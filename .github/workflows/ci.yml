@@ -77,7 +77,7 @@ jobs:
       - name: Build documentation
         run: make -C docs html SPHINXOPTS="-W --keep-going"
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: docs-html
           path: docs/_build/html/
