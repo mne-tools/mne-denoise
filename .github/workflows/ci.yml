@@ -81,7 +81,7 @@ jobs:
       - name: Add .nojekyll to the build
         run: touch docs/_build/html/.nojekyll
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docs-html
           path: docs/_build/html/
