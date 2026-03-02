@@ -14,6 +14,12 @@ coverage.xml
 .idea/
 .vscode/
 .venv*/
+denoise_env/
+
+# Temp/scratch files
+nul
+tmpclaude-*
+*.tmp
 
 # External reference directories (not part of package)
 matlab_repos/
@@ -39,3 +45,6 @@ htmlcov/
 /figures/
 /outputs/
 /scratch/
+
+# Downloaded datasets (large EEG files)
+examples/tutorials/data/runabout/

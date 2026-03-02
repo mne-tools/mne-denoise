@@ -1,0 +1,1 @@
+Add publication-quality visualization module (:mod:`mne_denoise.viz`), quality-assurance metrics (:mod:`mne_denoise.qa`), Jupyter tutorials reproducing key papers, diagnostic attributes on :class:`~mne_denoise.zapline.ZapLine`, and batch-processing scripts for the Runabout (ds003620) dataset, by `Scott Huberty`_.

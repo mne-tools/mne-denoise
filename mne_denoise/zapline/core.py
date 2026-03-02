@@ -223,6 +223,7 @@ class ZapLine(DSS):
         )
 
         self.n_removed_ = None
+        self.removed = None
         self.adaptive_results_ = None
         self._artifact_mixing_ = None
 
@@ -412,6 +413,7 @@ class ZapLine(DSS):
 
             self.adaptive_results_ = res
             self.n_removed_ = res["n_removed"]
+            self.removed = res["removed"]
             cleaned = res["cleaned"]
 
             if data.ndim == 3:
@@ -494,6 +496,10 @@ class ZapLine(DSS):
             Cleaned data with line noise removed.
         """
         if self.n_removed_ <= 0:
+            self.removed = np.zeros_like(data)
+            self.sources_ = np.zeros((0, data.shape[1]))
+            self.data_smooth_ = data.copy()
+            self.data_residual_ = np.zeros_like(data)
             return data.copy()
 
         # 1. Smooth
@@ -509,6 +515,12 @@ class ZapLine(DSS):
 
         # 4. Subtract artifact from residual, add back smooth
         cleaned = data_smooth + (data_residual - artifact)
+
+        # Store for visualization / diagnostics
+        self.removed = artifact
+        self.sources_ = sources
+        self.data_smooth_ = data_smooth
+        self.data_residual_ = data_residual
 
         return cleaned
 
@@ -734,6 +746,8 @@ class ZapLine(DSS):
                         "end": end,
                         "n_removed": res["n_removed"],
                         "artifact_present": res["present"],
+                        "eigenvalues": res.get("eigenvalues"),
+                        "patterns": res.get("patterns"),
                     }
                 )
 
