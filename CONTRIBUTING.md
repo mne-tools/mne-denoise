@@ -231,6 +231,10 @@ pytest -k "zapline" -v
 - Name test functions `test_*`
 - Use descriptive test names that explain what is being tested
 - Use fixtures for common setup
+- Plotting tests use the non-interactive Matplotlib backend configured in
+  `tests/conftest.py`, and figures are closed automatically after each test
+- Pass `show=False` when testing plotting functions
+- For optional dependencies, prefer `pytest.importorskip(...)`
 
 Example test:
 

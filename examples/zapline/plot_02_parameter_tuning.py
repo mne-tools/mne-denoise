@@ -21,11 +21,11 @@ import numpy as np
 from scipy import signal
 from scipy.io import loadmat
 
-from mne_denoise.viz.zapline import (
-    plot_cleaning_summary,
-    plot_component_scores,
+from mne_denoise.viz import (
+    plot_component_cleaning_summary,
+    plot_component_patterns,
+    plot_component_score_curve,
     plot_psd_comparison,
-    plot_spatial_patterns,
 )
 from mne_denoise.zapline import ZapLine
 
@@ -178,13 +178,14 @@ plt.show()
 
 print("\nPart 3: Understanding component scores")
 
-est_scores = ZapLine(line_freq=50, sfreq=sfreq, n_remove="auto")
+# Use a fixed removal count to guarantee selected components for pattern plots.
+est_scores = ZapLine(line_freq=50, sfreq=sfreq, n_remove=3)
 est_scores.fit(data)
 
 # Use the reusable viz functions
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-plot_component_scores(est_scores, ax=axes[0], show=False)
-plot_spatial_patterns(est_scores, n_patterns=3, ax=axes[1], show=False)
+plot_component_score_curve(est_scores, ax=axes[0], show=False)
+plot_component_patterns(est_scores, n_components=3, ax=axes[1], show=False)
 plt.tight_layout()
 plt.show()
 
@@ -243,12 +244,25 @@ if meg_data is not None:
 
     # Use reusable viz function for PSD comparison
     plot_psd_comparison(
-        meg_data, cleaned_meg, sfreq_meg, line_freq=60, fmax=150, show=True
+        meg_data,
+        cleaned_meg,
+        sfreq=sfreq_meg,
+        line_freq=60,
+        fmax=150,
+        show=True,
     )
 
     # Show comprehensive summary
-    plot_cleaning_summary(
-        meg_data, cleaned_meg, est_meg, sfreq_meg, line_freq=60, show=True
+    plot_component_cleaning_summary(
+        scores=getattr(est_meg, "scores_", getattr(est_meg, "eigenvalues_", None)),
+        selected_count=getattr(est_meg, "n_removed_", 0),
+        patterns=getattr(est_meg, "patterns_", None),
+        removed=meg_data - cleaned_meg,
+        sources=getattr(est_meg, "sources_", None),
+        sfreq=sfreq_meg,
+        line_freq=60,
+        title="Component Cleaning Summary (ZapLine)",
+        show=True,
     )
 
     # %%

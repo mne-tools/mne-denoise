@@ -42,12 +42,12 @@ from mne.datasets import sample
 
 from mne_denoise.dss import DSS, AverageBias, BandpassBias
 from mne_denoise.viz import (
+    plot_component_patterns,
+    plot_component_score_curve,
     plot_component_summary,
     plot_component_time_series,
-    plot_evoked_comparison,
+    plot_evoked_gfp_comparison,
     plot_psd_comparison,
-    plot_score_curve,
-    plot_spatial_patterns,
 )
 
 # %%
@@ -148,7 +148,7 @@ dss_evoked.fit(epochs)
 # This plot shows the "Bias Ratio" for each component.
 # *   **Expectation**: The first component (Comp 0) should have a much higher score than the rest.
 # *   This indicates that Comp 0 is highly reproducible (signal), while others are noise.
-plot_score_curve(dss_evoked, mode="ratio", show=False)
+plot_component_score_curve(dss_evoked, mode="ratio", show=False)
 
 # 2. Component Time Series
 # ------------------------
@@ -169,7 +169,7 @@ plot_component_time_series(dss_evoked, data=epochs, n_components=3, show=False)
 #     *   **Comp 1+**: Often look "speckled" or messy, indicating they capture noise.
 #
 # Note: Since the data is synthetic, the sensor locations are idealized.
-plot_spatial_patterns(dss_evoked, n_components=3, show=False)
+plot_component_patterns(dss_evoked, n_components=3, show=False)
 
 # 4. Component Summary
 # --------------------
@@ -190,7 +190,7 @@ epochs_denoised = mne.EpochsArray(epochs_denoised, info)
 # Plot Original vs Denoised Evoked Response
 # *   **Expectation**: The "Denoised" trace should have smaller confidence intervals (shaded area)
 #     because the variable noise has been removed.
-plot_evoked_comparison(epochs, epochs_denoised, show=True)
+plot_evoked_gfp_comparison(epochs, epochs_denoised, times=epochs.times, show=True)
 
 
 # %%
@@ -208,7 +208,7 @@ dss_osc.fit(epochs)
 
 # Visualize
 # 1. Score Curve
-plot_score_curve(dss_osc, mode="ratio", show=False)
+plot_component_score_curve(dss_osc, mode="ratio", show=False)
 
 # 2. Component Time Series
 # *   **Expectation**: Comp 0 should look like a bursty/clean 50Hz oscillation.
@@ -218,7 +218,7 @@ plot_component_time_series(dss_osc, data=epochs, n_components=3, show=False)
 # 3. Spatial Patterns
 # *   **Expectation**: Comp 0 should show the "Right-ish" field pattern.
 # *   **Note**: This topography is distinct from the Evoked signal, showing how DSS separates sources spatially.
-plot_spatial_patterns(dss_osc, n_components=3, show=False)
+plot_component_patterns(dss_osc, n_components=3, show=False)
 
 # 4. Component Summary
 # *   **Expectation**: PSD should show a very sharp peak at 50 Hz.
@@ -276,7 +276,7 @@ dss_alpha.fit(raw)
 
 # Visualize
 # 1. Score Curve
-plot_score_curve(dss_alpha, mode="ratio", show=False)
+plot_component_score_curve(dss_alpha, mode="ratio", show=False)
 
 # 2. Component Time Series
 # *   **Expectation**: Strong rhythmic activity (alpha waves) in the first component.
@@ -285,7 +285,7 @@ plot_component_time_series(dss_alpha, data=raw, n_components=5, show=False)
 # 3. Spatial Patterns
 # *   **Expectation**: Comp 0 shows a posterior/occipital topography (visual/alpha areas).
 # *   **Note**: The dots here represent the MEG sensors (gradiometers).
-plot_spatial_patterns(dss_alpha, n_components=5, show=False)
+plot_component_patterns(dss_alpha, n_components=5, show=False)
 
 # 4. Component Summary
 # *   **Expectation**: PSD peak in 8-12 Hz range.
@@ -329,7 +329,7 @@ dss_m100.fit(epochs_real)
 
 # Visualize
 # 1. Score Curve
-plot_score_curve(dss_m100, mode="ratio", show=False)
+plot_component_score_curve(dss_m100, mode="ratio", show=False)
 
 # 2. Component Time Series
 # *   **Expectation**: Comp 0 should show a clear evoked potential (M100) that is
@@ -339,7 +339,7 @@ plot_component_time_series(dss_m100, data=epochs_real, n_components=5, show=Fals
 # 3. Spatial Patterns
 # *   **Expectation**: Dipolar pattern over auditory cortex (temporal lobes).
 # *   **Observation**: You might see symmetric dipoles over left and right temporal areas.
-plot_spatial_patterns(dss_m100, n_components=5, show=False)
+plot_component_patterns(dss_m100, n_components=5, show=False)
 
 # 4. Summary
 plot_component_summary(dss_m100, data=epochs_real, n_components=[0], show=False)
@@ -353,7 +353,7 @@ epochs_m100 = mne.EpochsArray(epochs_m100, epochs_real.info)
 
 # Compare Evoked Responses
 # *   **Expectation**: Cleaner M100 peak with reduced baseline noise.
-plot_evoked_comparison(epochs_real, epochs_m100, show=True)
+plot_evoked_gfp_comparison(epochs_real, epochs_m100, times=epochs_real.times, show=True)
 
 # %%
 # Conclusion

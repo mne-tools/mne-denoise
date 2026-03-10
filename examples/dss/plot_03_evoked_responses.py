@@ -24,10 +24,10 @@ from mne.datasets import sample
 
 from mne_denoise.dss import DSS, AverageBias, LinearDenoiser
 from mne_denoise.viz import (
+    plot_component_score_curve,
     plot_component_summary,
     plot_component_time_series,
-    plot_evoked_comparison,
-    plot_score_curve,
+    plot_evoked_gfp_comparison,
 )
 
 # %%
@@ -166,7 +166,7 @@ dss_std.fit(epochs_meg)
 
 # Visualize
 # The score curve shows how "evoked" each component is (0 to 1).
-plot_score_curve(dss_std, mode="ratio", show=False)
+plot_component_score_curve(dss_std, mode="ratio", show=False)
 
 # Time Series of top components
 plot_component_time_series(dss_std, data=epochs_meg, n_components=5, show=False)
@@ -197,9 +197,10 @@ epochs_clean = mne.EpochsArray(
 )
 
 # Compare Global Field Power
-plot_evoked_comparison(
+plot_evoked_gfp_comparison(
     epochs_meg,
     epochs_clean,
+    times=epochs_meg.times,
     labels=("Original", f"Denoised (Top {keep_n})"),
     show=False,
 )
@@ -284,7 +285,7 @@ dss_diff.fit(epochs_meg)
 
 # 3. Visualize
 # Component 0 should be the "Difference Component".
-plot_score_curve(dss_diff, mode="ratio", show=False)
+plot_component_score_curve(dss_diff, mode="ratio", show=False)
 
 # Let's plot the time series of Comp 0 for Left vs Right conditions separate.
 # We expect to see a strong separation.

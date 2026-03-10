@@ -8,6 +8,42 @@ import mne
 import numpy as np
 
 
+def _compute_gfp(inst_or_data):
+    """Compute GFP (RMS across channels) from 2D/3D signal data.
+
+    Parameters
+    ----------
+    inst_or_data : MNE object | ndarray
+        Signal data as:
+        - 2D ``(n_channels, n_times)``, or
+        - 3D ``(n_epochs, n_channels, n_times)``.
+        MNE inputs are converted via ``get_data()``.
+
+    Returns
+    -------
+    gfp : ndarray of shape (n_times,)
+        Global field power time series.
+
+    Raises
+    ------
+    ValueError
+        If input is not 2D or 3D.
+    """
+    if hasattr(inst_or_data, "get_data"):
+        data = np.asarray(inst_or_data.get_data(), dtype=float)
+    else:
+        data = np.asarray(inst_or_data, dtype=float)
+
+    if data.ndim == 3:
+        data = data.mean(axis=0)
+    if data.ndim != 2:
+        raise ValueError(
+            "GFP input must be 2D (n_channels, n_times) or 3D "
+            "(n_epochs, n_channels, n_times)."
+        )
+    return np.sqrt(np.mean(data**2, axis=0))
+
+
 def _get_info(estimator, info=None):
     """Resolve MNE info from estimator or argument."""
     if info is not None:
@@ -90,7 +126,7 @@ def _get_components(estimator, data=None):
     # We want dimension 0 to be components for easier plotting.
 
     if (
-        isinstance(data, mne.BaseEpochs | mne.epochs.BaseEpochs)
+        isinstance(data, mne.BaseEpochs)
         and sources.ndim == 3
         and sources.shape[1] == _get_filters(estimator).shape[0]
     ):

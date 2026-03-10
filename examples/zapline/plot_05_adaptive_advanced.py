@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-from mne_denoise.viz.zapline import plot_psd_comparison
+from mne_denoise.viz import plot_psd_comparison
 from mne_denoise.zapline import ZapLine
 from mne_denoise.zapline.adaptive import detect_harmonics
 
@@ -128,7 +128,9 @@ print("\n--- Step 4: Topography Outputs ---")
 print("\n--- Step 5: Spectral Comparison ---")
 
 # Use our reusable viz function for a quick overview
-plot_psd_comparison(data, data_clean, sfreq, line_freq=fundamental, fmax=180, show=True)
+plot_psd_comparison(
+    data, data_clean, sfreq=sfreq, line_freq=fundamental, fmax=180, show=True
+)
 
 # Detailed per-frequency comparison
 fig, axes = plt.subplots(1, 3, figsize=(14, 4))

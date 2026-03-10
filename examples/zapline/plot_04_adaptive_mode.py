@@ -25,7 +25,7 @@ import numpy as np
 from matplotlib.gridspec import GridSpec
 from scipy import signal
 
-from mne_denoise.viz.zapline import plot_psd_comparison
+from mne_denoise.viz import plot_psd_comparison
 from mne_denoise.zapline.adaptive import (
     check_artifact_presence,
     find_fine_peak,
@@ -285,7 +285,7 @@ print(f"Cleaning complete. Components removed: {result['n_removed']}")
 # Use our reusable viz functions for quick overview, then custom plots.
 
 # Quick overview using our viz functions
-plot_psd_comparison(data, data_clean, sfreq, line_freq=target_freq, show=True)
+plot_psd_comparison(data, data_clean, sfreq=sfreq, line_freq=target_freq, show=True)
 
 fig = plt.figure(figsize=(14, 10))
 gs = GridSpec(3, 3, figure=fig, hspace=0.3, wspace=0.3)

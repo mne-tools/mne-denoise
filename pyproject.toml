@@ -64,6 +64,8 @@ test = [
   "pytest>=7.4.0",
   "pytest-cov>=4.1.0",
   "pytest-timeout>=2.2.0",
+  "pandas>=1.5",
+  "seaborn>=0.12",
 ]
 dev = [
   "mne-denoise[test]",
@@ -129,8 +131,10 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/**" = ["D", "B", "SIM"]
-"examples/**" = ["D", "E402", "B"]
+"tests/**" = ["D", "B", "SIM", "E402"]
+"examples/**" = ["D", "E402", "B", "F404"]
+"scripts/**" = ["D", "E402"]
+"run_erp_benchmark.py" = ["D", "E402"]
 
 [tool.ruff.format]
 docstring-code-format = true

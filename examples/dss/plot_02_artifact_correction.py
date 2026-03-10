@@ -30,12 +30,12 @@ from mne.preprocessing import create_ecg_epochs, create_eog_epochs
 
 from mne_denoise.dss import DSS, AverageBias, CycleAverageBias
 from mne_denoise.viz import (
+    plot_component_patterns,
+    plot_component_score_curve,
     plot_component_summary,
     plot_component_time_series,
-    plot_evoked_comparison,
+    plot_evoked_gfp_comparison,
     plot_psd_comparison,
-    plot_score_curve,
-    plot_spatial_patterns,
 )
 
 # %%
@@ -91,7 +91,7 @@ dss_eog.fit(eog_epochs)
 
 # 1. Score Curve
 # *   **Expectation**: Comp 0 should have a very high score (reproducible bias).
-plot_score_curve(dss_eog, mode="ratio", show=False)
+plot_component_score_curve(dss_eog, mode="ratio", show=False)
 
 # 2. Time Series
 # *   **Expectation**: Comp 0 should look like a classic "V-shape" or bell-shape blink.
@@ -99,7 +99,7 @@ plot_component_time_series(dss_eog, data=eog_epochs, n_components=10, show=False
 
 # 3. Spatial Patterns
 # *   **Expectation**: Comp 0 should be strictly frontal.
-plot_spatial_patterns(dss_eog, n_components=10, show=False)
+plot_component_patterns(dss_eog, n_components=10, show=False)
 
 # 4. Summary (Topo + Time + PSD)
 plot_component_summary(dss_eog, data=eog_epochs, n_components=[0, 1], show=False)
@@ -206,11 +206,11 @@ plt.show(block=False)
 
 # Compare spatial patterns (both bias types)
 print("\n--- Comparing Spatial Patterns ---")
-plot_spatial_patterns(dss_eog, n_components=1, show=False)
+plot_component_patterns(dss_eog, n_components=1, show=False)
 plt.gcf().suptitle("TrialAverageBias: Blink Component Topography")
 plt.show(block=False)
 
-plot_spatial_patterns(dss_cycle, n_components=1, show=False)
+plot_component_patterns(dss_cycle, n_components=1, show=False)
 plt.gcf().suptitle("CycleAverageBias: Blink Component Topography")
 plt.show(block=False)
 
@@ -272,8 +272,12 @@ eog_epochs_clean = mne.Epochs(
 
 print("Plotting correction effect...")
 # Expectation 1: The huge blink artifact in the 'Original' trace should be gone or massive reduced.
-plot_evoked_comparison(
-    eog_epochs, eog_epochs_clean, show=False, labels=("Original", "Cleaned")
+plot_evoked_gfp_comparison(
+    eog_epochs,
+    eog_epochs_clean,
+    times=eog_epochs.times,
+    show=False,
+    labels=("Original", "Cleaned"),
 )
 
 # Expectation 2: The PSD should be largely unchanged in the alpha/beta bands.
@@ -308,7 +312,7 @@ dss_ecg.fit(ecg_epochs)
 # ----------------------------
 
 # 1. Score Curve
-plot_score_curve(dss_ecg, mode="ratio", show=False)
+plot_component_score_curve(dss_ecg, mode="ratio", show=False)
 
 # 2. Time Series
 # *   **Expectation**: Comp 0 should look like a QRS complex.
@@ -316,7 +320,7 @@ plot_component_time_series(dss_ecg, data=ecg_epochs, n_components=8, show=False)
 
 # 3. Spatial Patterns
 # *   **Expectation**: Deep/distant field pattern.
-plot_spatial_patterns(dss_ecg, n_components=8, show=False)
+plot_component_patterns(dss_ecg, n_components=8, show=False)
 
 # 4. Summary
 plot_component_summary(dss_ecg, data=ecg_epochs, n_components=[0], show=False)
@@ -343,8 +347,12 @@ ecg_epochs_clean = mne.Epochs(
 )
 
 # Expectation 1: The QRS spike should be suppressed.
-plot_evoked_comparison(
-    ecg_epochs, ecg_epochs_clean, show=False, labels=("Original", "Cleaned")
+plot_evoked_gfp_comparison(
+    ecg_epochs,
+    ecg_epochs_clean,
+    times=ecg_epochs.times,
+    show=False,
+    labels=("Original", "Cleaned"),
 )
 
 # Expectation 2: Cardiac harmonics (multiples of heart rate ~1.2 Hz) should be reduced,

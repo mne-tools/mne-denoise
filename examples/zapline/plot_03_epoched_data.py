@@ -20,8 +20,8 @@ import numpy as np
 from scipy import signal
 from scipy.io import loadmat
 
-from mne_denoise.viz.zapline import (
-    plot_cleaning_summary,
+from mne_denoise.viz import (
+    plot_component_cleaning_summary,
     plot_psd_comparison,
 )
 from mne_denoise.zapline import ZapLine
@@ -94,10 +94,20 @@ print(f"Cleaned epochs shape: {cleaned_epochs.shape}")
 # ^^^^^^^^^^^^^^^^^^^^
 
 # Use the reusable viz function for PSD comparison
-plot_psd_comparison(data_concat, cleaned, sfreq, line_freq=50, show=True)
+plot_psd_comparison(data_concat, cleaned, sfreq=sfreq, line_freq=50, show=True)
 
 # Show comprehensive cleaning summary
-plot_cleaning_summary(data_concat, cleaned, est, sfreq, line_freq=50, show=True)
+plot_component_cleaning_summary(
+    scores=getattr(est, "scores_", getattr(est, "eigenvalues_", None)),
+    selected_count=getattr(est, "n_removed_", 0),
+    patterns=getattr(est, "patterns_", None),
+    removed=data_concat - cleaned,
+    sources=getattr(est, "sources_", None),
+    sfreq=sfreq,
+    line_freq=50,
+    title="Component Cleaning Summary (ZapLine)",
+    show=True,
+)
 
 # %%
 # Part 2: Real MEG Epoched Data (NoiseTools data3.mat)
@@ -153,7 +163,12 @@ if data3_path.exists():
 
     # Use the reusable viz functions
     plot_psd_comparison(
-        meg_concat, cleaned_meg, sfreq_meg, line_freq=50, fmax=150, show=True
+        meg_concat,
+        cleaned_meg,
+        sfreq=sfreq_meg,
+        line_freq=50,
+        fmax=150,
+        show=True,
     )
 
     # Measure reduction
@@ -211,10 +226,23 @@ if example_data_path.exists():
 
     # Use the reusable viz functions
     plot_psd_comparison(
-        meg_high, cleaned_high, sfreq_high, line_freq=50, fmax=150, show=True
+        meg_high,
+        cleaned_high,
+        sfreq=sfreq_high,
+        line_freq=50,
+        fmax=150,
+        show=True,
     )
-    plot_cleaning_summary(
-        meg_high, cleaned_high, est_high, sfreq_high, line_freq=50, show=True
+    plot_component_cleaning_summary(
+        scores=getattr(est_high, "scores_", getattr(est_high, "eigenvalues_", None)),
+        selected_count=getattr(est_high, "n_removed_", 0),
+        patterns=getattr(est_high, "patterns_", None),
+        removed=meg_high - cleaned_high,
+        sources=getattr(est_high, "sources_", None),
+        sfreq=sfreq_high,
+        line_freq=50,
+        title="Component Cleaning Summary (ZapLine)",
+        show=True,
     )
 
     # Measure reduction

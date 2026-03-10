@@ -37,9 +37,9 @@ from mne_denoise.dss.denoisers import (
 )
 from mne_denoise.dss.variants import smooth_dss, time_shift_dss
 from mne_denoise.viz import (
+    plot_channel_time_course_comparison,
     plot_component_summary,
     plot_psd_comparison,
-    plot_time_course_comparison,
 )
 
 # %%
@@ -332,7 +332,15 @@ comp_raw = mne.io.RawArray(
     sources_eeg[[0]], mne.create_info(1, raw_eeg.info["sfreq"], "eeg")
 )
 
-plot_time_course_comparison(raw_single, comp_raw, start=0, stop=10, show=False)
+plot_channel_time_course_comparison(
+    raw_single,
+    comp_raw,
+    picks=[0],
+    times=raw_single.times,
+    start=0,
+    stop=int(10 * raw_single.info["sfreq"]),
+    show=False,
+)
 plt.gcf().suptitle("Real EEG: Original vs TSR Component 0")
 plt.show(block=False)
 

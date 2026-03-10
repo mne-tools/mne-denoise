@@ -28,9 +28,9 @@ from scipy import signal
 from mne_denoise.dss import DSS, BandpassBias, LineNoiseBias
 from mne_denoise.dss.variants import narrowband_dss, narrowband_scan
 from mne_denoise.viz import (
+    plot_component_psd_comparison,
     plot_component_summary,
-    plot_narrowband_scan,
-    plot_spectral_psd_comparison,
+    plot_narrowband_score_scan,
 )
 
 # %%
@@ -111,7 +111,7 @@ best_dss, freqs, eigenvalues = narrowband_scan(
 )
 
 # Visualize the Spectrum of "Oscillatoriness"
-plot_narrowband_scan(freqs, eigenvalues, true_freqs=[10, 22], show=False)
+plot_narrowband_score_scan(freqs, eigenvalues, true_freqs=[10, 22], show=False)
 plt.show(block=False)
 
 print("Peaks clearly visible at 10 Hz and 22 Hz.")
@@ -227,8 +227,14 @@ plot_component_summary(dss_notch, data=raw_noisy, n_components=3, show=False)
 plt.show(block=False)
 
 # PSD comparison
-plot_spectral_psd_comparison(
-    raw_noisy, sources_notch, sfreq, peak_freq=60, fmax=200, show=False
+plot_component_psd_comparison(
+    raw_noisy,
+    sources_notch,
+    component_indices=[0],
+    sfreq=sfreq,
+    peak_freq=60,
+    fmax=200,
+    show=False,
 )
 plt.gcf().axes[0].set_title("Line Noise: Original PSD (60 Hz + harmonics)")
 plt.gcf().axes[1].set_title("Line Noise: DSS Components PSD")
@@ -296,7 +302,7 @@ _, freqs_meg, eigs_meg = narrowband_scan(
     n_components=1,
 )
 
-plot_narrowband_scan(
+plot_narrowband_score_scan(
     freqs_meg, eigs_meg, peak_freq=freqs_meg[np.argmax(eigs_meg)], show=False
 )
 plt.gcf().axes[0].set_title("MEG: Narrowband Scan for Alpha")
@@ -319,7 +325,7 @@ print("Creating additional MEG visualizations...")
 
 # Note: You can also use mne_denoise.viz functions:
 # - plot_psd_comparison(raw, denoised_raw, ...)
-# - plot_time_course_comparison(raw, denoised_raw, ...)
+# - plot_channel_time_course_comparison(raw, denoised_raw, ...)
 # Here we show custom plots for educational purposes.
 
 # 1. Time series comparison: Raw sensor vs DSS component
@@ -339,8 +345,13 @@ plt.tight_layout()
 plt.show(block=False)
 
 # 2. PSD Comparison: Before vs After
-plot_spectral_psd_comparison(
-    raw, sources_meg, raw.info["sfreq"], peak_freq=peak_freq, show=False
+plot_component_psd_comparison(
+    raw,
+    sources_meg,
+    component_indices=[0],
+    sfreq=raw.info["sfreq"],
+    peak_freq=peak_freq,
+    show=False,
 )
 plt.gcf().axes[0].set_title("MEG: Original Data PSD (Average)")
 plt.gcf().axes[1].set_title("MEG: DSS Components PSD")
@@ -396,7 +407,7 @@ _, freqs_eeg, eigs_eeg = narrowband_scan(
 )
 
 peak_freq_eeg = freqs_eeg[np.argmax(eigs_eeg)]
-plot_narrowband_scan(freqs_eeg, eigs_eeg, peak_freq=peak_freq_eeg, show=False)
+plot_narrowband_score_scan(freqs_eeg, eigs_eeg, peak_freq=peak_freq_eeg, show=False)
 plt.gcf().axes[0].set_title("EEG: Narrowband Scan (Eyes Closed Resting State)")
 plt.show(block=False)
 
@@ -415,7 +426,7 @@ plt.show(block=False)
 print("Creating additional EEG visualizations...")
 
 # Note: Similar to MEG, you can use plot_psd_comparison() and
-# plot_time_course_comparison() from mne_denoise.viz
+# plot_channel_time_course_comparison() from mne_denoise.viz
 
 # 1. Time series comparison: Raw sensor vs DSS component
 sources_eeg = dss_eeg.transform(raw_eeg)
@@ -434,8 +445,13 @@ plt.tight_layout()
 plt.show(block=False)
 
 # 2. PSD Comparison: Before vs After
-plot_spectral_psd_comparison(
-    raw_eeg, sources_eeg, raw_eeg.info["sfreq"], peak_freq=peak_freq_eeg, show=False
+plot_component_psd_comparison(
+    raw_eeg,
+    sources_eeg,
+    component_indices=[0],
+    sfreq=raw_eeg.info["sfreq"],
+    peak_freq=peak_freq_eeg,
+    show=False,
 )
 plt.gcf().axes[0].set_title("EEG: Original Data PSD (Average)")
 plt.gcf().axes[1].set_title("EEG: DSS Components PSD")

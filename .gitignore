@@ -48,3 +48,17 @@ htmlcov/
 
 # Downloaded datasets (large EEG files)
 examples/tutorials/data/runabout/
+
+# Local datasets / heavy artifacts (do not commit)
+examples/tutorials/data/
+examples/tutorials/mne_denoise.pdf
+condescending-liskov/data/
+*_nb_temp.json
+*_code_cells.txt
+*_out.txt
+*_err.txt
+*_log.txt
+cov_report.txt
+*.eeg
+*.mat
+
