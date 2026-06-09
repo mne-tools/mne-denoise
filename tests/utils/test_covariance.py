@@ -262,3 +262,13 @@ def test_compute_evoked_covariance_raises_on_too_few_samples():
 
     with pytest.raises(ValueError, match="at least 2 time samples"):
         compute_evoked_covariance(evoked)
+
+
+def test_compute_evoked_covariance_rejects_non_2d_data():
+    """Non-2D evoked data is rejected before reaching MNE."""
+
+    class _FakeEvoked:
+        data = np.zeros((2, 3, 4))
+
+    with pytest.raises(ValueError, match="2D"):
+        compute_evoked_covariance(_FakeEvoked())
