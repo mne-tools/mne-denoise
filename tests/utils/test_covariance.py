@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import mne
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from mne_denoise.dss.utils.covariance import _ledoit_wolf_shrinkage, compute_covariance
+from mne_denoise.dss.utils.covariance import (
+    _ledoit_wolf_shrinkage,
+    compute_covariance,
+    compute_evoked_covariance,
+)
 
 
 def test_empirical_covariance_shape():
@@ -213,3 +218,47 @@ def test_weighted_covariance_correctness():
     assert_allclose(
         cov_w_half, cov_sub, atol=1e-7, err_msg="Weighted cov (masking) mismatch"
     )
+
+
+def _make_evoked(n_channels=6, n_times=300, sfreq=200.0, seed=0):
+    rng = np.random.default_rng(seed)
+    data = rng.standard_normal((n_channels, n_times))
+    info = mne.create_info([f"EEG{i:03d}" for i in range(n_channels)], sfreq, "eeg")
+    return mne.EvokedArray(data, info, verbose=False), data
+
+
+def test_compute_evoked_covariance_type_and_shape():
+    """compute_evoked_covariance returns a symmetric mne.Covariance."""
+    evoked, _ = _make_evoked()
+
+    cov = compute_evoked_covariance(evoked, method="empirical", verbose=False)
+
+    assert isinstance(cov, mne.Covariance)
+    assert cov.data.shape == (len(evoked.ch_names), len(evoked.ch_names))
+    assert_allclose(cov.data, cov.data.T)
+
+
+def test_compute_evoked_covariance_matches_empirical_second_moment():
+    """The estimate is the (scale-invariant) across-time second moment YYᵀ/n.
+
+    MNE assumes zero-mean data and does not remove the temporal mean, matching
+    the Raw/Epochs branches of ``DSS._fit_mne``. DSS only uses covariance
+    ratios, so we compare trace-normalized matrices to stay independent of
+    MNE's internal sample-count normalization.
+    """
+    evoked, data = _make_evoked()
+    expected = data @ data.T / data.shape[1]
+
+    cov = compute_evoked_covariance(evoked, method="empirical", verbose=False)
+
+    got_n = cov.data / np.trace(cov.data)
+    exp_n = expected / np.trace(expected)
+    assert_allclose(got_n, exp_n, atol=1e-10)
+
+
+def test_compute_evoked_covariance_raises_on_too_few_samples():
+    """A single time sample cannot yield a covariance."""
+    evoked, _ = _make_evoked(n_times=1)
+
+    with pytest.raises(ValueError, match="at least 2 time samples"):
+        compute_evoked_covariance(evoked)

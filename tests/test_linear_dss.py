@@ -824,6 +824,44 @@ def test_dss_mne_evoked_extracts_known_signal():
     assert correlation > 0.85, f"Evoked signal correlation {correlation} too low"
 
 
+def test_dss_evoked_uses_mne_covariance_path():
+    """DSS on an Evoked fits through MNE covariances, not the NumPy fallback.
+
+    Regression test for issue #39: the fitted eigenvalues must equal a manual
+    ``compute_dss`` on the baseline/biased covariances produced by
+    ``compute_evoked_covariance``, proving the Evoked branch of ``_fit_mne``
+    now stays within the MNE ecosystem.
+    """
+    from mne_denoise.dss.denoisers import BandpassBias
+    from mne_denoise.dss.utils import compute_evoked_covariance
+
+    rng = np.random.default_rng(7)
+    n_ch, n_t, sfreq = 8, 500, 200.0
+    t = np.arange(n_t) / sfreq
+    sig = np.sin(2 * np.pi * 10 * t)
+    mix = np.array([1.0, 0.7, 0.4, 0.2, 0.0, 0.0, 0.0, 0.0])
+    data = rng.standard_normal((n_ch, n_t)) * 0.3 + np.outer(mix, sig)
+    info = mne.create_info([f"EEG{i:03d}" for i in range(n_ch)], sfreq, "eeg")
+    evoked = mne.EvokedArray(data, info, verbose=False)
+
+    bias = BandpassBias(freq_band=(8, 12), sfreq=sfreq)
+    dss = DSS(bias=bias, normalize_input=False)
+    dss.fit(evoked)
+
+    # Reproduce the MNE-side covariances independently and run compute_dss.
+    baseline = compute_evoked_covariance(evoked, method="empirical", verbose=False)
+    biased_evoked = mne.EvokedArray(bias.apply(data), info, verbose=False)
+    biased = compute_evoked_covariance(biased_evoked, method="empirical", verbose=False)
+    _, _, eig_ref = compute_dss(baseline.data, biased.data, reg=dss.reg)
+
+    assert_allclose(
+        np.sort(dss.eigenvalues_)[::-1],
+        np.sort(eig_ref)[::-1],
+        rtol=1e-6,
+        atol=1e-8,
+    )
+
+
 def test_dss_reconstruction_preserves_signal():
     """DSS transform + inverse_transform should preserve signal content."""
     rng = np.random.default_rng(42)

@@ -9,6 +9,9 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 
 from __future__ import annotations
 
+import warnings
+from typing import Any
+
 import numpy as np
 
 
@@ -123,6 +126,72 @@ def compute_covariance(
     cov = (cov + cov.T) / 2
 
     return cov
+
+
+def compute_evoked_covariance(
+    evoked: Any,
+    method: str = "empirical",
+    **kwargs: Any,
+) -> Any:
+    """Compute a sensor covariance from an :class:`mne.Evoked`.
+
+    MNE-Python's :func:`mne.compute_covariance` and
+    :func:`mne.compute_raw_covariance` accept :class:`~mne.Epochs` and
+    :class:`~mne.io.Raw` only. For an already-averaged :class:`~mne.Evoked` we
+    treat its time samples as observations by wrapping the data in a
+    single-trial :class:`~mne.EpochsArray` and deferring to
+    :func:`mne.compute_covariance`. This keeps the estimation inside the MNE
+    ecosystem (returning a genuine :class:`mne.Covariance`) and matches the
+    Raw/Epochs branches of :meth:`mne_denoise.dss.DSS._fit_mne`, which assume
+    zero-mean data and do not remove the per-channel temporal mean.
+
+    Parameters
+    ----------
+    evoked : mne.Evoked
+        The averaged response. Time samples are treated as observations.
+    method : str
+        Covariance estimator forwarded to :func:`mne.compute_covariance`
+        (e.g. ``'empirical'``, ``'shrunk'``, ``'oas'``). Default ``'empirical'``.
+    **kwargs
+        Additional keyword arguments forwarded to
+        :func:`mne.compute_covariance` (e.g. ``rank``, ``verbose``).
+
+    Returns
+    -------
+    cov : mne.Covariance
+        The estimated sensor covariance.
+    """
+    import mne
+
+    data = np.asarray(evoked.data)
+    if data.ndim != 2:
+        raise ValueError(
+            f"Evoked data must be 2D (n_channels, n_times), got {data.ndim}D."
+        )
+    if data.shape[1] < 2:
+        raise ValueError(
+            "Evoked must have at least 2 time samples to estimate a covariance."
+        )
+
+    # Wrap the single averaged response as a one-trial Epochs so MNE's
+    # covariance machinery applies. ``keep_sample_mean=True`` stops MNE from
+    # subtracting the (single) evoked response, which would otherwise zero the
+    # data and yield an all-zero covariance.
+    epochs = mne.EpochsArray(
+        data[np.newaxis], evoked.info, tmin=float(evoked.times[0]), verbose=False
+    )
+    with warnings.catch_warnings():
+        # Baseline correction is intentionally not applied: DSS uses the raw
+        # second-moment covariance, so MNE's "not baseline corrected" notice
+        # is expected here and would otherwise leak into every Evoked fit.
+        warnings.filterwarnings(
+            "ignore",
+            message="Epochs are not baseline corrected",
+            category=RuntimeWarning,
+        )
+        return mne.compute_covariance(
+            epochs, method=method, keep_sample_mean=True, **kwargs
+        )
 
 
 def _ledoit_wolf_shrinkage(data: np.ndarray) -> float:

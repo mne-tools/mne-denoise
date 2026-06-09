@@ -35,7 +35,7 @@ from ..blending import overlap_add_combine
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from .denoisers import LinearDenoiser
 from .denoisers.temporal import SmoothingBias
-from .utils import compute_covariance
+from .utils import compute_covariance, compute_evoked_covariance
 from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
 from .utils.selection import auto_select_components_robust
 from .utils.whitening import (
@@ -767,9 +767,12 @@ class DSS(BaseEstimator, TransformerMixin):
             biased_inst = mne.EpochsArray(biased_data, inst.info, verbose=False)
             biased_cov = mne.compute_covariance(biased_inst, method=method, **kws)
 
-        else:  # Evoked - use numpy path since MNE doesn't support Evoked covariance
-            self._fit_numpy(data, weights=weights)
-            return
+        else:  # Evoked
+            baseline_cov = compute_evoked_covariance(inst, method=method, **kws)
+            biased_inst = mne.EvokedArray(
+                biased_data, inst.info, tmin=float(inst.times[0]), verbose=False
+            )
+            biased_cov = compute_evoked_covariance(biased_inst, method=method, **kws)
 
         # Extract data from MNE covariances
         self.filters_, self.patterns_, self.eigenvalues_ = compute_dss(

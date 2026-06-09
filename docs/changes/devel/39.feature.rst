@@ -1,0 +1,2 @@
+**DSS**:
+- ``DSS`` now estimates covariances for :class:`mne.Evoked` inputs through MNE's own machinery instead of falling back to the internal NumPy path. A new ``mne_denoise.dss.utils.compute_evoked_covariance`` helper treats the averaged response's time samples as observations and returns a genuine :class:`mne.Covariance`, keeping the Evoked data flow consistent with the Raw and Epochs branches (Issue #39).
