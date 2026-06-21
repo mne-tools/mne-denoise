@@ -1,0 +1,65 @@
+# Arm: muscle_ds004505 — reference-coupled muscle/movement cleaning (dual-layer table-tennis EEG). Skeleton (P0).
+# Reference-aware vs reference-free reported in SEPARATE tiers. Implemented LAST (most complexity).
+arm: muscle_ds004505
+runner: muscle
+status: not_started
+
+dataset:
+  id: ds004505
+  project_relative_path: openneuro/ds004505
+  version: pending
+  subjects: pending            # 25 available
+  channel_types: [eeg, noise_layer, neck_emg]
+  reference_channels: {noise_layer: pending, neck_emg: pending}
+
+tiers:                         # do NOT rank free vs reference-aware together
+  reference_free: [none, ica_fixed, asr, rasr_windowed]   # AMICA optional
+  reference_aware: [reference_regression, tspca, dual_layer_regression, icanclean]
+compact_asr:                   # the minimum ASR sub-analysis lives here
+  methods: [asr_euclidean, rasr_windowed]
+  cutoffs: [10, 20, 30]
+  calibration: {source: pending, duration_s: pending, contamination_fraction: pending,
+                external_or_internal: pending, shared_across_methods: true, excluded_from_eval: true}
+  compare_at: matched_attenuation
+sweep: {asr: {param: cutoff, grid: [10, 20, 30]}, icanclean: {param: r2_threshold, grid: pending}}
+
+reference_fairness:            # match information across reference-aware methods
+  match: [n_reference_channels, fit_duration, preprocessing, time_lags, regularization, parameter_budget]
+  sensitivity: [16, 32, 64, 120]   # noise-channel counts; + missing/noisy refs; fit vs held-out ref subsets
+anti_circularity:              # fit and evaluate coupling on DIFFERENT references/blocks
+  fit_reference_channels: noise_layer
+  evaluation_reference_channels: independent_neck_emg
+  cross_fit: blockwise
+
+downstream_eval_ica:           # identical across cleaned datasets (else differences are the ICA's, not the cleaner's)
+  algorithm: pending
+  n_components: pending
+  hp_hz: pending
+  duration_s: pending
+  seed: 42
+  record: iclabel_probability_distributions   # not only thresholded counts
+
+metrics:
+  primary_target: independent_neck_emg_contamination_metric
+  primary_preservation: frozen_task_band_contrast    # pending_feasibility; preferred order beta > alpha > task_vs_rest
+  emg_attenuation_hierarchy: [hf_zero_lag_coupling, noise_layer_coupling, independent_neck_emg_coupling, muscle_spatial_topography, phantom_ground_truth]
+  preserve_separately: [low_freq_motor_task_effects, beta_erd, task_topography, plausible_non_zero_lag_coupling]
+  secondary: [iclabel_brain_count, dipole_residual_variance, effective_rank_change, retained_variance, runtime]
+  negative_control: {band: pending, roi: pending}
+preservation:
+  contrast: pending_feasibility   # freeze ONE after ds004505 feasibility (no fallback list in final)
+  frequency_band: pending_feasibility
+  roi_channels: pending_feasibility
+  time_window: pending_feasibility
+  baseline: pending_feasibility
+  direction_expected: pending_feasibility
+  equivalence_margin: pending_feasibility
+preservation_reference:
+  source: low_motion_intervals_and_conservative_rejection_contrast
+  independent_from_method_fit: true
+
+ip_disclosure: {icanclean_patent: "WO 2022/061322", python_impl_authorization: pending, license_compatibility: pending}
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: pending}

@@ -1,0 +1,48 @@
+# Arm: ocular_erp_core — ocular artifact correction, EEG (ERP CORE N170). Skeleton (P0).
+# EOG-DSS is a single FROZEN definition (no per-subject drift, no alternative operator).
+arm: ocular_erp_core
+runner: ocular
+status: not_started
+
+dataset:
+  id: erp_core_n170
+  project_relative_path: osf/erp-core/n170
+  version: pending
+  subjects: pending
+  channel_types: [eeg]
+  eog_channels: {veog: pending, heog: pending}
+
+eog_dss:                        # frozen definition
+  bias: cycle_average
+  event_source: {blink: VEOG, saccade: HEOG}
+  blink_window_ms: pending
+  saccade_window_ms: pending
+  n_components: pending
+  component_selection: automatic_rule_pending
+  fit_split: train_blocks
+  evaluation_split: held_out_blocks
+
+methods_under_test: [eog_dss]
+comparators:
+  required: [none, eog_regression, ica_iclabel_rejection, ssp_eog]
+  ablations: [veog_only, heog_only, joint, one_vs_many_components, blink_free_vs_artifact_rich]
+sweep: {eog_dss: {param: n_components, grid: pending}}
+
+splits: {fit: train_blocks, selection: validation, evaluation: held_out_blocks}
+trial_handling: {match_trial_counts: true, report_native_and_matched: true}
+
+metrics:
+  primary_target: held_out_blink_locked_residual_amplitude   # measured on SCALP EEG frontal ROI, not the EOG channel
+  primary_preservation: N170_mean_amplitude_equivalence
+  attenuation_measurement: {space: scalp_eeg, roi: frontal, baseline: pending, statistic: mean, overlapping_blink_handling: pending, blink_and_saccade_separate: true}
+  secondary: [eog_coupling_residual, SME, trial_retention, rank_components, runtime]
+preservation_reference:
+  source: blink_free_held_out_trials
+  independent_from_method_fit: true
+equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+storage:
+  always_save: [metrics, model_json, qc_arrays, evoked_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: pending}

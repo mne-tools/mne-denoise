@@ -1,0 +1,47 @@
+# Arm: ground_truth_generic — nonlinear BSS on random known-mixing simulation. Skeleton (P0).
+arm: ground_truth_generic
+runner: ground_truth
+status: not_started
+
+simulation:
+  regime: generic_random_mixing
+  source: eegdenoisenet            # clean EEG + EOG/EMG artifact segments → X = A·S
+  project_relative_path: zenodo/eegdenoisenet
+  cases: [eog_only, emg_only, eog_plus_emg]
+  snr_levels_db: pending
+  channel_counts: pending
+  source_counts: pending
+  mixing: {same_A_within_replicate: true, independent_A_across_replicates: true, min_condition_number: pending}
+  n_replicates: pending
+  seeds: {global: 42}
+  split: by_source_recording_before_segmenting     # no same-recording window leakage
+  amplitude_normalization: preserve_ratios
+  injection_level: sensor_or_source_documented
+
+source_matching:                  # solved on TRAIN, applied to test
+  assignment: hungarian_on_train_similarity
+  sign_rule: pending
+  scale_rule: pending
+  uses: train_only
+  report: [unmatched, duplicated, collapsed]
+
+methods_under_test:
+  iterative_dss:
+    primary: {nonlinearity: tanh, orthogonalization: symmetric}
+    ablations: [{nonlinearity: kurtosis}, {nonlinearity: wiener_mask}, {orthogonalization: deflation}]
+    report: [convergence_rate, iterations, seed_variation, n_inits]
+comparators:
+  required: [pca, fastica, infomax, picard, oracle]   # oracle = A_brain·S_brain (upper bound, excluded from sig tests)
+  exploratory: [linear_dss_matched_bias]
+  optional: [amica]
+
+metrics:
+  primary_target: neural_source_rrmse
+  primary_preservation: permutation_aligned_clean_source_correlation
+  secondary: [sir, sdr, sar, amari, mixing_recovery, contamination_precision_recall, convergence, runtime]
+  gating: {amari: square_identifiable_mixing_only, sir_sdr_sar: known_matched_sources, rrmse_corr: known_clean}
+preservation_reference: {source: known_clean_neural_sources, independent_from_method_fit: true}
+
+unit_of_inference: nested_over_source_set_A_snr_artifact_seed   # mixed models; no window-level pseudoreplication
+storage:
+  always_save: [metrics, model_json, recovered_sources_summary]

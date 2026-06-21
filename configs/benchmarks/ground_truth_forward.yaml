@@ -1,0 +1,38 @@
+# Arm: ground_truth_forward — nonlinear BSS on a physiological EEG forward-model simulation. Skeleton (P0).
+# Source-recovery ground truth is EEG-only; MEG evidence is empirical + parity.
+arm: ground_truth_forward
+runner: ground_truth
+status: not_started
+
+simulation:
+  regime: forward_model
+  forward: {lead_field: pending, montage: pending, head_model: pending}
+  neural_sources: cortical_spatially_correlated
+  artifact_sources: {ocular: realistic_topography, muscle: realistic_topography}
+  optional_nonstationarity: [time_varying_mixing, convolutive]
+  snr_levels_db: pending
+  n_replicates: pending
+  seeds: {global: 42}
+  split: by_source_before_segmenting
+
+source_matching: {assignment: hungarian_on_train_similarity, uses: train_only, report: [unmatched, duplicated, collapsed]}
+
+methods_under_test:
+  iterative_dss:
+    primary: {nonlinearity: tanh, orthogonalization: symmetric}
+    ablations: [{nonlinearity: kurtosis}, {nonlinearity: wiener_mask}, {orthogonalization: deflation}]
+comparators:
+  required: [pca, fastica, infomax, picard, oracle]
+  exploratory: [linear_dss_matched_bias]
+  optional: [amica]
+
+metrics:
+  primary_target: sensor_source_reconstruction_error
+  primary_preservation: known_neural_signal_preservation
+  secondary: [rrmse, clean_source_correlation, sir, sdr, sar, amari, convergence, runtime]
+  gating: {amari: square_identifiable_mixing_only}
+preservation_reference: {source: known_clean_neural_sources, independent_from_method_fit: true}
+
+unit_of_inference: nested_over_source_set_A_snr_artifact_seed
+storage:
+  always_save: [metrics, model_json, recovered_sources_summary]

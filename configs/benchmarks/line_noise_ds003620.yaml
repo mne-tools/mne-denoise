@@ -1,0 +1,60 @@
+# Arm: line_ds003620 — real mobile EEG line noise (50 Hz). Skeleton (P0).
+arm: line_ds003620
+runner: line_noise
+status: not_started
+
+dataset:
+  id: ds003620
+  project_relative_path: openneuro/ds003620
+  version: pending
+  subjects: pending            # all available unless raw-QC excludes (blind to method)
+  excluded_subjects: []
+  channel_types: [eeg]
+  raw_or_processed: raw        # raw sample rate; do NOT use a 40-Hz-LP file
+  line_freq_hz: 50
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression, spectrum_interpolation]
+  optional: []
+
+sweep:
+  zapline: {param: n_remove, grid: pending}
+
+psd_spec:
+  estimator: welch
+  window: hann
+  nperseg: pending
+  noverlap: pending
+  resolution_hz: pending
+  center_bin_hz: pending
+  sideband_hz: pending
+  harmonics_hz: pending        # only < Nyquist
+  channel_aggregation: [geometric_mean, per_channel_distribution]
+
+guards:
+  no_lowpass_below_highest_harmonic: true
+  no_resample_before_line_eval: true
+  no_cleaner_before_branch: true
+  identical_input_across_methods: true
+
+splits: {selection: validation_subjects_or_runs, evaluation: held_out, note: "R(f0) primary only if not test-tuned"}
+
+metrics:
+  primary_target: held_out_R_f0
+  primary_preservation: sideband_continuity
+  secondary: [harmonic_attenuation_db, out_of_band_power, rank_change, n_components, overclean, underclean, runtime]
+preservation_reference:
+  source: sideband_continuity_and_task_response
+  construction: proxy (no clean ground truth on real data)
+  independent_from_method_fit: true
+equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-02]}

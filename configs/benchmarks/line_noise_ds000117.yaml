@@ -1,0 +1,57 @@
+# Arm: line_ds000117 — real LAB MEG line noise (50 Hz, UK). Skeleton (P0).
+# CRITICAL: use the RAW unprocessed FIF. Supplied MaxFilter/SSS files already had 50 Hz + harmonics + HPI
+# removed and are FORBIDDEN for the line-noise arm.
+arm: line_ds000117
+runner: line_noise
+status: not_started
+
+dataset:
+  id: ds000117
+  project_relative_path: openneuro/ds000117
+  version: pending
+  expected_subjects: 19         # 16 = published subset; use 19 unless raw-QC excludes
+  subjects: pending
+  excluded_subjects: []
+  channel_types: [mag, grad]    # denoise mag and grad SEPARATELY; EEG is a separate arm
+  raw_or_processed: raw
+  supplied_sss_file: forbidden  # already notch+harmonic+HPI removed
+  line_freq_hz: 50
+  harmonics_hz: [50, 100, 150, 200, 250]
+  hpi_exclusion: from_raw_metadata   # ~300 Hz; derive bands from sidecars, not hard-coded
+
+meg_line_noise:
+  cleaning_order: clean_raw_then_optional_sss   # PRIMARY: operate on raw (full rank), report rank
+  sss_applied: false                            # primary arm; sensitivity branch below
+  sensitivity_branch: {sss_applied: true, line_frequency_removal_in_sss: false}
+  rank_before: pending
+  rank_after: pending
+  sensor_types_fit_separately: true
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression, spectrum_interpolation]
+sweep: {zapline: {param: n_remove, grid: pending}}
+
+psd_spec:
+  estimator: welch
+  nperseg: pending
+  sideband_hz: pending
+  channel_aggregation: [per_sensor_type, per_channel_distribution]
+
+metrics:
+  primary_target: held_out_line_harmonic_residual
+  primary_preservation: m170_and_off_target_spectral_equivalence
+  secondary: [harmonic_attenuation_db, rank_change, runtime]
+preservation_reference:
+  source: held_out_low_artifact_trials
+  independent_from_method_fit: true
+equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: pending}

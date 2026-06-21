@@ -1,0 +1,54 @@
+# Arm: evoked_ds000117 — DSS evoked enhancement, MEG (ds000117 faces vs scrambled, M170). Skeleton (P0).
+arm: evoked_ds000117
+runner: evoked
+status: not_started
+
+dataset:
+  id: ds000117
+  project_relative_path: openneuro/ds000117
+  version: pending
+  expected_subjects: 19
+  subjects: pending
+  excluded_subjects: []
+  channel_types: [mag, grad]   # denoised SEPARATELY by sensor type; EEG is a separate simultaneous arm
+
+preprocessing:
+  input: sss_recomputed_without_notch     # evoked arm may use SSS; identical across methods
+  preprocessing_identical_across_methods: true
+  reference: na_meg
+  hp_hz: pending
+  lp_hz: pending
+  resample_hz: pending
+
+m170_outcome:                  # frozen so signed MEG fields are not cancelled by pooling
+  conditions: [faces, scrambled]
+  window_ms: pending           # predefined
+  baseline_ms: pending
+  roi_selection: literature_or_training_runs_only
+  magnetometers: {outcome: roi_mean_or_gfp}
+  planar_gradiometers: {combine_pairs: rms, outcome: roi_rms}
+  polarity_convention: pending
+  topographic_similarity: pending
+
+methods_under_test: [dss_average_bias]
+comparators:
+  required: [none, rank_matched_pca]
+  secondary: [ica_rank_matched]
+  null_condition: event_destroyed_dss
+sweep: {dss: {param: n_components, grid: pending}}
+
+splits: {fit: train_runs, selection: validation, evaluation: held_out_runs}
+
+metrics:
+  primary_target: held_out_face_minus_scrambled_M170_effect
+  primary_preservation: M170_amplitude_topography_equivalence
+  secondary: [SME, split_half_reliability, rank_change, runtime]
+preservation_reference:
+  source: held_out_low_artifact_trials_common_meg_preproc
+  independent_from_method_fit: true
+equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays, evoked_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: pending}

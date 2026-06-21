@@ -1,0 +1,50 @@
+# Arm: evoked_erp_core — DSS evoked enhancement, EEG (ERP CORE N170, faces vs cars). Skeleton (P0).
+arm: evoked_erp_core
+runner: evoked
+status: not_started
+
+dataset:
+  id: erp_core_n170
+  project_relative_path: osf/erp-core/n170
+  version: pending
+  subjects: pending            # 40 available; lock test set in DEVELOPMENT_AND_TEST_SETS.md
+  excluded_subjects: []
+  channel_types: [eeg]
+  eog_channels: pending
+
+generalization:                # ds003620 is OPTIONAL external generalization, not required for done
+  datasets: [ds003620]
+  required_for_track_done: false
+
+preprocessing:
+  reference: pending
+  hp_hz: pending
+  lp_hz: pending
+  resample_hz: pending
+  shared_line_noise_step: identical_across_methods_before_branch
+  roi_window_source: erp_core_resource    # adopt ROI + window from ERP CORE, not post-hoc
+
+methods_under_test: [dss_average_bias]
+comparators:
+  required: [none, rank_matched_pca]
+  secondary: [ica_rank_matched]
+  null_condition: event_destroyed_dss     # independent per-trial circular time-shift; stored as NULL, not a comparator
+sweep: {dss: {param: n_components, grid: pending}}
+
+splits: {fit: train_runs_or_trials, selection: validation, evaluation: held_out_trials}
+trial_handling: {match_trial_counts: true, report_native_and_matched: true}
+
+metrics:
+  primary_target: held_out_face_minus_car_N170_effect_size   # enhancement (independent of DSS objective)
+  primary_preservation: N170_mean_amplitude_topography_equivalence
+  secondary: [SME, split_half_reliability, latency, across_subject_variance, off_target_windows, rank_change]
+preservation_reference:
+  source: high_trial_count_low_contamination_held_out_ERP
+  independent_from_method_fit: true
+equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+storage:
+  always_save: [metrics, model_json, qc_arrays, evoked_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: pending}
