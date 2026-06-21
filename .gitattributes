@@ -1,0 +1,3 @@
+# Keep shell scripts LF so they run on the Linux cluster regardless of the OS
+# they were edited on (CRLF breaks bash on Compute Canada / Fir).
+*.sh text eol=lf

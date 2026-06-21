@@ -1,0 +1,23 @@
+# Extra runtime deps for the mne-denoise CPU benchmark on Fir (Compute Canada).
+#
+# The core scientific stack (numpy, scipy, matplotlib, pandas, scikit-learn) is
+# provided by the `scipy-stack/2024a` module and reused via
+# `python -m venv --system-site-packages`.  mne-denoise itself is installed
+# editable (`pip install --no-index -e .`), which pulls `mne` from the Alliance
+# wheelhouse.  ASR in this package is a NATIVE numpy/scipy implementation, so
+# `asrpy` is intentionally NOT a dependency.
+#
+# fir_env.sh installs these; this file documents the explicit extras and lets you
+# run `pip install -r scripts/cc/requirements_fir.txt` by hand if you prefer.
+
+# Dataset download (not in the Alliance wheelhouse — installs from PyPI)
+openneuro-py>=2024.2.0
+
+# Benchmark tables + plots (usually already in scipy-stack; listed for clarity)
+pandas>=1.5
+seaborn>=0.12
+
+# --- Optional: only needed for cross-method BASELINE comparisons, not for the ---
+# --- native mne_denoise.asr. Uncomment if a benchmark compares against them. ---
+# asrpy
+# mne-icalabel
