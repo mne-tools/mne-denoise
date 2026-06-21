@@ -60,6 +60,7 @@ sphinx_gallery_conf = {
         [
             "../examples/dss",
             "../examples/zapline",
+            "../examples/asr",
         ]
     ),
     "within_subsection_order": FileNameSortKey,

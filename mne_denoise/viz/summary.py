@@ -553,7 +553,7 @@ def plot_signal_diagnostics_summary(
     n_times = None
     for name in group_order:
         data_in = signals[name]
-        if isinstance(data_in, (mne.io.BaseRaw, mne.Evoked, mne.BaseEpochs)):
+        if isinstance(data_in, mne.io.BaseRaw | mne.Evoked | mne.BaseEpochs):
             arr = np.asarray(data_in.get_data(), dtype=float)
         else:
             arr = np.asarray(data_in, dtype=float)
@@ -1165,13 +1165,17 @@ def plot_endpoint_metrics_summary(
 
     bp = ax_c.boxplot(
         [metric[(groups == group) & np.isfinite(metric)] for group in group_order],
-        labels=[
+        patch_artist=True,
+    )
+    ax_c.set_xticks(range(1, len(group_order) + 1))
+    ax_c.set_xticklabels(
+        [
             group_labels[group]
             if group_labels is not None and group in group_labels
             else group
             for group in group_order
         ],
-        patch_artist=True,
+        fontsize=FONTS["tick"],
     )
     for patch, color in zip(bp["boxes"], bar_colors):
         patch.set_facecolor(color)

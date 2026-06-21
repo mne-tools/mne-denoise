@@ -18,6 +18,7 @@ from collections.abc import Callable
 
 import numpy as np
 
+from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne
 from .utils.whitening import whiten_data
 
@@ -731,7 +732,7 @@ class IterativeDSS:
         normalize_input: bool = True,
         max_iter: int = 100,
         tol: float = 1e-6,
-        verbose: bool = False,
+        verbose: bool | str | int | None = False,
         alpha: float | Callable | None = None,
         beta: float | Callable | None = None,
         gamma: float | Callable | None = None,
@@ -746,6 +747,7 @@ class IterativeDSS:
         self.max_iter = max_iter
         self.tol = tol
         self.verbose = verbose
+        set_log_level_from_verbose(self.verbose)
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
@@ -775,6 +777,7 @@ class IterativeDSS:
         self : IterativeDSS
             The fitted transformer.
         """
+        set_log_level_from_verbose(self.verbose)
         # Validate and extract data using shared helper
         data, _, mne_type, mne_info, picks, ch_names = extract_data_from_mne(X)
         self._mne_ch_names_ = ch_names
@@ -841,6 +844,7 @@ class IterativeDSS:
         sources : ndarray, shape (n_components, n_times) or (n_components, n_times, n_epochs)
             Extracted source time series.
         """
+        set_log_level_from_verbose(self.verbose)
         if self.filters_ is None:
             raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
 
@@ -895,6 +899,7 @@ class IterativeDSS:
         reconstructed : ndarray, shape (n_channels, n_times)
             Reconstructed data: ``patterns_[:, :n_sources] @ sources``.
         """
+        set_log_level_from_verbose(self.verbose)
         if self.patterns_ is None:
             raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
 

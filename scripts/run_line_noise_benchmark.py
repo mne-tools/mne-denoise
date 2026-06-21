@@ -445,7 +445,7 @@ def save_outputs(
     raw_after.save(out_dir / "cleaned_raw.fif", overwrite=True, verbose=False)
 
     # 2. Metrics TSV (whole-recording)
-    flat = {k: v for k, v in metrics_dict.items() if not isinstance(v, (list, dict))}
+    flat = {k: v for k, v in metrics_dict.items() if not isinstance(v, list | dict)}
     df = pd.DataFrame([flat])
     df.insert(0, "subject", sub)
     df.insert(1, "method", method_tag)
@@ -456,7 +456,7 @@ def save_outputs(
         cond_rows = []
         for cond, cmetrics in condition_metrics.items():
             cflat = {
-                k: v for k, v in cmetrics.items() if not isinstance(v, (list, dict))
+                k: v for k, v in cmetrics.items() if not isinstance(v, list | dict)
             }
             cflat["subject"] = sub
             cflat["method"] = method_tag
@@ -609,7 +609,7 @@ def process_subject(sub, ds_path=None, deriv_root=None):
                     {
                         k: v
                         for k, v in cmetrics.items()
-                        if not isinstance(v, (list, dict))
+                        if not isinstance(v, list | dict)
                     }
                 )
                 results.append(crow)
@@ -635,7 +635,7 @@ def process_subject(sub, ds_path=None, deriv_root=None):
             # Whole-recording row
             row = {"subject": sub, "method": method_tag, "condition": "all"}
             row.update(
-                {k: v for k, v in metrics.items() if not isinstance(v, (list, dict))}
+                {k: v for k, v in metrics.items() if not isinstance(v, list | dict)}
             )
             results.append(row)
 

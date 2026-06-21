@@ -34,7 +34,7 @@ from .theme import (
 
 def _as_signal_array(inst):
     """Return signal data as a float array with shape (C, T) or (E, C, T)."""
-    if isinstance(inst, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)):
+    if isinstance(inst, mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked):
         data = np.asarray(inst.get_data(), dtype=float)
     else:
         data = np.asarray(inst, dtype=float)
@@ -72,7 +72,7 @@ def _variance_per_channel(data):
 
 def _as_channel_variance(inst_or_var):
     """Return a per-channel variance vector."""
-    if isinstance(inst_or_var, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)):
+    if isinstance(inst_or_var, mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked):
         return _variance_per_channel(_as_signal_array(inst_or_var))
 
     arr = np.asarray(inst_or_var, dtype=float)
@@ -87,7 +87,7 @@ def _as_channel_variance(inst_or_var):
 
 def _extract_overlay_trace(inst, pick):
     """Extract a single trace for overlay plotting from 2D/3D inputs."""
-    if isinstance(inst, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)):
+    if isinstance(inst, mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked):
         data = _as_signal_array(inst)
     else:
         data = np.asarray(inst, dtype=float)
@@ -506,6 +506,11 @@ def plot_signal_overlay(
     x_label="Time",
     y_label="Amplitude",
     title=None,
+    reference=None,
+    reference_label="Reference",
+    highlight_mask=None,
+    highlight_label="Artifact",
+    highlight_spans=None,
     show=True,
     fname=None,
 ):
@@ -536,6 +541,23 @@ def plot_signal_overlay(
         Y-axis label.
     title : str | None
         Optional custom title.
+    reference : array-like of shape (n_times,) | None
+        Optional ground-truth/reference trace overlaid on the same axis (e.g.
+        the clean signal in a simulation). Aligned to the same length and time
+        window as the before/after traces.
+    reference_label : str
+        Legend label for the reference trace.
+    highlight_mask : array-like of bool of shape (n_times,) | None
+        Optional boolean mask; samples where True are shaded with
+        ``fill_between`` to mark artifact regions.
+    highlight_label : str
+        Legend label for the ``highlight_mask`` shading.
+    highlight_spans : sequence[mapping] | None
+        Optional list of spans to shade with ``axvspan``. Each item is a mapping
+        with ``onset`` and ``duration`` (in the same units as ``times``) and
+        optional ``color``, ``alpha``, and ``label`` keys. Only the first span of
+        each distinct label receives a legend entry. Useful for annotation-based
+        repair/rejection spans.
     show : bool
         If True, display the figure.
     fname : path-like | None
@@ -610,6 +632,39 @@ def plot_signal_overlay(
         alpha=0.85,
         linewidth=1.2,
     )
+    if reference is not None:
+        ref_trace = np.asarray(reference, dtype=float).ravel()[:n_samples][mask]
+        ax.plot(
+            time_axis,
+            ref_trace,
+            color="C2",
+            label=reference_label,
+            alpha=0.8,
+            linewidth=1.0,
+        )
+    if highlight_mask is not None:
+        flagged = np.asarray(highlight_mask, dtype=bool).ravel()[:n_samples][mask]
+        ax.fill_between(
+            time_axis,
+            *ax.get_ylim(),
+            where=flagged,
+            color="C3",
+            alpha=0.12,
+            label=highlight_label,
+        )
+    if highlight_spans:
+        seen_labels = set()
+        for span in highlight_spans:
+            label = span.get("label")
+            legend_label = label if label not in seen_labels else None
+            seen_labels.add(label)
+            ax.axvspan(
+                span["onset"],
+                span["onset"] + span.get("duration", 0.0),
+                color=span.get("color", "C3"),
+                alpha=span.get("alpha", 0.12),
+                label=legend_label,
+            )
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title or "Signal Overlay Comparison")

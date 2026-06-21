@@ -54,7 +54,7 @@ jobs:
         run: pytest --cov=mne_denoise --cov-report=xml -v
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
@@ -76,8 +76,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .[docs]
-          # TODO: remove once MNE releases the somato tarfile fix
-          pip install git+https://github.com/mne-tools/mne-python@main
       - name: Build documentation
         run: make -C docs html SPHINXOPTS="-W --keep-going"
       - name: Add .nojekyll to the build

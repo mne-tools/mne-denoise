@@ -41,6 +41,8 @@ import warnings
 
 import numpy as np
 
+from .._logging import set_log_level_from_verbose
+
 # Inherit from DSS
 from ..dss.denoisers.spectral import LineNoiseBias
 from ..dss.denoisers.temporal import SmoothingBias
@@ -205,6 +207,7 @@ class ZapLine(DSS):
         knee_min_ratio: float = 3.0,
         adaptive: bool = False,
         adaptive_params: dict | None = None,
+        verbose: bool | str | int | None = None,
     ):
         self.sfreq = float(sfreq)
         self.line_freq = float(line_freq) if line_freq is not None else None
@@ -217,6 +220,8 @@ class ZapLine(DSS):
         self.knee_min_ratio = knee_min_ratio
         self.adaptive = adaptive
         self.adaptive_params = adaptive_params if adaptive_params is not None else {}
+        self.verbose = verbose
+        set_log_level_from_verbose(self.verbose)
 
         # Initialize DSS Bias immediately if line_freq is known and valid
         if self.line_freq is not None and self.line_freq > 0:
@@ -235,7 +240,12 @@ class ZapLine(DSS):
 
         # Initialize DSS parent with our bias
         super().__init__(
-            bias=self.bias, n_components=None, rank=rank, reg=reg, normalize_input=False
+            bias=self.bias,
+            n_components=None,
+            rank=rank,
+            reg=reg,
+            normalize_input=False,
+            verbose=self.verbose,
         )
 
         self.n_removed_ = None
@@ -279,6 +289,7 @@ class ZapLine(DSS):
         transform : Apply the fitted filters to remove noise.
         fit_transform : Fit and transform in one step.
         """
+        set_log_level_from_verbose(self.verbose)
         if self.adaptive:
             raise RuntimeError(
                 "Adaptive mode requires simultaneous fit and transform (local chunks). "
@@ -341,6 +352,7 @@ class ZapLine(DSS):
         fit : Fit the spatial filters.
         fit_transform : Fit and transform in one step.
         """
+        set_log_level_from_verbose(self.verbose)
         if self.adaptive:
             raise RuntimeError(
                 "Adaptive mode requires simultaneous fit and transform (local chunks). "
@@ -410,6 +422,7 @@ class ZapLine(DSS):
         - ``line_freq``: Detected line frequency
         - ``chunk_info``: List of per-chunk processing information
         """
+        set_log_level_from_verbose(self.verbose)
         data, extracted_sfreq, mne_type, orig_inst, picks, ch_names = (
             extract_data_from_mne(X)
         )

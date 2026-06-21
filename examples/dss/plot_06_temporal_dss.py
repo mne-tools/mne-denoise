@@ -320,8 +320,14 @@ from mne.datasets import eegbci
 
 subject = 1
 runs = [1]  # Baseline, eyes open
-eegbci.load_data(subject, runs, update_path=True)
-raw_path = eegbci.load_data(subject, runs)[0]
+try:
+    eegbci.load_data(subject, runs, update_path=True)
+    raw_path = eegbci.load_data(subject, runs)[0]
+except Exception as e:
+    import sys
+
+    print(f"Skipping EEGBCI example due to network error: {e}")
+    sys.exit(0)
 
 raw_eeg = mne.io.read_raw_edf(raw_path, preload=True, verbose=False)
 

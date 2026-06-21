@@ -618,3 +618,37 @@ def compute_all_qa_metrics(
         "per_harmonic_attenuation_db": per_h_atten,
         "per_harmonic_R": per_h_r,
     }
+
+
+def rms_change(data_before: np.ndarray, data_after: np.ndarray) -> float:
+    """Root mean square (RMS) of the difference between before and after signals.
+
+    Parameters
+    ----------
+    data_before : ndarray
+        Data before denoising.
+    data_after : ndarray
+        Data after denoising.
+
+    Returns
+    -------
+    rms : float
+        RMS of the difference (data_before - data_after).
+    """
+    delta = data_before - data_after
+    return float(np.sqrt(np.mean(delta**2)))
+
+
+def max_abs_change(data_before: np.ndarray, data_after: np.ndarray) -> float:
+    """Maximum absolute change between before and after signals."""
+    return float(np.max(np.abs(data_before - data_after)))
+
+
+def channel_variance_ratio(
+    data_before: np.ndarray, data_after: np.ndarray
+) -> np.ndarray:
+    """Per-channel variance ratio: var(after) / var(before)."""
+    axis = (0, 2) if data_before.ndim == 3 else 1
+    var_before = np.var(data_before, axis=axis)
+    var_after = np.var(data_after, axis=axis)
+    return var_after / np.maximum(var_before, np.finfo(float).eps)

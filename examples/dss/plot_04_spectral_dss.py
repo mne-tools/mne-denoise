@@ -394,8 +394,16 @@ from mne.io import read_raw_edf
 # Load resting-state data (eyes closed = run 1)
 # Subject 1, Run 1 (eyes closed 1 minute)
 print("Loading EEGBCI resting-state data (eyes closed)...")
+try:
+    data_path = eegbci.load_data(subjects=[1], runs=[1], update_path=True)[0]
+except Exception as e:
+    import sys
+
+    print(f"Skipping EEGBCI example due to network error: {e}")
+    sys.exit(0)
+
 raw_eeg = read_raw_edf(
-    eegbci.load_data(subjects=[1], runs=[1], update_path=True)[0],
+    data_path,
     preload=True,
     verbose=False,
 )

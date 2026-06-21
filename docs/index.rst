@@ -12,6 +12,7 @@ to extract reproducible or rhythmic components while preserving data rank.
 
    getting-started
    dss
+   asr
    auto_examples/index
 
 .. toctree::

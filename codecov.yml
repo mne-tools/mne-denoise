@@ -6,7 +6,12 @@ coverage:
         threshold: 1% # Allow 1% drop
     patch:
       default:
-        target: auto # Diff must be covered at least as well as the project
+        # New code should be well covered, but need not exactly match the
+        # mature package's per-line coverage (defensive guards, plotting
+        # branches, and deep numerical fallbacks). 85% is a solid bar, well
+        # above Codecov's 70% default.
+        target: 85%
+        threshold: 2%
 
 comment:
   layout: "reach, diff, flags, files"

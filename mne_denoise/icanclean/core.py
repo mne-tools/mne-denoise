@@ -59,6 +59,7 @@ from joblib import Parallel, delayed
 from scipy import linalg as la
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from ._cca import canonical_correlation
 
@@ -624,7 +625,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         global_threshold: float | str | None = None,
         global_clean_with: str | None = None,
         global_max_reject_fraction: float | None = None,
-        verbose: bool = True,
+        verbose: bool | str | int | None = None,
     ):
         if ref_channels is None:
             raise ValueError("ref_channels must be provided explicitly")
@@ -659,6 +660,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         self.global_clean_with = global_clean_with
         self.global_max_reject_fraction = global_max_reject_fraction
         self.verbose = verbose
+        set_log_level_from_verbose(self.verbose)
 
     def fit(self, X: Any, y=None) -> ICanClean:
         """Fit is a no-op; included for sklearn compatibility.
@@ -678,6 +680,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         -------
         self : ICanClean
         """
+        set_log_level_from_verbose(self.verbose)
         return self
 
     def transform(self, X: Any, y=None) -> Any:
@@ -701,6 +704,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         X_clean : Raw | Epochs | ndarray
             Cleaned data in the same format as the input.
         """
+        set_log_level_from_verbose(self.verbose)
         self._reset_qc_attrs()
 
         data, sfreq_data, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(

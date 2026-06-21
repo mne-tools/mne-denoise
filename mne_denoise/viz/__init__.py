@@ -1,5 +1,10 @@
 """Visualization functions for MNE-Denoise."""
 
+from .asr import (
+    plot_asr_calibration_fraction,
+    plot_asr_component_reconstruction,
+    plot_asr_repair_timeline,
+)
 from .components import (
     plot_component_epochs_image,
     plot_component_patterns,
@@ -66,6 +71,10 @@ from .theme import (
 )
 
 __all__ = [
+    # ASR-specific diagnostics (generic plots live in the modules above)
+    "plot_asr_repair_timeline",
+    "plot_asr_calibration_fraction",
+    "plot_asr_component_reconstruction",
     # Theme
     "COLORS",
     "FONTS",

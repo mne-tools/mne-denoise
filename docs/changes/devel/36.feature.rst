@@ -1,0 +1,15 @@
+Added the ``mne_denoise.asr`` module for Artifact Subspace Reconstruction. It
+provides a standard ASR estimator with array-level calibration/processing
+helpers, clean_rawdata-compatible clean-RMS distribution fitting, ASR-specific
+QA metrics and diagnostics, and MATLAB-backed parity fixtures. The module also
+exposes MATLAB-reference-backed ``AdaptiveASR`` (``psp`` / ``psw`` / ``mw``)
+variants with a scikit-learn-style ``fit`` / ``partial_fit`` / ``transform``
+API, and source-backed ``JugglerASR`` calibration variants implementing the
+sample-wise ASRDBSCAN and ASRGEV reference-selection procedures from Kim et al.
+(2025), plus the ``mne_denoise.asr.select_juggler_reference_samples`` helper,
+tests, docs, and synthetic gallery examples. Validation tooling under
+``scripts/`` injects known burst artifacts on real EEG and reproduces headline
+figures from Chang et al. (2020), Blum et al. (2019), and Kim et al. (2025). Calibration and
+standard/adaptive processing honor an optional ``max_mem_mb`` budget through
+memory-bounded covariance aggregation, preserving the full-memory path for
+small datasets.

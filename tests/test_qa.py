@@ -8,11 +8,14 @@ import pytest
 import mne_denoise.qa as qa
 from mne_denoise.qa import (
     below_noise_distortion_db,
+    channel_variance_ratio,
     compute_all_qa_metrics,
     geometric_mean_psd_ratio,
+    max_abs_change,
     noise_surround_ratio,
     overclean_proportion,
     peak_attenuation_db,
+    rms_change,
     spectral_distortion,
     suppression_ratio,
     underclean_proportion,
@@ -32,7 +35,7 @@ def test_peak_attenuation_1d_basic():
     psd_before[mask] = 1.0
     psd_after[mask] = 0.5
     result = peak_attenuation_db(freqs, psd_before, psd_after, 50.0)
-    assert isinstance(result, (float, np.floating))
+    assert isinstance(result, float | np.floating)
     expected = 10 * np.log10(1.0 / 0.5)
     np.testing.assert_allclose(result, expected, atol=0.01)
 
@@ -186,3 +189,99 @@ def test_variance_removed_zero_variance_before():
 def test_reexport_matches():
     """Ensure direct import matches the module attribute."""
     assert peak_attenuation_db is qa.peak_attenuation_db
+
+
+def test_rms_change_basic():
+    x = np.array([1.0, 2.0, 3.0])
+    y = np.array([1.0, 2.0, 4.0])
+    # Delta is [0, 0, -1] -> delta^2 = [0, 0, 1] -> mean = 1/3 -> sqrt(1/3)
+    assert np.isclose(rms_change(x, y), np.sqrt(1 / 3))
+
+
+def test_max_abs_change_basic():
+    x = np.array([1.0, 2.0, 5.0])
+    y = np.array([2.0, 2.0, 2.0])
+    # max diff is abs(5.0 - 2.0) = 3.0
+    assert max_abs_change(x, y) == 3.0
+
+
+def test_channel_variance_ratio_basic():
+    x = np.array([[1.0, -1.0, 1.0, -1.0], [2.0, -2.0, 2.0, -2.0]])
+    y = np.array([[0.5, -0.5, 0.5, -0.5], [0.0, 0.0, 0.0, 0.0]])
+    # Var before: [1.0, 4.0]
+    # Var after: [0.25, 0.0]
+    # Ratio: [0.25, 0.0]
+    ratio = channel_variance_ratio(x, y)
+    np.testing.assert_allclose(ratio, [0.25, 0.0])
+
+
+def test_channel_variance_ratio_3d():
+    x = np.array([[[1.0, -1.0], [1.0, -1.0]], [[2.0, -2.0], [2.0, -2.0]]])
+    y = np.array([[[0.5, -0.5], [0.5, -0.5]], [[0.0, 0.0], [0.0, 0.0]]])
+    # x channel 0: [1, -1, 2, -2], mean=0, var=2.5
+    # y channel 0: [0.5, -0.5, 0, 0], mean=0, var=0.125
+    # ratio = 0.125 / 2.5 = 0.05
+    ratio = channel_variance_ratio(x, y)
+    np.testing.assert_allclose(ratio, [0.05, 0.05])
+
+
+def test_noise_surround_ratio_1d():
+    freqs = np.arange(0, 100, 0.5)
+    psd = np.ones(len(freqs))
+    result = noise_surround_ratio(freqs, psd, 50.0)
+    np.testing.assert_allclose(result, 1.0, atol=0.01)
+
+
+def test_below_noise_distortion_db_1d():
+    freqs = np.arange(0, 100, 0.5)
+    psd = np.ones(len(freqs))
+    result = below_noise_distortion_db(freqs, psd, psd)
+    np.testing.assert_allclose(result, 0.0, atol=1e-10)
+
+
+def test_below_noise_distortion_db_no_mask():
+    freqs = np.arange(0, 0.5, 0.1)
+    psd = np.ones(len(freqs))
+    assert below_noise_distortion_db(freqs, psd, psd, fmin=1.0, fmax=45.0) == 0.0
+    psd2d = np.ones((2, len(freqs)))
+    np.testing.assert_allclose(
+        below_noise_distortion_db(freqs, psd2d, psd2d, fmin=1.0, fmax=45.0), np.zeros(2)
+    )
+
+
+def test_overclean_proportion_1d():
+    freqs = np.arange(0, 100, 0.5)
+    psd = np.ones(len(freqs))
+    result = overclean_proportion(freqs, psd, psd, 50.0)
+    assert result == pytest.approx(0.0)
+
+
+def test_overclean_proportion_no_mask():
+    freqs = np.arange(0, 0.5, 0.1)
+    psd = np.ones(len(freqs))
+    result = overclean_proportion(freqs, psd, psd, 50.0)
+    assert result == 0.0
+
+
+def test_underclean_proportion_1d():
+    freqs = np.arange(0, 100, 0.5)
+    psd = np.ones(len(freqs))
+    result = underclean_proportion(freqs, psd, 50.0)
+    assert result == pytest.approx(0.0)
+
+
+def test_geometric_mean_psd_ratio_1d():
+    freqs = np.arange(0, 100, 0.5)
+    psd = np.ones(len(freqs))
+    result = geometric_mean_psd_ratio(freqs, psd, psd)
+    np.testing.assert_allclose(result, 1.0, atol=1e-6)
+
+
+def test_geometric_mean_psd_ratio_no_mask():
+    freqs = np.arange(0, 0.5, 0.1)
+    psd = np.ones(len(freqs))
+    assert geometric_mean_psd_ratio(freqs, psd, psd, fmin=1.0, fmax=45.0) == 1.0
+    psd2d = np.ones((2, len(freqs)))
+    np.testing.assert_allclose(
+        geometric_mean_psd_ratio(freqs, psd2d, psd2d, fmin=1.0, fmax=45.0), np.ones(2)
+    )

@@ -644,9 +644,13 @@ def test_adaptive_qa_branches():
         # Scenario 3: Hybrid fallback
         # Always "weak", should trigger hybrid fallback
         with (
-            patch("mne_denoise.zapline.core.check_spectral_qa", return_value="weak"),
             patch(
-                "mne_denoise.zapline.core.apply_hybrid_cleanup", return_value=chunk
+                "mne_denoise.zapline.core.check_spectral_qa",
+                return_value="weak",
+            ),
+            patch(
+                "mne_denoise.zapline.core.apply_hybrid_cleanup",
+                return_value=chunk,
             ) as mock_hybrid,
         ):
             zap._process_chunk(

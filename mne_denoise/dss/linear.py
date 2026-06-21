@@ -30,6 +30,7 @@ try:
 except ImportError:
     mne = None
 
+from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from .denoisers import LinearDenoiser
 from .utils import compute_covariance
@@ -319,6 +320,7 @@ class DSS(BaseEstimator, TransformerMixin):
         cov_method: str = "empirical",
         cov_kws: dict | None = None,
         return_type: str = "sources",
+        verbose: bool | str | int | None = None,
     ) -> None:
         self.n_components = n_components
         self.bias = bias
@@ -328,6 +330,8 @@ class DSS(BaseEstimator, TransformerMixin):
         self.cov_method = cov_method
         self.cov_kws = cov_kws
         self.return_type = return_type
+        self.verbose = verbose
+        set_log_level_from_verbose(self.verbose)
 
         # Fitted attributes
         self.filters_: np.ndarray | None = None
@@ -366,6 +370,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self : DSS
             The fitted transformer.
         """
+        set_log_level_from_verbose(self.verbose)
         if self.normalize_input:
             X_norm = self._normalize(X, fit=True)
         else:
@@ -585,6 +590,7 @@ class DSS(BaseEstimator, TransformerMixin):
             If return_type='raw'/'epochs'/'evoked', returns the reconstructed data (denoised)
             projected back to sensor space (keeping n_components).
         """
+        set_log_level_from_verbose(self.verbose)
         if self.filters_ is None:
             raise RuntimeError("DSS not fitted. Call fit() first.")
 
