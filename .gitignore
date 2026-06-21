@@ -14,6 +14,12 @@ coverage.xml
 .idea/
 .vscode/
 .venv*/
+denoise_env/
+
+# Temp/scratch files
+nul
+tmpclaude-*
+*.tmp
 
 # External reference directories (not part of package)
 matlab_repos/
@@ -41,6 +47,9 @@ htmlcov/
 /outputs/
 /scratch/
 
+# Downloaded datasets (large EEG files)
+examples/tutorials/data/runabout/
+
 # Local datasets / heavy artifacts (do not commit)
 examples/tutorials/data/
 examples/tutorials/mne_denoise.pdf
@@ -53,3 +62,4 @@ condescending-liskov/data/
 cov_report.txt
 *.eeg
 *.mat
+
