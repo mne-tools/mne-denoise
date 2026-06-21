@@ -10,8 +10,8 @@ conditions met; see [PUBLICATION_GATE](PUBLICATION_GATE.md)).
 ## Phase status
 | Phase | State | Notes |
 |---|---|---|
-| P0 docs + config skeletons | in_progress | this commit |
-| P1 foundation (contracts, metrics, simulation, parity, tests) | not_started | |
+| P0 docs + config skeletons | done | commit 531a758 |
+| P1 foundation (contracts, metrics, simulation, parity, tests) | done | comparators/config/parity/simulation + 5 qa modules; 60 unit tests passing |
 | P2 dataset registry + staging + downloaders | not_started | ds004505 feasibility pending |
 | P3 per-arm configs + 5 runners + sweep machinery | not_started | |
 | P4 Fir pilots | not_started | gated on per-track launch gates |
