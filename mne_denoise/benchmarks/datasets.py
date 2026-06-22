@@ -159,16 +159,16 @@ REGISTRY: dict[str, DatasetSpec] = {
         notes="BETA SSVEP (external replication). THU portal upload/liubingchuan_eld_BETA_database "
               "(S1-S10..S61-S70.tar.gz + Description); no DOI/version -> SHA256SUMS manifest"),
     "eegeyenet": DatasetSpec(
-        dataset_id="eegeyenet", repository="osf", project_relative_path="osf/eegeyenet",
-        download_source="confirm:osf-addon-broken", access="confirm", expected_subjects=356,
-        license="verify_osf_metadata",
-        notes="EEG + eye-tracking (external/SECONDARY ocular; ERP CORE is the primary). OSF ktv7m: real data is on a "
-              "GOOGLEDRIVE addon (EEGEyeNet-Data/<task>/synchronised_{min,max}/). The OSF<->googledrive AND dropbox "
-              "addon connections are BROKEN: api.osf.io + waterbutler (files.osf.io) list the folder hierarchy from "
-              "cache but every LEAF folder returns 0 entries -> file manifest cannot be completed. NOT auto-stageable "
-              "(OSF-side, not a downloader bug). download_osf.py (waterbutler recursive + manifest + retry) is ready "
-              "for when OSF's addon is fixed or for direct file links. Don't use ardkastrati/EEGEyeNet-DataAcquisition "
-              "(MATLAB task code, not data). DEFERRED."),
+        dataset_id="eegeyenet", repository="openneuro", project_relative_path="openneuro/ds007338",
+        download_source="openneuro-py:ds007338", access="confirm", expected_subjects=356, license="CC0",
+        doi="10.17605/OSF.IO/KTV7M",
+        notes="EEG+eye-tracking (external/SECONDARY ocular; ERP CORE primary). CORRECT durable home = OpenNeuro "
+              "ds007338 (mirror NEMAR ds005872), CC0, BIDS raw 128ch@500Hz. As of 2026-06 only a 1-SUBJECT STUB "
+              "(sub-EP10) is uploaded -> the 356 count fails validation until the full upload lands; RE-CHECK "
+              "ds007338 then flip access=open (one-line, auto via openneuro-py). OSF ktv7m addon (dropbox+googledrive) "
+              "is DEAD: listings empty AND file GUIDs 404 (the published osf.io/download/ge87t link is stale). "
+              "Else email authors (Kastrati/Plomecka, ETH; CC0 so they can share freely). Do NOT use "
+              "ardkastrati/EEGEyeNet-DataAcquisition (MATLAB task code, not data)."),
     "brain_invaders_2012": DatasetSpec(
         dataset_id="brain_invaders_2012", repository="zenodo", project_relative_path="zenodo/brain-invaders-2012",
         download_source="zenodo:2649006", access="open", expected_subjects=25,
