@@ -62,10 +62,10 @@ if [ ! -d "${MNE_DENOISE_VENV}" ]; then
     python -m pip install --no-index -e "${MNE_DENOISE_REPO}[test]" \
         || python -m pip install --no-index -e "${MNE_DENOISE_REPO}"
 
-    # Extra runtime deps for the benchmark scripts.  openneuro-py is not in the
-    # Alliance wheelhouse → fall back to PyPI (small, pure-python).
-    python -m pip install --no-index pandas seaborn openneuro-py 2>/dev/null \
-        || python -m pip install openneuro-py
+    # Extra deps — all confirmed in the Alliance wheelhouse (2026-06-21), so the
+    # whole env builds offline (compute nodes have no internet). openneuro-py is
+    # only used on login nodes (downloads); pooch for OSF/Zenodo fetchers.
+    python -m pip install --no-index pandas seaborn pytest openneuro-py pooch
 else
     echo "--- Activating existing virtualenv ---"
     # shellcheck disable=SC1091
