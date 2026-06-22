@@ -183,9 +183,13 @@ REGISTRY: dict[str, DatasetSpec] = {
               "(already EOG-removed / line-cleaned / bad-chan-interpolated / rereferenced)"),
     "wearbci": DatasetSpec(
         dataset_id="wearbci", repository="onedrive", project_relative_path="mobile/wearbci",
-        download_source="confirm:onedrive", access="confirm", expected_subjects=36, license="unknown",
-        notes="EEG+IMU+video (HKUST-MINSys-Lab/WearBCI-Dataset). BLOCKED: no dataset license, OneDrive "
-              "is not a durable versioned archive — awaiting author license clarification"),
+        download_source="manual:onedrive", access="confirm", expected_subjects=36, license="unknown",
+        doi="10.1145/3774906.3802782",
+        notes="EEG(16.4h)+IMU(9.2h)+video(0.9h), walking/navigation. github.com/HKUST-MINSys-Lab/WearBCI-Dataset. "
+              "BLOCKED x2: (1) NO license stated (repo has no LICENSE; nothing in README) -> not publishable "
+              "without author permission; (2) OneDrive folder share needs interactive redeem (shares API 401; "
+              "1drv.ms -> web UI, no direct URL) -> cannot stage headless on Fir. MANUAL PATH: browser-download "
+              "locally, then rsync to /project/rrg-kjerbi/datasets/mobile/wearbci, then `stage_dataset.py wearbci`"),
     "japanese_eeg_emg": DatasetSpec(
         dataset_id="japanese_eeg_emg", repository="openneuro", project_relative_path="openneuro/ds007808",
         download_source="openneuro-py:ds007808", access="open", expected_subjects=3, license="CC0",

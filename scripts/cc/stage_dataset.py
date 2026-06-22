@@ -96,6 +96,11 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         db = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),
                         "--dest", str(root), "--db", db], check=True)
+    elif src.startswith("manual:"):
+        raise RuntimeError(
+            f"{spec.dataset_id}: no headless download ({src}). Stage MANUALLY: place the data at "
+            f"{root}, then re-run this command to validate + sentinel it. See the registry note."
+        )
     elif src.startswith(("confirm:", "registration:", "portal:")):
         raise RuntimeError(
             f"{spec.dataset_id}: access='{spec.access}' is not automated ({src}). "
