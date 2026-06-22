@@ -15,12 +15,15 @@
 # ==============================================================================
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-cd "${REPO_ROOT}"
+# In an sbatch job BASH_SOURCE is Slurm's spooled copy, not the repo — use SLURM_SUBMIT_DIR.
+REPO_ROOT="${SLURM_SUBMIT_DIR:-$PWD}"
+cd "${REPO_ROOT}" || { echo "cannot cd to ${REPO_ROOT}"; exit 1; }
+echo "repo: ${REPO_ROOT}  host: $(hostname)"
 
 echo "=== [1/4] build + activate env (offline wheelhouse) ==="
-source scripts/cc/fir_env.sh
+source scripts/cc/fir_env.sh || { echo "ERROR: fir_env.sh failed"; exit 1; }
+python -c "import mne_denoise, mne" || { echo "ERROR: env unusable (mne/mne_denoise import failed)"; exit 1; }
+set -e   # from here, any step failure fails the job (so sacct reflects reality)
 
 echo "=== [2/4] import smoke ==="
 python - <<'PY'
