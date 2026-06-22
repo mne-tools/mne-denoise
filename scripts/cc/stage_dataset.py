@@ -62,11 +62,13 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
               + (f"(subjects: {subjects})" if subjects else "(ALL subjects)"), flush=True)
         openneuro.download(**kw)
     elif src.startswith("osf:"):
+        node = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_erp_core.py"),
-                        "--dest", str(root)], check=True)
-    elif src.startswith("pooch:"):
+                        "--dest", str(root), "--osf-node", node], check=True)
+    elif src.startswith("gin:"):
+        repo = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_eegdenoisenet.py"),
-                        "--dest", str(root)], check=True)
+                        "--dest", str(root), "--repo", repo], check=True)
     else:
         raise ValueError(f"no downloader for source {src!r}")
 

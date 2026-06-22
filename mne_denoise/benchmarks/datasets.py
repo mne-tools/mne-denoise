@@ -82,8 +82,10 @@ REGISTRY: dict[str, DatasetSpec] = {
     ),
     "erp_core_n170": DatasetSpec(
         dataset_id="erp_core_n170", repository="osf",
-        project_relative_path="osf/erp-core/n170",
-        download_source="osf:thsqg",   # ERP CORE OSF project (all 7 paradigms incl. N170; large)
+        # Full ERP CORE project (all 7 paradigms incl. N170); the N170 runner reads
+        # its paradigm subdir within this tree.
+        project_relative_path="osf/erp-core",
+        download_source="osf:thsqg",   # ERP CORE OSF project node (osfclient clone)
         doi="10.18115/D5JW4R", license="CC-BY-SA 4.0",
         citation="Kappenman et al. 2021 (ERP CORE)",
         expected_subjects=40, expected_channels={"eeg": 30, "eog": 3}, expected_sfreq=1024.0,
@@ -171,13 +173,14 @@ def validate_dataset(root, dataset_id: str, *, deep: bool = False) -> list[str]:
                 issues.append(
                     f"subject count {n} != expected {spec.expected_subjects}"
                 )
-    elif spec.repository in ("osf",):
-        if spec.expected_subjects is not None:
-            n = sum(1 for p in root.glob("sub-*") if p.is_dir())
-            if n == 0:
-                issues.append("no sub-* directories found")
+    else:
+        # osf (full OSF project) / gin (git-annex) / zenodo: custom layouts —
+        # just confirm the download produced content (no BIDS subject convention).
+        if not any(root.iterdir()):
+            issues.append("directory is empty (download produced nothing)")
 
-    if deep:
+    # deep (read a recording, check sfreq/channels) only applies to BIDS/openneuro.
+    if deep and spec.repository == "openneuro":
         issues.extend(_deep_validate(root, spec))
     return issues
 
