@@ -9,8 +9,10 @@
 # Each dataset is downloaded (openneuro-py) to its resolved scratch root, then
 # validated, then a sentinel is written (see scripts/cc/stage_dataset.py).
 set -o pipefail
+# Stage datasets under the shared /project root (firm user preference), overridable.
+export DATASETS_ROOT="${DATASETS_ROOT:-/project/rrg-kjerbi/datasets}"
 cd "$(dirname "$0")/../.." || { echo "cannot find repo root"; exit 1; }
-echo "repo: $(pwd)  host: $(hostname)  start: $(date '+%F %T')"
+echo "repo: $(pwd)  host: $(hostname)  start: $(date '+%F %T')  DATASETS_ROOT=${DATASETS_ROOT}"
 source scripts/cc/fir_env.sh
 
 rc_all=0

@@ -73,7 +73,10 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
 
 def stage(dataset_id: str, *, version=None, subjects=None, dry_run=False, force=False) -> dict:
     spec = D.get_spec(dataset_id)
-    root = D.resolve_dataset_root(dataset_id, version=version)
+    # Persist datasets under the shared /project root by default (firm user preference);
+    # override with DATASETS_ROOT. (/scratch is only a fallback in resolve_dataset_root.)
+    datasets_root = os.environ.get("DATASETS_ROOT", "/project/rrg-kjerbi/datasets")
+    root = pathlib.Path(datasets_root) / spec.project_relative_path
     sent = sentinel_path(dataset_id)
     plan = {"dataset": dataset_id, "root": str(root), "source": spec.download_source}
 

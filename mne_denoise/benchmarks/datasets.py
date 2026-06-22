@@ -83,7 +83,7 @@ REGISTRY: dict[str, DatasetSpec] = {
     "erp_core_n170": DatasetSpec(
         dataset_id="erp_core_n170", repository="osf",
         project_relative_path="osf/erp-core/n170",
-        download_source="osf:PENDING_NODE_ID",   # verify the N170 OSF component on Fir
+        download_source="osf:thsqg",   # ERP CORE OSF project (all 7 paradigms incl. N170; large)
         doi="10.18115/D5JW4R", license="CC-BY-SA 4.0",
         citation="Kappenman et al. 2021 (ERP CORE)",
         expected_subjects=40, expected_channels={"eeg": 30, "eog": 3}, expected_sfreq=1024.0,
@@ -91,9 +91,9 @@ REGISTRY: dict[str, DatasetSpec] = {
         notes="faces vs cars N170; ROI/window adopted from the ERP CORE resource",
     ),
     "eegdenoisenet": DatasetSpec(
-        dataset_id="eegdenoisenet", repository="zenodo",
-        project_relative_path="zenodo/eegdenoisenet",
-        download_source="pooch:PENDING_URL",     # verify Zenodo/GitHub URL+hash on Fir
+        dataset_id="eegdenoisenet", repository="gin",
+        project_relative_path="gin/eegdenoisenet",
+        download_source="gin:NCClab/EEGdenoiseNet",  # G-Node/GIN host (not Zenodo)
         doi="10.1088/1741-2552/ac2bf8", license="open",
         citation="Zhang et al. 2021 (EEGdenoiseNet)",
         raw_or_processed="processed",
