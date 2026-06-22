@@ -39,7 +39,8 @@ def test_resolve_falls_back_to_scratch_target(tmp_path):
     env = {"DATASETS_ROOT": str(tmp_path / "shared"), "SCRATCH": str(tmp_path / "scr")}
     got = D.resolve_dataset_root("ds003620", env=env)   # nothing exists
     assert (tmp_path / "scr").as_posix() in got.as_posix()
-    assert got.name == D.get_spec("ds003620").version  # <version> leaf
+    # scratch target uses the <rel> layout (no version leaf) so openneuro-py lands here
+    assert got.as_posix().endswith("mne-denoise/datasets/openneuro/ds003620")
 
 
 def _make_openneuro_tree(root, n_subjects):

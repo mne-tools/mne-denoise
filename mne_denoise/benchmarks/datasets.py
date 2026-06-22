@@ -131,12 +131,13 @@ def candidate_roots(dataset_id: str, *, version: str | None = None,
     env = dict(os.environ if env is None else env)
     spec = get_spec(dataset_id)
     rel = spec.project_relative_path
-    ver = version or spec.version or "latest"
     out: list[pathlib.Path] = []
     if env.get("DATASETS_ROOT"):
         out.append(pathlib.Path(env["DATASETS_ROOT"]) / rel)
     out.append(pathlib.Path("/project/rrg-kjerbi/datasets") / rel)
-    out.append(_scratch_root(env) / "mne-denoise" / "datasets" / rel / ver)
+    # Scratch download target — same <rel> layout as the shared roots (no version
+    # leaf) so openneuro-py's DATA_DIR/<id> download lands exactly here.
+    out.append(_scratch_root(env) / "mne-denoise" / "datasets" / rel)
     return out
 
 
