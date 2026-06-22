@@ -207,10 +207,12 @@ REGISTRY: dict[str, DatasetSpec] = {
         notes="Cam-CAN lifespan MEG (multi-TB). Apply (supervisor required): "
               "opendata.mrc-cbu.cam.ac.uk/projects/camcan/request/ ; package phase2_arm1_raw_meg. NOT automated"),
     "hcp_meg": DatasetSpec(
-        dataset_id="hcp_meg", repository="balsa", project_relative_path="meg/hcp",
-        download_source="registration:hcp", access="registration", expected_subjects=95,
-        notes="HCP Young Adult MEG (~95 subj, multi-TB) via BALSA balsa.wustl.edu; accept terms. "
-              "Auto-stage possible AFTER terms acceptance (no AWS creds needed). NOT automated yet"),
+        dataset_id="hcp_meg", repository="s3", project_relative_path="meg/hcp",
+        download_source="hcp:unprocessed", access="registration", expected_subjects=95,
+        license="HCP Open Access Data Use Terms",
+        notes="HCP Young Adult MEG, 95 subj. s3://hcp-openaccess/HCP_1200/<subj>/unprocessed/MEG/ (4D/BTi, "
+              "mne.io.read_raw_bti). Staged via download_hcp.py + AWS creds in ~/.aws/credentials (chmod 600, "
+              "terms-accepted ConnectomeDB account). RAW ONLY ~0.94 TB; processed (4.62 TB, already cleaned) skipped"),
     "tuh_eeg": DatasetSpec(
         dataset_id="tuh_eeg", repository="controlled_nedc", project_relative_path="clinical/tuh-eeg",
         download_source="registration:tuh", access="registration",

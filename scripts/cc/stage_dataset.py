@@ -92,6 +92,10 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         bucket_host, prefix = src.split(":", 1)[1].split("/", 1)
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_s3.py"),
                         "--dest", str(root), "--bucket-host", bucket_host, "--prefix", prefix], check=True)
+    elif src.startswith("hcp:"):
+        scope = src.split(":", 1)[1] or "unprocessed"  # needs ~/.aws creds (terms-accepted)
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_hcp.py"),
+                        "--dest", str(root), "--scope", scope], check=True)
     elif src.startswith("physionet:"):
         db = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),
