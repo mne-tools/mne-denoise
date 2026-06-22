@@ -59,6 +59,8 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         kw = {"dataset": accession, "target_dir": str(root)}
         if subjects:
             kw["include"] = list(subjects)
+        if spec.download_exclude:
+            kw["exclude"] = list(spec.download_exclude)  # e.g. skip MRI "*/anat/*"
         print(f"[openneuro] {accession} -> {root} "
               + (f"(subjects: {subjects})" if subjects else "(ALL subjects)"), flush=True)
         openneuro.download(**kw)

@@ -38,6 +38,7 @@ class DatasetSpec:
     required_channel_types: tuple[str, ...] = ()
     raw_or_processed: str = "raw"
     known_exclusions: tuple[str, ...] = ()
+    download_exclude: tuple[str, ...] = ()   # openneuro-py exclude globs (e.g. skip MRI "*/anat/*")
     verified_date: str | None = None
     # access: "open" (auto-downloadable), "registration" (needs account/DUA — user
     # must provide), "confirm" (needs a verified durable URL/accession before download).
@@ -120,7 +121,9 @@ REGISTRY: dict[str, DatasetSpec] = {
     "ds004475": DatasetSpec(
         dataset_id="ds004475", repository="openneuro", project_relative_path="openneuro/ds004475",
         download_source="openneuro-py:ds004475", license="CC0", access="open",
-        notes="split-belt treadmill / mobile EEG (verify channel types, raw rate, gait events)"),
+        download_exclude=("*/anat/*",),  # skip MRI (not needed for EEG; a T1w.nii 404s on OpenNeuro S3)
+        notes="split-belt treadmill / mobile EEG (verify channel types, raw rate, gait events). "
+              "MRI anat excluded (unused + broken object upstream)"),
     "ds007554": DatasetSpec(
         dataset_id="ds007554", repository="openneuro", project_relative_path="openneuro/ds007554",
         download_source="openneuro-py:ds007554", license="CC0", access="open", expected_subjects=30,
