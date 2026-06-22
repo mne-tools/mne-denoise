@@ -77,10 +77,12 @@ REGISTRY: dict[str, DatasetSpec] = {
         project_relative_path="openneuro/ds000117",
         download_source="openneuro-py:ds000117",
         license="see dataset", citation="Wakeman & Henson 2015 (multimodal faces)",
-        expected_subjects=19, expected_channels={"mag": 102, "grad": 204, "eeg": 70},
+        # OpenNeuro release = 16 subjects + an 'emptyroom' pseudo-subject (17 sub-* dirs);
+        # study N=19 refers to the original paper. Skip the strict count; rely on deep-validate.
+        expected_subjects=None, expected_channels={"mag": 102, "grad": 204, "eeg": 70},
         expected_sfreq=1100.0, expected_line_frequency=50.0,
-        required_channel_types=("mag", "grad"), raw_or_processed="raw",
-        notes="MEG faces (M170); 16 = published subset. LINE-NOISE ARM MUST USE RAW FIF "
+        required_channel_types=("mag", "grad"), raw_or_processed="raw", verified_date="2026-06-21",
+        notes="MEG faces (M170); OpenNeuro = 16 subj + emptyroom. LINE-NOISE ARM MUST USE RAW FIF "
               "(supplied SSS files already had 50 Hz+harmonics+HPI removed).",
     ),
     "erp_core_n170": DatasetSpec(
