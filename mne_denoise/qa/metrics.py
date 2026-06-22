@@ -28,6 +28,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+from scipy.integrate import trapezoid  # stable across numpy 1.x/2.x (np.trapezoid is 2.0+)
 from scipy.signal import welch as sp_welch
 
 if TYPE_CHECKING:
@@ -193,8 +194,8 @@ def below_noise_distortion(
     mask = (freqs >= target_freq - low_offset) & (freqs <= target_freq - high_offset)
     if not mask.any():
         return float("nan")
-    a_pre = np.trapezoid(psd_before[mask], freqs[mask])
-    a_post = np.trapezoid(psd_after[mask], freqs[mask])
+    a_pre = trapezoid(psd_before[mask], freqs[mask])
+    a_post = trapezoid(psd_after[mask], freqs[mask])
     if a_pre <= 0:
         return float("nan")
     return float(100.0 * (a_post - a_pre) / a_pre)

@@ -10,6 +10,7 @@ zero-lag contamination from genuine corticomuscular coupling (see
 from __future__ import annotations
 
 import numpy as np
+from scipy.integrate import trapezoid  # stable across numpy 1.x/2.x
 
 
 def _data(x):
@@ -81,4 +82,4 @@ def hf_band_power(data, sfreq, *, fmin=20.0, fmax=100.0, nperseg=None) -> float:
     band = (f >= fmin) & (f <= fmax)
     if not band.any():
         raise ValueError("empty HF band for given sfreq")
-    return float(np.trapezoid(p[band], f[band]))
+    return float(trapezoid(p[band], f[band]))

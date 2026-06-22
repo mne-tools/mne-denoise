@@ -8,6 +8,7 @@ MNE objects are accepted where a ``.get_data()`` exists.
 from __future__ import annotations
 
 import numpy as np
+from scipy.integrate import trapezoid  # stable name across numpy 1.x/2.x (np.trapezoid is 2.0+)
 
 
 def _data(x):
@@ -52,7 +53,7 @@ def erp_area(evoked, times, tmin, tmax, *, picks=None) -> float:
     roi = data.mean(0) if data.ndim > 1 else data
     times = np.asarray(times, float)
     w = _window(times, tmin, tmax)
-    return float(np.trapezoid(np.abs(roi[w]), times[w]))
+    return float(trapezoid(np.abs(roi[w]), times[w]))
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +128,7 @@ def out_of_band_power(data, sfreq, *, exclude_band, nperseg=None) -> float:
     p = p.mean(0) if p.ndim > 1 else p
     lo, hi = exclude_band
     keep = ~((f >= lo) & (f <= hi))
-    return float(np.trapezoid(p[keep], f[keep]))
+    return float(trapezoid(p[keep], f[keep]))
 
 
 def topographic_similarity(a, b) -> float:

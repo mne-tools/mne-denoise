@@ -74,6 +74,7 @@ def _spectra(eeg_dir: pathlib.Path, rec: dict) -> dict:
     try:
         import mne
         import numpy as np
+        from scipy.integrate import trapezoid
     except Exception as exc:  # noqa: BLE001
         return {"error": f"mne/numpy unavailable: {exc}"}
     hits = sorted(eeg_dir.glob("*_eeg.set")) or sorted(eeg_dir.glob("*_eeg.vhdr"))
@@ -88,7 +89,7 @@ def _spectra(eeg_dir: pathlib.Path, rec: dict) -> dict:
         data = psd.get_data().mean(0)
         def band(lo, hi):
             m = (freqs >= lo) & (freqs <= hi)
-            return float(np.trapezoid(data[m], freqs[m]))
+            return float(trapezoid(data[m], freqs[m]))
         return {"alpha_power": band(*ALPHA), "beta_power": band(*BETA),
                 "n_channels": len(raw.ch_names)}
     except Exception as exc:  # noqa: BLE001
