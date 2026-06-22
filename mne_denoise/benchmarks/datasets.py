@@ -175,10 +175,12 @@ REGISTRY: dict[str, DatasetSpec] = {
         download_source="osf:ag3kj", access="open", expected_subjects=27,
         notes="MEG-MASC natural speech (2nd MEG). OSF node ag3kj (BIDS) — NOT OpenNeuro"),
     "mobile_scalp_ear": DatasetSpec(
-        dataset_id="mobile_scalp_ear", repository="figshare", project_relative_path="figshare/mobile-scalp-ear-eeg",
-        download_source="confirm:figshare-collection", access="confirm", expected_subjects=24, license="CC-BY-4.0",
-        notes="scalp(32)+ear(14) EEG, 4 EOG, IMU. Figshare 16669072 API returns ONLY metadata "
-              "(data.json + summary) — likely a COLLECTION, not the data article. NEED: data article/collection id"),
+        dataset_id="mobile_scalp_ear", repository="osf", project_relative_path="osf/mobile-scalp-ear-eeg",
+        download_source="osf:r7s9b", access="open", expected_subjects=24, license="CC-BY-4.0",
+        doi="10.17605/OSF.IO/R7S9B", expected_sfreq=500.0,
+        notes="scalp(32)+ear(14) EEG, 4 EOG, IMU; ERP+SSVEP under motion (0/0.8/1.6/2.0 m/s). OSF r7s9b, "
+              "EEG-BIDS/BrainVision. BENCHMARK: use raw sourcedata (500 Hz), NOT the 100 Hz derivatives "
+              "(already EOG-removed / line-cleaned / bad-chan-interpolated / rereferenced)"),
     "wearbci": DatasetSpec(
         dataset_id="wearbci", repository="onedrive", project_relative_path="mobile/wearbci",
         download_source="confirm:onedrive", access="confirm", expected_subjects=36, license="unknown",
