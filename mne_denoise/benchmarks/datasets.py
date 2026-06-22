@@ -64,7 +64,7 @@ REGISTRY: dict[str, DatasetSpec] = {
         license="CC0", citation="Studnicki et al. 2023 (table tennis, dual-layer)",
         expected_subjects=25,
         # noise-layer (120) + IMU are typed MISC in channels.tsv, not a distinct type.
-        expected_channels={"eeg": 120, "emg": 8, "misc": 185}, expected_sfreq=500.0,
+        expected_channels={"eeg": 120, "emg": 8, "misc": 185}, expected_sfreq=250.0,
         required_channel_types=("eeg",), raw_or_processed="raw", verified_date="2026-06-21",
         notes="dual-layer EEG + neck EMG + IMU; muscle/reference arm; BIDS under raw_bids/; "
               "noise-layer 120ch typed MISC (identify by name/electrodes in the muscle runner)",
