@@ -130,7 +130,9 @@ def stage(dataset_id: str, *, version=None, subjects=None, dry_run=False, force=
     except FileExistsError:
         raise RuntimeError(f"another staging job holds the lock {lock}; retry later")
     try:
-        if not root.exists() or D.validate_dataset(root, dataset_id):
+        # Download if forced, missing, or failing validation. --force re-triggers the
+        # downloader (which resumes/skips existing files) to complete a partial dataset.
+        if force or not root.exists() or D.validate_dataset(root, dataset_id):
             print(f"[download] {dataset_id} -> {root}")
             _download(spec, root, subjects)
         issues = D.validate_dataset(root, dataset_id, deep=True)
