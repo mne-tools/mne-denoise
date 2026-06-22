@@ -51,17 +51,17 @@ def _make_openneuro_tree(root, n_subjects):
 
 
 def test_validate_openneuro_ok(tmp_path):
-    spec = D.get_spec("ds000117")
-    root = tmp_path / "ds000117"
+    spec = D.get_spec("ds003620")          # fixed integer expected_subjects (44)
+    root = tmp_path / "ds003620"
     _make_openneuro_tree(root, spec.expected_subjects)
-    assert D.validate_dataset(root, "ds000117") == []
+    assert D.validate_dataset(root, "ds003620") == []
 
 
 def test_validate_flags_wrong_subject_count_and_missing_description(tmp_path):
-    root = tmp_path / "ds000117"
+    root = tmp_path / "ds003620"
     root.mkdir()
     (root / "sub-01").mkdir()
-    issues = D.validate_dataset(root, "ds000117")
+    issues = D.validate_dataset(root, "ds003620")
     assert any("subject count" in s for s in issues)
     assert any("dataset_description" in s for s in issues)
 
