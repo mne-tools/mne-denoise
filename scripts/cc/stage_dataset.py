@@ -51,12 +51,16 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
     src = spec.download_source or ""
     root.mkdir(parents=True, exist_ok=True)
     if src.startswith("openneuro-py:"):
-        cmd = [sys.executable, str(_REPO / "scripts" / "download_openneuro.py"),
-               "--dataset", spec.dataset_id]
+        # Use the openneuro-py library directly: full dataset by default, or a
+        # subject subset via include=[...]. Downloads INTO target_dir (= root).
+        import openneuro
+
+        kw = {"dataset": spec.dataset_id, "target_dir": str(root)}
         if subjects:
-            cmd += ["--subjects", *subjects]
-        env = {**os.environ, "DATA_DIR": str(root.parent)}
-        subprocess.run(cmd, check=True, env=env)
+            kw["include"] = list(subjects)
+        print(f"[openneuro] {spec.dataset_id} -> {root} "
+              + (f"(subjects: {subjects})" if subjects else "(ALL subjects)"), flush=True)
+        openneuro.download(**kw)
     elif src.startswith("osf:"):
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_erp_core.py"),
                         "--dest", str(root)], check=True)
