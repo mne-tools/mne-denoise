@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-"""Robust OSF project downloader via the OSF API (stdlib only; no osfclient).
+"""Robust OSF downloader via the WaterButler API (files.osf.io); stdlib only.
 
-osfclient `clone` is fragile on large projects (dies on a transient HTTP 500, or
-``KeyError: 'name'`` on odd entries, with no retry/resume).  This walks osfstorage
-through the API instead: recurses folders, descends into child components, retries
-each file on 5xx/timeout, skips malformed entries, and skips files already present
-at the right size (resume).  Run on a Fir login node (internet).
+OSF data often lives on addon storage (EEGEyeNet ktv7m keeps its data on a
+**googledrive** addon under ``EEGEyeNet-Data/``; its dropbox addon is an empty
+duplicate).  The metadata API (api.osf.io) lists addon *folders* but not their
+contents, and osfclient dies on a ``KeyError: 'name'``.  WaterButler
+(files.osf.io/v1) actually serves addon files, so we walk that: enumerate every
+provider, recurse folders, skip malformed entries, retry on 5xx/timeout, build a
+frozen JSON manifest, then download with resume (skip files already at size).
 
-    python scripts/download_osf.py --dest <dir> --node r7s9b              # single project
-    python scripts/download_osf.py --dest <dir> --node ktv7m --dry-run    # incl. child components
+    python scripts/download_osf.py --dest <dir> --node ktv7m --dry-run   # build+print manifest only
+    python scripts/download_osf.py --dest <dir> --node r7s9b             # download (osfstorage or addons)
 """
 
 from __future__ import annotations
@@ -21,7 +23,8 @@ import time
 import urllib.error
 import urllib.request
 
-API = "https://api.osf.io/v2"
+V2 = "https://api.osf.io/v2"
+WB = "https://files.osf.io/v1/resources"
 UA = {"User-Agent": "mne-denoise-benchmark/0.1"}
 
 
@@ -30,51 +33,53 @@ def _get_json(url: str, tries: int = 5):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
                 return json.load(r)
-        except Exception:  # noqa: BLE001
+        except urllib.error.HTTPError as e:
+            if e.code in (404, 410):       # provider/path absent — caller decides
+                raise
+            if i == tries - 1:
+                raise
+            time.sleep(2 * (i + 1))
+        except Exception:                  # noqa: BLE001
             if i == tries - 1:
                 raise
             time.sleep(2 * (i + 1))
 
 
-def _walk(listing_url: str):
-    """Yield (relpath, download_url, size) under an osfstorage listing, recursing folders."""
-    url = listing_url
-    while url:
-        d = _get_json(url)
-        for it in d["data"]:
-            a = it.get("attributes", {})
-            name = a.get("name")
-            if not name:
-                continue  # malformed entry (the osfclient KeyError cause) — skip
-            rel = (a.get("materialized_path") or f"/{name}").lstrip("/")
-            if a.get("kind") == "file":
-                dl = it.get("links", {}).get("download")
-                if dl:
-                    yield rel, dl, a.get("size") or 0
-            elif a.get("kind") == "folder":
-                sub = it["relationships"]["files"]["links"]["related"]["href"]
-                yield from _walk(sub)
-        url = d.get("links", {}).get("next")
-
-
 def _providers(node: str) -> list[str]:
-    """Storage providers on a node: osfstorage + any addons (dropbox/googledrive/...)."""
-    d = _get_json(f"{API}/nodes/{node}/files/")
+    d = _get_json(f"{V2}/nodes/{node}/files/")
     return [p["attributes"]["provider"] for p in d["data"]]
 
 
-def _collect(node: str, prefix: str = ""):
-    """All files for a node across ALL providers, recursing into child components.
+def _walk(node: str, provider: str, path: str = "/", prefix: str = ""):
+    """Yield (relpath, download_url, size) under a WaterButler provider path."""
+    try:
+        items = _get_json(f"{WB}/{node}/providers/{provider}{path}")["data"]
+    except urllib.error.HTTPError:
+        return                              # broken/absent addon path — skip
+    for it in items:
+        a = it.get("attributes", {})
+        name = a.get("name")
+        if not name:
+            continue                        # malformed entry (the osfclient KeyError cause)
+        mat = (a.get("materialized") or f"{prefix}/{name}").lstrip("/")
+        if a.get("kind") == "file":
+            dl = (it.get("links", {}) or {}).get("download") \
+                or f"{WB}/{node}/providers/{provider}{a['path']}"
+            try:
+                sz = int(a.get("size") or 0)
+            except (TypeError, ValueError):
+                sz = 0
+            yield mat, dl, sz
+        elif a.get("kind") == "folder":
+            yield from _walk(node, provider, a["path"], "/" + mat)
 
-    EEGEyeNet (ktv7m) keeps its data on a Dropbox addon under a child component,
-    so we must enumerate providers, not just osfstorage.
-    """
-    items = []
+
+def _collect(node: str, prefix: str = ""):
+    items, n_comp = [], 0
     for prov in _providers(node):
-        for rel, dl, sz in _walk(f"{API}/nodes/{node}/files/{prov}/"):
+        for rel, dl, sz in _walk(node, prov):
             items.append((prefix + rel, dl, sz))
-    n_comp = 0
-    for c in _get_json(f"{API}/nodes/{node}/children/")["data"]:
+    for c in _get_json(f"{V2}/nodes/{node}/children/")["data"]:
         n_comp += 1
         title = c["attributes"]["title"].strip().replace("/", "_")
         sub, _ = _collect(c["id"], prefix=f"{prefix}{title}/")
@@ -85,12 +90,12 @@ def _collect(node: str, prefix: str = ""):
 def _download_file(url: str, out: pathlib.Path, tries: int = 5) -> bool:
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=600) as resp, \
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=900) as resp, \
                  open(out, "wb") as fh:
                 while chunk := resp.read(1 << 20):
                     fh.write(chunk)
             return True
-        except Exception:  # noqa: BLE001
+        except Exception:                   # noqa: BLE001
             time.sleep(3 * (i + 1))
     return False
 
@@ -102,20 +107,31 @@ def download(dest: pathlib.Path, node: str, dry_run: bool = False) -> int:
         return 2
     try:
         files, n_comp = _collect(node)
-    except Exception as exc:  # noqa: BLE001
-        print(f"ERROR: OSF API walk failed: {exc}", file=sys.stderr)
+    except Exception as exc:                # noqa: BLE001
+        print(f"ERROR: OSF/WaterButler walk failed: {exc}", file=sys.stderr)
         return 2
-    tot = sum(s for _, _, s in files)
-    print(f"[osf] node {node} (+{n_comp} components): {len(files)} files ~{tot/1e9:.2f} GB")
+    # de-dup (same relpath from a broken duplicate addon) keeping the larger size
+    best: dict[str, tuple[str, int]] = {}
+    for rel, dl, sz in files:
+        if rel not in best or sz > best[rel][1]:
+            best[rel] = (dl, sz)
+    tot = sum(s for _, s in best.values())
+    print(f"[osf] node {node} (+{n_comp} components): {len(best)} files ~{tot/1e9:.2f} GB")
+    manifest = [{"path": rel, "size": sz} for rel, (_, sz) in sorted(best.items())]
     if dry_run:
-        for rel, _, s in files[:15]:
-            print(f"   {rel}  {s/1e6:.1f} MB")
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / "osf_manifest.json").write_text(json.dumps(manifest, indent=1))
+        for rel, (_, sz) in list(sorted(best.items()))[:15]:
+            print(f"   {rel}  {sz/1e6:.1f} MB")
+        print(f"[osf] manifest -> {dest/'osf_manifest.json'} ({len(best)} entries)")
         return 0
-    if not files:
-        print("ERROR: no files found", file=sys.stderr)
+    if not best:
+        print("ERROR: no files found (all providers empty?)", file=sys.stderr)
         return 1
+    dest.mkdir(parents=True, exist_ok=True)
+    (dest / "osf_manifest.json").write_text(json.dumps(manifest, indent=1))
     rc, done = 0, 0
-    for rel, dl, size in files:
+    for rel, (dl, size) in sorted(best.items()):
         out = dest / rel
         out.parent.mkdir(parents=True, exist_ok=True)
         if out.exists() and size and out.stat().st_size == size:

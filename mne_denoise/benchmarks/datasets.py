@@ -160,12 +160,15 @@ REGISTRY: dict[str, DatasetSpec] = {
               "(S1-S10..S61-S70.tar.gz + Description); no DOI/version -> SHA256SUMS manifest"),
     "eegeyenet": DatasetSpec(
         dataset_id="eegeyenet", repository="osf", project_relative_path="osf/eegeyenet",
-        download_source="confirm:osf-dropbox-addon", access="confirm", expected_subjects=356,
+        download_source="confirm:osf-addon-broken", access="confirm", expected_subjects=356,
         license="verify_osf_metadata",
-        notes="EEG + eye-tracking (external/SECONDARY ocular; ERP CORE is the primary). OSF ktv7m: data sits on a "
-              "DROPBOX ADDON under component dr6zb (dots/movie/vss/zuco). OSF API returns the addon folders EMPTY; "
-              "osfclient dies on KeyError:'name'. NEED direct OSF download URLs (osf.io/<id>/download) or the "
-              "authors' DataAcquisition route. DEFERRED."),
+        notes="EEG + eye-tracking (external/SECONDARY ocular; ERP CORE is the primary). OSF ktv7m: real data is on a "
+              "GOOGLEDRIVE addon (EEGEyeNet-Data/<task>/synchronised_{min,max}/). The OSF<->googledrive AND dropbox "
+              "addon connections are BROKEN: api.osf.io + waterbutler (files.osf.io) list the folder hierarchy from "
+              "cache but every LEAF folder returns 0 entries -> file manifest cannot be completed. NOT auto-stageable "
+              "(OSF-side, not a downloader bug). download_osf.py (waterbutler recursive + manifest + retry) is ready "
+              "for when OSF's addon is fixed or for direct file links. Don't use ardkastrati/EEGEyeNet-DataAcquisition "
+              "(MATLAB task code, not data). DEFERRED."),
     "brain_invaders_2012": DatasetSpec(
         dataset_id="brain_invaders_2012", repository="zenodo", project_relative_path="zenodo/brain-invaders-2012",
         download_source="zenodo:2649006", access="open", expected_subjects=25,
