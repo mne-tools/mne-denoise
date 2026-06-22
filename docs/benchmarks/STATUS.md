@@ -11,8 +11,8 @@ conditions met; see [PUBLICATION_GATE](PUBLICATION_GATE.md)).
 | Phase | State | Notes |
 |---|---|---|
 | P0 docs + config skeletons | done | commit 531a758 |
-| P1 foundation (contracts, metrics, simulation, parity, tests) | done | comparators/config/parity/simulation + 5 qa modules; 60 unit tests passing |
-| P2 dataset registry + staging + downloaders | not_started | ds004505 feasibility pending |
+| P1 foundation (contracts, metrics, simulation, parity, tests) | done | comparators/config/parity/simulation + 5 qa modules; 68 unit tests passing |
+| P2 dataset registry + staging + downloaders | code done | datasets.py (registry/resolver/validation) + stage_dataset.py + erp_core/eegdenoisenet downloaders + ds004505 feasibility script. **Staging + feasibility run on Fir.** ERP-CORE OSF node id & EEGdenoiseNet archive URL/hash still need verification (registry marks them PENDING). |
 | P3 per-arm configs + 5 runners + sweep machinery | not_started | |
 | P4 Fir pilots | not_started | gated on per-track launch gates |
 
