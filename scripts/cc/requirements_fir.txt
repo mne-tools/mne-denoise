@@ -12,6 +12,7 @@
 
 # Dataset download (not in the Alliance wheelhouse — installs from PyPI)
 openneuro-py>=2024.2.0
+pooch>=1.8        # OSF (ERP CORE) + Zenodo (EEGdenoiseNet) fetch in scripts/download_*.py
 
 # Benchmark tables + plots (usually already in scipy-stack; listed for clarity)
 pandas>=1.5

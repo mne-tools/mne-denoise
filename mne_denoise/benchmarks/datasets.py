@@ -57,13 +57,17 @@ REGISTRY: dict[str, DatasetSpec] = {
     ),
     "ds004505": DatasetSpec(
         dataset_id="ds004505", repository="openneuro",
-        project_relative_path="openneuro/ds004505",
+        # On Fir the BIDS root is under raw_bids/ (admin/derivatives/raw_bids layout);
+        # verified 2026-06-21: 25 subjects, 120 EEG + 8 EMG + 185 MISC (noise layer = MISC).
+        project_relative_path="openneuro/ds004505/raw_bids",
         download_source="openneuro-py:ds004505",
         license="CC0", citation="Studnicki et al. 2023 (table tennis, dual-layer)",
         expected_subjects=25,
-        expected_channels={"eeg": 120, "noise": 120, "emg": 8}, expected_sfreq=500.0,
-        required_channel_types=("eeg",), raw_or_processed="raw",
-        notes="dual-layer EEG + neck EMG + IMU; muscle/reference arm",
+        # noise-layer (120) + IMU are typed MISC in channels.tsv, not a distinct type.
+        expected_channels={"eeg": 120, "emg": 8, "misc": 185}, expected_sfreq=500.0,
+        required_channel_types=("eeg",), raw_or_processed="raw", verified_date="2026-06-21",
+        notes="dual-layer EEG + neck EMG + IMU; muscle/reference arm; BIDS under raw_bids/; "
+              "noise-layer 120ch typed MISC (identify by name/electrodes in the muscle runner)",
     ),
     "ds000117": DatasetSpec(
         dataset_id="ds000117", repository="openneuro",
