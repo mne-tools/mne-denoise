@@ -143,15 +143,16 @@ REGISTRY: dict[str, DatasetSpec] = {
     # ---- need a verified durable URL / accession before download (access=confirm) ----
     "tsinghua_ssvep": DatasetSpec(
         dataset_id="tsinghua_ssvep", repository="http_portal", project_relative_path="ssvep/tsinghua-benchmark",
-        download_source="portal:https://bci.med.tsinghua.edu.cn/download.html", access="portal_unversioned",
+        download_source="thu:yijun", access="portal_unversioned",
         expected_subjects=35, license="not_stated",
-        notes="Tsinghua 40-target SSVEP (primary SSVEP). Portal S1-S35 archives, no DOI/version; "
-              "needs a custom downloader + save a checksum manifest"),
+        notes="Tsinghua 40-target SSVEP (primary SSVEP). THU portal upload/yijun (S1-S35.mat.7z + "
+              "metadata); no DOI/version -> SHA256SUMS manifest saved on download"),
     "beta_ssvep": DatasetSpec(
         dataset_id="beta_ssvep", repository="http_portal", project_relative_path="ssvep/beta",
-        download_source="portal:https://bci.med.tsinghua.edu.cn/download.html", access="portal_unversioned",
+        download_source="thu:liubingchuan_eld_BETA_database", access="portal_unversioned",
         expected_subjects=70, license="not_stated",
-        notes="BETA SSVEP (external replication). Portal S1-S70 archives, no DOI/version; custom downloader + checksums"),
+        notes="BETA SSVEP (external replication). THU portal upload/liubingchuan_eld_BETA_database "
+              "(S1-S10..S61-S70.tar.gz + Description); no DOI/version -> SHA256SUMS manifest"),
     "eegeyenet": DatasetSpec(
         dataset_id="eegeyenet", repository="osf", project_relative_path="osf/eegeyenet",
         download_source="osf:ktv7m", access="open", expected_subjects=356, license="verify_osf_metadata",

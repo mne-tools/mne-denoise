@@ -81,6 +81,10 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         repo = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_eegdenoisenet.py"),
                         "--dest", str(root), "--repo", repo], check=True)
+    elif src.startswith("thu:"):
+        subdir = src.split(":", 1)[1]
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_thu_portal.py"),
+                        "--dest", str(root), "--subdir", subdir], check=True)
     elif src.startswith("physionet:"):
         db = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),
