@@ -57,15 +57,29 @@ def _walk(listing_url: str):
         url = d.get("links", {}).get("next")
 
 
-def _collect(node: str):
-    """All files for a node: root files at top level, each child component under its title/."""
-    items = list(_walk(f"{API}/nodes/{node}/files/osfstorage/"))
-    children = _get_json(f"{API}/nodes/{node}/children/")["data"]
-    for c in children:
+def _providers(node: str) -> list[str]:
+    """Storage providers on a node: osfstorage + any addons (dropbox/googledrive/...)."""
+    d = _get_json(f"{API}/nodes/{node}/files/")
+    return [p["attributes"]["provider"] for p in d["data"]]
+
+
+def _collect(node: str, prefix: str = ""):
+    """All files for a node across ALL providers, recursing into child components.
+
+    EEGEyeNet (ktv7m) keeps its data on a Dropbox addon under a child component,
+    so we must enumerate providers, not just osfstorage.
+    """
+    items = []
+    for prov in _providers(node):
+        for rel, dl, sz in _walk(f"{API}/nodes/{node}/files/{prov}/"):
+            items.append((prefix + rel, dl, sz))
+    n_comp = 0
+    for c in _get_json(f"{API}/nodes/{node}/children/")["data"]:
+        n_comp += 1
         title = c["attributes"]["title"].strip().replace("/", "_")
-        for rel, dl, sz in _walk(f"{API}/nodes/{c['id']}/files/osfstorage/"):
-            items.append((f"{title}/{rel}", dl, sz))
-    return items, len(children)
+        sub, _ = _collect(c["id"], prefix=f"{prefix}{title}/")
+        items += sub
+    return items, n_comp
 
 
 def _download_file(url: str, out: pathlib.Path, tries: int = 5) -> bool:
