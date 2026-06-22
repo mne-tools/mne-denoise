@@ -184,12 +184,13 @@ def validate_dataset(root, dataset_id: str, *, deep: bool = False) -> list[str]:
 def _deep_validate(root: pathlib.Path, spec: DatasetSpec) -> list[str]:
     """Read one recording (if present) and check sfreq/channel types. Needs MNE + data."""
     issues: list[str] = []
+    # Primary BIDS recordings only: skip git-annex/datalad internals, sourcedata/
+    # (raw vendor files, often incomplete), and derivatives/.
+    _skip = {".git", "sourcedata", "derivatives"}
     hits: list[pathlib.Path] = []
     for pat in ("*.vhdr", "*.fif", "*.edf", "*.set"):
-        # Real recordings only: skip git-annex/datalad internals (.git/annex stores
-        # objects in directories named "<key>.set/" etc.) and any non-file matches.
         hits = sorted(p for p in root.rglob(pat)
-                      if p.is_file() and ".git" not in p.parts)
+                      if p.is_file() and not (_skip & set(p.parts)))
         if hits:
             break
     if not hits:
