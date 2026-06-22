@@ -142,41 +142,46 @@ REGISTRY: dict[str, DatasetSpec] = {
 
     # ---- need a verified durable URL / accession before download (access=confirm) ----
     "tsinghua_ssvep": DatasetSpec(
-        dataset_id="tsinghua_ssvep", repository="url", project_relative_path="ssvep/tsinghua-benchmark",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=35,
-        notes="Tsinghua 40-target SSVEP benchmark (primary SSVEP). NEED: download URL"),
+        dataset_id="tsinghua_ssvep", repository="http_portal", project_relative_path="ssvep/tsinghua-benchmark",
+        download_source="portal:https://bci.med.tsinghua.edu.cn/download.html", access="portal_unversioned",
+        expected_subjects=35, license="not_stated",
+        notes="Tsinghua 40-target SSVEP (primary SSVEP). Portal S1-S35 archives, no DOI/version; "
+              "needs a custom downloader + save a checksum manifest"),
     "beta_ssvep": DatasetSpec(
-        dataset_id="beta_ssvep", repository="url", project_relative_path="ssvep/beta",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=70,
-        notes="BETA SSVEP (external replication). NEED: download URL"),
+        dataset_id="beta_ssvep", repository="http_portal", project_relative_path="ssvep/beta",
+        download_source="portal:https://bci.med.tsinghua.edu.cn/download.html", access="portal_unversioned",
+        expected_subjects=70, license="not_stated",
+        notes="BETA SSVEP (external replication). Portal S1-S70 archives, no DOI/version; custom downloader + checksums"),
     "eegeyenet": DatasetSpec(
-        dataset_id="eegeyenet", repository="url", project_relative_path="ocular/eegeyenet",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=356,
-        notes="EEG + eye-tracking (external ocular). NEED: OSF/durable URL"),
+        dataset_id="eegeyenet", repository="osf", project_relative_path="osf/eegeyenet",
+        download_source="osf:ktv7m", access="open", expected_subjects=356, license="verify_osf_metadata",
+        notes="EEG + eye-tracking (external ocular). OSF node ktv7m; verify OSF license metadata"),
     "brain_invaders_2012": DatasetSpec(
-        dataset_id="brain_invaders_2012", repository="moabb", project_relative_path="erp/brain-invaders-2012",
-        download_source="confirm:moabb:BrainInvaders2012", access="confirm", expected_subjects=25,
-        notes="P300. Via MOABB (needs moabb dep) or a Zenodo URL — confirm preferred route"),
+        dataset_id="brain_invaders_2012", repository="zenodo", project_relative_path="zenodo/brain-invaders-2012",
+        download_source="zenodo:2649006", access="open", expected_subjects=25,
+        notes="P300 (BI.EEG.2012-GIPSA). Zenodo 10.5281/zenodo.2649006 — direct, no MOABB needed"),
     "vr_p300": DatasetSpec(
-        dataset_id="vr_p300", repository="url", project_relative_path="erp/vr-pc-p300",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=21,
-        notes="VR vs PC P300 (device/environment generalization). NEED: download URL"),
+        dataset_id="vr_p300", repository="zenodo", project_relative_path="zenodo/vr-eeg-2018-gipsa",
+        download_source="zenodo:2605204", access="open", expected_subjects=21,
+        notes="VR vs PC P300 (VR.EEG.2018-GIPSA). Zenodo 10.5281/zenodo.2605204"),
     "meg_masc": DatasetSpec(
-        dataset_id="meg_masc", repository="openneuro", project_relative_path="openneuro/meg-masc",
-        download_source="confirm:PENDING_ACCESSION", access="confirm", expected_subjects=27,
-        notes="MEG-MASC natural speech (2nd MEG). NEED: OpenNeuro accession (then auto-downloadable)"),
+        dataset_id="meg_masc", repository="osf", project_relative_path="osf/meg-masc",
+        download_source="osf:ag3kj", access="open", expected_subjects=27,
+        notes="MEG-MASC natural speech (2nd MEG). OSF node ag3kj (BIDS) — NOT OpenNeuro"),
     "mobile_scalp_ear": DatasetSpec(
-        dataset_id="mobile_scalp_ear", repository="url", project_relative_path="mobile/scalp-ear-eeg",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=24,
-        notes="scalp+ear EEG, EOG, IMU; ERP/SSVEP under motion. NEED: durable URL + license"),
+        dataset_id="mobile_scalp_ear", repository="figshare", project_relative_path="figshare/mobile-scalp-ear-eeg",
+        download_source="confirm:figshare-collection", access="confirm", expected_subjects=24, license="CC-BY-4.0",
+        notes="scalp(32)+ear(14) EEG, 4 EOG, IMU. Figshare 16669072 API returns ONLY metadata "
+              "(data.json + summary) — likely a COLLECTION, not the data article. NEED: data article/collection id"),
     "wearbci": DatasetSpec(
-        dataset_id="wearbci", repository="url", project_relative_path="mobile/wearbci",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=36,
-        notes="EEG+IMU+video, walking/navigation (2026). NEED: repository URL + license + raw availability"),
+        dataset_id="wearbci", repository="onedrive", project_relative_path="mobile/wearbci",
+        download_source="confirm:onedrive", access="confirm", expected_subjects=36, license="unknown",
+        notes="EEG+IMU+video (HKUST-MINSys-Lab/WearBCI-Dataset). BLOCKED: no dataset license, OneDrive "
+              "is not a durable versioned archive — awaiting author license clarification"),
     "japanese_eeg_emg": DatasetSpec(
-        dataset_id="japanese_eeg_emg", repository="url", project_relative_path="muscle/japanese-eeg-emg",
-        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=3,
-        notes="~1000h synced high-density EEG + facial EMG + speech. NEED: download URL"),
+        dataset_id="japanese_eeg_emg", repository="openneuro", project_relative_path="openneuro/ds007808",
+        download_source="openneuro-py:ds007808", access="open", expected_subjects=3, license="CC0",
+        notes="JapanEEG ~1020h EEG + facial EMG + audio (BIDS). OpenNeuro ds007808. STORAGE: ~1 TB — confirm before staging"),
 
     # ---- require registration / data-use agreement (user must obtain access) ----
     "omega": DatasetSpec(

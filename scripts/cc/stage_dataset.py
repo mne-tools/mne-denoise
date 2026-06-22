@@ -61,10 +61,22 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         print(f"[openneuro] {spec.dataset_id} -> {root} "
               + (f"(subjects: {subjects})" if subjects else "(ALL subjects)"), flush=True)
         openneuro.download(**kw)
-    elif src.startswith("osf:"):
+    elif src.startswith("osf-components:"):
         node = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_erp_core.py"),
                         "--dest", str(root), "--osf-node", node], check=True)
+    elif src.startswith("osf:"):
+        node = src.split(":", 1)[1]
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_osf.py"),
+                        "--dest", str(root), "--node", node], check=True)
+    elif src.startswith("zenodo:"):
+        rec = src.split(":", 1)[1]
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_zenodo.py"),
+                        "--dest", str(root), "--record", rec], check=True)
+    elif src.startswith("figshare:"):
+        art = src.split(":", 1)[1]
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_figshare.py"),
+                        "--dest", str(root), "--article", art], check=True)
     elif src.startswith("gin:"):
         repo = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_eegdenoisenet.py"),
@@ -73,11 +85,11 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         db = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),
                         "--dest", str(root), "--db", db], check=True)
-    elif src.startswith(("confirm:", "registration:")):
+    elif src.startswith(("confirm:", "registration:", "portal:")):
         raise RuntimeError(
             f"{spec.dataset_id}: access='{spec.access}' is not automated ({src}). "
-            "Provide a durable URL/accession or registration credentials first "
-            "(see the dataset's registry note)."
+            "Provide a durable URL/accession or registration credentials, or use the "
+            "dataset's custom downloader (see the registry note)."
         )
     else:
         raise ValueError(f"no downloader for source {src!r}")
