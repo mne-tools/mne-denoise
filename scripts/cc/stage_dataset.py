@@ -86,6 +86,10 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         subdir = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_thu_portal.py"),
                         "--dest", str(root), "--subdir", subdir], check=True)
+    elif src.startswith("s3:"):
+        bucket_host, prefix = src.split(":", 1)[1].split("/", 1)
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_s3.py"),
+                        "--dest", str(root), "--bucket-host", bucket_host, "--prefix", prefix], check=True)
     elif src.startswith("physionet:"):
         db = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),

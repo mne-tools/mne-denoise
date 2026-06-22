@@ -188,33 +188,38 @@ REGISTRY: dict[str, DatasetSpec] = {
 
     # ---- require registration / data-use agreement (user must obtain access) ----
     "omega": DatasetSpec(
-        dataset_id="omega", repository="registration", project_relative_path="meg/omega",
+        dataset_id="omega", repository="controlled_nextcloud", project_relative_path="meg/omega",
         download_source="registration:omega", access="registration",
-        notes="Open MEG Archive; 60-Hz MEG replication. NEED: account/DUA (cannot auto-download)"),
+        notes="Open MEG Archive (60-Hz MEG). Register: mcgill.ca/bic/omega-registration "
+              "(ethics approval required). Landing: mcgill.ca/bic/neuroinformatics/omega. NOT automated"),
     "camcan": DatasetSpec(
-        dataset_id="camcan", repository="registration", project_relative_path="meg/camcan",
+        dataset_id="camcan", repository="controlled_sftp", project_relative_path="meg/camcan",
         download_source="registration:camcan", access="registration",
-        notes="Cam-CAN lifespan MEG; very large (multi-TB). NEED: application/approval"),
+        notes="Cam-CAN lifespan MEG (multi-TB). Apply (supervisor required): "
+              "opendata.mrc-cbu.cam.ac.uk/projects/camcan/request/ ; package phase2_arm1_raw_meg. NOT automated"),
     "hcp_meg": DatasetSpec(
-        dataset_id="hcp_meg", repository="registration", project_relative_path="meg/hcp",
-        download_source="registration:hcp", access="registration",
-        notes="HCP Young Adult MEG; multi-TB. NEED: data-use agreement + AWS/ConnectomeDB creds"),
+        dataset_id="hcp_meg", repository="balsa", project_relative_path="meg/hcp",
+        download_source="registration:hcp", access="registration", expected_subjects=95,
+        notes="HCP Young Adult MEG (~95 subj, multi-TB) via BALSA balsa.wustl.edu; accept terms. "
+              "Auto-stage possible AFTER terms acceptance (no AWS creds needed). NOT automated yet"),
     "tuh_eeg": DatasetSpec(
-        dataset_id="tuh_eeg", repository="registration", project_relative_path="clinical/tuh-eeg",
+        dataset_id="tuh_eeg", repository="controlled_nedc", project_relative_path="clinical/tuh-eeg",
         download_source="registration:tuh", access="registration",
-        notes="TUH EEG corpus; large. NEED: credentialed access (signed agreement)"),
+        notes="TUH EEG corpus. Request access: isip.piconepress.com/projects/tuh_eeg/ . NOT automated"),
     "tuh_artifact": DatasetSpec(
-        dataset_id="tuh_artifact", repository="registration", project_relative_path="clinical/tuh-artifact",
+        dataset_id="tuh_artifact", repository="controlled_nedc", project_relative_path="clinical/tuh-artifact",
         download_source="registration:tuh", access="registration",
-        notes="TUH EEG Artifact Corpus (labelled artifacts). NEED: credentialed access"),
+        notes="TUH EEG Artifact Corpus. Request: isip.piconepress.com/projects/nedc/html/resources.shtml. NOT automated"),
     "deap": DatasetSpec(
-        dataset_id="deap", repository="registration", project_relative_path="ocular/deap",
+        dataset_id="deap", repository="controlled_http", project_relative_path="ocular/deap",
         download_source="registration:deap", access="registration", expected_subjects=32,
-        notes="DEAP 32ch EEG + peripheral. NEED: registration/EULA"),
+        notes="DEAP 32ch EEG + peripheral. Register: eecs.qmul.ac.uk/mmv/datasets/deap/ . NOT automated"),
     "lemon": DatasetSpec(
-        dataset_id="lemon", repository="registration", project_relative_path="resting/lemon",
-        download_source="registration:lemon", access="registration",
-        notes="MPI Leipzig LEMON resting EEG. NEED: confirm distribution route / data-use terms"),
+        dataset_id="lemon", repository="s3", project_relative_path="s3/lemon-eeg",
+        download_source="s3:fcp-indi.s3.amazonaws.com/data/Projects/INDI/MPI-LEMON/EEG_MPILMBB_LEMON/EEG_Raw_BIDS_ID/",
+        access="open", license="PDDL",
+        notes="MPI Leipzig LEMON resting EEG (raw BIDS) via anonymous INDI S3 — no registration. "
+              "MRI/preprocessed/localizer subsets skipped (raw only)"),
 }
 
 
