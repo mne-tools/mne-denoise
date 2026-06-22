@@ -51,14 +51,15 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
     src = spec.download_source or ""
     root.mkdir(parents=True, exist_ok=True)
     if src.startswith("openneuro-py:"):
-        # Use the openneuro-py library directly: full dataset by default, or a
-        # subject subset via include=[...]. Downloads INTO target_dir (= root).
+        # Accession comes from the source (registry id may differ, e.g.
+        # japanese_eeg_emg -> ds007808). Full dataset by default; subset via include=[].
         import openneuro
 
-        kw = {"dataset": spec.dataset_id, "target_dir": str(root)}
+        accession = src.split(":", 1)[1]
+        kw = {"dataset": accession, "target_dir": str(root)}
         if subjects:
             kw["include"] = list(subjects)
-        print(f"[openneuro] {spec.dataset_id} -> {root} "
+        print(f"[openneuro] {accession} -> {root} "
               + (f"(subjects: {subjects})" if subjects else "(ALL subjects)"), flush=True)
         openneuro.download(**kw)
     elif src.startswith("osf-components:"):
