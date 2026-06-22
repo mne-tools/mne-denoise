@@ -186,7 +186,10 @@ def _deep_validate(root: pathlib.Path, spec: DatasetSpec) -> list[str]:
     issues: list[str] = []
     hits: list[pathlib.Path] = []
     for pat in ("*.vhdr", "*.fif", "*.edf", "*.set"):
-        hits = sorted(root.rglob(pat))
+        # Real recordings only: skip git-annex/datalad internals (.git/annex stores
+        # objects in directories named "<key>.set/" etc.) and any non-file matches.
+        hits = sorted(p for p in root.rglob(pat)
+                      if p.is_file() and ".git" not in p.parts)
         if hits:
             break
     if not hits:

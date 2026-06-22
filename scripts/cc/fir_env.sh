@@ -65,7 +65,7 @@ if [ ! -d "${MNE_DENOISE_VENV}" ]; then
     # Extra deps — all confirmed in the Alliance wheelhouse (2026-06-21), so the
     # whole env builds offline (compute nodes have no internet). openneuro-py is
     # only used on login nodes (downloads); pooch for OSF/Zenodo fetchers.
-    python -m pip install --no-index pandas seaborn pytest openneuro-py pooch
+    python -m pip install --no-index pandas seaborn pytest pyyaml openneuro-py pooch
 else
     echo "--- Activating existing virtualenv ---"
     # shellcheck disable=SC1091
