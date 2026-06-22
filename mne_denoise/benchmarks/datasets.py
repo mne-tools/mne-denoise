@@ -160,8 +160,12 @@ REGISTRY: dict[str, DatasetSpec] = {
               "(S1-S10..S61-S70.tar.gz + Description); no DOI/version -> SHA256SUMS manifest"),
     "eegeyenet": DatasetSpec(
         dataset_id="eegeyenet", repository="osf", project_relative_path="osf/eegeyenet",
-        download_source="osf:ktv7m", access="open", expected_subjects=356, license="verify_osf_metadata",
-        notes="EEG + eye-tracking (external ocular). OSF node ktv7m; verify OSF license metadata"),
+        download_source="confirm:osf-dropbox-addon", access="confirm", expected_subjects=356,
+        license="verify_osf_metadata",
+        notes="EEG + eye-tracking (external/SECONDARY ocular; ERP CORE is the primary). OSF ktv7m: data sits on a "
+              "DROPBOX ADDON under component dr6zb (dots/movie/vss/zuco). OSF API returns the addon folders EMPTY; "
+              "osfclient dies on KeyError:'name'. NEED direct OSF download URLs (osf.io/<id>/download) or the "
+              "authors' DataAcquisition route. DEFERRED."),
     "brain_invaders_2012": DatasetSpec(
         dataset_id="brain_invaders_2012", repository="zenodo", project_relative_path="zenodo/brain-invaders-2012",
         download_source="zenodo:2649006", access="open", expected_subjects=25,
