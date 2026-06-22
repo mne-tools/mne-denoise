@@ -39,6 +39,9 @@ class DatasetSpec:
     raw_or_processed: str = "raw"
     known_exclusions: tuple[str, ...] = ()
     verified_date: str | None = None
+    # access: "open" (auto-downloadable), "registration" (needs account/DUA — user
+    # must provide), "confirm" (needs a verified durable URL/accession before download).
+    access: str = "open"
     notes: str = ""
 
 
@@ -109,6 +112,101 @@ REGISTRY: dict[str, DatasetSpec] = {
         raw_or_processed="raw",
         notes="iCanClean phantom; independent re-analysis; trials are technical repeats",
     ),
+
+    # ============================ extended datasets (user request 2026-06-21) ============================
+    # ---- fully open, auto-downloadable (existing mechanisms) ----
+    "ds004475": DatasetSpec(
+        dataset_id="ds004475", repository="openneuro", project_relative_path="openneuro/ds004475",
+        download_source="openneuro-py:ds004475", license="CC0", access="open",
+        notes="split-belt treadmill / mobile EEG (verify channel types, raw rate, gait events)"),
+    "ds007554": DatasetSpec(
+        dataset_id="ds007554", repository="openneuro", project_relative_path="openneuro/ds007554",
+        download_source="openneuro-py:ds007554", license="CC0", access="open", expected_subjects=30,
+        notes="EEG+fNIRS+ECG, motor/cognitive, 3 sessions; very new — verify BIDS/events before confirmatory use"),
+    "sleep_edfx": DatasetSpec(
+        dataset_id="sleep_edfx", repository="physionet", project_relative_path="physionet/sleep-edfx",
+        download_source="physionet:sleep-edfx/1.0.0", license="ODC-BY", access="open", expected_sfreq=100.0,
+        notes="Sleep-EDF Expanded; 197 PSG nights; EEG/EOG/chin-EMG; long-duration EOG/EMG + sleep-stage preservation"),
+    "capslpdb": DatasetSpec(
+        dataset_id="capslpdb", repository="physionet", project_relative_path="physionet/capslpdb",
+        download_source="physionet:capslpdb/1.0.0", license="ODC-BY", access="open",
+        notes="CAP Sleep; >=3 EEG + EOG + chin/tibial EMG + ECG; ocular/cardiac/muscle reference + long-data"),
+    "eegmmidb": DatasetSpec(
+        dataset_id="eegmmidb", repository="physionet", project_relative_path="physionet/eegmmidb",
+        download_source="physionet:eegmmidb/1.0.0", license="ODC-BY", access="open", expected_subjects=109,
+        notes="EEG Motor Movement/Imagery; 64ch; ERD/ERS preservation + large-N external test"),
+    "chbmit": DatasetSpec(
+        dataset_id="chbmit", repository="physionet", project_relative_path="physionet/chbmit",
+        download_source="physionet:chbmit/1.0.0", license="ODC-BY", access="open",
+        notes="CHB-MIT scalp EEG; long clinical; robustness/scaling stress test (large)"),
+
+    # ---- need a verified durable URL / accession before download (access=confirm) ----
+    "tsinghua_ssvep": DatasetSpec(
+        dataset_id="tsinghua_ssvep", repository="url", project_relative_path="ssvep/tsinghua-benchmark",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=35,
+        notes="Tsinghua 40-target SSVEP benchmark (primary SSVEP). NEED: download URL"),
+    "beta_ssvep": DatasetSpec(
+        dataset_id="beta_ssvep", repository="url", project_relative_path="ssvep/beta",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=70,
+        notes="BETA SSVEP (external replication). NEED: download URL"),
+    "eegeyenet": DatasetSpec(
+        dataset_id="eegeyenet", repository="url", project_relative_path="ocular/eegeyenet",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=356,
+        notes="EEG + eye-tracking (external ocular). NEED: OSF/durable URL"),
+    "brain_invaders_2012": DatasetSpec(
+        dataset_id="brain_invaders_2012", repository="moabb", project_relative_path="erp/brain-invaders-2012",
+        download_source="confirm:moabb:BrainInvaders2012", access="confirm", expected_subjects=25,
+        notes="P300. Via MOABB (needs moabb dep) or a Zenodo URL — confirm preferred route"),
+    "vr_p300": DatasetSpec(
+        dataset_id="vr_p300", repository="url", project_relative_path="erp/vr-pc-p300",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=21,
+        notes="VR vs PC P300 (device/environment generalization). NEED: download URL"),
+    "meg_masc": DatasetSpec(
+        dataset_id="meg_masc", repository="openneuro", project_relative_path="openneuro/meg-masc",
+        download_source="confirm:PENDING_ACCESSION", access="confirm", expected_subjects=27,
+        notes="MEG-MASC natural speech (2nd MEG). NEED: OpenNeuro accession (then auto-downloadable)"),
+    "mobile_scalp_ear": DatasetSpec(
+        dataset_id="mobile_scalp_ear", repository="url", project_relative_path="mobile/scalp-ear-eeg",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=24,
+        notes="scalp+ear EEG, EOG, IMU; ERP/SSVEP under motion. NEED: durable URL + license"),
+    "wearbci": DatasetSpec(
+        dataset_id="wearbci", repository="url", project_relative_path="mobile/wearbci",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=36,
+        notes="EEG+IMU+video, walking/navigation (2026). NEED: repository URL + license + raw availability"),
+    "japanese_eeg_emg": DatasetSpec(
+        dataset_id="japanese_eeg_emg", repository="url", project_relative_path="muscle/japanese-eeg-emg",
+        download_source="confirm:PENDING_URL", access="confirm", expected_subjects=3,
+        notes="~1000h synced high-density EEG + facial EMG + speech. NEED: download URL"),
+
+    # ---- require registration / data-use agreement (user must obtain access) ----
+    "omega": DatasetSpec(
+        dataset_id="omega", repository="registration", project_relative_path="meg/omega",
+        download_source="registration:omega", access="registration",
+        notes="Open MEG Archive; 60-Hz MEG replication. NEED: account/DUA (cannot auto-download)"),
+    "camcan": DatasetSpec(
+        dataset_id="camcan", repository="registration", project_relative_path="meg/camcan",
+        download_source="registration:camcan", access="registration",
+        notes="Cam-CAN lifespan MEG; very large (multi-TB). NEED: application/approval"),
+    "hcp_meg": DatasetSpec(
+        dataset_id="hcp_meg", repository="registration", project_relative_path="meg/hcp",
+        download_source="registration:hcp", access="registration",
+        notes="HCP Young Adult MEG; multi-TB. NEED: data-use agreement + AWS/ConnectomeDB creds"),
+    "tuh_eeg": DatasetSpec(
+        dataset_id="tuh_eeg", repository="registration", project_relative_path="clinical/tuh-eeg",
+        download_source="registration:tuh", access="registration",
+        notes="TUH EEG corpus; large. NEED: credentialed access (signed agreement)"),
+    "tuh_artifact": DatasetSpec(
+        dataset_id="tuh_artifact", repository="registration", project_relative_path="clinical/tuh-artifact",
+        download_source="registration:tuh", access="registration",
+        notes="TUH EEG Artifact Corpus (labelled artifacts). NEED: credentialed access"),
+    "deap": DatasetSpec(
+        dataset_id="deap", repository="registration", project_relative_path="ocular/deap",
+        download_source="registration:deap", access="registration", expected_subjects=32,
+        notes="DEAP 32ch EEG + peripheral. NEED: registration/EULA"),
+    "lemon": DatasetSpec(
+        dataset_id="lemon", repository="registration", project_relative_path="resting/lemon",
+        download_source="registration:lemon", access="registration",
+        notes="MPI Leipzig LEMON resting EEG. NEED: confirm distribution route / data-use terms"),
 }
 
 

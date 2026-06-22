@@ -69,6 +69,16 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
         repo = src.split(":", 1)[1]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_eegdenoisenet.py"),
                         "--dest", str(root), "--repo", repo], check=True)
+    elif src.startswith("physionet:"):
+        db = src.split(":", 1)[1]
+        subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),
+                        "--dest", str(root), "--db", db], check=True)
+    elif src.startswith(("confirm:", "registration:")):
+        raise RuntimeError(
+            f"{spec.dataset_id}: access='{spec.access}' is not automated ({src}). "
+            "Provide a durable URL/accession or registration credentials first "
+            "(see the dataset's registry note)."
+        )
     else:
         raise ValueError(f"no downloader for source {src!r}")
 
