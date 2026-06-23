@@ -1,0 +1,37 @@
+# Arm: p300_vr — P300 target/non-target enhancement, EEG (Cattan 2019 VR-P300, GIPSA, PC condition).
+# Tier-B generalization of the DSS evoked-enhancement claim to a new ERP + new lab/recording.
+arm: p300_vr
+runner: evoked
+status: active
+
+dataset:
+  id: vr_p300
+  project_relative_path: zenodo/vr-eeg-2018-gipsa
+  channel_types: [eeg]
+  n_subjects: 21
+
+methods_under_test: [dss_average_bias]
+comparators:
+  required: [none, rank_matched_pca]
+
+metrics:
+  primary_target: held_out_target_minus_nontarget_P300_effect_size
+  primary_preservation: P300_amplitude_equivalence
+  roi_channels: [PZ]                 # centro-parietal P300 maximum
+  secondary: [split_half_reliability, SME]
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+
+baseline_preprocessing:
+  source: "Cattan, Andreev & Congedo 2019 (VR-P300, GIPSA-lab); 16-ch, 512 Hz"
+  online_reference: nose
+  steps:
+    highpass_hz: 1.0
+    resample_hz: 256
+    offline_reference: average
+    window_ms: [300, 500]            # P300 measurement window
+  branch_point: scalp_eeg_256hz_pre_artifact_removal
+  excluded_from_baseline: [dss, pca, ica]
+
+sweep: {dss: {param: n_components, grid: [2, 4, 6, 8]}}

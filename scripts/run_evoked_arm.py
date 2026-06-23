@@ -167,6 +167,39 @@ def _load_ds000117_m170(root, subject, cfg):
             mne.concatenate_epochs(scram_eps, on_mismatch="ignore"))
 
 
+def _load_vr_p300(root, subject, cfg):
+    """Cattan 2019 VR-P300 (GIPSA): parse the PC-condition CSV (512 Hz; time, 16 EEG, then
+    item/target/flash markers) and epoch target vs non-target flashes (P300 oddball).
+    Returns (target, nontarget) for the evoked runner."""
+    import glob
+    import re
+
+    import mne
+
+    num = int(re.sub(r"\D", "", subject) or 0)
+    cand = glob.glob(f"{root}/**/subject_{num:02d}_PC.csv", recursive=True)
+    if not cand:
+        cand = glob.glob(f"{pathlib.Path(root).parent}/**/subject_{num:02d}_PC.csv", recursive=True)
+    if not cand:
+        raise FileNotFoundError(f"vr_p300 CSV not found for {subject} under {root}")
+    arr = np.loadtxt(cand[0], delimiter=",")
+    sf0 = 512.0
+    ch = ["FP1", "FP2", "FC5", "FZ", "FC6", "T7", "CZ", "T8", "P7", "P3", "PZ", "P4", "P8", "O1", "OZ", "O2"]
+    raw = mne.io.RawArray(arr[:, 1:17].T * 1e-6, mne.create_info(ch, sf0, "eeg"), verbose=False)
+    flash = np.where(arr[:, 19] > 0)[0]          # col 20 (1-idx): flash onsets
+    is_t = arr[flash, 18] > 0                     # col 19 (1-idx): target indicator at flash
+    raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+    sf = float(raw.info["sfreq"])
+    t_s = flash / sf0
+
+    def _ep(times, cid):
+        ev = np.array([[int(round(t * sf)), 0, cid] for t in times], dtype=int)
+        return mne.Epochs(raw, ev, {str(cid): cid}, tmin=-0.1, tmax=0.6,
+                          baseline=(-0.1, 0.0), preload=True, verbose=False)
+
+    return _ep(t_s[is_t], 1), _ep(t_s[~is_t], 2)
+
+
 def _trial_gfp(epochs, tmin, tmax):
     """Per-trial global field power (RMS over channels) averaged in [tmin, tmax].
     Used for reliability/SME; single-trial GFP is noise-dominated."""
@@ -213,6 +246,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         epo_a, epo_b = epo_a.copy().pick("data"), epo_b.copy().pick("data")  # evoked: EEG only (EOG auxiliary)
     elif is_meg:
         epo_a, epo_b = _load_ds000117_m170(root, subject, cfg)               # mag-only faces vs scrambled
+    elif ds_id == "vr_p300":
+        epo_a, epo_b = _load_vr_p300(root, subject, cfg)                      # target vs non-target P300
     else:
         raise NotImplementedError(
             f"no real-data loader for dataset {ds_id!r} yet; use --synthetic for the local smoke."
