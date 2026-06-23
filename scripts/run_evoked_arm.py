@@ -169,11 +169,20 @@ def _load_ds000117_m170(root, subject, cfg):
 
 def _trial_gfp(epochs, tmin, tmax):
     """Per-trial global field power (RMS over channels) averaged in [tmin, tmax].
-    The MEG-magnetometer M170 endpoint — non-cancelling, no ROI needed."""
+    Used for reliability/SME; single-trial GFP is noise-dominated."""
     x = epochs.get_data(copy=False)
     times = epochs.times
     m = (times >= tmin) & (times <= tmax)
     return np.sqrt((x[:, :, m] ** 2).mean(axis=1)).mean(axis=1)
+
+
+def _evoked_gfp(epochs, tmin, tmax):
+    """GFP of the trial-AVERAGED (evoked) field in [tmin, tmax] — isolates the
+    reproducible M170 signal (the proper MEG-magnetometer effect endpoint)."""
+    ev = epochs.get_data(copy=False).mean(axis=0)  # (n_ch, n_times) evoked
+    times = epochs.times
+    m = (times >= tmin) & (times <= tmax)
+    return float(np.sqrt((ev[:, m] ** 2).mean(axis=0)).mean())
 
 
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
@@ -228,10 +237,11 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
             if is_meg:
                 amps_a = _trial_gfp(ra.cleaned, tmin, tmax)
                 amps_b = _trial_gfp(rb.cleaned, tmin, tmax)
+                diff = _evoked_gfp(ra.cleaned, tmin, tmax) - _evoked_gfp(rb.cleaned, tmin, tmax)
             else:
                 amps_a = _trial_amps(ra.cleaned, tmin, tmax, picks)
                 amps_b = _trial_amps(rb.cleaned, tmin, tmax, picks)
-            diff = float(np.mean(amps_a) - np.mean(amps_b))
+                diff = float(np.mean(amps_a) - np.mean(amps_b))
             sme_a = qp.analytic_sme(amps_a)
             try:
                 sh = qp.split_half_reliability(ra.cleaned.get_data(copy=False)[:, picks or slice(None), :].mean(1))
