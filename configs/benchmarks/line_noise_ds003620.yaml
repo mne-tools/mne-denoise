@@ -23,7 +23,7 @@ comparators:
   optional: []
 
 sweep:
-  zapline: {param: n_remove, grid: pending}
+  zapline: {param: n_remove, grid: [1, 2, 3, 4, 5, 6, 8, 10]}
 
 psd_spec:
   estimator: welch

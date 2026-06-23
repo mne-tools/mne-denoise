@@ -30,6 +30,7 @@ import mne_denoise.benchmarks.adapters  # noqa: F401  (registers method adapters
 from mne_denoise.benchmarks import comparators
 from mne_denoise.benchmarks import datasets as D
 from mne_denoise.benchmarks import io as bio
+from mne_denoise.benchmarks import sweep as _sweep
 from mne_denoise.benchmarks.preprocessing import apply_baseline, branch_context
 from mne_denoise.qa import metrics as qm
 
@@ -110,30 +111,36 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     n_harm = 3
     rows = []
     for mid in _methods(cfg):
-        try:
-            cmp = comparators.get(mid)
-        except KeyError:
-            rows.append({"method": mid, "status": "unavailable_dependency"})
-            continue
-        state = cmp.fit(sel, ctx)
-        res = cmp.transform(ev, state, ctx)
-        if res.status != "success":
-            rows.append({"method": mid, "status": res.status, "error": res.error})
-            continue
-        qa = qm.compute_all_qa_metrics(ev, res.cleaned, line_freq=line_freq, n_harmonics=n_harm)
-        row = {
-            "status": "success",
-            "runtime_s": res.runtime_seconds,
-            "n_removed": res.diagnostics.get("n_removed"),
-            **_scalars(qa),
-        }
-        rows.append({"method": mid, **row})
-        out_dir = pathlib.Path(deriv_root) / subject / BENCH / mid
-        bio.save_subject_benchmark_results(
-            out_dir, subject=subject, method=mid, metrics=row,
-            model_info={"baseline_applied": applied, "line_freq": line_freq,
-                        "branch_point": (cfg.get("baseline_preprocessing") or {}).get("branch_point")},
-        )
+        for suffix, mparams in _sweep.method_runs(cfg, mid):
+            tag = f"{mid}__{suffix}" if suffix else mid
+            sweep_param = suffix.split("-", 1)[0] if suffix else None
+            sweep_value = suffix.split("-", 1)[1] if suffix else None
+            try:
+                cmp = comparators.get(mid, **mparams)
+            except KeyError:
+                rows.append({"method": mid, "tag": tag, "status": "unavailable_dependency"})
+                continue
+            state = cmp.fit(sel, ctx)
+            res = cmp.transform(ev, state, ctx)
+            if res.status != "success":
+                rows.append({"method": mid, "tag": tag, "status": res.status, "error": res.error})
+                continue
+            qa = qm.compute_all_qa_metrics(ev, res.cleaned, line_freq=line_freq, n_harmonics=n_harm)
+            row = {
+                "status": "success",
+                "sweep_param": sweep_param,
+                "sweep_value": sweep_value,
+                "runtime_s": res.runtime_seconds,
+                "n_removed": res.diagnostics.get("n_removed"),
+                **_scalars(qa),
+            }
+            rows.append({"method": mid, "tag": tag, **row})
+            out_dir = pathlib.Path(deriv_root) / subject / BENCH / tag
+            bio.save_subject_benchmark_results(
+                out_dir, subject=subject, method=tag, metrics=row,
+                model_info={"baseline_applied": applied, "line_freq": line_freq,
+                            "branch_point": (cfg.get("baseline_preprocessing") or {}).get("branch_point")},
+            )
     return rows
 
 
