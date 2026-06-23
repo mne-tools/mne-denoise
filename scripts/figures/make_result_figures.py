@@ -71,13 +71,24 @@ def fig_failure():
 
 # --- 2. ds003620 line group + QC -----------------------------------------
 def fig_line_group():
-    meth = ["none", "notch", "non_spatial_line", "zapline_plus"]
-    lab = ["none", "notch", "non-spatial", "ZapLine+"]
-    fig, axs = plt.subplots(1, 2, figsize=(8, 3.3))
-    barpanel(axs[0], "line_ds003620", meth, "R_f0", lab, "held-out $R(f_0)$",
-             "Line attenuation (ds003620, n=42)", hline=1.0)
-    barpanel(axs[1], "line_ds003620", meth, "overclean_proportion", lab, "overclean proportion",
-             "Overcleaning (collateral floor loss)", color=RED)
+    # env-segmented (lab/oval/campus recovered from the participants.tsv counterbalancing)
+    envs = ["lab", "oval", "campus"]; elab = ["Lab", "Field", "Campus"]
+    meth = ["none", "notch", "non_spatial_line", "zapline_plus"]; mlab = ["none", "notch", "non-sp", "ZapLine+"]
+    mcol = [GREY, RED, "#DD8452", BLUE]
+    fig, axs = plt.subplots(1, 2, figsize=(8.6, 3.3))
+    x = np.arange(len(envs)); w = 0.2
+    for j, (m, c) in enumerate(zip(meth, mcol)):
+        vals = [msem("line_ds003620_env", f"{e}__{m}", "R_f0")[0] or 0 for e in envs]
+        axs[0].bar(x + (j - 1.5) * w, vals, w, label=mlab[j], color=c)
+    axs[0].axhline(1.0, ls="--", c=GREY, lw=1)
+    axs[0].set_xticks(x); axs[0].set_xticklabels(elab); axs[0].set_ylabel("held-out $R(f_0)$")
+    axs[0].set_title("Line attenuation by mobility (ds003620, n=41)"); axs[0].legend(fontsize=6.5, ncol=2)
+    nrm = [msem("line_ds003620_env", f"{e}__zapline_plus", "n_removed")[0] or 0 for e in envs]
+    axs[1].bar(x, nrm, color=BLUE, width=0.6)
+    for i, v in enumerate(nrm):
+        axs[1].text(i, v, f"{v:.0f}", ha="center", va="bottom", fontsize=8)
+    axs[1].set_xticks(x); axs[1].set_xticklabels(elab); axs[1].set_ylabel("ZapLine+ components removed")
+    axs[1].set_title("Adaptive removal $\\propto$ contamination")
     save(fig, "runabout_line_noise_group.png")
 
 
@@ -160,9 +171,12 @@ def fig_muscle():
 def fig_megline():
     meth = ["none", "notch", "non_spatial_line", "zapline_plus"]
     lab = ["none", "notch", "non-spatial", "ZapLine+"]
-    fig, ax = plt.subplots(figsize=(5.5, 3.3))
-    barpanel(ax, "line_ds000117", meth, "peak_attenuation_db", lab, "peak attenuation (dB)",
-             "MEG line attenuation @ 50 Hz (mag, n=15)")
+    fig, axs = plt.subplots(1, 2, figsize=(9, 3.3), sharey=True)
+    barpanel(axs[0], "line_ds000117", meth, "peak_attenuation_db", lab, "peak attenuation (dB)",
+             "Elekta ds000117 (mag, n=15)")
+    barpanel(axs[1], "line_meg_masc", meth, "peak_attenuation_db", lab, "",
+             "KIT meg-MASC (mag, n=11)")
+    fig.suptitle("MEG line attenuation @ 50 Hz across systems (contamination-proportional)", fontsize=9.5)
     save(fig, "meg_scaling_summary.png")
 
 
@@ -186,11 +200,40 @@ def fig_groundtruth():
     save(fig, "nonlinear_dss_summary.png")
 
 
+# --- 8. phantom (reference-aware, ds004784) ------------------------------
+def fig_phantom():
+    meth = ["none", "icanclean", "tspca"]; lab = ["none", "iCanClean", "TSPCA"]
+    fig, axs = plt.subplots(1, 2, figsize=(7.6, 3.3))
+    barpanel(axs[0], "phantom_ds004784", meth, "emg_coupling", lab,
+             "residual coupling $\\rho$ to EXG", "Artifact removal (phantom, n=1)", color=RED)
+    barpanel(axs[1], "phantom_ds004784", meth, "hf_power", lab,
+             "HF power (20--100 Hz)", "HF artifact level", color=BLUE)
+    save(fig, "phantom_ds004784_summary.png")
+
+
+# --- 9. mobile auditory ERP (ds003620, reframed) -------------------------
+def fig_mobile_erp():
+    p = pathlib.Path(__file__).resolve().parents[2] / "docs/benchmarks/filled_values/mobile_erp_ds003620.json"
+    m = json.load(open(p))
+    g = m.get("mobile_erp_ds003620.g.c0", 0); lat = m.get("mobile_erp_ds003620.latency_ms.c0", 0)
+    fig, axs = plt.subplots(1, 2, figsize=(6.6, 3.2))
+    axs[0].bar([0], [g], color=BLUE, width=0.5)
+    axs[0].axhline(0.5, ls="--", c=GREY, lw=1); axs[0].axhline(0.8, ls=":", c=GREY, lw=1)
+    axs[0].set_xticks([0]); axs[0].set_xticklabels(["C0 (none)"]); axs[0].set_ylim(0, 1.0)
+    axs[0].set_ylabel("vertex N1--P2 effect size (Hedges $g$)")
+    axs[0].set_title("Mobile auditory ERP (ds003620, n=41)")
+    axs[0].text(0, g + 0.02, f"{g:.2f}", ha="center", fontsize=10)
+    axs[1].bar([0], [lat], color=GREEN, width=0.5); axs[1].axhspan(150, 250, color=GREEN, alpha=0.12)
+    axs[1].set_xticks([0]); axs[1].set_xticklabels(["P2 peak"]); axs[1].set_ylabel("latency (ms)")
+    axs[1].set_title("P2 peak latency"); axs[1].text(0, lat + 4, f"{lat:.0f} ms", ha="center", fontsize=10)
+    save(fig, "runabout_erp_summary.png")
+
+
 if __name__ == "__main__":
     fig_failure(); fig_line_group(); fig_line_qc(); fig_pareto()
     fig_evoked("evoked_erp_core", "evoked_erp_core_summary.png", "N170 (ERP-CORE, n=40)")
     fig_evoked("evoked_ds000117", "evoked_ds000117_summary.png", "M170 (MEG, n=16)")
-    fig_ocular(); fig_muscle(); fig_megline()
+    fig_ocular(); fig_muscle(); fig_megline(); fig_phantom(); fig_mobile_erp()
     try:
         fig_groundtruth()
     except Exception as exc:  # noqa: BLE001
