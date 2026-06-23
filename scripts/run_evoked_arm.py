@@ -121,23 +121,79 @@ def _load_erp_core_n170(root, subject, cfg):
     return epo["face"], epo["car"], eog
 
 
+def _load_ds000117_m170(root, subject, cfg):
+    """ds000117 M170: raw FIF runs, epoch faces (Famous+Unfamiliar) vs Scrambled.
+    Magnetometers only (mag_grad_separate; M170 mag endpoint = GFP). Returns (face, scram)."""
+    import csv as _csv
+    import glob
+
+    import mne
+
+    runs = sorted(glob.glob(f"{root}/{subject}/**/*task-facerecognition_run-*_meg.fif", recursive=True))
+    runs = [r for r in runs if "proc-" not in pathlib.Path(r).name]  # raw only
+    if not runs:
+        raise FileNotFoundError(f"no raw MEG runs for {subject} under {root}")
+    bp = cfg.get("baseline_preprocessing")
+    face_eps, scram_eps = [], []
+    for rf in runs:
+        raw = mne.io.read_raw_fif(rf, preload=True, verbose=False).pick("mag")
+        raw, _ = apply_baseline(raw, bp)
+        sf = float(raw.info["sfreq"])
+        fo, so = [], []
+        with open(rf.replace("_meg.fif", "_events.tsv")) as f:
+            for r in _csv.DictReader(f, delimiter="\t"):
+                tt = r.get("trial_type", "")
+                try:
+                    on = float(r["onset"])
+                except (TypeError, ValueError, KeyError):
+                    continue
+                (fo if tt in ("Famous", "Unfamiliar") else so if tt == "Scrambled" else []).append(on)
+
+        def _ep(onsets, cid):
+            if not onsets:
+                return None
+            ev = np.array([[int(round(o * sf)), 0, cid] for o in onsets], dtype=int)
+            return mne.Epochs(raw, ev, {str(cid): cid}, tmin=-0.1, tmax=0.4,
+                              baseline=(-0.1, 0.0), preload=True, verbose=False)
+
+        fe, se = _ep(fo, 1), _ep(so, 2)
+        if fe is not None:
+            face_eps.append(fe)
+        if se is not None:
+            scram_eps.append(se)
+    return mne.concatenate_epochs(face_eps), mne.concatenate_epochs(scram_eps)
+
+
+def _trial_gfp(epochs, tmin, tmax):
+    """Per-trial global field power (RMS over channels) averaged in [tmin, tmax].
+    The MEG-magnetometer M170 endpoint — non-cancelling, no ROI needed."""
+    x = epochs.get_data(copy=False)
+    times = epochs.times
+    m = (times >= tmin) & (times <= tmax)
+    return np.sqrt((x[:, :, m] ** 2).mean(axis=1)).mean(axis=1)
+
+
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     bp = cfg.get("baseline_preprocessing", {}) or {}
     steps = bp.get("steps", {}) or {}
-    win = steps.get("n170_window_ms") or [130, 200]
+    win = (steps.get("window_ms") or steps.get("n170_window_ms")
+           or (cfg.get("m170_outcome") or {}).get("window_ms") or [130, 200])
     tmin, tmax = win[0] / 1000.0, win[1] / 1000.0
+    ds_id = (cfg.get("dataset", {}) or {}).get("id")
+    is_meg = ds_id == "ds000117"
     if synthetic:
         epo_a, epo_b = _synth_two_conditions()
-    elif cfg.get("dataset", {}).get("id") == "erp_core_n170":
+    elif ds_id == "erp_core_n170":
         epo_a, epo_b, _eog = _load_erp_core_n170(root, subject, cfg)
         epo_a, epo_b = epo_a.copy().pick("data"), epo_b.copy().pick("data")  # evoked: EEG only (EOG auxiliary)
+    elif is_meg:
+        epo_a, epo_b = _load_ds000117_m170(root, subject, cfg)               # mag-only faces vs scrambled
     else:
         raise NotImplementedError(
-            f"no real-data loader for dataset {cfg.get('dataset', {}).get('id')!r} yet "
-            "(ds000117 MEG loader lands next); use --synthetic for the local smoke."
+            f"no real-data loader for dataset {ds_id!r} yet; use --synthetic for the local smoke."
         )
     ctx = {"sfreq": float(epo_a.info["sfreq"])}
-    picks = _roi_picks(epo_a, cfg)
+    picks = None if is_meg else _roi_picks(epo_a, cfg)  # MEG mag endpoint = GFP (no ROI)
     na, nb = len(epo_a), len(epo_b)
     tr_a, ev_a = epo_a[: na // 2], epo_a[na // 2:]
     tr_b, ev_b = epo_b[: nb // 2], epo_b[nb // 2:]
@@ -166,8 +222,12 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                 bad = ra if ra.status != "success" else rb
                 rows.append({"method": mid, "tag": tag, "status": bad.status, "error": bad.error})
                 continue
-            amps_a = _trial_amps(ra.cleaned, tmin, tmax, picks)
-            amps_b = _trial_amps(rb.cleaned, tmin, tmax, picks)
+            if is_meg:
+                amps_a = _trial_gfp(ra.cleaned, tmin, tmax)
+                amps_b = _trial_gfp(rb.cleaned, tmin, tmax)
+            else:
+                amps_a = _trial_amps(ra.cleaned, tmin, tmax, picks)
+                amps_b = _trial_amps(rb.cleaned, tmin, tmax, picks)
             diff = float(np.mean(amps_a) - np.mean(amps_b))
             sme_a = qp.analytic_sme(amps_a)
             try:

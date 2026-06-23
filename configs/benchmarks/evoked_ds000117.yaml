@@ -22,8 +22,8 @@ preprocessing:
 
 m170_outcome:                  # frozen so signed MEG fields are not cancelled by pooling
   conditions: [faces, scrambled]
-  window_ms: pending           # predefined
-  baseline_ms: pending
+  window_ms: [150, 200]        # M170 peak ~170 ms
+  baseline_ms: [-100, 0]
   roi_selection: literature_or_training_runs_only
   magnetometers: {outcome: roi_mean_or_gfp}
   planar_gradiometers: {combine_pairs: rms, outcome: roi_rms}
@@ -35,7 +35,7 @@ comparators:
   required: [none, rank_matched_pca]
   secondary: [ica_rank_matched]
   null_condition: event_destroyed_dss
-sweep: {dss: {param: n_components, grid: pending}}
+sweep: {dss: {param: n_components, grid: [2, 4, 6, 8]}}
 
 splits: {fit: train_runs, selection: validation, evaluation: held_out_runs}
 
