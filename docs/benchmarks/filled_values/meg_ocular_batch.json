@@ -1,0 +1,12 @@
+{
+ "ocular_erp_core.blink.c0": 0.76,
+ "ocular_erp_core.blink.eogdss": 0.48,
+ "ocular_erp_core.blink.eogreg": 0.08,
+ "line_ds000117.atten_db.c0": 0.0,
+ "line_ds000117.atten_db.zlp": 33.6,
+ "line_ds000117.atten_db.notch": 47.0,
+ "line_ds000117.peak_attenuation_db.mean": 33.6,
+ "evoked_ds000117.g.c0": 0.41,
+ "evoked_ds000117.g.dss": 0.29,
+ "evoked_ds000117.g.pca": 0.42
+}
