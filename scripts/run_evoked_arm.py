@@ -186,8 +186,17 @@ def _load_vr_p300(root, subject, cfg):
     sf0 = 512.0
     ch = ["FP1", "FP2", "FC5", "FZ", "FC6", "T7", "CZ", "T8", "P7", "P3", "PZ", "P4", "P8", "O1", "OZ", "O2"]
     raw = mne.io.RawArray(arr[:, 1:17].T * 1e-6, mne.create_info(ch, sf0, "eeg"), verbose=False)
-    flash = np.where(arr[:, 19] > 0)[0]          # col 20 (1-idx): flash onsets
-    is_t = arr[flash, 18] > 0                     # col 19 (1-idx): target indicator at flash
+    # P300 speller: col18=item code (flash 20-45 / cue 60-85, offset +40); col19 cues the
+    # target item; col20 = flash onset. A flash is target when its item == the current cue's.
+    item, cue, flsh = arr[:, 17], arr[:, 18] > 0, arr[:, 19] > 0
+    cur, flash, is_t = None, [], []
+    for i in range(arr.shape[0]):
+        if cue[i]:
+            cur = item[i] - 40.0
+        if flsh[i]:
+            flash.append(i)
+            is_t.append(cur is not None and abs(item[i] - cur) < 0.5)
+    flash, is_t = np.array(flash, int), np.array(is_t, bool)
     raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     sf = float(raw.info["sfreq"])
     t_s = flash / sf0
