@@ -74,11 +74,57 @@ def _methods(cfg):
     return list(dict.fromkeys(out))
 
 
+def _load_erp_core_ocular(root, subject, cfg):
+    """Load ERP-CORE N170 for the ocular arm: all stimulus epochs (faces+cars, with their
+    natural blinks) and the EOG channels retained (the ocular methods need them). Returns
+    (epochs, eog_names, (tmin, tmax) N170 window, posterior picks)."""
+    import csv as _csv
+    import glob
+
+    import mne
+
+    from mne_denoise.benchmarks.preprocessing import apply_baseline
+
+    cand = glob.glob(f"{root}/**/{subject}_ses-N170_task-N170_eeg.set", recursive=True)
+    if not cand:
+        cand = glob.glob(f"{pathlib.Path(root).parent}/**/{subject}_ses-N170_task-N170_eeg.set", recursive=True)
+    if not cand:
+        raise FileNotFoundError(f"N170 .set not found for {subject} under {root}")
+    setf = pathlib.Path(cand[0])
+    raw = mne.io.read_raw_eeglab(setf, preload=True, verbose=False)
+    eog = [c for c in raw.ch_names if c.startswith(("HEOG", "VEOG"))]
+    if eog:
+        raw.set_channel_types({c: "eog" for c in eog})
+    onsets = []
+    with open(setf.with_name(setf.name.replace("_eeg.set", "_events.tsv"))) as f:
+        for r in _csv.DictReader(f, delimiter="\t"):
+            if r.get("trial_type") != "stimulus":
+                continue
+            try:
+                v = int(float(r["value"])); on = float(r["onset"])
+            except (ValueError, KeyError, TypeError):
+                continue
+            if 1 <= v <= 80:  # faces + cars (ocular arm doesn't need the contrast)
+                onsets.append(on)
+    raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+    sf = float(raw.info["sfreq"])
+    ev = np.array([[int(round(o * sf)), 0, 1] for o in onsets], dtype=int)
+    epo = mne.Epochs(raw, ev, {"stim": 1}, tmin=-0.2, tmax=0.8, baseline=(-0.2, 0.0),
+                     preload=True, verbose=False)
+    roi = (cfg.get("metrics", {}) or {}).get("roi_channels") or ["PO7", "PO8"]
+    picks = [epo.ch_names.index(c) for c in roi if c in epo.ch_names] or None
+    steps = (cfg.get("baseline_preprocessing", {}) or {}).get("steps", {}) or {}
+    win = steps.get("n170_window_ms") or [110, 150]
+    return epo, eog, (win[0] / 1000.0, win[1] / 1000.0), picks
+
+
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     if synthetic:
         epo, eog, (wlo, whi), picks = _synth_ocular()
+    elif cfg.get("dataset", {}).get("id") == "erp_core_n170":
+        epo, eog, (wlo, whi), picks = _load_erp_core_ocular(root, subject, cfg)
     else:
-        raise NotImplementedError("real ERP-CORE N170 loader (VEOG/HEOG + face/car) lands with the pilot")
+        raise NotImplementedError(f"no ocular loader for dataset {cfg.get('dataset', {}).get('id')!r}")
     sfreq = float(epo.info["sfreq"])
     n = len(epo)
     tr, ev = epo[: n // 2], epo[n // 2:]
