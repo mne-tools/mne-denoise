@@ -34,7 +34,7 @@ comparators:
     non_spatial_line_noise:
       preferred: cleanline
       accepted_substitutes: [sinusoid_regression, spectrum_interpolation]
-sweep: {zapline: {param: n_remove, grid: pending}}
+sweep: {zapline: {param: n_remove, grid: [1, 2, 3, 4, 6, 8]}}
 
 psd_spec:
   estimator: welch

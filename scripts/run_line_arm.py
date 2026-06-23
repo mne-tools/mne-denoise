@@ -61,6 +61,23 @@ def _find_raw(root: pathlib.Path, subject: str):
     raise FileNotFoundError(f"no recording for {subject} under {root}")
 
 
+def _load_ds000117_meg(root, subject):
+    """ds000117 MEG line arm: load the RAW (non-SSS) run-01 FIF — line noise is intact
+    only in the raw files (SSS/MaxFilter removes 50 Hz + harmonics + HPI). Magnetometers
+    only (the baseline's mag_grad_separate; gradiometers are a separate sub-analysis)."""
+    import glob
+
+    import mne
+
+    hits = sorted(glob.glob(f"{root}/{subject}/**/*task-facerecognition_run-*_meg.fif", recursive=True))
+    hits = [h for h in hits if "proc-" not in pathlib.Path(h).name]  # raw only (no proc-sss)
+    if not hits:
+        raise FileNotFoundError(f"no raw MEG run for {subject} under {root}")
+    raw = mne.io.read_raw_fif(hits[0], preload=True, verbose=False)
+    raw.pick("mag")
+    return raw
+
+
 def _synth_subject(line_freq=50.0, sfreq=500.0, secs=60, nch=16, seed=0):
     import mne
 
@@ -103,7 +120,13 @@ def _scalars(d: dict) -> dict:
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     ctx = branch_context(cfg)
     line_freq = ctx.get("line_freq", 50.0)
-    raw = _synth_subject(line_freq=line_freq) if synthetic else _find_raw(root, subject)
+    ds_id = (cfg.get("dataset") or {}).get("id")
+    if synthetic:
+        raw = _synth_subject(line_freq=line_freq)
+    elif ds_id == "ds000117":
+        raw = _load_ds000117_meg(root, subject)
+    else:
+        raw = _find_raw(root, subject)
     raw, applied = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     raw.pick("data")  # score on data channels
     ctx["sfreq"] = float(raw.info["sfreq"])
