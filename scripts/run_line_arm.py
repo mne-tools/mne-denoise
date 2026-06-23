@@ -97,6 +97,63 @@ def _load_meg_masc(root, subject):
     return raw
 
 
+def _ds003620_env_segments(root, subject):
+    """Map ds003620's single continuous recording to its 3 mobility environments.
+
+    The recording is 6 sequential ~equal blocks = 3 environments (lab / oval / campus) x 2 task
+    conditions (count / do-not-count), counterbalanced per subject (participants.tsv). The EEG
+    has no block markers (only S 1 stimuli), so blocks are split by stimulus index into 6 equal
+    segments and mapped to environments via the per-subject counterbalancing. Inter-block
+    transitions (subjects physically relocate) are excluded by cropping between the first and last
+    stimulus of each segment. Returns {env_name: [(tmin_s, tmax_s), ...]} (2 segments per env)."""
+    import csv
+    import glob
+
+    num = int(subject.split("-")[1])
+    evf = glob.glob(f"{root}/{subject}/**/*_events.tsv", recursive=True)
+    jf = glob.glob(f"{root}/{subject}/**/*_eeg.json", recursive=True)
+    sf = 500.0
+    if jf:
+        import json
+        sf = float(json.load(open(jf[0])).get("SamplingFrequency", 500.0))
+    ons = []
+    with open(evf[0]) as f:
+        for r in csv.DictReader(f, delimiter="\t"):
+            try:
+                ons.append(float(r["onset"]))
+            except (ValueError, KeyError):
+                pass
+    ons = np.sort(np.asarray(ons)) / sf  # samples -> seconds
+    N = len(ons)
+    bnd = [int(round(N * k / 6)) for k in range(7)]
+    segs = [(float(ons[bnd[k]]), float(ons[min(bnd[k + 1] - 1, N - 1)])) for k in range(6)]
+    # per-subject counterbalancing from participants.tsv (participant_id is "sub-<n>", no zero-pad)
+    lvl = {"1": "lab", "2": "oval", "3": "campus"}
+    prow = {}
+    with open(f"{root}/participants.tsv") as f:
+        for r in csv.DictReader(f, delimiter="\t"):
+            if r.get("participant_id") in (f"sub-{num}", subject):
+                prow = r
+                break
+    cnt = [lvl.get(prow.get(f"enviro_{i}_count", ""), "lab") for i in (1, 2, 3)]
+    dnc = [lvl.get(prow.get(f"enviro_{i}_d_count", ""), "lab") for i in (1, 2, 3)]
+    order = (cnt + dnc) if str(prow.get("condition", "1")) == "1" else (dnc + cnt)
+    env_segs = {}
+    for seg, env in zip(segs, order):
+        env_segs.setdefault(env, []).append(seg)
+    return env_segs
+
+
+def _concat_env(raw, segments):
+    """Crop the raw to each (tmin, tmax) segment and concatenate (one mobility environment)."""
+    import mne
+
+    tmax_all = float(raw.times[-1])
+    parts = [raw.copy().crop(tmin=max(0.0, t0), tmax=min(tmax_all, t1))
+             for t0, t1 in segments if t1 > t0]
+    return mne.concatenate_raws(parts) if len(parts) > 1 else parts[0]
+
+
 def _synth_subject(line_freq=50.0, sfreq=500.0, secs=60, nch=16, seed=0):
     import mne
 
@@ -152,40 +209,47 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     raw, applied = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     raw.pick("data")  # score on data channels
     ctx["sfreq"] = float(raw.info["sfreq"])
-    sel, ev = _split_select_eval(raw)
     n_harm = 3
     rows = []
-    for mid in _methods(cfg):
-        for suffix, mparams in _sweep.method_runs(cfg, mid):
-            tag = f"{mid}__{suffix}" if suffix else mid
-            sweep_param = suffix.split("-", 1)[0] if suffix else None
-            sweep_value = suffix.split("-", 1)[1] if suffix else None
-            try:
-                cmp = comparators.get(mid, **mparams)
-            except KeyError:
-                rows.append({"method": mid, "tag": tag, "status": "unavailable_dependency"})
-                continue
-            state = cmp.fit(sel, ctx)
-            res = cmp.transform(ev, state, ctx)
-            if res.status != "success":
-                rows.append({"method": mid, "tag": tag, "status": res.status, "error": res.error})
-                continue
-            qa = qm.compute_all_qa_metrics(ev, res.cleaned, line_freq=line_freq, n_harmonics=n_harm)
-            row = {
-                "status": "success",
-                "sweep_param": sweep_param,
-                "sweep_value": sweep_value,
-                "runtime_s": res.runtime_seconds,
-                "n_removed": res.diagnostics.get("n_removed"),
-                **_scalars(qa),
-            }
-            rows.append({"method": mid, "tag": tag, **row})
-            out_dir = pathlib.Path(deriv_root) / subject / BENCH / tag
-            bio.save_subject_benchmark_results(
-                out_dir, subject=subject, method=tag, metrics=row,
-                model_info={"baseline_applied": applied, "line_freq": line_freq,
-                            "branch_point": (cfg.get("baseline_preprocessing") or {}).get("branch_point")},
-            )
+    env_seg = bool(cfg.get("env_segment")) and ds_id == "ds003620" and not synthetic
+    envs = ["lab", "oval", "campus"] if env_seg else [None]
+    env_map = _ds003620_env_segments(root, subject) if env_seg else None
+    for env in envs:
+        raw_e = raw if env is None else _concat_env(raw, env_map[env])
+        sel, ev = _split_select_eval(raw_e)
+        for mid in _methods(cfg):
+            for suffix, mparams in _sweep.method_runs(cfg, mid):
+                base = f"{mid}__{suffix}" if suffix else mid
+                tag = f"{env}__{base}" if env else base
+                sweep_param = suffix.split("-", 1)[0] if suffix else None
+                sweep_value = suffix.split("-", 1)[1] if suffix else None
+                try:
+                    cmp = comparators.get(mid, **mparams)
+                except KeyError:
+                    rows.append({"method": mid, "tag": tag, "env": env, "status": "unavailable_dependency"})
+                    continue
+                state = cmp.fit(sel, ctx)
+                res = cmp.transform(ev, state, ctx)
+                if res.status != "success":
+                    rows.append({"method": mid, "tag": tag, "env": env, "status": res.status, "error": res.error})
+                    continue
+                qa = qm.compute_all_qa_metrics(ev, res.cleaned, line_freq=line_freq, n_harmonics=n_harm)
+                row = {
+                    "status": "success",
+                    "env": env,
+                    "sweep_param": sweep_param,
+                    "sweep_value": sweep_value,
+                    "runtime_s": res.runtime_seconds,
+                    "n_removed": res.diagnostics.get("n_removed"),
+                    **_scalars(qa),
+                }
+                rows.append({"method": mid, "tag": tag, **row})
+                out_dir = pathlib.Path(deriv_root) / subject / BENCH / tag
+                bio.save_subject_benchmark_results(
+                    out_dir, subject=subject, method=tag, metrics=row,
+                    model_info={"baseline_applied": applied, "line_freq": line_freq, "env": env,
+                                "branch_point": (cfg.get("baseline_preprocessing") or {}).get("branch_point")},
+                )
     return rows
 
 
