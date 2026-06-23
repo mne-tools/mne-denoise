@@ -58,8 +58,9 @@ def _fit_unmix(method: str, X_train: np.ndarray, n_comp: int):
     if method == "picard":
         from picard import picard
 
-        _, W, _ = picard(X_train, n_components=n_comp, ortho=False, random_state=0, max_iter=300)
-        return (lambda X: W @ X), W
+        K, W, _ = picard(X_train, n_components=n_comp, ortho=False, random_state=0, max_iter=300)
+        WK = W @ K  # compose whitening (K) with the whitened-space unmixing (W)
+        return (lambda X: WK @ X), WK
     if method == "iterative_dss":
         from mne_denoise.dss import iterative_dss
         from mne_denoise.dss.denoisers import TanhMaskDenoiser, beta_tanh
