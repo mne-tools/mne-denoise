@@ -58,3 +58,14 @@ unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays]
   save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-02]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Liebherr et al. 2021 (10.1038/s41598-021-01772-8)"
+  mains_hz: 50                       # Adelaide AU (inferred)
+  online_reference: FCz
+  steps:                             # identical input to ZapLine/ZapLine+ AND notch/CleanLine
+    keep_native_sfreq: 500           # no resample before line eval
+    highpass_hz: 0.5                 # drift only, zero-phase FIR
+    reference: as_recorded
+  branch_point: raw_500hz_pre_line_removal
+  excluded_from_baseline: [resample_250, lowpass_40, asr, ica]   # would alter line content / under test

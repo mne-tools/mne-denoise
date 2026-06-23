@@ -32,3 +32,13 @@ ip_disclosure: {icanclean_patent: "WO 2022/061322", python_impl_authorization: p
 unit_of_inference: phantom_trial_technical_repeat
 storage:
   always_save: [metrics, model_json, qc_arrays]
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "independent re-analysis of the iCanClean phantom (method PDF filed)"
+  steps:
+    highpass_hz: 1.0
+    no_resample: true
+    preserve_known_sources: true     # brain + artifact = ground-truth reference
+  branch_point: phantom_known_sources_retained
+  excluded_from_baseline: [icanclean, asr, auto_cca, adaptive_filtering]
+  unit: technical_repeats

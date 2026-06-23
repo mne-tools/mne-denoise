@@ -55,3 +55,15 @@ unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays]
   save_cleaned: {mode: selected_subjects, subjects: pending}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Wakeman & Henson 2015 (10.1038/sdata.2015.1)"
+  mains_hz: 50                       # UK (explicit)
+  online_reference: nose
+  steps:
+    use_raw_fif: true                # NOT MaxFilter/SSS (already removed 50 Hz + HPI)
+    keep_native_sfreq: 1100
+    mag_grad_separate: true
+    exclude_hpi_bands_hz: [293, 307, 314, 321, 328]
+  branch_point: raw_fif_full_rank_pre_line_removal
+  excluded_from_baseline: [sss_maxfilter, resample]

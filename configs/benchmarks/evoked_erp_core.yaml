@@ -48,3 +48,18 @@ seeds: {global: 42, ica: 42}
 storage:
   always_save: [metrics, model_json, qc_arrays, evoked_arrays]
   save_cleaned: {mode: selected_subjects, subjects: pending}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Kappenman et al. 2021 (10.1016/j.neuroimage.2020.117465)"
+  mains_hz: 60                       # UC Davis US
+  online_reference: CMS_DRL
+  steps:
+    resample_hz: 256
+    offline_reference: average_all_33   # N170 convention
+    highpass_hz: 0.1                 # non-causal Butterworth
+    bipolar_eog: true
+    epoch_ms: [-200, 800]
+    baseline_ms: [-200, 0]
+  branch_point: common_epoched_erp
+  excluded_from_baseline: [ica_ocular]   # ICA correction is a comparator (under test)
+  gap: "per-paradigm N170 window in paper table; confirm vs BIDS sidecars on Fir"

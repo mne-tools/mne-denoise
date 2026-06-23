@@ -63,3 +63,17 @@ unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays]
   save_cleaned: {mode: selected_subjects, subjects: pending}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Studnicki 2024 DiB (10.1016/j.dib.2023.110024) + 2022 Sensors (10.3390/s22155867)"
+  mains_hz: 60                       # Florida US (explicit, CleanLine)
+  online_reference: CPz
+  steps:
+    highpass_hz: 1.0
+    resample_hz: 250
+    reference: common_average_per_layer_full_rank
+    cleanline_hz: 60                 # line != the artifact under test here
+    bad_channel_interp: true
+    preserve_reference_channels: [noise_layer_120, neck_emg_8]
+  branch_point: scalp_eeg_250hz_reference_channels_retained
+  excluded_from_baseline: [amica, icanclean, asr, time_rejection]   # the methods under test

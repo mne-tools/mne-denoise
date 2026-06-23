@@ -57,3 +57,12 @@ equivalence_margin: {value: pending_feasibility, direction: non_inferiority, jus
 storage:
   always_save: [metrics, model_json, qc_arrays, removed_signal]
   save_cleaned: {mode: selected_replicates, ids: pending}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "synthetic forward-model base + known L_known"
+  mains_hz: [50, 60]                 # both injected
+  steps:
+    clean_forward_base: true         # known pre-injection signal is the reference
+    inject_L_known: true
+  branch_point: "X_test = X_base + L_known"
+  excluded_from_baseline: [any_cleaning_before_branch]

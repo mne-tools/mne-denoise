@@ -45,3 +45,13 @@ preservation_reference: {source: known_clean_neural_sources, independent_from_me
 unit_of_inference: nested_over_source_set_A_snr_artifact_seed   # mixed models; no window-level pseudoreplication
 storage:
   always_save: [metrics, model_json, recovered_sources_summary]
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "controlled simulation (EEGdenoiseNet sources, known random mixing A)"
+  steps:
+    generate_clean_sources: true
+    apply_mixing_in_sim: true        # known A
+    set_snr_in_sim: true
+  branch_point: identical_mixed_sensors_X_eq_A_S
+  excluded_from_baseline: [all_bss_methods]   # PCA/ICA/Picard/IterativeDSS applied post-branch
+  note: "no real preprocessing; mixing + SNR set in-sim"

@@ -52,3 +52,15 @@ unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays, evoked_arrays]
   save_cleaned: {mode: selected_subjects, subjects: pending}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Wakeman & Henson 2015 (10.1038/sdata.2015.1)"
+  mains_hz: 50
+  online_reference: nose
+  steps:
+    use_sss: true
+    epoch_ms: [-100, 800]            # authors epoch -500/+1200 then trim
+    baseline_ms: [-100, 0]
+    mag_grad_endpoints_separate: true   # M170: mags ROI/GFP, grads RMS-of-pair
+  branch_point: common_epoched_evoked_sss
+  excluded_from_baseline: [the_comparator_methods]
