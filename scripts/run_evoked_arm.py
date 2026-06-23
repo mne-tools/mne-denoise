@@ -189,13 +189,20 @@ def _load_vr_p300(root, subject, cfg):
     # P300 speller: col18=item code (flash 20-45 / cue 60-85, offset +40); col19 cues the
     # target item; col20 = flash onset. A flash is target when its item == the current cue's.
     item, cue, flsh = arr[:, 17], arr[:, 18] > 0, arr[:, 19] > 0
-    cur, flash, is_t = None, [], []
+    tcol = trow = None   # row/column speller: cue 60-65 -> target column (flash 20-25),
+    flash, is_t = [], []  #                     cue 80-85 -> target row (flash 40-45)
     for i in range(arr.shape[0]):
         if cue[i]:
-            cur = item[i] - 40.0
+            ci = item[i]
+            if 60 <= ci <= 65:
+                tcol = ci - 40.0
+            elif 80 <= ci <= 85:
+                trow = ci - 40.0
         if flsh[i]:
             flash.append(i)
-            is_t.append(cur is not None and abs(item[i] - cur) < 0.5)
+            it = item[i]
+            is_t.append((tcol is not None and abs(it - tcol) < 0.5) or
+                        (trow is not None and abs(it - trow) < 0.5))
     flash, is_t = np.array(flash, int), np.array(is_t, bool)
     raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     sf = float(raw.info["sfreq"])
