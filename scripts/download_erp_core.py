@@ -25,14 +25,32 @@ import urllib.request
 OSF_API = "https://api.osf.io/v2"
 
 
-def list_components(node: str) -> list[tuple[str, str]]:
-    """Return [(component_id, title), ...] for all children of an OSF node (paginated)."""
+def list_components(node: str, *, attempts: int = 8) -> list[tuple[str, str]]:
+    """Return [(component_id, title), ...] for all children of an OSF node (paginated).
+
+    OSF intermittently throttles anonymous callers and returns an empty ``data`` even
+    when ``meta.total`` > 0; retry such pages with backoff so a detached run recovers.
+    """
+    import time
+
     url = f"{OSF_API}/nodes/{node}/children/?page%5Bsize%5D=50"  # encode [] or OSF returns empty
     out: list[tuple[str, str]] = []
     while url:
-        req = urllib.request.Request(url, headers={"Accept": "application/vnd.api+json"})
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            data = json.load(resp)
+        data = None
+        for i in range(attempts):
+            req = urllib.request.Request(url, headers={
+                "Accept": "application/vnd.api+json", "User-Agent": "mne-denoise/1.0"})
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    data = json.load(resp)
+            except Exception:  # noqa: BLE001
+                data = None
+            total = (((data or {}).get("links") or {}).get("meta") or {}).get("total")
+            if data is not None and (data.get("data") or not total):
+                break  # got rows, or a genuinely-empty page
+            time.sleep(min(60, 8 * (i + 1)))  # OSF throttle / transient-empty backoff
+        if not data:
+            break
         out.extend((c["id"], c["attributes"]["title"]) for c in data.get("data", []))
         url = (data.get("links") or {}).get("next")
     return out
