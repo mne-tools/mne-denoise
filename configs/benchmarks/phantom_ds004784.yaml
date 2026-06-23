@@ -16,9 +16,8 @@ dataset:
   channel_types: [eeg, eog]
   n_subjects: 1
 
-methods_under_test: [icanclean, tspca]   # TSPCA stands in for the C1 Auto-CCA slot
-comparators:
-  required: [none]
+tiers:                                   # TSPCA stands in for the C1 Auto-CCA slot
+  reference_free: [none]
   reference_aware: [icanclean, tspca]
 
 metrics:
