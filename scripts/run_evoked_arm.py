@@ -29,6 +29,7 @@ from mne_denoise.benchmarks import comparators
 from mne_denoise.benchmarks import datasets as D
 from mne_denoise.benchmarks import io as bio
 from mne_denoise.benchmarks import sweep as _sweep
+from mne_denoise.benchmarks.preprocessing import apply_baseline
 from mne_denoise.qa import preservation as qp
 
 BENCH = "evoked"
@@ -78,17 +79,61 @@ def _roi_picks(epochs, cfg):
     return None  # all channels (synthetic / default)
 
 
+def _load_erp_core_n170(root, subject, cfg):
+    """Load ERP-CORE N170 (EEGLAB .set), set EOG types, apply the paper-grounded
+    baseline, and epoch faces (value 1-40) vs cars (41-80). Returns (face, car, eog)."""
+    import csv as _csv
+    import glob
+
+    import mne
+
+    cand = glob.glob(f"{root}/**/{subject}_ses-N170_task-N170_eeg.set", recursive=True)
+    if not cand:
+        cand = glob.glob(f"{pathlib.Path(root).parent}/**/{subject}_ses-N170_task-N170_eeg.set",
+                         recursive=True)
+    if not cand:
+        raise FileNotFoundError(f"N170 .set not found for {subject} under {root}")
+    setf = pathlib.Path(cand[0])
+    raw = mne.io.read_raw_eeglab(setf, preload=True, verbose=False)
+    eog = [c for c in raw.ch_names if c.startswith(("HEOG", "VEOG"))]
+    if eog:
+        raw.set_channel_types({c: "eog" for c in eog})
+    # events from the BIDS sidecar (onset in seconds -> robust to resampling)
+    evf = setf.with_name(setf.name.replace("_eeg.set", "_events.tsv"))
+    onsets = []
+    with open(evf) as f:
+        for r in _csv.DictReader(f, delimiter="\t"):
+            if r.get("trial_type") != "stimulus":
+                continue
+            try:
+                v = int(float(r["value"])); on = float(r["onset"])
+            except (ValueError, KeyError, TypeError):
+                continue
+            if 1 <= v <= 40:
+                onsets.append((on, 1))
+            elif 41 <= v <= 80:
+                onsets.append((on, 2))
+    raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+    sf = float(raw.info["sfreq"])
+    ev = np.array([[int(round(on * sf)), 0, c] for on, c in onsets], dtype=int)
+    epo = mne.Epochs(raw, ev, {"face": 1, "car": 2}, tmin=-0.2, tmax=0.8,
+                     baseline=(-0.2, 0.0), preload=True, verbose=False)
+    return epo["face"], epo["car"], eog
+
+
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     bp = cfg.get("baseline_preprocessing", {}) or {}
     steps = bp.get("steps", {}) or {}
-    win = steps.get("n170_window_ms") or [110, 150]
+    win = steps.get("n170_window_ms") or [130, 200]
     tmin, tmax = win[0] / 1000.0, win[1] / 1000.0
     if synthetic:
         epo_a, epo_b = _synth_two_conditions()
+    elif cfg.get("dataset", {}).get("id") == "erp_core_n170":
+        epo_a, epo_b, _eog = _load_erp_core_n170(root, subject, cfg)
     else:
         raise NotImplementedError(
-            "real evoked loading is wired per dataset via the config events; "
-            "use --synthetic for the local smoke. (ERP-CORE/ds000117 loaders land with the pilot.)"
+            f"no real-data loader for dataset {cfg.get('dataset', {}).get('id')!r} yet "
+            "(ds000117 MEG loader lands next); use --synthetic for the local smoke."
         )
     ctx = {"sfreq": float(epo_a.info["sfreq"])}
     picks = _roi_picks(epo_a, cfg)
