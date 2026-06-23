@@ -152,7 +152,8 @@ def _load_ds000117_m170(root, subject, cfg):
         def _ep(onsets, cid):
             if not onsets:
                 return None
-            ev = np.array([[int(round(o * sf)), 0, cid] for o in onsets], dtype=int)
+            fs = raw.first_samp  # FIF onsets are relative to recording start; events need first_samp
+            ev = np.array([[int(round(o * sf)) + fs, 0, cid] for o in onsets], dtype=int)
             return mne.Epochs(raw, ev, {str(cid): cid}, tmin=-0.1, tmax=0.4,
                               baseline=(-0.1, 0.0), preload=True, verbose=False)
 
