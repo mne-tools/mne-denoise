@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=evoked_erp_core
 #SBATCH --account=rrg-kjerbi
-#SBATCH --array=0-6
+#SBATCH --array=0-39%16
 #SBATCH --time=00:20:00
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=8G
