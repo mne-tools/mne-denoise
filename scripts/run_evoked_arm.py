@@ -219,9 +219,10 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         )
     ctx = {"sfreq": float(epo_a.info["sfreq"])}
     picks = None if is_meg else _roi_picks(epo_a, cfg)  # MEG mag endpoint = GFP (no ROI)
-    na, nb = len(epo_a), len(epo_b)
-    tr_a, ev_a = epo_a[: na // 2], epo_a[na // 2:]
-    tr_b, ev_b = epo_b[: nb // 2], epo_b[nb // 2:]
+    # interleaved split so train/eval span all runs equally (MEG head moves between runs;
+    # a first-half/second-half split would mismatch the spatial pattern train->eval)
+    tr_a, ev_a = epo_a[::2], epo_a[1::2]
+    tr_b, ev_b = epo_b[::2], epo_b[1::2]
     train = mne_concat(tr_a, tr_b)  # filters learned on both conditions' train trials
     m170_tpl = _m170_template(tr_a, tr_b, tmin, tmax) if is_meg else None  # face-selective template (train only)
     rows = []
