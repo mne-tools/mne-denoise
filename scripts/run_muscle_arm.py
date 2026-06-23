@@ -13,6 +13,7 @@ INDEPENDENT neck-EMG. Primary target = independent neck-EMG contamination
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import sys
 
