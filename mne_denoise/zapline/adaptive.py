@@ -50,6 +50,14 @@ from ..dss.utils.covariance import compute_covariance
 logger = logging.getLogger(__name__)
 
 
+def _log_psd(psd: np.ndarray) -> np.ndarray:
+    """dB PSD with a floor relative to the spectrum's own peak, so peak/outlier
+    detection is scale-invariant. An absolute ``1e-20`` floor flattens MEG
+    magnetometer PSDs (~1e-26) to a constant, hiding the line peak entirely."""
+    floor = float(np.max(psd)) * 1e-15 + 1e-300
+    return 10 * np.log10(np.clip(psd, floor, None))
+
+
 # -----------------------------------------------------------------------------
 # 1. CleanLine Utilities (Fallback cleanup)
 # -----------------------------------------------------------------------------
@@ -226,7 +234,7 @@ def find_noise_freqs(
         data, fs=sfreq, window="hann", nperseg=n_fft, axis=-1, average="mean"
     )
 
-    psd_log = 10 * np.log10(np.clip(psd, 1e-20, None))
+    psd_log = _log_psd(psd)
     # Geometric mean over channels (mean in log space)
     mean_log_psd = np.mean(psd_log, axis=0)
 
@@ -404,7 +412,7 @@ def find_fine_peak(
         data, fs=sfreq, nperseg=min(n_times, 4 * int(sfreq)), nfft=n_fft, axis=-1
     )
 
-    psd_log = 10 * np.log10(np.clip(psd, 1e-20, None))
+    psd_log = _log_psd(psd)
     mean_log_psd = np.mean(psd_log, axis=0)
 
     mask = (freqs >= f_low) & (freqs <= f_high)
@@ -446,7 +454,7 @@ def check_artifact_presence(
     n_fft = min(n_times, int(sfreq * 4))
     freqs, psd = welch(data, fs=sfreq, nperseg=n_fft, axis=-1)
 
-    psd_log = 10 * np.log10(np.clip(psd, 1e-20, None))
+    psd_log = _log_psd(psd)
     mean_log_psd = np.mean(psd_log, axis=0)
 
     f_low = target_freq - 3
@@ -527,7 +535,7 @@ def detect_harmonics(
         n_fft = 1024
 
     freqs, psd = welch(data, fs=sfreq, window="hann", nperseg=n_fft, axis=-1)
-    psd_log = 10 * np.log10(np.clip(psd, 1e-20, None))
+    psd_log = _log_psd(psd)
     mean_log_psd = np.mean(psd_log, axis=0)
 
     freq_res = freqs[1] - freqs[0]
@@ -607,7 +615,7 @@ def check_spectral_qa(
     n_fft = min(n_times, int(sfreq * 4))
     freqs, psd = welch(data, fs=sfreq, nperseg=n_fft, axis=-1)
 
-    psd_log = 10 * np.log10(np.clip(psd, 1e-20, None))
+    psd_log = _log_psd(psd)
     mean_log_psd = np.mean(psd_log, axis=0)
 
     f_win_low = target_freq - 3
