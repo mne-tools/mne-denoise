@@ -1,0 +1,37 @@
+# Arm: p300_brain_invaders — P300 target/non-target enhancement (BrainInvaders 2012, GIPSA).
+# Tier-B generalization of the DSS evoked-enhancement claim to the P300 + a new lab/paradigm.
+arm: p300_brain_invaders
+runner: evoked
+status: active
+
+dataset:
+  id: brain_invaders
+  project_relative_path: zenodo/brain-invaders-2012
+  channel_types: [eeg]
+  n_subjects: 25
+
+methods_under_test: [dss_average_bias]
+comparators:
+  required: [none, rank_matched_pca]
+
+metrics:
+  primary_target: held_out_target_minus_nontarget_P300_effect_size
+  primary_preservation: P300_amplitude_equivalence
+  roi_channels: [PZ]                 # centro-parietal P300 maximum
+  secondary: [split_half_reliability, SME]
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+
+baseline_preprocessing:
+  source: "Van Veen, Congedo et al. 2012 (BrainInvaders P300, GIPSA-lab); 16-ch"
+  online_reference: nose
+  steps:
+    highpass_hz: 1.0
+    resample_hz: 128
+    offline_reference: average
+    window_ms: [250, 450]            # P300 measurement window
+  branch_point: scalp_eeg_pre_artifact_removal
+  excluded_from_baseline: [dss, pca, ica]
+
+sweep: {dss: {param: n_components, grid: [2, 4, 6, 8]}}

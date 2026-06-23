@@ -216,6 +216,44 @@ def _load_vr_p300(root, subject, cfg):
     return _ep(t_s[is_t], 1), _ep(t_s[~is_t], 2)
 
 
+def _load_brain_invaders(root, subject, cfg):
+    """BrainInvaders 2012 (GIPSA P300 game): training.csv inside subject_NN.zip
+    (time, 16 EEG, marker, col19=flash onset, col20=target). Clean per-flash target/
+    non-target (~1/6 oddball). Returns (target, nontarget) for the evoked runner."""
+    import glob
+    import io
+    import re
+    import zipfile
+
+    import mne
+
+    num = int(re.sub(r"\D", "", subject) or 0)
+    cand = glob.glob(f"{root}/**/subject_{num:02d}.zip", recursive=True)
+    if not cand:
+        cand = glob.glob(f"{pathlib.Path(root).parent}/**/subject_{num:02d}.zip", recursive=True)
+    if not cand:
+        raise FileNotFoundError(f"brain_invaders zip not found for {subject} under {root}")
+    with zipfile.ZipFile(cand[0]) as zf:
+        name = next(n for n in zf.namelist() if n.endswith("training.csv") and "__MACOSX" not in n)
+        with zf.open(name) as f:
+            arr = np.loadtxt(io.TextIOWrapper(f, "utf-8"), delimiter=",")
+    sf0 = 1.0 / float(np.median(np.diff(arr[:, 0])))
+    ch = ["FP1", "FP2", "F5", "AFZ", "F6", "T7", "CZ", "T8", "P7", "P3", "PZ", "P4", "P8", "O1", "OZ", "O2"]
+    raw = mne.io.RawArray(arr[:, 1:17].T, mne.create_info(ch, sf0, "eeg"), verbose=False)
+    flash = np.where(arr[:, 18] > 0)[0]       # col 19: flash onset
+    is_t = arr[flash, 19] > 0                  # col 20: target indicator at flash
+    raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+    sf = float(raw.info["sfreq"])
+    t_s = flash / sf0
+
+    def _ep(times, cid):
+        ev = np.array([[int(round(t * sf)), 0, cid] for t in times], dtype=int)
+        return mne.Epochs(raw, ev, {str(cid): cid}, tmin=-0.1, tmax=0.6,
+                          baseline=(-0.1, 0.0), preload=True, verbose=False)
+
+    return _ep(t_s[is_t], 1), _ep(t_s[~is_t], 2)
+
+
 def _trial_gfp(epochs, tmin, tmax):
     """Per-trial global field power (RMS over channels) averaged in [tmin, tmax].
     Used for reliability/SME; single-trial GFP is noise-dominated."""
@@ -264,6 +302,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         epo_a, epo_b = _load_ds000117_m170(root, subject, cfg)               # mag-only faces vs scrambled
     elif ds_id == "vr_p300":
         epo_a, epo_b = _load_vr_p300(root, subject, cfg)                      # target vs non-target P300
+    elif ds_id == "brain_invaders":
+        epo_a, epo_b = _load_brain_invaders(root, subject, cfg)               # P300 game target vs non-target
     else:
         raise NotImplementedError(
             f"no real-data loader for dataset {ds_id!r} yet; use --synthetic for the local smoke."
