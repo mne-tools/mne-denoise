@@ -384,16 +384,64 @@ class _RefRegression(Comparator):
 
         raw = evaluation.copy()
         eeg = raw.copy().pick("eeg")
-        ref_data = raw.copy().pick(list(ref)).get_data()
+        ed = eeg.get_data()
+        rd = raw.copy().pick(list(ref)).get_data()
         cleaned = eeg.copy()
-        cleaned._data = regress_out(eeg.get_data(), ref_data)
+        if ed.ndim == 3:  # epoched: regress across the concatenated time axis
+            ntr, nch, nt = ed.shape
+            E = ed.transpose(1, 0, 2).reshape(nch, -1)
+            R = rd.transpose(1, 0, 2).reshape(rd.shape[1], -1)
+            cleaned._data = regress_out(E, R).reshape(nch, ntr, nt).transpose(1, 0, 2)
+        else:
+            cleaned._data = regress_out(ed, rd)
         return ComparatorResult(cleaned=cleaned, status="success",
                                 diagnostics={"n_ref": len(ref)})
 
 
 # ---------------------------------------------------------------------------
+# EOG-DSS  (ocular: remove the EEG subspace coupled to the EOG channels)
+# ---------------------------------------------------------------------------
+def _flat(x):
+    return x.transpose(1, 0, 2).reshape(x.shape[1], -1) if x.ndim == 3 else x
+
+
+class _EOGDSS(Comparator):
+    """``eog_dss`` — learn (on TRAIN) the rank-k spatial subspace of EEG most coupled
+    to the EOG channels (``ctx['eog_channels']``) and project it out of EVAL. A spatial
+    ocular filter; the frozen cycle-average (blink-locked) variant is a refinement."""
+
+    def __init__(self, n_components: int = 2, **params: Any) -> None:
+        super().__init__(ComparatorMeta("eog_dss", fit_scope="train_only", rank_reducing=True),
+                         n_components=n_components, **params)
+        self.k = int(n_components)
+
+    def _fit(self, train, ctx):
+        eog = ctx.get("eog_channels") or ctx.get("ref_channels")
+        if not eog:
+            return None
+        Xe = _flat(train.copy().pick("eeg").get_data())
+        Xo = _flat(train.copy().pick(list(eog)).get_data())
+        B = Xe @ Xo.T @ np.linalg.pinv(Xo @ Xo.T)         # ocular spatial patterns (n_ch, n_eog)
+        U, _, _ = np.linalg.svd(B, full_matrices=False)
+        return U[:, : self.k]                              # ocular subspace basis (n_ch, k)
+
+    def _transform(self, evaluation, payload, ctx):
+        if payload is None:
+            return ComparatorResult(status="skipped_missing_channels",
+                                    error="eog_dss needs ctx['eog_channels']")
+        P = payload
+        eeg = evaluation.copy().pick("eeg")
+        proj = np.eye(P.shape[0]) - P @ P.T               # remove the ocular subspace
+        x = eeg.get_data()
+        eeg._data = np.einsum("ij,ejt->eit", proj, x) if x.ndim == 3 else proj @ x
+        return ComparatorResult(cleaned=eeg, status="success", rank_after=int(P.shape[0] - self.k),
+                                diagnostics={"n_components": self.k})
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
+register("eog_dss", lambda **p: _EOGDSS(**p))
 register("asr", lambda **p: _ASR(method="standard", **p))
 register("rasr", lambda **p: _ASR(method="riemannian_windowed", **p))
 register("icanclean", lambda **p: _ICanClean(**p))
