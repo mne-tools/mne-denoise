@@ -149,8 +149,53 @@ class _Notch(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# Linear DSS  (native; train_only — evoked enhancement / oscillatory extraction)
+# ---------------------------------------------------------------------------
+class _DSS(Comparator):
+    """``dss`` — linear DSS denoising. Filters learned on TRAIN (leakage barrier),
+    applied to EVAL. Bias defaults to ``AverageBias`` (trial-reproducibility →
+    evoked enhancement); ``bias='bandpass'`` targets an oscillatory band via ctx.
+    Keeps the top ``n_components`` and reconstructs."""
+
+    def __init__(self, n_components: int = 5, bias: str = "average", **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("dss", fit_scope="train_only", rank_reducing=True),
+            n_components=n_components, bias=bias, **params,
+        )
+        self.n_components = int(n_components)
+        self.bias = bias
+
+    def _make_bias(self, ctx):
+        from mne_denoise.dss import denoisers as _den
+
+        if self.bias == "bandpass":
+            band = ctx.get("band", (1.0, 40.0))
+            return _den.BandpassBias(freq_band=tuple(band), sfreq=ctx["sfreq"])
+        return _den.AverageBias()
+
+    def _fit(self, train, ctx):
+        from mne_denoise.dss import DSS
+
+        rtype = "epochs" if hasattr(train, "get_data") and train.__class__.__name__.startswith("Epochs") else "raw"
+        dss = DSS(bias=self._make_bias(ctx), n_components=self.n_components, return_type=rtype)
+        dss.fit(train)
+        return dss
+
+    def _transform(self, evaluation, payload, ctx):
+        dss = payload
+        cleaned = dss.transform(evaluation)
+        evs = getattr(dss, "eigenvalues_", None)
+        return ComparatorResult(
+            cleaned=cleaned, status="success", rank_after=self.n_components,
+            diagnostics={"eigenvalues": (evs[: self.n_components].tolist() if evs is not None else None)},
+            parameters={"n_components": self.n_components, "bias": self.bias},
+        )
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
+register("dss", lambda **p: _DSS(**p))
 register("zapline", lambda **p: _ZapLine(adaptive=False, **p))
 register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))
 register("notch", lambda **p: _Notch(method="fir", **p))
