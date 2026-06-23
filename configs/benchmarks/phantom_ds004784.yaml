@@ -1,44 +1,42 @@
-# Arm: phantom_ds004784 — reference-aware cleaning on the iCanClean phantom. Skeleton (P0).
-# Independent RE-ANALYSIS of author-created data: reported SEPARATELY from the random-mixture BSS arms.
+# Arm: phantom_ds004784 — reference-aware artifact removal on a conductive head phantom.
+# Independent RE-ANALYSIS of author-created data, reported SEPARATELY from the BSS arms.
+# Known clean brain (task-Brain) + injected artifacts (task-All); reference-aware methods
+# (iCanClean, TSPCA) decouple the EEG from the EXG external electrodes that pick up the
+# artifacts. Unit = technical repeat (single phantom, n=1). Runs on the muscle runner.
 arm: phantom_ds004784
-runner: ground_truth
-status: not_started
+runner: muscle
+status: active
 
 dataset:
-  id: ds004784
+  id: phantom_ds004784
   project_relative_path: openneuro/ds004784
-  version: pending
   description: iCanClean phantom (known brain + artifact sources)
+  contaminated_task: All                 # brain + eye + jaw + neck + motion artifacts
   trials_are: technical_repeats          # NOT independent human subjects
-  required_for: reference_aware_icanclean_claim
-  waiver: {allowed_on: verified_technical_or_licensing_barrier, consequence: [track_status_partial, no_independent_ground_truth_icanclean_claim]}
+  channel_types: [eeg, eog]
+  n_subjects: 1
 
-methods_under_test: [icanclean]
+methods_under_test: [icanclean, tspca]   # TSPCA stands in for the C1 Auto-CCA slot
 comparators:
-  required: [none, asr, auto_cca, adaptive_filtering]
-  reference_aware: [icanclean, tspca, auto_cca, adaptive_filtering]
-tuning: held_out_not_best_on_eval        # original study tuned on the eval data; we use held-out tuning
-sweep: {icanclean: {param: r2_threshold, grid: pending}}
+  required: [none]
+  reference_aware: [icanclean, tspca]
 
 metrics:
-  primary_target: known_artifact_source_attenuation
-  primary_preservation: known_brain_source_preservation
-  secondary: [data_quality_score, rank_change, runtime]
+  primary_target: reference_coupling_to_EXG_artifact   # lower = more artifact removed
+  primary_preservation: brain_band_power
+  secondary: [hf_power, runtime]
 preservation_reference: {source: known_phantom_brain_sources, independent_from_method_fit: true}
 
-independence_note: "Independent re-analysis of the publicly released iCanClean phantom (author-created); pair with muscle_ds004505 + own simulation + non-author metrics."
-ip_disclosure: {icanclean_patent: "WO 2022/061322", python_impl_authorization: pending}
+independence_note: "Independent re-analysis of the publicly released iCanClean phantom (author-created); reported separately, paired with muscle_ds004505 + own simulation."
 
 unit_of_inference: phantom_trial_technical_repeat
 storage:
-  always_save: [metrics, model_json, qc_arrays]
+  always_save: [metrics, model_json]
 
-baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
-  source: "independent re-analysis of the iCanClean phantom (method PDF filed)"
+baseline_preprocessing:
+  source: "Downey & Ferris (ds004784 conductive phantom); 128-ch BioSemi ABCD, 512 Hz"
   steps:
     highpass_hz: 1.0
-    no_resample: true
-    preserve_known_sources: true     # brain + artifact = ground-truth reference
-  branch_point: phantom_known_sources_retained
-  excluded_from_baseline: [icanclean, asr, auto_cca, adaptive_filtering]
-  unit: technical_repeats
+    resample_hz: 256
+  branch_point: phantom_scalp_pre_artifact_removal
+  excluded_from_baseline: [icanclean, tspca, asr]

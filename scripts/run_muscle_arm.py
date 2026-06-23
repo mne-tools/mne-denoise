@@ -117,9 +117,35 @@ def _load_ds004505(root, subject, cfg):
     return raw, noise_layer, neck_emg
 
 
+def _load_ds004784(root, subject, cfg):
+    """Load ds004784 conductive-phantom EEG (task-All = injected brain + all artifacts).
+    128 BioSemi scalp electrodes (A1-D32) are the EEG; EXG1-8 are external electrodes that
+    pick up the artifacts (the reference-aware fit + scoring reference). The known clean
+    brain (task-Brain) is a separate recording used only for the preservation discussion.
+    Returns (raw, exg_names, exg_names)."""
+    import glob
+
+    import mne
+
+    task = (cfg.get("dataset") or {}).get("contaminated_task", "All")
+    cand = glob.glob(f"{root}/**/{subject}_task-{task}_eeg.set", recursive=True)
+    if not cand:
+        cand = glob.glob(f"{pathlib.Path(root).parent}/**/{subject}_task-{task}_eeg.set", recursive=True)
+    if not cand:
+        raise FileNotFoundError(f"ds004784 task-{task} .set not found for {subject} under {root}")
+    raw = mne.io.read_raw_eeglab(pathlib.Path(cand[0]), preload=True, verbose=False)
+    exg = [c for c in raw.ch_names if c.upper().startswith("EXG")]
+    scalp = [c for c in raw.ch_names if len(c) >= 2 and c[0] in "ABCD" and c[1:].isdigit()]
+    raw.set_channel_types({c: ("eeg" if c in scalp else "eog" if c in exg else "misc")
+                           for c in raw.ch_names})
+    return raw, exg, exg
+
+
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     if synthetic:
         raw, fit_refs, eval_refs = _synth_muscle()
+    elif (cfg.get("dataset") or {}).get("id") == "phantom_ds004784":
+        raw, fit_refs, eval_refs = _load_ds004784(root, subject, cfg)
     else:
         raw, fit_refs, eval_refs = _load_ds004505(root, subject, cfg)
     raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
@@ -195,7 +221,11 @@ def main(argv=None):
             else:
                 print(f"  {r['method']:22}{r.get('tier',''):16}{r.get('status')}")
         return 0
-    root = D.resolve_dataset_root(cfg["dataset"]["id"])
+    try:
+        root = D.resolve_dataset_root(cfg["dataset"]["id"])
+    except Exception:  # noqa: BLE001 - unregistered Tier-B id: fall back to the config path
+        root = pathlib.Path(os.environ.get("DATASETS_ROOT", "/project/rrg-kjerbi/datasets")) / \
+            (cfg.get("dataset", {}) or {}).get("project_relative_path", "")
     if a.subject:
         run_subject(cfg, a.subject, root, deriv_root)
         return 0
