@@ -439,8 +439,89 @@ class _EOGDSS(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# TSPCA  (time-shift PCA/regression) + SSP-EOG  (fill the two known gaps)
+# ---------------------------------------------------------------------------
+class _TSPCA(Comparator):
+    """``tspca`` — time-shift PCA / regression (de Cheveigné & Simon 2007). Subtract
+    from EEG the part predictable from time-LAGGED copies of the reference channels
+    (distinct from zero-lag ``regression``). Reference-aware (``ctx['ref_channels']``)."""
+
+    def __init__(self, n_shifts: int = 3, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("tspca", fit_scope="window_local", reference_aware=True),
+            n_shifts=n_shifts, **params,
+        )
+        self.n_shifts = int(n_shifts)
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        ref = ctx.get("ref_channels")
+        if not ref:
+            return ComparatorResult(status="skipped_missing_channels", error="tspca needs ctx['ref_channels']")
+        from mne_denoise.qa.coupling import regress_out
+
+        raw = evaluation.copy()
+        eeg = raw.copy().pick("eeg")
+        ed = eeg.get_data()
+        rd = raw.copy().pick(list(ref)).get_data()
+        shifts = range(-self.n_shifts, self.n_shifts + 1)
+        cleaned = eeg.copy()
+        if ed.ndim == 3:
+            ntr, nch, nt = ed.shape
+            E = ed.transpose(1, 0, 2).reshape(nch, -1)
+            R = rd.transpose(1, 0, 2).reshape(rd.shape[1], -1)
+            Rl = np.vstack([np.roll(R, s, axis=1) for s in shifts])
+            cleaned._data = regress_out(E, Rl).reshape(nch, ntr, nt).transpose(1, 0, 2)
+        else:
+            Rl = np.vstack([np.roll(rd, s, axis=1) for s in shifts])
+            cleaned._data = regress_out(ed, Rl)
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"n_shifts": self.n_shifts})
+
+
+class _SSPEOG(Comparator):
+    """``ssp_eog`` — SSP-style projectors from the blink-weighted EEG covariance learned
+    on TRAIN (top-k PCs of the artifact subspace, the standard SSP convention), projected
+    out of EVAL. Distinct from EOG-DSS (which uses regression patterns)."""
+
+    def __init__(self, n_components: int = 1, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("ssp_eog", fit_scope="train_only", rank_reducing=True),
+            n_components=n_components, **params,
+        )
+        self.k = int(n_components)
+
+    def _fit(self, train, ctx):
+        eog = ctx.get("eog_channels") or ctx.get("ref_channels")
+        if not eog:
+            return None
+        Xe = _flat(train.copy().pick("eeg").get_data())
+        Xo = _flat(train.copy().pick(list(eog)).get_data())
+        w = np.abs(Xo).sum(0)
+        w = w / (w.sum() + 1e-12)                          # emphasise blink samples
+        Cw = (Xe * w) @ Xe.T                               # blink-weighted covariance
+        U, _, _ = np.linalg.svd(Cw, full_matrices=False)
+        return U[:, : self.k]
+
+    def _transform(self, evaluation, payload, ctx):
+        if payload is None:
+            return ComparatorResult(status="skipped_missing_channels", error="ssp_eog needs ctx['eog_channels']")
+        P = payload
+        eeg = evaluation.copy().pick("eeg")
+        proj = np.eye(P.shape[0]) - P @ P.T
+        x = eeg.get_data()
+        eeg._data = np.einsum("ij,ejt->eit", proj, x) if x.ndim == 3 else proj @ x
+        return ComparatorResult(cleaned=eeg, status="success", rank_after=int(P.shape[0] - self.k),
+                                diagnostics={"n_components": self.k})
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
+register("tspca", lambda **p: _TSPCA(**p))
+register("ssp_eog", lambda **p: _SSPEOG(**p))
 register("eog_dss", lambda **p: _EOGDSS(**p))
 register("asr", lambda **p: _ASR(method="standard", **p))
 register("rasr", lambda **p: _ASR(method="riemannian_windowed", **p))
