@@ -27,7 +27,7 @@ OSF_API = "https://api.osf.io/v2"
 
 def list_components(node: str) -> list[tuple[str, str]]:
     """Return [(component_id, title), ...] for all children of an OSF node (paginated)."""
-    url = f"{OSF_API}/nodes/{node}/children/?page[size]=50"
+    url = f"{OSF_API}/nodes/{node}/children/?page%5Bsize%5D=50"  # encode [] or OSF returns empty
     out: list[tuple[str, str]] = []
     while url:
         req = urllib.request.Request(url, headers={"Accept": "application/vnd.api+json"})
