@@ -37,6 +37,7 @@ trial_handling: {match_trial_counts: true, report_native_and_matched: true}
 metrics:
   primary_target: held_out_face_minus_car_N170_effect_size   # enhancement (independent of DSS objective)
   primary_preservation: N170_mean_amplitude_topography_equivalence
+  roi_channels: [PO7, PO8]            # ERP-CORE N170 canonical electrodes (Kappenman 2021)
   secondary: [SME, split_half_reliability, latency, across_subject_variance, off_target_windows, rank_change]
 preservation_reference:
   source: high_trial_count_low_contamination_held_out_ERP
@@ -56,6 +57,7 @@ baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
   steps:
     resample_hz: 256
     offline_reference: average_all_33   # N170 convention
+    n170_window_ms: [110, 150]          # ERP-CORE N170 measurement window (Kappenman 2021)
     highpass_hz: 0.1                 # non-causal Butterworth
     bipolar_eog: true
     epoch_ms: [-200, 800]
