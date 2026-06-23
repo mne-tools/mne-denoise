@@ -89,11 +89,39 @@ def _methods(cfg):
     return out
 
 
+def _load_ds004505(root, subject, cfg):
+    """Load ds004505 table-tennis dual-layer EEG. EEG = scalp electrodes; noise_layer =
+    paired 'N-' electrodes (fit reference); neck_emg = EMG channels (independent eval
+    reference). Returns (raw, noise_layer_names, neck_emg_names)."""
+    import csv as _csv
+    import glob
+
+    import mne
+
+    cand = glob.glob(f"{root}/**/{subject}_task-TableTennis_eeg.set", recursive=True)
+    if not cand:
+        cand = glob.glob(f"{pathlib.Path(root).parent}/**/{subject}_task-TableTennis_eeg.set", recursive=True)
+    if not cand:
+        raise FileNotFoundError(f"ds004505 .set not found for {subject} under {root}")
+    setf = pathlib.Path(cand[0])
+    raw = mne.io.read_raw_eeglab(setf, preload=True, verbose=False)
+    chf = setf.with_name(setf.name.replace("_eeg.set", "_channels.tsv"))
+    bids_type = {}
+    with open(chf) as f:
+        for r in _csv.DictReader(f, delimiter="\t"):
+            bids_type[r["name"]] = r["type"].upper()
+    raw.set_channel_types({c: {"EEG": "eeg", "EMG": "emg", "MISC": "misc"}.get(bids_type.get(c, "MISC"), "misc")
+                           for c in raw.ch_names})
+    noise_layer = [c for c in raw.ch_names if c.startswith("N-")]
+    neck_emg = [c for c in raw.ch_names if bids_type.get(c) == "EMG"]
+    return raw, noise_layer, neck_emg
+
+
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     if synthetic:
         raw, fit_refs, eval_refs = _synth_muscle()
     else:
-        raise NotImplementedError("real ds004505 loader (resolve noise_layer/neck_emg picks) lands with the pilot")
+        raw, fit_refs, eval_refs = _load_ds004505(root, subject, cfg)
     raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     sfreq = float(raw.info["sfreq"])
     emg_eval = raw.copy().pick(eval_refs).get_data()  # independent neck-EMG (scoring ref)
