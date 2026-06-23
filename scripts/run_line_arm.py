@@ -78,6 +78,25 @@ def _load_ds000117_meg(root, subject):
     return raw
 
 
+def _load_meg_masc(root, subject):
+    """meg_masc KIT line arm: read the raw .con (ses-1, task-1), magnetometers only.
+    A distinct MEG system (NYU KIT, ~157 axial-gradiometer 'mag' sensors) from the Elekta
+    ds000117 arm; line noise empirically at 50 Hz. Cropped to 180 s (stationary line)."""
+    import glob
+
+    import mne
+
+    hits = sorted(glob.glob(f"{root}/**/{subject}/ses-1/meg/{subject}_ses-1_task-1_meg.con", recursive=True))
+    if not hits:
+        hits = sorted(glob.glob(f"{root}/**/{subject}_ses-*_task-*_meg.con", recursive=True))
+    if not hits:
+        raise FileNotFoundError(f"no meg_masc .con for {subject} under {root}")
+    raw = mne.io.read_raw_kit(hits[0], preload=False, verbose=False)
+    raw.crop(tmax=min(180.0, float(raw.times[-1])))
+    raw.pick("mag").load_data()
+    return raw
+
+
 def _synth_subject(line_freq=50.0, sfreq=500.0, secs=60, nch=16, seed=0):
     import mne
 
@@ -126,6 +145,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         raw = _synth_subject(line_freq=line_freq)
     elif ds_id == "ds000117":
         raw = _load_ds000117_meg(root, subject)
+    elif ds_id == "meg_masc":
+        raw = _load_meg_masc(root, subject)
     else:
         raw = _find_raw(root, subject)
     raw, applied = apply_baseline(raw, cfg.get("baseline_preprocessing"))
@@ -198,7 +219,11 @@ def main(argv=None):
             print(f"  {r['method']:18} {r.get('status')}  R_f0={r.get('R_f0', r.get('noise_surr_ratio'))}")
         return 0
 
-    root = D.resolve_dataset_root(cfg["dataset"]["id"])
+    try:
+        root = D.resolve_dataset_root(cfg["dataset"]["id"])
+    except Exception:  # noqa: BLE001 - unregistered Tier-B id: fall back to the config path
+        root = pathlib.Path(os.environ.get("DATASETS_ROOT", "/project/rrg-kjerbi/datasets")) / \
+            (cfg.get("dataset", {}) or {}).get("project_relative_path", "")
     if a.slurm_array:
         tid = int(os.environ.get("SLURM_ARRAY_TASK_ID", 1))
         subs = cfg["dataset"].get("subjects") or _all_subjects(root)

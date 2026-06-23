@@ -1,0 +1,42 @@
+# Arm: line_meg_masc — MEG line-noise attenuation on a 2nd MEG system (MEG-MASC, NYU KIT).
+# Tier-B generalization/scaling of the adaptive-ZapLine MEG result (ds000117 = Elekta) to a
+# different sensor geometry (157 KIT axial gradiometers). Line empirically at 50 Hz (verified).
+arm: line_meg_masc
+runner: line
+status: active
+
+dataset:
+  id: meg_masc
+  project_relative_path: osf/meg-masc
+  channel_types: [mag]
+  n_subjects: 27
+  line_freq_hz: 50
+  harmonics_hz: [50, 100, 150]
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression]
+
+metrics:
+  primary_target: held_out_line_peak_attenuation_db
+  primary_preservation: off_target_out_of_band_power
+  secondary: [harmonic_attenuation_db, rank_change, runtime]
+
+unit_of_inference: subject
+seeds: {global: 42}
+
+baseline_preprocessing:
+  source: "Gwilliams et al. 2023 (MEG-MASC, 10.1038/s41597-023-02752-5); NYU KIT 157-sensor, 1000 Hz"
+  mains_hz: 50
+  steps:
+    resample_hz: 500                 # 50 Hz + harmonics to 150 Hz well below Nyquist
+    mag_only: true
+    crop_s: 180                      # stationary line; full 737 s is unnecessary
+  branch_point: meg_mag_full_rank_pre_line_removal
+  excluded_from_baseline: [sss_maxfilter, notch, zapline]
+
+sweep: {zapline: {param: n_remove, grid: [1, 2, 4, 8, 16]}}
