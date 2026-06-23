@@ -4,7 +4,7 @@
 #SBATCH --array=1-16%8
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --output=logs/%x-%A_%a.out
 #SBATCH --error=logs/%x-%A_%a.err
 # MEG line arm (ds000117 faces): one task per subject (sub-01..sub-16). Uses the RAW
