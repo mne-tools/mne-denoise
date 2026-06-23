@@ -1,0 +1,17 @@
+{
+ "line_ds003620.rf0.lab.raw": 2.2,
+ "line_ds003620.rf0.lab.notch": 0.29,
+ "line_ds003620.rf0.lab.nonspatial": 0.6,
+ "line_ds003620.rf0.lab.zlp": 1.26,
+ "line_ds003620.overclean.lab.zlp": 0.02,
+ "line_ds003620.rf0.field.raw": 1.68,
+ "line_ds003620.rf0.field.notch": 0.26,
+ "line_ds003620.rf0.field.nonspatial": 0.57,
+ "line_ds003620.rf0.field.zlp": 1.25,
+ "line_ds003620.overclean.field.zlp": 0.012,
+ "line_ds003620.rf0.campus.raw": 2.7,
+ "line_ds003620.rf0.campus.notch": 0.2,
+ "line_ds003620.rf0.campus.nonspatial": 0.74,
+ "line_ds003620.rf0.campus.zlp": 1.24,
+ "line_ds003620.overclean.campus.zlp": 0.041
+}
