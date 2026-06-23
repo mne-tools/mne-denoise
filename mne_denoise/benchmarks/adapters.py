@@ -303,8 +303,101 @@ class _SpatialPCA(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# ASR / rASR  (native; calibration_then_transform)
+# ---------------------------------------------------------------------------
+class _ASR(Comparator):
+    """``asr`` (Euclidean) / ``rasr`` (``method='riemannian_windowed'``). Calibrated
+    on clean TRAIN data, then transforms EVAL. ``cutoff`` is the swept aggressiveness."""
+
+    def __init__(self, cutoff: float = 20.0, method: str = "standard", **params: Any) -> None:
+        cid = "rasr" if method == "riemannian_windowed" else "asr"
+        super().__init__(
+            ComparatorMeta(cid, fit_scope="calibration_then_transform"),
+            cutoff=cutoff, method=method, **params,
+        )
+        self.cutoff = float(cutoff)
+        self.method = method
+
+    def _fit(self, train, ctx):
+        from mne_denoise.asr import ASR
+
+        asr = ASR(sfreq=ctx.get("sfreq"), cutoff=self.cutoff, method=self.method)
+        asr.fit(train)
+        return asr
+
+    def _transform(self, evaluation, payload, ctx):
+        cleaned = payload.transform(evaluation)
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"cutoff": self.cutoff, "method": self.method},
+                                parameters={"cutoff": self.cutoff})
+
+
+# ---------------------------------------------------------------------------
+# iCanClean / reference regression  (reference-aware; need ctx['ref_channels'])
+# ---------------------------------------------------------------------------
+class _ICanClean(Comparator):
+    """``icanclean`` — reference-coupled CCA; removes the EEG subspace shared with
+    the reference channels (``ctx['ref_channels']``)."""
+
+    def __init__(self, threshold: float = 0.7, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("icanclean", fit_scope="window_local", reference_aware=True),
+            threshold=threshold, **params,
+        )
+        self.threshold = threshold
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        ref = ctx.get("ref_channels")
+        if not ref:
+            return ComparatorResult(status="skipped_missing_channels",
+                                    error="icanclean needs ctx['ref_channels']")
+        from mne_denoise.icanclean import ICanClean
+
+        icc = ICanClean(sfreq=float(evaluation.info["sfreq"]), ref_channels=list(ref),
+                        threshold=self.threshold)
+        cleaned = icc.fit_transform(evaluation.copy())
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"threshold": self.threshold})
+
+
+class _RefRegression(Comparator):
+    """``regression`` — least-squares regress the reference channels out of EEG
+    (per-recording; reference-aware baseline)."""
+
+    def __init__(self, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("regression", fit_scope="window_local", reference_aware=True), **params,
+        )
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        ref = ctx.get("ref_channels")
+        if not ref:
+            return ComparatorResult(status="skipped_missing_channels",
+                                    error="regression needs ctx['ref_channels']")
+        from mne_denoise.qa.coupling import regress_out
+
+        raw = evaluation.copy()
+        eeg = raw.copy().pick("eeg")
+        ref_data = raw.copy().pick(list(ref)).get_data()
+        cleaned = eeg.copy()
+        cleaned._data = regress_out(eeg.get_data(), ref_data)
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"n_ref": len(ref)})
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
+register("asr", lambda **p: _ASR(method="standard", **p))
+register("rasr", lambda **p: _ASR(method="riemannian_windowed", **p))
+register("icanclean", lambda **p: _ICanClean(**p))
+register("regression", lambda **p: _RefRegression(**p))
 register("dss", lambda **p: _DSS(**p))
 register("dss_average_bias", lambda **p: _DSS(bias="average", **p))
 register("ica_rank_matched", lambda **p: _ICARankMatched(**p))
