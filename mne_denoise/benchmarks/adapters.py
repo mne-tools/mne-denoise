@@ -261,15 +261,55 @@ class _ICAICLabel(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# Spatial rank-matched PCA  (handles Epochs per-trial AND continuous arrays)
+# ---------------------------------------------------------------------------
+class _SpatialPCA(Comparator):
+    """``rank_matched_pca`` — spatial PCA across channels, fitted on TRAIN, applied
+    to EVAL. For Epochs it reconstructs each trial from the top-k spatial
+    components (the dimensionality-matched control for DSS); for a Raw/array it
+    reconstructs the 2-D signal."""
+
+    def __init__(self, n_components: int = 5, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("rank_matched_pca", fit_scope="train_only", rank_reducing=True),
+            n_components=n_components, **params,
+        )
+        self.k = int(n_components)
+
+    @staticmethod
+    def _chan_time(x):
+        return x.transpose(1, 0, 2).reshape(x.shape[1], -1) if x.ndim == 3 else x
+
+    def _fit(self, train, ctx):
+        from sklearn.decomposition import PCA
+
+        x = train.get_data(copy=False) if hasattr(train, "get_data") else np.asarray(train)
+        X = self._chan_time(x)  # (n_channels, n_samples)
+        pca = PCA(n_components=min(self.k, X.shape[0]), svd_solver="full")
+        pca.fit(X.T)
+        return pca
+
+    def _transform(self, evaluation, payload, ctx):
+        pca = payload
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data(copy=False)
+            out = np.stack([pca.inverse_transform(pca.transform(x[i].T)).T for i in range(x.shape[0])])
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success", rank_after=int(pca.n_components_))
+        x = np.asarray(evaluation)
+        recon = pca.inverse_transform(pca.transform(x.T)).T
+        return ComparatorResult(cleaned=recon, status="success", rank_after=int(pca.n_components_))
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
-from .comparators import _REGISTRY  # noqa: E402  (for the pca alias)
-
 register("dss", lambda **p: _DSS(**p))
+register("dss_average_bias", lambda **p: _DSS(bias="average", **p))
 register("ica_rank_matched", lambda **p: _ICARankMatched(**p))
 register("ica_iclabel_rejection", lambda **p: _ICAICLabel(**p))
-if "rank_matched_pca" not in _REGISTRY:
-    register("rank_matched_pca", _REGISTRY["pca_reconstruct"])  # alias the validated PCA control
+register("rank_matched_pca", lambda **p: _SpatialPCA(**p))
 register("zapline", lambda **p: _ZapLine(adaptive=False, **p))
 register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))
 register("notch", lambda **p: _Notch(method="fir", **p))

@@ -222,11 +222,14 @@ class NoCorrection(Comparator):
 
     def _transform(self, evaluation, payload, ctx):
         x = _as_array(evaluation)
+        # collapse epoched data (n_epochs, n_ch, n_times) to a 2-D channel view for rank
+        x2 = x.transpose(1, 0, 2).reshape(x.shape[1], -1) if x.ndim == 3 else x
+        rank = int(np.linalg.matrix_rank(x2)) if x2.ndim == 2 else None
         return ComparatorResult(
             cleaned=evaluation,
             status="success",
-            rank_before=int(np.linalg.matrix_rank(x)),
-            rank_after=int(np.linalg.matrix_rank(x)),
+            rank_before=rank,
+            rank_after=rank,
             n_samples_before=int(x.shape[-1]),
             n_samples_after=int(x.shape[-1]),
         )
