@@ -45,13 +45,11 @@ def list_components(node: str, *, attempts: int = 8) -> list[tuple[str, str]]:
                     data = json.load(resp)
             except Exception:  # noqa: BLE001
                 data = None
-            meta = (data or {}).get("meta") or (((data or {}).get("links") or {}).get("meta")) or {}
-            total = meta.get("total")
-            if data is not None and (data.get("data") or not total):
-                break  # got rows, or a genuinely-empty page
+            if data is not None and data.get("data"):
+                break  # got rows; a known node's children query is never legitimately empty
             time.sleep(min(60, 8 * (i + 1)))  # OSF throttle / transient-empty backoff
-        if not data:
-            break
+        if not data or not data.get("data"):
+            break  # give up this page after exhausting retries
         out.extend((c["id"], c["attributes"]["title"]) for c in data.get("data", []))
         url = (data.get("links") or {}).get("next")
     return out
