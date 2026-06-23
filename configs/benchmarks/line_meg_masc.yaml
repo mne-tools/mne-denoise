@@ -9,7 +9,8 @@ dataset:
   id: meg_masc
   project_relative_path: osf/meg-masc
   channel_types: [mag]
-  n_subjects: 27
+  n_subjects: 11                     # sub-01..sub-11 staged on Fir (of 27 on OSF)
+  subjects: [sub-01, sub-02, sub-03, sub-04, sub-05, sub-06, sub-07, sub-08, sub-09, sub-10, sub-11]
   line_freq_hz: 50
   harmonics_hz: [50, 100, 150]
 
