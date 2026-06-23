@@ -45,7 +45,8 @@ def list_components(node: str, *, attempts: int = 8) -> list[tuple[str, str]]:
                     data = json.load(resp)
             except Exception:  # noqa: BLE001
                 data = None
-            total = (((data or {}).get("links") or {}).get("meta") or {}).get("total")
+            meta = (data or {}).get("meta") or (((data or {}).get("links") or {}).get("meta")) or {}
+            total = meta.get("total")
             if data is not None and (data.get("data") or not total):
                 break  # got rows, or a genuinely-empty page
             time.sleep(min(60, 8 * (i + 1)))  # OSF throttle / transient-empty backoff
