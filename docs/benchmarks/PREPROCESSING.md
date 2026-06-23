@@ -27,14 +27,14 @@ Mains frequency is stated explicitly only for ds000117 (UK, 50 Hz) and ds004505 
 
 | Arm / dataset | Channels | $f_s$ | Mains | Baseline (adopt) | Notes / source |
 |---|---|---|---|---|---|
-| ssvep tsinghua / beta | 64 EEG | 250 | 50 (CN) | native 250 Hz; bandpass around stim harmonics; per-trial epoch; ref as-recorded | beta paper (arXiv 1911.13045) filed; Tsinghua paper IEEE (optional) |
+| ssvep tsinghua / beta | 64 EEG | 250 (released; 1 kHz native) | **50 (CN)** | use **as-released**: 250 Hz, **vertex (Cz) reference**, acquisition **50 Hz notch retained**, 0.15–200 Hz bandwidth; bandpass around stim harmonics; per-trial epoch | **Wang 2017 (10.1109/TNSRE.2016.2627556) + Liu 2020 (arXiv 1911.13045) — filed** |
 | cardiac ds007554 | EEG + ECG (+fNIRS) | per BIDS | 50? (verify) | read BIDS native; HP 0.5–1 Hz; ECG as QRS reference | OpenNeuro descriptor (read BIDS sidecars on Fir) |
 | cardiac capslpdb | PSG: EEG+EOG+EMG+ECG | per-record (varies) | 50 (IT, inf.) | read EDF native montage/rate; minimal HP; ECG as reference | PhysioNet docs (CAP atlas = scoring, not preprocessing) |
 | meg_scaling hcp_meg | 248 mag (4D/BTi) | 2034.5 (HCP manual) | 60 (US, inf.) | raw 4D via `read_raw_bti`; native rate; ref-channel noise-cancel context only | Larson-Prior 2013 (design paper; low-level specs in HCP MEG manual) |
 | meg_scaling meg_masc | 208 KIT | 1000 | 50 (NYUAD, inf.) | distributed RAW; native 1000 Hz; supply own 50 Hz notch/HP for scaling test | Gwilliams 2023 (RAW, no author preprocessing) |
 | mobile_scalp_ear | 32 scalp + 14 ear + 4 EOG | 500 (raw sourcedata) | 50 (KR, inf.) | **use raw sourcedata, NOT 100 Hz derivatives** (already EOG-removed/line-cleaned/interp/reref) | OSF r7s9b registry note |
 | mobile ds004475 | mobile EEG | per BIDS | — | read BIDS native; HP; gait events | OpenNeuro descriptor (read sidecars on Fir) |
-| sleep_edfx | 2 EEG (Fpz-Cz, Pz-Oz) + EOG + EMG | 100 | 50 (NL/EU, inf.) | native 100 Hz EDF montage; minimal HP; long-duration streaming | PhysioNet Sleep-EDF docs; Kemp 2000 IEEE (optional) |
+| sleep_edfx | 2 EEG (Fpz-Cz, Pz-Oz) + EOG + chin EMG | 100 | 50 (NL/EU, inf.) | native 100 Hz EDF montage; minimal HP; long-duration streaming | PhysioNet docs (acquisition); **Kemp 2000 filed** — slow-wave *analysis* method, not acquisition |
 | clinical chbmit | 23 EEG | 256 | 60 (US, inf.) | native 256 Hz EDF; minimal HP; stress/robustness only | PhysioNet docs; Shoeb thesis (optional) |
 | eegmmidb | 64 EEG | 160 | 60 (US, inf.) | native 160 Hz EDF; minimal HP | PhysioNet docs (BCI2000 paper has no acquisition specifics) |
 | p300 brain_invaders / vr_p300 | 16 EEG | 512 / 128 | 50 (FR, inf.) | native rate; HP 1 Hz; P300 epoch + baseline | Zenodo/HAL descriptors (optional) |
@@ -71,8 +71,8 @@ Zhang et al. 2021, *J Neural Eng* [10.1088/1741-2552/ac2bf8] (arXiv 2009.11662, 
 
 ## Provenance
 PDFs / full texts under `D:\mne-denoise-reports\documents\dataset_papers\<dataset>\`:
-- **PDF + markdown:** eegdenoisenet (arXiv), beta_ssvep (arXiv), ds004784 (iCanClean method).
+- **PDF + markdown:** eegdenoisenet (arXiv), beta_ssvep (arXiv), ds004784 (iCanClean method), **tsinghua_ssvep (Wang 2017, user-supplied)**, **sleep_edfx (Kemp 2000, user-supplied)**.
 - **PMC full text (.txt):** ds003620, ds000117, ds004505 (×2), meg_masc, lemon, erp_core_n170, hcp_meg.
-- **Spec-grounded (PhysioNet/registry/BIDS; paper optional):** eegmmidb, capslpdb, sleep_edfx, chbmit, tsinghua_ssvep, ds007554, ds004475, mobile_scalp_ear, brain_invaders_2012, vr_p300, lemon-line.
+- **Spec-grounded (PhysioNet/registry/BIDS; no acquisition-specific paper):** eegmmidb, capslpdb, chbmit, ds007554, ds004475, mobile_scalp_ear, brain_invaders_2012, vr_p300, lemon-line.
 
-**Optional PDF refinements the user may add** (paywalled; baseline already grounded from specs): Tsinghua SSVEP (Wang 2017, IEEE TNSRE 10.1109/TNSRE.2016.2627556), Sleep-EDF (Kemp 2000, IEEE TBME 10.1109/10.867928). Drop into the matching `dataset_papers/<id>/` folder and re-run markitdown to refine those generalization cards.
+All paywalled refinements resolved: Tsinghua SSVEP (Wang 2017, IEEE TNSRE 10.1109/TNSRE.2016.2627556) confirmed the released data are 250 Hz / Cz-referenced / 50 Hz-notched (0.15–200 Hz); Sleep-EDF (Kemp 2000, IEEE TBME 10.1109/10.867928) is the slow-wave *analysis* method (acquisition montage from PhysioNet).
