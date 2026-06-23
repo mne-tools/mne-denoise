@@ -119,7 +119,8 @@ def _scalars(d: dict) -> dict:
 
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     ctx = branch_context(cfg)
-    line_freq = ctx.get("line_freq", 50.0)
+    _lf = ctx.get("line_freq", 50.0)
+    line_freq = _lf[0] if isinstance(_lf, (list, tuple)) else _lf  # scalar for synth + metric; ctx keeps the list for notch
     ds_id = (cfg.get("dataset") or {}).get("id")
     if synthetic:
         raw = _synth_subject(line_freq=line_freq)

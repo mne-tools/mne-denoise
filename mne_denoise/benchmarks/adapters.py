@@ -44,16 +44,20 @@ def _sfreq(evaluation: Any, ctx: dict) -> float:
     return float(sf)
 
 
-def _line_harmonics(line_freq: float, sfreq: float, n: int | None = None) -> list[float]:
-    """Line fundamental + harmonics strictly below Nyquist."""
+def _line_harmonics(line_freq, sfreq: float, n: int | None = None) -> list[float]:
+    """Line fundamental(s) + harmonics strictly below Nyquist. Accepts a single
+    frequency or a list (e.g. dual 50+60 Hz injection)."""
     nyq = sfreq / 2.0
-    out, k = [], 1
-    while line_freq * k < nyq - 1.0:
-        out.append(line_freq * k)
-        if n is not None and len(out) >= n:
-            break
-        k += 1
-    return out
+    bases = line_freq if isinstance(line_freq, (list, tuple)) else [line_freq]
+    out: list[float] = []
+    for base in bases:
+        k = 1
+        while base * k < nyq - 1.0:
+            out.append(float(base * k))
+            if n is not None and len(out) >= n:
+                break
+            k += 1
+    return sorted(set(out))
 
 
 # ---------------------------------------------------------------------------

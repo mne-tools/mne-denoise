@@ -91,10 +91,11 @@ def branch_context(cfg: dict) -> dict:
     ds = cfg.get("dataset", {}) or {}
     bp = cfg.get("baseline_preprocessing", {}) or {}
     ctx: dict[str, Any] = {}
-    if ds.get("line_freq_hz") is not None:
-        ctx["line_freq"] = float(ds["line_freq_hz"])
-    elif bp.get("mains_hz") not in (None, False) and not isinstance(bp.get("mains_hz"), list):
-        ctx["line_freq"] = float(bp["mains_hz"])
+    lf = ds.get("line_freq_hz")
+    if lf is None:
+        lf = bp.get("mains_hz")
+    if lf not in (None, False):
+        ctx["line_freq"] = [float(x) for x in lf] if isinstance(lf, list) else float(lf)
     ref = (ds.get("reference_channels") or {})
     if ref:
         ctx["reference_channels"] = ref
