@@ -142,7 +142,7 @@ def _load_ds000117_m170(root, subject, cfg):
         fo, so = [], []
         with open(rf.replace("_meg.fif", "_events.tsv")) as f:
             for r in _csv.DictReader(f, delimiter="\t"):
-                tt = r.get("trial_type", "")
+                tt = r.get("stim_type") or r.get("trial_type") or ""   # per-run MEG col is stim_type
                 try:
                     on = float(r["onset"])
                 except (TypeError, ValueError, KeyError):
