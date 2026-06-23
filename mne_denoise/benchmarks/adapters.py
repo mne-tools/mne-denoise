@@ -193,9 +193,83 @@ class _DSS(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# ICA controls (rank-matched dimensionality control; ICLabel ocular rejection)
+# ---------------------------------------------------------------------------
+class _ICARankMatched(Comparator):
+    """``ica_rank_matched`` — rank-k ICA fit on TRAIN, reconstructed on EVAL with
+    no component removed (a dimensionality-matched control for DSS/PCA)."""
+
+    def __init__(self, n_components: int = 5, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("ica_rank_matched", fit_scope="train_only", rank_reducing=True),
+            n_components=n_components, **params,
+        )
+        self.k = int(n_components)
+
+    def _fit(self, train, ctx):
+        import mne
+
+        ica = mne.preprocessing.ICA(n_components=self.k, max_iter="auto", random_state=97, verbose=False)
+        ica.fit(train, verbose=False)
+        ica.exclude = []
+        return ica
+
+    def _transform(self, evaluation, payload, ctx):
+        ica = payload
+        cleaned = ica.apply(evaluation.copy(), verbose=False)
+        return ComparatorResult(cleaned=cleaned, status="success", rank_after=self.k,
+                                parameters={"n_components": self.k})
+
+
+class _ICAICLabel(Comparator):
+    """``ica_iclabel_rejection`` — ICA fit on TRAIN, ocular ICs labelled by ICLabel
+    (falls back to EOG-correlation), removed on EVAL. Reference-blind ocular comparator."""
+
+    def __init__(self, n_components: int | None = None, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("ica_iclabel_rejection", fit_scope="train_only",
+                           optional_dependency="mne-icalabel"),
+            n_components=n_components, **params,
+        )
+        self.n_components = n_components
+
+    def _fit(self, train, ctx):
+        import mne
+
+        ica = mne.preprocessing.ICA(n_components=self.n_components, max_iter="auto",
+                                    random_state=97, verbose=False)
+        ica.fit(train, verbose=False)
+        excl: list[int] = []
+        try:
+            from mne_icalabel import label_components
+
+            labels = label_components(train, ica, method="iclabel")["labels"]
+            excl = [i for i, lab in enumerate(labels) if lab in ("eye blink", "eye")]
+        except Exception:  # noqa: BLE001 - fall back to EOG correlation if available
+            try:
+                excl, _ = ica.find_bads_eog(train, verbose=False)
+            except Exception:  # noqa: BLE001
+                excl = []
+        ica.exclude = list(excl)
+        return ica
+
+    def _transform(self, evaluation, payload, ctx):
+        ica = payload
+        cleaned = ica.apply(evaluation.copy(), verbose=False)
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"n_excluded": len(ica.exclude)})
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
+from .comparators import _REGISTRY  # noqa: E402  (for the pca alias)
+
 register("dss", lambda **p: _DSS(**p))
+register("ica_rank_matched", lambda **p: _ICARankMatched(**p))
+register("ica_iclabel_rejection", lambda **p: _ICAICLabel(**p))
+if "rank_matched_pca" not in _REGISTRY:
+    register("rank_matched_pca", _REGISTRY["pca_reconstruct"])  # alias the validated PCA control
 register("zapline", lambda **p: _ZapLine(adaptive=False, **p))
 register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))
 register("notch", lambda **p: _Notch(method="fir", **p))
