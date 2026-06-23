@@ -33,8 +33,8 @@ seeds: {global: 42}
 baseline_preprocessing:
   source: "Liebherr et al. 2021 (ds003620, Runabout); 32-ch mobile EEG, 500 Hz"
   mains_hz: 50
-  online_reference: average
-  steps:
-    average_reference: true        # keep native 500 Hz (preserve 50/100/150 Hz harmonics)
+  steps: {}                        # operate on referential data at native 500 Hz: average-
+                                   # referencing would remove the common-mode line before
+                                   # ZapLine, leaving only a weak spatial residual to act on.
   branch_point: scalp_eeg_pre_line_removal
-  excluded_from_baseline: [notch, zapline]
+  excluded_from_baseline: [average_reference, notch, zapline]
