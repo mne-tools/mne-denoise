@@ -176,13 +176,26 @@ def _trial_gfp(epochs, tmin, tmax):
     return np.sqrt((x[:, :, m] ** 2).mean(axis=1)).mean(axis=1)
 
 
-def _evoked_gfp(epochs, tmin, tmax):
-    """GFP of the trial-AVERAGED (evoked) field in [tmin, tmax] — isolates the
-    reproducible M170 signal (the proper MEG-magnetometer effect endpoint)."""
-    ev = epochs.get_data(copy=False).mean(axis=0)  # (n_ch, n_times) evoked
+def _m170_template(tr_a, tr_b, tmin, tmax):
+    """Unit M170 difference topography from TRAIN (face evoked - scrambled evoked,
+    windowed). Non-circular: training trials only (config: literature_or_training_runs_only).
+    Captures the face-SELECTIVE pattern that a global GFP washes out."""
+    times = tr_a.times
+    m = (times >= tmin) & (times <= tmax)
+    da = tr_a.get_data(copy=False).mean(axis=0)[:, m].mean(axis=1)  # (n_ch,) face evoked
+    db = tr_b.get_data(copy=False).mean(axis=0)[:, m].mean(axis=1)  # (n_ch,) scrambled evoked
+    d = da - db
+    n = float(np.linalg.norm(d))
+    return d / n if n > 0 else d
+
+
+def _m170_amps(epochs, template, tmin, tmax):
+    """Per-trial projection of the windowed field onto the train M170 template
+    (sign-aligned, non-cancelling face-selective endpoint)."""
+    x = epochs.get_data(copy=False)
     times = epochs.times
     m = (times >= tmin) & (times <= tmax)
-    return float(np.sqrt((ev[:, m] ** 2).mean(axis=0)).mean())
+    return x[:, :, m].mean(axis=2) @ template
 
 
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
@@ -210,6 +223,7 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     tr_a, ev_a = epo_a[: na // 2], epo_a[na // 2:]
     tr_b, ev_b = epo_b[: nb // 2], epo_b[nb // 2:]
     train = mne_concat(tr_a, tr_b)  # filters learned on both conditions' train trials
+    m170_tpl = _m170_template(tr_a, tr_b, tmin, tmax) if is_meg else None  # face-selective template (train only)
     rows = []
     methods = list(cfg.get("methods_under_test", []) or []) + list(
         (cfg.get("comparators", {}) or {}).get("required", []) or []
@@ -235,13 +249,12 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                 rows.append({"method": mid, "tag": tag, "status": bad.status, "error": bad.error})
                 continue
             if is_meg:
-                amps_a = _trial_gfp(ra.cleaned, tmin, tmax)
-                amps_b = _trial_gfp(rb.cleaned, tmin, tmax)
-                diff = _evoked_gfp(ra.cleaned, tmin, tmax) - _evoked_gfp(rb.cleaned, tmin, tmax)
+                amps_a = _m170_amps(ra.cleaned, m170_tpl, tmin, tmax)
+                amps_b = _m170_amps(rb.cleaned, m170_tpl, tmin, tmax)
             else:
                 amps_a = _trial_amps(ra.cleaned, tmin, tmax, picks)
                 amps_b = _trial_amps(rb.cleaned, tmin, tmax, picks)
-                diff = float(np.mean(amps_a) - np.mean(amps_b))
+            diff = float(np.mean(amps_a) - np.mean(amps_b))
             sme_a = qp.analytic_sme(amps_a)
             try:
                 sh = qp.split_half_reliability(ra.cleaned.get_data(copy=False)[:, picks or slice(None), :].mean(1))
