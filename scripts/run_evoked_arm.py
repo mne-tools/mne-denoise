@@ -130,6 +130,7 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         epo_a, epo_b = _synth_two_conditions()
     elif cfg.get("dataset", {}).get("id") == "erp_core_n170":
         epo_a, epo_b, _eog = _load_erp_core_n170(root, subject, cfg)
+        epo_a, epo_b = epo_a.copy().pick("data"), epo_b.copy().pick("data")  # evoked: EEG only (EOG auxiliary)
     else:
         raise NotImplementedError(
             f"no real-data loader for dataset {cfg.get('dataset', {}).get('id')!r} yet "
@@ -162,7 +163,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                              "error": f"{type(exc).__name__}: {exc}"})
                 continue
             if ra.status != "success" or rb.status != "success":
-                rows.append({"method": mid, "tag": tag, "status": ra.status if ra.status != "success" else rb.status})
+                bad = ra if ra.status != "success" else rb
+                rows.append({"method": mid, "tag": tag, "status": bad.status, "error": bad.error})
                 continue
             amps_a = _trial_amps(ra.cleaned, tmin, tmax, picks)
             amps_b = _trial_amps(rb.cleaned, tmin, tmax, picks)
