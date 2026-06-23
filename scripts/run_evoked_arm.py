@@ -162,7 +162,9 @@ def _load_ds000117_m170(root, subject, cfg):
             face_eps.append(fe)
         if se is not None:
             scram_eps.append(se)
-    return mne.concatenate_epochs(face_eps), mne.concatenate_epochs(scram_eps)
+    # runs differ in dev_head_t (head moves between runs); irrelevant for sensor-space denoising
+    return (mne.concatenate_epochs(face_eps, on_mismatch="ignore"),
+            mne.concatenate_epochs(scram_eps, on_mismatch="ignore"))
 
 
 def _trial_gfp(epochs, tmin, tmax):
