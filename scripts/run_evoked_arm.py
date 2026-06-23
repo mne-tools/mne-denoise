@@ -400,7 +400,11 @@ def main(argv=None):
             else:
                 print(f"  {r['tag']:22} {r.get('status')}")
         return 0
-    root = D.resolve_dataset_root(cfg["dataset"]["id"])
+    try:
+        root = D.resolve_dataset_root(cfg["dataset"]["id"])
+    except Exception:  # noqa: BLE001 - unregistered Tier-B id: fall back to the config path
+        root = pathlib.Path(os.environ.get("DATASETS_ROOT", "/project/rrg-kjerbi/datasets")) / \
+            (cfg.get("dataset", {}) or {}).get("project_relative_path", "")
     subject = a.subject or (f"sub-{int(os.environ.get('SLURM_ARRAY_TASK_ID', 1)):02d}" if a.slurm_array else None)
     if subject:
         run_subject(cfg, subject, root, deriv_root)
