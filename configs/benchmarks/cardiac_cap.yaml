@@ -1,0 +1,14 @@
+arm: cardiac_cap
+runner: cardiac
+status: active
+dataset: {id: capslpdb, project_relative_path: physionet/capslpdb, channel_types: [eeg, ecg], n_subjects: 10}
+methods_under_test: [cardiac_dss]
+comparators: {required: [none, ecg_regression]}
+metrics: {primary_target: qrs_locked_residual, primary_preservation: neural_band_power}
+unit_of_inference: recording
+seeds: {global: 42}
+baseline_preprocessing:
+  source: "CAP Sleep Database (PhysioNet); bipolar EEG + ECG channel"
+  steps: {highpass_hz: 0.5}
+  branch_point: scalp_eeg_pre_cardiac_removal
+  excluded_from_baseline: [ica, ssp, cardiac_dss]

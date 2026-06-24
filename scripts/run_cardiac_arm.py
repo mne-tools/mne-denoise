@@ -77,13 +77,37 @@ def _load_ds007554(root, subject, cfg):
     return raw
 
 
+def _load_cap(root, subject, cfg):
+    """CAP sleep PSG: EDF with a clean ECG channel (ECG1-ECG2) synchronized to bipolar EEG
+    (Fp2-F4, F4-C4, ...). No cross-modal sync needed---ECG is a channel."""
+    import glob
+
+    import mne
+
+    edf = sorted(glob.glob(f"{root}/**/{subject}.edf", recursive=True)) or \
+        sorted(glob.glob(f"{root}/{subject}*.edf"))
+    if not edf:
+        raise FileNotFoundError(f"no CAP edf for {subject} under {root}")
+    raw = mne.io.read_raw_edf(edf[0], preload=True, verbose=False)
+    ecg = [c for c in raw.ch_names if "ECG" in c.upper() or "EKG" in c.upper()]
+    eeg = [c for c in raw.ch_names if c not in ecg and any(b in c for b in
+           ("Fp2", "F4", "C4", "P4", "O2", "F3", "C3", "P3", "O1", "A1", "A2")) and "-" in c]
+    raw.rename_channels({ecg[0]: "ECG"})
+    raw.set_channel_types({c: ("ecg" if c == "ECG" else "eeg") for c in eeg + ["ECG"]})
+    raw.pick(eeg + ["ECG"])
+    raw.crop(tmax=min(600.0, float(raw.times[-1])))   # 10 min is plenty of beats
+    raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+    return raw
+
+
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     import mne
 
     from mne_denoise.dss import DSS
     from mne_denoise.dss.denoisers import CycleAverageBias
 
-    raw = _load_ds007554(root, subject, cfg)
+    ds_id = (cfg.get("dataset", {}) or {}).get("id")
+    raw = _load_cap(root, subject, cfg) if ds_id == "capslpdb" else _load_ds007554(root, subject, cfg)
     sf = float(raw.info["sfreq"])
     ecg_events, _, _ = mne.preprocessing.find_ecg_events(raw, ch_name="ECG", verbose=False)
     rp = (ecg_events[:, 0] - raw.first_samp).astype(int)
