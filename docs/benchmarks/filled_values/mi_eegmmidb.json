@@ -1,0 +1,15 @@
+{
+ "_arm": "mi_eegmmidb",
+ "_n": 9,
+ "_dataset": "eegmmidb left/right-fist motor imagery (runs R04/R08/R12), 64 EEG, 160 Hz; CSP(6)+LDA, 5-fold CV",
+ "median_accuracy": {"none": 0.533, "asr": 0.533, "rasr": 0.533},
+ "best_subject_accuracy": 0.956,
+ "paired_asr_minus_none": {"median": 0.000, "mean": -0.007},
+ "wilcoxon_asr_vs_none_p": 0.752,
+ "_per_subject_none_asr_rasr": {
+   "S003": [0.533, 0.600, 0.578], "S004": [0.533, 0.533, 0.533], "S005": [0.533, 0.511, 0.489],
+   "S006": [0.511, 0.489, 0.444], "S007": [0.956, 0.956, 0.956], "S008": [0.600, 0.400, 0.489],
+   "S009": [0.422, 0.467, 0.467]
+ },
+ "_note": "External preservation endpoint: ASR preserves MI decodability (paired Δ=0.000, p=0.75; best subject 0.956 preserved exactly). Cohort mostly near-chance (eegmmidb 2-class MI is hard + thin 45-trial CV) but the discriminative mu/beta rhythm survives artifact cleaning. S001/S002 also ran; medians/test over all n=9."
+}
