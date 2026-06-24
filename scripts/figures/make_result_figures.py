@@ -20,7 +20,10 @@ import numpy as np  # noqa: E402
 
 FIG = pathlib.Path(r"D:/overleaf_repos/69a477a4afe0ee4cadc562fd/figures")
 FIG.mkdir(exist_ok=True)
-D = json.load(open(r"D:/tmp/all_arms.json"))
+try:
+    D = json.load(open(r"D:/tmp/all_arms.json"))
+except FileNotFoundError:
+    D = {}   # all_arms.json absent: data-driven figs no-op; self-contained figs (ssvep/cardiac/mobile) still run
 plt.rcParams.update({"figure.dpi": 140, "font.size": 9, "axes.titlesize": 10,
                      "axes.grid": True, "grid.alpha": 0.25, "savefig.bbox": "tight"})
 BLUE, RED, GREEN, GREY = "#4C72B0", "#C44E52", "#55A868", "#888888"
@@ -229,11 +232,57 @@ def fig_mobile_erp():
     save(fig, "runabout_erp_summary.png")
 
 
+# --- 10. SSVEP comb-DSS (Tsinghua) ---------------------------------------
+def fig_ssvep():
+    p = pathlib.Path(__file__).resolve().parents[2] / "docs/benchmarks/filled_values/ssvep_tsinghua.json"
+    m = json.load(open(p))
+    sr, sd, n = m["ssvep_tsinghua.snr_raw"], m["ssvep_tsinghua.snr_dss"], m["ssvep_tsinghua.n"]
+    ac, ad = m["ssvep_tsinghua.acc_cca_pct"], m["ssvep_tsinghua.acc_dss_cca_pct"]
+    fig, axs = plt.subplots(1, 2, figsize=(7.2, 3.3))
+    axs[0].bar([0, 1], [sr, sd], color=[GREY, BLUE], width=0.55)
+    axs[0].set_xticks([0, 1]); axs[0].set_xticklabels(["raw", "comb-DSS"])
+    axs[0].set_ylabel("stimulus-harmonic SNR (dB)")
+    axs[0].set_title(f"SSVEP target enhancement (Tsinghua, n={n})")
+    axs[0].annotate(f"+{m['ssvep_tsinghua.gain_db']:.1f} dB", xy=(1, sd), xytext=(0.5, sd + 0.5),
+                    ha="center", fontsize=9.5, color=BLUE)
+    axs[1].bar([0, 1], [ac, ad], color=[GREY, BLUE], width=0.55)
+    axs[1].set_xticks([0, 1]); axs[1].set_xticklabels(["CCA", "DSS+CCA"]); axs[1].set_ylim(80, 100)
+    axs[1].set_ylabel("40-class accuracy (\\%)")
+    axs[1].set_title("Decoding (already saturated; DSS-redundant)")
+    for i, v in enumerate([ac, ad]):
+        axs[1].text(i, v + 0.4, f"{v:.1f}\\%", ha="center", fontsize=8)
+    save(fig, "ssvep_dss_summary.png")
+
+
+# --- 11. cardiac (CAP, reference-coupled) --------------------------------
+def fig_cardiac():
+    p = pathlib.Path(__file__).resolve().parents[2] / "docs/benchmarks/filled_values/cardiac_cap.json"
+    m = json.load(open(p))
+    meth = ["none", "ecg_regression", "cardiac_dss"]; lab = ["none", "ECG-reg\n(lagged)", "CycleAvg\nDSS"]
+    qn, nn = st.median(m["none"]["qrs"]), st.median(m["none"]["neu"])
+    removed = [100 * (1 - st.median(m[x]["qrs"]) / qn) for x in meth]
+    retained = [100 * st.median(m[x]["neu"]) / nn for x in meth]
+    col = [GREY, GREEN, RED]
+    fig, axs = plt.subplots(1, 2, figsize=(7.4, 3.3))
+    axs[0].bar(range(3), removed, color=col, width=0.62)
+    axs[0].set_xticks(range(3)); axs[0].set_xticklabels(lab, fontsize=8)
+    axs[0].set_ylabel("\\% QRS-locked cardiac removed"); axs[0].set_title("Cardiac removal (CAP, n=8)")
+    for i, v in enumerate(removed):
+        axs[0].text(i, v + 1.5, f"{v:.0f}\\%", ha="center", fontsize=8)
+    axs[1].bar(range(3), retained, color=col, width=0.62); axs[1].axhline(100, ls="--", c=GREY, lw=1)
+    axs[1].set_xticks(range(3)); axs[1].set_xticklabels(lab, fontsize=8)
+    axs[1].set_ylabel("\\% neural band retained"); axs[1].set_title("Preservation (4--30 Hz)")
+    for i, v in enumerate(retained):
+        axs[1].text(i, v + 1.5, f"{v:.0f}\\%", ha="center", fontsize=8)
+    save(fig, "ecg_artifact_summary.png")
+
+
 if __name__ == "__main__":
     fig_failure(); fig_line_group(); fig_line_qc(); fig_pareto()
     fig_evoked("evoked_erp_core", "evoked_erp_core_summary.png", "N170 (ERP-CORE, n=40)")
     fig_evoked("evoked_ds000117", "evoked_ds000117_summary.png", "M170 (MEG, n=16)")
     fig_ocular(); fig_muscle(); fig_megline(); fig_phantom(); fig_mobile_erp()
+    fig_ssvep(); fig_cardiac()
     try:
         fig_groundtruth()
     except Exception as exc:  # noqa: BLE001
