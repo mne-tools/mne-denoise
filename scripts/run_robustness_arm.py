@@ -55,6 +55,13 @@ def _load(ds_id, rec, root, cfg):
                ("Fp2", "F4", "C4", "P4", "O2", "F3", "C3", "P3", "O1")) and "-" in c]
         raw.pick(eeg)
         tmax = 1800.0                                   # CAP: 30-min profile window
+    elif ds_id == "chbmit":                             # clinical scalp EEG (23 bipolar, ~1-h records)
+        edf = sorted(glob.glob(f"{root}/**/{rec}.edf", recursive=True))
+        raw = mne.io.read_raw_edf(edf[0], preload=True, verbose=False)
+        bip = [c for c in raw.ch_names if "-" in c
+               and not any(x in c.upper() for x in ("ECG", "EKG", "VNS", "."))]
+        raw.pick(bip)
+        tmax = float(raw.times[-1])                     # full ~1-h clinical recording
     else:  # sleep-edfx: process the FULL night (genuine long-duration streaming test)
         edf = sorted(glob.glob(f"{root}/**/{rec}*PSG*.edf", recursive=True))
         raw = mne.io.read_raw_edf(edf[0], preload=True, verbose=False)
