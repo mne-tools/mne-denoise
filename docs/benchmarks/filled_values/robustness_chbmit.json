@@ -1,0 +1,20 @@
+{
+ "_arm": "robustness_chbmit",
+ "_n": 6,
+ "_n_failed_calibration": 1,
+ "_dataset": "CHB-MIT scalp seizure EEG, 23 bipolar 10-20 channels, 8-60 min segments",
+ "_recordings": {
+   "chb01_01": {"min": 60.0, "tp": 496, "reject": 0.463, "rankD": 5.65, "band": 0.323},
+   "chb01_02": {"min": 9.6, "tp": 346, "reject": 0.200, "rankD": 3.132, "band": 0.511},
+   "chb01_03": {"min": 8.8, "tp": 318, "reject": 0.074, "rankD": 0.282, "band": 0.916},
+   "chb02_01": {"min": 60.0, "tp": 467, "reject": 0.303, "rankD": 3.859, "band": 0.374},
+   "chb02_02": {"min": 8.3, "tp": 322, "reject": 0.146, "rankD": 0.477, "band": 0.819},
+   "chb05_01": {"min": 9.3, "tp": 338, "reject": 0.226, "rankD": 0.925, "band": 0.700},
+   "chb03_01": {"status": "failed_calibration: not enough clean calibration windows"}
+ },
+ "throughput_x_realtime": {"median": 342, "range": [318, 496]},
+ "rejected_window_frac": {"median": 0.21, "range": [0.074, 0.463]},
+ "effective_rank_change": {"median": 2.03, "range": [0.28, 5.65], "n_dims_total": 23},
+ "neural_band_retained": {"median": 0.61, "range": [0.323, 0.916]},
+ "_note": "23-ch ASR streams on clinical EEG (~340x-rt) but footprint is highly recording-dependent and sometimes severe (up to 5.6/23 dims removed, band to 0.32); chb03_01 defeated clean-window calibration. Reinforces sleep regime-mismatch with multichannel structural evidence. Some downloads truncated (8-60 min)."
+}
