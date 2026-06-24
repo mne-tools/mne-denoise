@@ -1,0 +1,27 @@
+# Arm: ssvep_tsinghua — steady-state response extraction (Tsinghua 40-target benchmark).
+# Tier-B generalization: comb-DSS/RESS harmonic-SNR enhancement + subject-safe decoding.
+arm: ssvep_tsinghua
+runner: ssvep
+status: active
+
+dataset:
+  id: tsinghua_ssvep
+  project_relative_path: ssvep/tsinghua-benchmark
+  subdir: tsinghua                     # under $SSVEP_ROOT (decompressed .mat)
+  n_subjects: 35
+  channel_types: [eeg]
+  sfreq_hz: 250
+  n_targets: 40
+
+methods_under_test: [ssvep_dss]        # CombFilterBias comb-DSS / RESS
+comparators:
+  required: [cca, fbcca]
+
+metrics:
+  primary_target: extracted_component_harmonic_snr
+  primary_preservation: out_of_band_power
+  n_harmonics: 3
+  secondary: [decoding_accuracy_subject_safe_cv]
+
+unit_of_inference: subject
+seeds: {global: 42}
