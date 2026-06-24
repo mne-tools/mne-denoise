@@ -54,12 +54,14 @@ def _load(ds_id, rec, root, cfg):
         eeg = [c for c in raw.ch_names if any(b in c for b in
                ("Fp2", "F4", "C4", "P4", "O2", "F3", "C3", "P3", "O1")) and "-" in c]
         raw.pick(eeg)
-    else:  # sleep-edfx
+        tmax = 1800.0                                   # CAP: 30-min profile window
+    else:  # sleep-edfx: process the FULL night (genuine long-duration streaming test)
         edf = sorted(glob.glob(f"{root}/**/{rec}*PSG*.edf", recursive=True))
         raw = mne.io.read_raw_edf(edf[0], preload=True, verbose=False)
         raw.pick([c for c in raw.ch_names if c.startswith("EEG")])
+        tmax = float(raw.times[-1])
     raw.filter(1.0, 40.0, verbose=False)
-    raw.crop(tmax=min(1800.0, float(raw.times[-1])))    # 30-min window
+    raw.crop(tmax=min(tmax, float(raw.times[-1])))
     return raw
 
 
