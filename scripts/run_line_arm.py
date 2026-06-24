@@ -97,6 +97,34 @@ def _load_meg_masc(root, subject):
     return raw
 
 
+def _load_lemon(root, subject):
+    """LEMON resting EEG: the released BrainVision .vhdr/.vmrk reference a template filename
+    (sub-010002) rather than the actual subject, so MNE can't resolve the data/marker files.
+    Patch the headers into a temp dir with the correct names, then read."""
+    import glob
+    import re
+    import shutil
+    import tempfile
+
+    import mne
+
+    vhdr = sorted(glob.glob(f"{root}/{subject}/**/*.vhdr", recursive=True))
+    if not vhdr:
+        raise FileNotFoundError(f"no LEMON .vhdr for {subject} under {root}")
+    vp = pathlib.Path(vhdr[0])
+    base, d = vp.stem, vp.parent
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    vt = vp.read_text()
+    vt = re.sub(r"DataFile=.*", f"DataFile={base}.eeg", vt)
+    vt = re.sub(r"MarkerFile=.*", f"MarkerFile={base}.vmrk", vt)
+    (tmp / f"{base}.vhdr").write_text(vt)
+    mt = (d / f"{base}.vmrk").read_text()
+    mt = re.sub(r"DataFile=.*", f"DataFile={base}.eeg", mt)
+    (tmp / f"{base}.vmrk").write_text(mt)
+    shutil.copy(d / f"{base}.eeg", tmp / f"{base}.eeg")
+    return mne.io.read_raw_brainvision(str(tmp / f"{base}.vhdr"), preload=True, verbose=False)
+
+
 def _ds003620_env_segments(root, subject):
     """Map ds003620's single continuous recording to its 3 mobility environments.
 
@@ -204,6 +232,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         raw = _load_ds000117_meg(root, subject)
     elif ds_id == "meg_masc":
         raw = _load_meg_masc(root, subject)
+    elif ds_id == "lemon":
+        raw = _load_lemon(root, subject)
     else:
         raw = _find_raw(root, subject)
     raw, applied = apply_baseline(raw, cfg.get("baseline_preprocessing"))
