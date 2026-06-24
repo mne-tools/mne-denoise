@@ -105,8 +105,10 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         try:
             if mid == "none":
                 cleaned = X
-            elif mid == "ecg_regression":
-                cleaned = regress_out(X, ecg)
+            elif mid == "ecg_regression":          # time-shifted ECG regression (captures the lagged QRS shape)
+                L = int(0.12 * sf)
+                R = np.vstack([np.roll(ecg[0], k) for k in range(-L, L + 1, max(1, L // 8))])
+                cleaned = regress_out(X, R)
             else:  # cardiac_dss: subtract the recovered cardiac subspace
                 dss = DSS(bias=CycleAverageBias(event_samples=rp, window=win, sfreq=sf),
                           n_components=3, return_type="array")
