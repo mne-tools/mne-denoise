@@ -97,6 +97,28 @@ def _load_meg_masc(root, subject):
     return raw
 
 
+def _load_hcp_meg(root, subject):
+    """HCP Young-Adult MEG line arm: read a resting-state 4D/BTi run (read_raw_bti), magnetometers
+    only. A 3rd MEG system (4D/BTi, 248 mag) after Elekta (ds000117) and KIT (meg_masc); WashU
+    site, line empirically at 60 Hz. Cropped to 180 s (stationary line)."""
+    import glob
+    import os
+
+    import mne
+
+    cf = sorted(glob.glob(f"{root}/{subject}/unprocessed/MEG/*-Restin/4D/c,rfDC"))
+    if not cf:
+        cf = sorted(glob.glob(f"{root}/{subject}/**/4D/c,rfDC", recursive=True))
+    if not cf:
+        raise FileNotFoundError(f"no HCP 4D/BTi resting run for {subject} under {root}")
+    d = os.path.dirname(cf[0])
+    raw = mne.io.read_raw_bti(os.path.join(d, "c,rfDC"), os.path.join(d, "config"),
+                              head_shape_fname=None, preload=False, verbose=False)
+    raw.crop(tmax=min(180.0, float(raw.times[-1])))
+    raw.pick("mag").load_data()
+    return raw
+
+
 def _load_lemon(root, subject):
     """LEMON resting EEG: the released BrainVision .vhdr/.vmrk reference a template filename
     (sub-010002) rather than the actual subject, so MNE can't resolve the data/marker files.
@@ -234,6 +256,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         raw = _load_meg_masc(root, subject)
     elif ds_id == "lemon":
         raw = _load_lemon(root, subject)
+    elif ds_id == "hcp_meg":
+        raw = _load_hcp_meg(root, subject)
     else:
         raw = _find_raw(root, subject)
     raw, applied = apply_baseline(raw, cfg.get("baseline_preprocessing"))
