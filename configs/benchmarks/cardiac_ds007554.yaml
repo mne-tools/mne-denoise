@@ -1,0 +1,24 @@
+# Arm: cardiac_ds007554 — real cardiac-artifact suppression (ds007554 EEG + synced ECG physio).
+# Tier-B generalization: cardiac DSS (CycleAverageBias subtraction) vs ECG-regression; QRS-locked residual.
+arm: cardiac_ds007554
+runner: cardiac
+status: active
+dataset:
+  id: ds007554
+  project_relative_path: openneuro/ds007554
+  contaminated_task: mentalarithmetic
+  channel_types: [eeg, ecg]
+  n_subjects: 30
+methods_under_test: [cardiac_dss]
+comparators:
+  required: [none, ecg_regression]
+metrics:
+  primary_target: qrs_locked_residual
+  primary_preservation: neural_band_power
+unit_of_inference: subject
+seeds: {global: 42}
+baseline_preprocessing:
+  source: "OpenNeuro ds007554 (CMx7-MM); 32-ch EEG + ECG physio, 250 Hz"
+  steps: {highpass_hz: 0.5}
+  branch_point: scalp_eeg_pre_cardiac_removal
+  excluded_from_baseline: [ica, ssp, cardiac_dss]
