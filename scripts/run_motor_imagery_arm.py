@@ -40,10 +40,14 @@ def _load_mi(root, subject):
     raws = []
     for r in RUNS:
         f = sorted(glob.glob(f"{root}/{subject}/{subject}R{r:02d}.edf"))
-        if f:
+        if not f:
+            continue
+        try:
             raws.append(mne.io.read_raw_edf(f[0], preload=True, verbose=False))
+        except Exception:  # noqa: BLE001 - skip a truncated/corrupt download, use the valid runs
+            continue
     if not raws:
-        raise FileNotFoundError(f"no MI runs for {subject} under {root}")
+        raise FileNotFoundError(f"no readable MI runs for {subject} under {root}")
     raw = mne.concatenate_raws(raws, verbose=False)
     raw.rename_channels({c: c.strip(".").upper() for c in raw.ch_names})
     raw.set_channel_types({c: "eeg" for c in raw.ch_names})
