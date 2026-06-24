@@ -104,12 +104,12 @@ def _load_erp_core_ocular(root, subject, cfg):
                 v = int(float(r["value"])); on = float(r["onset"])
             except (ValueError, KeyError, TypeError):
                 continue
-            if 1 <= v <= 80:  # faces + cars (ocular arm doesn't need the contrast)
-                onsets.append(on)
+            if 1 <= v <= 80:  # faces (1-40) vs cars (41-80): keep the contrast for preservation
+                onsets.append((on, 1 if v <= 40 else 2))
     raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     sf = float(raw.info["sfreq"])
-    ev = np.array([[int(round(o * sf)), 0, 1] for o in onsets], dtype=int)
-    epo = mne.Epochs(raw, ev, {"stim": 1}, tmin=-0.2, tmax=0.8, baseline=(-0.2, 0.0),
+    ev = np.array([[int(round(o * sf)), 0, c] for o, c in onsets], dtype=int)
+    epo = mne.Epochs(raw, ev, {"face": 1, "car": 2}, tmin=-0.2, tmax=0.8, baseline=(-0.2, 0.0),
                      preload=True, verbose=False)
     roi = (cfg.get("metrics", {}) or {}).get("roi_channels") or ["PO7", "PO8"]
     picks = [epo.ch_names.index(c) for c in roi if c in epo.ch_names] or None
@@ -149,8 +149,15 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         coup = reference_coupling(x.transpose(1, 0, 2).reshape(x.shape[1], -1), eog_eval)
         evoked = x.mean(0)                                              # (n_ch, n_times) held-out ERP
         n170 = qp.erp_mean_amplitude(evoked, epo.times, wlo, whi, picks=picks)
+        try:                                                            # face-car N170 contrast: preserved face-selectivity
+            af = eeg["face"].average().data
+            ac = eeg["car"].average().data
+            n170_diff = float(qp.erp_mean_amplitude(af, epo.times, wlo, whi, picks=picks)
+                              - qp.erp_mean_amplitude(ac, epo.times, wlo, whi, picks=picks))
+        except Exception:  # noqa: BLE001
+            n170_diff = float("nan")
         row = {"status": "success", "blink_coupling": float(coup), "n170_amp": float(n170),
-               "runtime_s": res.runtime_seconds}
+               "n170_diff": n170_diff, "runtime_s": res.runtime_seconds}
         rows.append({"method": mid, **row})
         out_dir = pathlib.Path(deriv_root) / subject / BENCH / mid
         bio.save_subject_benchmark_results(out_dir, subject=subject, method=mid, metrics=row)
