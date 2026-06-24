@@ -71,8 +71,7 @@ def run_subject(cfg, rec, root, deriv_root):
     sf = float(raw.info["sfreq"])
     X = raw.get_data()
     dur_min = float(raw.times[-1]) / 60.0
-    ncal = int(min(120.0, raw.times[-1] / 2) * sf)
-    calib = X[:, :ncal]
+    calib = X    # calibrate on the recording's own clean windows (no artifact-free rest segment in sleep PSG)
     try:
         mask, _ = compute_clean_window_mask(X, sf)
         retained = rejected_window_fraction(mask)        # mask = retained-sample mask
@@ -102,8 +101,7 @@ def run_subject(cfg, rec, root, deriv_root):
                "throughput_x_realtime": round(dur_min * 60.0 / rt, 1) if rt > 0 else None,
                "rejected_window_frac": rej,
                "effective_rank_change": round(float(effective_rank_change(X, cleaned)), 3),
-               "neural_band_retained": round(_bandpow(cleaned, sf, 1, 30) / (_bandpow(X, sf, 1, 30) or 1), 3),
-               "calibration_min": round(ncal / sf / 60.0, 1)}
+               "neural_band_retained": round(_bandpow(cleaned, sf, 1, 30) / (_bandpow(X, sf, 1, 30) or 1), 3)}
         rows.append({"method": method, **row})
         out = pathlib.Path(deriv_root) / rec / BENCH / method
         bio.save_subject_benchmark_results(out, subject=rec, method=method, metrics=row)

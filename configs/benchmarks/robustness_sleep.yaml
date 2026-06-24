@@ -1,0 +1,12 @@
+# Arm: robustness_sleep — long-duration ASR streaming (Sleep-EDF, 2 EEG, 100 Hz, ~22-h nights).
+arm: robustness_sleep
+runner: robustness
+status: active
+dataset: {id: sleep-edfx, project_relative_path: physionet/sleep-edfx, channel_types: [eeg],
+          subjects: ["SC4311E0","SC4621E0","SC4352F0","SC4082E0"]}
+methods_under_test: [asr, rasr]
+comparators: {required: [none]}
+metrics: {primary_target: throughput_x_realtime}
+unit_of_inference: recording
+seeds: {global: 42}
+baseline_preprocessing: {source: "Sleep-EDF Expanded; Fpz-Cz/Pz-Oz EEG", steps: {highpass_hz: 1.0, lowpass_hz: 40.0}}
