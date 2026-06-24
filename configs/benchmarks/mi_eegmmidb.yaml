@@ -1,0 +1,12 @@
+# Arm: mi_eegmmidb — motor-imagery external preservation (eegmmidb, 64 EEG, left/right fist imagery).
+arm: mi_eegmmidb
+runner: motor_imagery
+status: active
+dataset: {id: eegmmidb, project_relative_path: physionet/eegmmidb, channel_types: [eeg],
+          subjects: ["S001","S002","S003","S004","S005","S006","S007","S008","S009","S010"]}
+methods_under_test: [dss]
+comparators: {required: [none, asr]}
+metrics: {primary_target: cv_accuracy}
+unit_of_inference: subject
+seeds: {global: 42}
+baseline_preprocessing: {source: "eegmmidb BCI2000; 64 EEG 10-10, 160 Hz", steps: {bandpass_hz: [8, 30]}}
