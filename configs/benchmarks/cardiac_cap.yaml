@@ -1,7 +1,7 @@
 arm: cardiac_cap
 runner: cardiac
 status: active
-dataset: {id: capslpdb, project_relative_path: physionet/capslpdb, channel_types: [eeg, ecg], n_subjects: 10}
+dataset: {id: capslpdb, project_relative_path: physionet/capslpdb, channel_types: [eeg, ecg], n_subjects: 8, subjects: ["brux1","brux2","ins1","ins2","ins3","ins4","ins5","ins6"]}
 methods_under_test: [cardiac_dss]
 comparators: {required: [none, ecg_regression]}
 metrics: {primary_target: qrs_locked_residual, primary_preservation: neural_band_power}
