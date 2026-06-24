@@ -82,31 +82,18 @@ def run_subject(cfg, subject, root, deriv_root):
     sf = float(raw.info["sfreq"])
     ctx = {"sfreq": sf, "bandpass_band": [8.0, 30.0], "freq_band": [8.0, 30.0]}
     rows = []
-    for method in ["none", "asr", "dss"]:
+    for method in ["none", "asr", "rasr"]:
         try:
             if method == "none":
                 den = raw
-            elif method == "asr":
+            else:  # asr / rasr: the transient-artifact cleaners whose MI preservation we test
                 from mne_denoise.asr import ASR
                 X = raw.get_data()
-                asr = ASR(sfreq=sf, cutoff=20.0)
+                asr = ASR(sfreq=sf, cutoff=20.0,
+                          method=("riemannian_windowed" if method == "rasr" else "standard"))
                 asr.fit(X)
                 den = raw.copy()
                 den._data = np.asarray(asr.transform(X), dtype=float)
-            else:  # dss: enhance the oscillatory band, then decode (fit-transform all; preservation test)
-                from mne_denoise.benchmarks import comparators
-                epo0 = _epochs(raw)
-                cmp = comparators.get("dss", bias="bandpass", n_components=8)
-                st = cmp.fit(epo0, ctx)
-                res = cmp.transform(epo0, st, ctx)
-                if res.status != "success":
-                    rows.append({"method": method, "status": res.status}); continue
-                X = res.cleaned.get_data()
-                y = epo0.events[:, 2]
-                acc = _cv_acc(X, y)
-                rows.append({"method": method, "status": "success", "cv_accuracy": round(acc, 4),
-                             "n_trials": int(len(y))})
-                continue
             epo = _epochs(den)
             y = epo.events[:, 2]
             if len(set(y)) < 2 or len(y) < 12:
