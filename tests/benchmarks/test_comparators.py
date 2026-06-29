@@ -141,6 +141,23 @@ def test_emd_drops_high_frequency_imfs():
     assert _band(cl, 8, 12) > 0.5 * _band(X, 8, 12)          # alpha preserved
 
 
+def test_new_comparators_handle_epochs_3d():
+    # the new comparators must preserve the (n_trials, n_channels, n_times) shape on Epochs
+    import mne
+
+    rng = np.random.default_rng(11)
+    sf, n_tr, n_ch, n_t = 250.0, 8, 6, 500
+    data = rng.standard_normal((n_tr, n_ch, n_t)) * 1e-6
+    info = mne.create_info([f"E{i}" for i in range(n_ch)], sf, "eeg")
+    epo = mne.EpochsArray(data, info, verbose=False)
+    ctx = {"sfreq": sf}
+    for cid in ("autocca", "ssa", "wavelet_threshold", "wica"):
+        comp = C.get(cid)
+        res = comp.transform(epo, comp.fit(epo, ctx), ctx)
+        assert res.status == "success", cid
+        assert res.cleaned.get_data().shape == data.shape, cid     # 3-D epochs shape preserved
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):
