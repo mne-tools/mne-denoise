@@ -118,6 +118,29 @@ def test_wica_removes_transient_artifact():
     assert np.abs(np.asarray(res.cleaned)).max() < 0.7 * np.abs(X).max()   # transient peak suppressed
 
 
+def test_emd_drops_high_frequency_imfs():
+    from scipy.signal import butter, filtfilt, welch
+
+    rng = np.random.default_rng(9)
+    sf, n_ch, n_t = 250.0, 3, 3000
+    t = np.arange(n_t) / sf
+    alpha = np.sin(2 * np.pi * 10 * t)
+    b, a = butter(4, [35 / 125, 90 / 125], btype="band")
+    muscle = filtfilt(b, a, rng.standard_normal(n_t))
+    X = np.stack([alpha + 2.0 * muscle for _ in range(n_ch)])
+    comp = C.get("emd", freq_cutoff=25.0)
+    res = comp.transform(X, comp.fit(X), {"sfreq": sf})
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape
+
+    def _band(x, lo, hi):
+        f, p = welch(x, sf, nperseg=1024, axis=-1)
+        return float(np.mean(p[..., (f >= lo) & (f <= hi)]))
+    cl = np.asarray(res.cleaned)
+    assert _band(cl, 35, 90) < 0.6 * _band(X, 35, 90)        # high-frequency muscle IMF removed
+    assert _band(cl, 8, 12) > 0.5 * _band(X, 8, 12)          # alpha preserved
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

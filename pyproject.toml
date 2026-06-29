@@ -67,6 +67,10 @@ test = [
   "pandas>=1.5",
   "seaborn>=0.12",
 ]
+benchmarks = [
+  "PyWavelets>=1.4",   # wavelet_threshold + wICA comparators (ocular/muscle)
+  "EMD-signal>=1.5",   # emd / eemd comparators (muscle/movement)
+]
 dev = [
   "mne-denoise[test]",
   "ruff>=0.9.0",

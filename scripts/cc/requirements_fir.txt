@@ -19,6 +19,10 @@ pyyaml>=6.0       # benchmark config loader/validator (not in scipy-stack)
 pandas>=1.5
 seaborn>=0.12
 
+# Literature-standard comparator methods (wearable-review audit, 2026-06) — not in scipy-stack
+PyWavelets>=1.4   # wavelet_threshold + wICA comparators (ocular/muscle)
+EMD-signal>=1.5   # emd / eemd comparators (muscle/movement)
+
 # --- Optional: only needed for cross-method BASELINE comparisons, not for the ---
 # --- native mne_denoise.asr. Uncomment if a benchmark compares against them. ---
 # asrpy

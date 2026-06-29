@@ -649,6 +649,42 @@ class _Wavelet(Comparator):
         return ComparatorResult(cleaned=out, status="success", diagnostics={"method": "wavelet_threshold"})
 
 
+class _EMD(Comparator):
+    """``emd``/``eemd`` -- Empirical Mode Decomposition: decompose each channel into IMFs,
+    drop the high-frequency (muscle/EMG) IMFs, reconstruct. Per-recording / unsupervised.
+    ``eemd`` is the noise-assisted ensemble variant (slower; sensitivity tier)."""
+
+    def __init__(self, method: str = "emd", freq_cutoff: float = 30.0, max_imf: int = 8,
+                 trials: int = 20, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta(method, fit_scope="window_local", optional_dependency="EMD-signal"),
+            method=method, freq_cutoff=freq_cutoff, max_imf=max_imf, trials=trials, **params,
+        )
+        self.method = method
+        self.freq_cutoff = float(freq_cutoff)
+        self.max_imf = int(max_imf)
+        self.trials = int(trials)
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        from mne_denoise.emd import EMDDenoiser
+
+        d = EMDDenoiser(sfreq=_sfreq(evaluation, ctx), method=self.method,
+                        freq_cutoff=self.freq_cutoff, max_imf=self.max_imf, trials=self.trials)
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data(copy=False)
+            out = (np.stack([d.transform(x[i]) for i in range(x.shape[0])])
+                   if x.ndim == 3 else d.transform(x))
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success",
+                                    diagnostics={"method": self.method, "freq_cutoff": self.freq_cutoff})
+        out = d.transform(np.asarray(evaluation))
+        return ComparatorResult(cleaned=out, status="success", diagnostics={"method": self.method})
+
+
 # ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
@@ -673,3 +709,5 @@ register("autocca", lambda **p: _AutoCCA(**p))
 register("ssa", lambda **p: _SSA(**p))
 register("wavelet_threshold", lambda **p: _Wavelet(method="threshold", **p))
 register("wica", lambda **p: _Wavelet(method="wica", **p))
+register("emd", lambda **p: _EMD(method="emd", **p))
+register("eemd", lambda **p: _EMD(method="eemd", **p))

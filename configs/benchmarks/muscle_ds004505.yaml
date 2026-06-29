@@ -13,7 +13,7 @@ dataset:
   reference_channels: {noise_layer: pending, neck_emg: pending}
 
 tiers:                         # do NOT rank free vs reference-aware together
-  reference_free: [none, ica_fixed, asr, rasr_windowed, autocca, wavelet_threshold]   # AMICA optional; autocca = reference-free BSS-CCA (De Clercq 2006); wavelet_threshold = literature-standard muscle wavelet denoising
+  reference_free: [none, ica_fixed, asr, rasr_windowed, autocca, wavelet_threshold, emd]   # AMICA optional; autocca = BSS-CCA (De Clercq 2006); wavelet_threshold + emd = literature-standard muscle methods (eemd = slower sensitivity variant via sweep)
   reference_aware: [reference_regression, tspca, dual_layer_regression, icanclean]
 compact_asr:                   # the minimum ASR sub-analysis lives here
   methods: [asr_euclidean, rasr_windowed]
