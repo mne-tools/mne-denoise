@@ -287,7 +287,7 @@ class _SpatialPCA(Comparator):
     def _fit(self, train, ctx):
         from sklearn.decomposition import PCA
 
-        x = train.get_data(copy=False) if hasattr(train, "get_data") else np.asarray(train)
+        x = train.get_data() if hasattr(train, "get_data") else np.asarray(train)
         X = self._chan_time(x)  # (n_channels, n_samples)
         pca = PCA(n_components=min(self.k, X.shape[0]), svd_solver="full")
         pca.fit(X.T)
@@ -296,7 +296,7 @@ class _SpatialPCA(Comparator):
     def _transform(self, evaluation, payload, ctx):
         pca = payload
         if hasattr(evaluation, "get_data"):
-            x = evaluation.get_data(copy=False)
+            x = evaluation.get_data()
             out = np.stack([pca.inverse_transform(pca.transform(x[i].T)).T for i in range(x.shape[0])])
             cleaned = evaluation.copy()
             cleaned._data = out
@@ -542,12 +542,12 @@ class _AutoCCA(Comparator):
     def _fit(self, train, ctx):
         from mne_denoise.cca import AutoCCA
 
-        x = train.get_data(copy=False) if hasattr(train, "get_data") else np.asarray(train)
+        x = train.get_data() if hasattr(train, "get_data") else np.asarray(train)
         return AutoCCA(rho_threshold=self.rho_threshold, n_keep=self.n_keep).fit(_flat(x))
 
     def _transform(self, evaluation, payload, ctx):
         if hasattr(evaluation, "get_data"):
-            x = evaluation.get_data(copy=False)
+            x = evaluation.get_data()
             out = (np.stack([payload.transform(x[i]) for i in range(x.shape[0])])
                    if x.ndim == 3 else payload.transform(x))
             cleaned = evaluation.copy()
@@ -584,7 +584,7 @@ class _SSA(Comparator):
         ssa = SSA(sfreq=_sfreq(evaluation, ctx), window_length=self.window_length,
                   drop_freq_max=self.drop_freq_max, drop_band=self.drop_band)
         if hasattr(evaluation, "get_data"):
-            x = evaluation.get_data(copy=False)
+            x = evaluation.get_data()
             out = (np.stack([ssa.transform(x[i]) for i in range(x.shape[0])])
                    if x.ndim == 3 else ssa.transform(x))
             cleaned = evaluation.copy()
@@ -619,13 +619,13 @@ class _Wavelet(Comparator):
             return None
         from mne_denoise.wavelet import WaveletICA
 
-        x = train.get_data(copy=False) if hasattr(train, "get_data") else np.asarray(train)
+        x = train.get_data() if hasattr(train, "get_data") else np.asarray(train)
         return WaveletICA(n_components=self.n_components, wavelet=self.wavelet or "coif5").fit(_flat(x))
 
     def _transform(self, evaluation, payload, ctx):
         if self.method == "wica":
             if hasattr(evaluation, "get_data"):
-                x = evaluation.get_data(copy=False)
+                x = evaluation.get_data()
                 out = (np.stack([payload.transform(x[i]) for i in range(x.shape[0])])
                        if x.ndim == 3 else payload.transform(x))
                 cleaned = evaluation.copy()
@@ -638,7 +638,7 @@ class _Wavelet(Comparator):
 
         wav = self.wavelet or "sym5"
         if hasattr(evaluation, "get_data"):
-            x = evaluation.get_data(copy=False)
+            x = evaluation.get_data()
             out = (np.stack([wavelet_denoise_multichannel(x[i], wav) for i in range(x.shape[0])])
                    if x.ndim == 3 else wavelet_denoise_multichannel(x, wav))
             cleaned = evaluation.copy()
@@ -674,7 +674,7 @@ class _EMD(Comparator):
         d = EMDDenoiser(sfreq=_sfreq(evaluation, ctx), method=self.method,
                         freq_cutoff=self.freq_cutoff, max_imf=self.max_imf, trials=self.trials)
         if hasattr(evaluation, "get_data"):
-            x = evaluation.get_data(copy=False)
+            x = evaluation.get_data()
             out = (np.stack([d.transform(x[i]) for i in range(x.shape[0])])
                    if x.ndim == 3 else d.transform(x))
             cleaned = evaluation.copy()
