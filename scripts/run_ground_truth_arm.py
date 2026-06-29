@@ -85,7 +85,7 @@ def run_replicate(rep, methods, *, min_corr=0.5):
     bi = np.asarray(rep.brain_idx)
     S_tr_b, S_te_b = rep.S_train[bi], rep.S_test[bi]
     n_brain = int(np.size(bi))
-    n_comp = rep.A.shape[1]
+    n_comp = min(rep.A.shape[1], rep.X_train.shape[0])   # clamp to channel count (enables the low-density sweep)
     rows = []
     for method in methods:
         try:

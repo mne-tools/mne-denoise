@@ -1,0 +1,14 @@
+# Arm: lowdensity_ground_truth — channel-count degradation of BSS source separation (simulation).
+# Tests the wearable review's claim that ICA/PCA/DSS lose effectiveness at low channel counts
+# (known sources at every density -> RRMSE degradation curve). Core low-density contribution.
+arm: lowdensity_ground_truth
+runner: lowdensity
+base_arm: ground_truth
+status: active
+channel_grid: [32, 16, 8, 6]          # n_channels must be >= n_brain+n_artifact (6); reaches wearable density
+simulation: {regime: generic, snr_db: 0.0, n_replicates: 10, n_brain: 3, n_artifact: 3}
+methods_under_test: [iterative_dss]
+comparators: {required: [pca, fastica, oracle]}
+metrics: {primary_target: rrmse_vs_channels, degradation: slope_rrmse_vs_log2_nch}
+unit_of_inference: replicate
+seeds: {global: 42}
