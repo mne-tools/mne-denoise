@@ -60,6 +60,29 @@ def test_autocca_separates_by_autocorrelation():
     assert _hf(np.asarray(res.cleaned)) < 0.5 * _hf(X)       # high-frequency (muscle) power suppressed
 
 
+def test_ssa_removes_slow_drift_preserves_oscillation():
+    # large slow drift (ocular/instrumental-like, 0.3 Hz) + alpha (10 Hz); SSA drops the slow.
+    rng = np.random.default_rng(5)
+    sf, n_ch, n_t = 250.0, 4, 5000
+    t = np.arange(n_t) / sf
+    drift = 5.0 * np.sin(2 * np.pi * 0.3 * t)
+    alpha = np.sin(2 * np.pi * 10 * t)
+    X = np.stack([drift + alpha + 0.05 * rng.standard_normal(n_t) for _ in range(n_ch)])
+    comp = C.get("ssa", drop_freq_max=3.0)
+    res = comp.transform(X, comp.fit(X), {"sfreq": sf})
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape
+
+    from scipy.signal import welch
+
+    def _band(x, lo, hi):
+        f, p = welch(x, sf, nperseg=1024, axis=-1)
+        return float(np.mean(p[..., (f >= lo) & (f <= hi)]))
+    cl = np.asarray(res.cleaned)
+    assert _band(cl, 0, 1) < 0.3 * _band(X, 0, 1)            # slow drift suppressed
+    assert _band(cl, 8, 12) > 0.7 * _band(X, 8, 12)          # alpha preserved
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

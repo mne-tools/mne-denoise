@@ -560,6 +560,42 @@ class _AutoCCA(Comparator):
                                 diagnostics={"n_kept": int(payload.n_kept_)})
 
 
+class _SSA(Comparator):
+    """``ssa`` -- Singular Spectrum Analysis: per-channel eigentriple decomposition that
+    drops slow / quasi-periodic (ocular drift, cardiac) components by their dominant
+    frequency and reconstructs by diagonal averaging. Per-recording / unsupervised."""
+
+    def __init__(self, drop_freq_max: float = 3.0, drop_band: Any = None,
+                 window_length: Any = None, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("ssa", fit_scope="window_local"),
+            drop_freq_max=drop_freq_max, drop_band=drop_band, window_length=window_length, **params,
+        )
+        self.drop_freq_max = float(drop_freq_max)
+        self.drop_band = drop_band
+        self.window_length = window_length
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        from mne_denoise.ssa import SSA
+
+        ssa = SSA(sfreq=_sfreq(evaluation, ctx), window_length=self.window_length,
+                  drop_freq_max=self.drop_freq_max, drop_band=self.drop_band)
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data(copy=False)
+            out = (np.stack([ssa.transform(x[i]) for i in range(x.shape[0])])
+                   if x.ndim == 3 else ssa.transform(x))
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success",
+                                    diagnostics={"drop_freq_max": self.drop_freq_max, "drop_band": self.drop_band})
+        out = ssa.transform(np.asarray(evaluation))
+        return ComparatorResult(cleaned=out, status="success",
+                                diagnostics={"drop_freq_max": self.drop_freq_max})
+
+
 # ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
@@ -581,3 +617,4 @@ register("notch", lambda **p: _Notch(method="fir", **p))
 register("non_spatial_line", lambda **p: _Notch(method="spectrum_fit", **p))
 # wearable-review-driven literature-standard comparators
 register("autocca", lambda **p: _AutoCCA(**p))
+register("ssa", lambda **p: _SSA(**p))

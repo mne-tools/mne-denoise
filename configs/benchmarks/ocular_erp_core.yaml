@@ -24,7 +24,7 @@ eog_dss:                        # frozen definition
 
 methods_under_test: [eog_dss]
 comparators:
-  required: [none, eog_regression, ica_iclabel_rejection, ssp_eog]
+  required: [none, eog_regression, ica_iclabel_rejection, ssp_eog, ssa]   # ssa = singular spectrum analysis (slow blink/drift removal; Golyandina)
   ablations: [veog_only, heog_only, joint, one_vs_many_components, blink_free_vs_artifact_rich]
 sweep: {eog_dss: {param: n_components, grid: pending}}
 
