@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from mne_denoise.benchmarks import comparators as C
+import mne_denoise.benchmarks.adapters  # noqa: F401  (registers autocca/asr/wavelet/... adapters)
 
 
 def _data(seed=0):
@@ -34,6 +35,29 @@ def test_pca_fit_then_transform_reduces_rank():
     assert res.status == "success"
     assert res.rank_after == 3
     assert np.asarray(res.cleaned).shape == evl.shape
+
+
+def test_autocca_separates_by_autocorrelation():
+    # a slow (high-autocorrelation, neural-like) source + a fast (low-autocorrelation,
+    # muscle-like) source mixed across channels; autoCCA should keep the slow, drop the fast.
+    rng = np.random.default_rng(3)
+    sf, n_ch, n_t = 250.0, 8, 4000
+    t = np.arange(n_t) / sf
+    slow = np.sin(2 * np.pi * 8 * t)
+    fast = rng.standard_normal(n_t)
+    A = rng.standard_normal((n_ch, 2))
+    X = A[:, 0:1] * slow + A[:, 1:2] * fast
+    comp = C.get("autocca", rho_threshold=0.9)
+    res = comp.transform(X, comp.fit(X))
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape          # shape preserved
+    assert 1 <= res.rank_after < n_ch                        # dropped the low-autocorrelation component(s)
+    from scipy.signal import welch
+
+    def _hf(x):
+        f, p = welch(x, sf, nperseg=512, axis=-1)
+        return float(np.mean(p[..., f > 40]))
+    assert _hf(np.asarray(res.cleaned)) < 0.5 * _hf(X)       # high-frequency (muscle) power suppressed
 
 
 def test_transform_without_fit_state_raises():

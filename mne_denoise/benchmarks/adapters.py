@@ -522,6 +522,45 @@ class _SSPEOG(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# Literature-standard comparators (wearable-review-driven: BSS-CCA, SSA, wavelet, EMD)
+# ---------------------------------------------------------------------------
+class _AutoCCA(Comparator):
+    """``autocca`` -- reference-free BSS-CCA (De Clercq 2006). CCA of the signal vs its
+    one-sample lag orders components by autocorrelation; the low-autocorrelation
+    (broadband EMG/muscle) components are dropped and the signal is reconstructed.
+    Fitted on TRAIN, applied to EVAL -- the reference-free, canonical muscle counterpart
+    to iCanClean."""
+
+    def __init__(self, rho_threshold: float = 0.9, n_keep: Any = None, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("autocca", fit_scope="train_only", rank_reducing=True),
+            rho_threshold=rho_threshold, n_keep=n_keep, **params,
+        )
+        self.rho_threshold = float(rho_threshold)
+        self.n_keep = n_keep
+
+    def _fit(self, train, ctx):
+        from mne_denoise.cca import AutoCCA
+
+        x = train.get_data(copy=False) if hasattr(train, "get_data") else np.asarray(train)
+        return AutoCCA(rho_threshold=self.rho_threshold, n_keep=self.n_keep).fit(_flat(x))
+
+    def _transform(self, evaluation, payload, ctx):
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data(copy=False)
+            out = (np.stack([payload.transform(x[i]) for i in range(x.shape[0])])
+                   if x.ndim == 3 else payload.transform(x))
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success", rank_after=int(payload.n_kept_),
+                                    diagnostics={"n_kept": int(payload.n_kept_),
+                                                 "rho_threshold": self.rho_threshold})
+        out = payload.transform(np.asarray(evaluation))
+        return ComparatorResult(cleaned=out, status="success", rank_after=int(payload.n_kept_),
+                                diagnostics={"n_kept": int(payload.n_kept_)})
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
 register("tspca", lambda **p: _TSPCA(**p))
@@ -540,3 +579,5 @@ register("zapline", lambda **p: _ZapLine(adaptive=False, **p))
 register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))
 register("notch", lambda **p: _Notch(method="fir", **p))
 register("non_spatial_line", lambda **p: _Notch(method="spectrum_fit", **p))
+# wearable-review-driven literature-standard comparators
+register("autocca", lambda **p: _AutoCCA(**p))

@@ -13,7 +13,7 @@ dataset:
   reference_channels: {noise_layer: pending, neck_emg: pending}
 
 tiers:                         # do NOT rank free vs reference-aware together
-  reference_free: [none, ica_fixed, asr, rasr_windowed]   # AMICA optional
+  reference_free: [none, ica_fixed, asr, rasr_windowed, autocca]   # AMICA optional; autocca = reference-free BSS-CCA (canonical muscle, De Clercq 2006)
   reference_aware: [reference_regression, tspca, dual_layer_regression, icanclean]
 compact_asr:                   # the minimum ASR sub-analysis lives here
   methods: [asr_euclidean, rasr_windowed]
@@ -21,7 +21,8 @@ compact_asr:                   # the minimum ASR sub-analysis lives here
   calibration: {source: pending, duration_s: pending, contamination_fraction: pending,
                 external_or_internal: pending, shared_across_methods: true, excluded_from_eval: true}
   compare_at: matched_attenuation
-sweep: {asr: {param: cutoff, grid: [10, 20, 30]}, icanclean: {param: r2_threshold, grid: pending}}
+sweep: {asr: {param: cutoff, grid: [10, 20, 30]}, icanclean: {param: r2_threshold, grid: pending},
+        autocca: {param: rho_threshold, grid: [0.8, 0.9, 0.95]}}   # expose autoCCA autocorrelation-threshold sensitivity
 
 reference_fairness:            # match information across reference-aware methods
   match: [n_reference_channels, fit_duration, preprocessing, time_lags, regularization, parameter_budget]
