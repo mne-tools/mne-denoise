@@ -83,6 +83,41 @@ def test_ssa_removes_slow_drift_preserves_oscillation():
     assert _band(cl, 8, 12) > 0.7 * _band(X, 8, 12)          # alpha preserved
 
 
+def test_wavelet_threshold_suppresses_broadband_noise():
+    rng = np.random.default_rng(7)
+    sf, n_ch, n_t = 250.0, 4, 4000
+    t = np.arange(n_t) / sf
+    alpha = np.sin(2 * np.pi * 10 * t)
+    X = np.stack([alpha + 0.8 * rng.standard_normal(n_t) for _ in range(n_ch)])
+    comp = C.get("wavelet_threshold")
+    res = comp.transform(X, comp.fit(X))
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape
+    from scipy.signal import welch
+
+    def _hfp(x):
+        f, p = welch(x, sf, nperseg=1024, axis=-1)
+        return float(np.mean(p[..., f > 40]))
+    assert _hfp(np.asarray(res.cleaned)) < _hfp(X)           # broadband HF noise reduced
+
+
+def test_wica_removes_transient_artifact():
+    rng = np.random.default_rng(8)
+    sf, n_ch, n_t = 250.0, 6, 4000
+    t = np.arange(n_t) / sf
+    neural = np.sin(2 * np.pi * 10 * t)
+    artifact = np.zeros(n_t)
+    for s in range(250, n_t, 500):
+        artifact[s : s + 25] += 10.0                          # sparse blink-like transients
+    A = rng.standard_normal((n_ch, 2))
+    X = A[:, 0:1] * neural + A[:, 1:2] * artifact + 0.1 * rng.standard_normal((n_ch, n_t))
+    comp = C.get("wica", n_components=4)
+    res = comp.transform(X, comp.fit(X))
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape
+    assert np.abs(np.asarray(res.cleaned)).max() < 0.7 * np.abs(X).max()   # transient peak suppressed
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

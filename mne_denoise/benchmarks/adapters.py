@@ -596,6 +596,59 @@ class _SSA(Comparator):
                                 diagnostics={"drop_freq_max": self.drop_freq_max})
 
 
+class _Wavelet(Comparator):
+    """``wavelet_threshold`` -- per-channel universal soft-thresholding (remove HF
+    noise/muscle); ``wica`` -- wavelet-enhanced ICA (Castellanos & Makarov 2006): extract
+    and subtract each ICA source's sparse high-amplitude transients. The most-used
+    wearable artifact methods for ocular and muscular contamination."""
+
+    def __init__(self, method: str = "threshold", wavelet: Any = None,
+                 n_components: Any = None, **params: Any) -> None:
+        cid = "wica" if method == "wica" else "wavelet_threshold"
+        scope = "train_only" if method == "wica" else "window_local"
+        super().__init__(
+            ComparatorMeta(cid, fit_scope=scope, optional_dependency="PyWavelets"),
+            method=method, wavelet=wavelet, n_components=n_components, **params,
+        )
+        self.method = method
+        self.wavelet = wavelet
+        self.n_components = n_components
+
+    def _fit(self, train, ctx):
+        if self.method != "wica":
+            return None
+        from mne_denoise.wavelet import WaveletICA
+
+        x = train.get_data(copy=False) if hasattr(train, "get_data") else np.asarray(train)
+        return WaveletICA(n_components=self.n_components, wavelet=self.wavelet or "coif5").fit(_flat(x))
+
+    def _transform(self, evaluation, payload, ctx):
+        if self.method == "wica":
+            if hasattr(evaluation, "get_data"):
+                x = evaluation.get_data(copy=False)
+                out = (np.stack([payload.transform(x[i]) for i in range(x.shape[0])])
+                       if x.ndim == 3 else payload.transform(x))
+                cleaned = evaluation.copy()
+                cleaned._data = out
+                return ComparatorResult(cleaned=cleaned, status="success",
+                                        diagnostics={"method": "wica", "wavelet": self.wavelet or "coif5"})
+            out = payload.transform(np.asarray(evaluation))
+            return ComparatorResult(cleaned=out, status="success", diagnostics={"method": "wica"})
+        from mne_denoise.wavelet import wavelet_denoise_multichannel
+
+        wav = self.wavelet or "sym5"
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data(copy=False)
+            out = (np.stack([wavelet_denoise_multichannel(x[i], wav) for i in range(x.shape[0])])
+                   if x.ndim == 3 else wavelet_denoise_multichannel(x, wav))
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success",
+                                    diagnostics={"method": "wavelet_threshold", "wavelet": wav})
+        out = wavelet_denoise_multichannel(np.asarray(evaluation), wav)
+        return ComparatorResult(cleaned=out, status="success", diagnostics={"method": "wavelet_threshold"})
+
+
 # ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
@@ -618,3 +671,5 @@ register("non_spatial_line", lambda **p: _Notch(method="spectrum_fit", **p))
 # wearable-review-driven literature-standard comparators
 register("autocca", lambda **p: _AutoCCA(**p))
 register("ssa", lambda **p: _SSA(**p))
+register("wavelet_threshold", lambda **p: _Wavelet(method="threshold", **p))
+register("wica", lambda **p: _Wavelet(method="wica", **p))
