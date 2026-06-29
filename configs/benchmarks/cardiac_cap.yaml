@@ -3,7 +3,7 @@ runner: cardiac
 status: active
 dataset: {id: capslpdb, project_relative_path: physionet/capslpdb, channel_types: [eeg, ecg], n_subjects: 8, subjects: ["brux1","brux2","ins1","ins2","ins3","ins4","ins5","ins6"]}
 methods_under_test: [cardiac_dss]
-comparators: {required: [none, ecg_regression]}
+comparators: {required: [none, ecg_regression, wavelet_threshold]}   # wavelet_threshold via registry (literature generic denoiser)
 metrics: {primary_target: qrs_locked_residual, primary_preservation: neural_band_power}
 unit_of_inference: recording
 seeds: {global: 42}

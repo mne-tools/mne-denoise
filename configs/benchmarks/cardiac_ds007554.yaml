@@ -11,7 +11,7 @@ dataset:
   n_subjects: 30
 methods_under_test: [cardiac_dss]
 comparators:
-  required: [none, ecg_regression]
+  required: [none, ecg_regression, wavelet_threshold]   # wavelet_threshold via registry
 metrics:
   primary_target: qrs_locked_residual
   primary_preservation: neural_band_power

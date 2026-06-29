@@ -124,7 +124,12 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         seg = np.stack([data[:, p + a:p + b] for p in rp])
         return float(np.sqrt((seg.mean(0) ** 2).mean()))
 
-    methods = ["none", "ecg_regression", "cardiac_dss"]
+    # config-driven: bespoke cardiac methods first, then any registered comparators named
+    # in the config (e.g. wavelet_threshold) dispatched through the comparator registry
+    cfg_methods = (list(cfg.get("methods_under_test", []) or [])
+                   + list((cfg.get("comparators", {}) or {}).get("required", []) or []))
+    methods = list(dict.fromkeys(["none", "ecg_regression", "cardiac_dss"] + cfg_methods))
+    ctx = {"sfreq": sf}
     for mid in methods:
         try:
             if mid == "none":
@@ -133,12 +138,23 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                 L = int(0.12 * sf)
                 R = np.vstack([np.roll(ecg[0], k) for k in range(-L, L + 1, max(1, L // 8))])
                 cleaned = regress_out(X, R)
-            else:  # cardiac_dss: subtract the recovered cardiac subspace
+            elif mid == "cardiac_dss":             # subtract the recovered cardiac subspace
                 dss = DSS(bias=CycleAverageBias(event_samples=rp, window=win, sfreq=sf),
                           n_components=3, return_type="array")
                 est = np.asarray(dss.fit_transform(X), dtype=float)
                 est = est if est.shape == X.shape else est.reshape(X.shape)
                 cleaned = X - est
+            else:                                  # registered comparator (ssa, wavelet_threshold, ...)
+                import mne_denoise.benchmarks.adapters  # noqa: F401  (populate registry)
+                from mne_denoise.benchmarks import comparators
+
+                cmp = comparators.get(mid)
+                res = cmp.transform(eeg, cmp.fit(eeg, ctx), ctx)
+                if res.status != "success":
+                    rows.append({"method": mid, "status": res.status, "error": getattr(res, "error", None)})
+                    continue
+                cleaned = (res.cleaned.get_data() if hasattr(res.cleaned, "get_data")
+                           else np.asarray(res.cleaned))
         except Exception as exc:  # noqa: BLE001
             rows.append({"method": mid, "status": "failed_numerical", "error": f"{type(exc).__name__}: {exc}"})
             continue
