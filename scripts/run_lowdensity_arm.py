@@ -83,6 +83,24 @@ def _print_curve(arm, base, methods, rows, metric="rrmse"):
         print(f"  {mth:16} " + "  ".join(cells))
 
 
+def _gate_heavy(cfg, n_ch, heavy_max=16, heavy=("eemd_cca", "emd", "eemd", "memd")):
+    """Drop compute-prohibitive per-channel methods (EEMD-CCA, EMD) above ``heavy_max`` channels.
+    EEMD-per-channel on full recordings does not scale to high density (the 64-ch case did not
+    finish in 45 min), and these single-channel-origin methods are relevant at the low-density
+    (wearable) end anyway."""
+    if int(n_ch) <= heavy_max:
+        return cfg
+    import copy
+    c = copy.deepcopy(cfg)
+    c["tiers"] = {k: [m for m in (v or []) if m not in heavy]
+                  for k, v in (cfg.get("tiers", {}) or {}).items()}
+    c["methods_under_test"] = [m for m in (cfg.get("methods_under_test", []) or []) if m not in heavy]
+    comp = c.get("comparators") or {}
+    if comp.get("required"):
+        comp["required"] = [m for m in comp["required"] if m not in heavy]
+    return c
+
+
 def run_real_data(cfg, deriv_root, *, synthetic=False):
     """Subsample a real arm's EEG channels to each density in ``channel_grid`` and re-score
     with that arm's methods + metrics (reuses run_{muscle,ocular}_arm.run_subject via the
@@ -120,7 +138,7 @@ def run_real_data(cfg, deriv_root, *, synthetic=False):
                     continue
                 keep = ss.farthest_point_channels(raw.info, eeg_idx, int(n_ch))
                 sub = raw.copy().pick([raw.ch_names[i] for i in keep] + list(fit_refs) + list(eval_refs))
-                for r in mod.run_subject(cfg, f"{subject}_nch{n_ch}", root, deriv_root,
+                for r in mod.run_subject(_gate_heavy(cfg, n_ch), f"{subject}_nch{n_ch}", root, deriv_root,
                                          preloaded=(sub, fit_refs, eval_refs)):
                     r["n_ch"] = int(n_ch); r["base_subject"] = subject; rows.append(r)
         else:  # ocular
@@ -137,7 +155,7 @@ def run_real_data(cfg, deriv_root, *, synthetic=False):
                 keep = ss.farthest_point_channels(epo.info, eeg_idx, int(n_ch), must_include=must)
                 sub = epo.copy().pick([epo.ch_names[i] for i in keep] + list(eog))
                 sub_picks = [sub.ch_names.index(c) for c in roi if c in sub.ch_names] or None
-                for r in mod.run_subject(cfg, f"{subject}_nch{n_ch}", root, deriv_root,
+                for r in mod.run_subject(_gate_heavy(cfg, n_ch), f"{subject}_nch{n_ch}", root, deriv_root,
                                          preloaded=(sub, eog, win, sub_picks)):
                     r["n_ch"] = int(n_ch); r["base_subject"] = subject; rows.append(r)
     return rows, methods
