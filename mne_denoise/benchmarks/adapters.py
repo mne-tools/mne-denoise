@@ -855,6 +855,37 @@ class _MWF(Comparator):
         return ComparatorResult(cleaned=out, status="success", diagnostics={"hf_hz": self.hf_hz})
 
 
+class _ADJUST(Comparator):
+    """``adjust`` -- ADJUST automatic ocular IC classifier (Mognon et al. 2011,
+    10.1111/j.1469-8986.2010.01061.x): ICA on TRAIN, flag blink / horizontal-eye / discontinuity
+    ICs from spatial+temporal features (SAD/SED/GDSF/MEV/TK, EM thresholds), remove on EVAL.
+    The classic feature-based ocular ICA classifier (predecessor of ICLabel). Needs epoched data."""
+
+    def __init__(self, n_components: int | None = None, **params: Any) -> None:
+        super().__init__(ComparatorMeta("adjust", fit_scope="train_only"),
+                         n_components=n_components, **params)
+        self.n_components = n_components
+
+    def _fit(self, train, ctx):
+        import mne
+        from mne_denoise.adjust import adjust_bad_components
+
+        ica = mne.preprocessing.ICA(n_components=self.n_components, max_iter="auto",
+                                    random_state=97, verbose=False)
+        ica.fit(train, verbose=False)
+        try:
+            ica.exclude = adjust_bad_components(ica, train)
+        except Exception:  # noqa: BLE001
+            ica.exclude = []
+        return ica
+
+    def _transform(self, evaluation, payload, ctx):
+        ica = payload
+        cleaned = ica.apply(evaluation.copy(), verbose=False)
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"n_excluded": len(ica.exclude)})
+
+
 # ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
@@ -885,3 +916,4 @@ register("emd", lambda **p: _EMD(method="emd", **p))
 register("eemd", lambda **p: _EMD(method="eemd", **p))
 register("eemd_cca", lambda **p: _EEMDCCA(**p))
 register("mwf", lambda **p: _MWF(**p))
+register("adjust", lambda **p: _ADJUST(**p))

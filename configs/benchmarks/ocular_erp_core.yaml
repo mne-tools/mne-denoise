@@ -24,7 +24,8 @@ eog_dss:                        # frozen definition
 
 methods_under_test: [eog_dss]
 comparators:
-  required: [none, eog_regression, ica_iclabel_rejection, ssp_eog, ssa, wica, wavelet_threshold]
+  required: [none, eog_regression, ica_iclabel_rejection, adjust, ssp_eog, ssa, wica, wavelet_threshold]
+  # adjust = ADJUST feature-based ocular IC classifier (Mognon 2011, the classic ICLabel predecessor);
   # ssa = singular spectrum analysis; wica = wavelet-enhanced ICA (Castellanos-Makarov 2006, canonical ocular);
   # wavelet_threshold = per-channel universal soft-thresholding. Literature-standard ocular methods from the wearable review.
   ablations: [veog_only, heog_only, joint, one_vs_many_components, blink_free_vs_artifact_rich]

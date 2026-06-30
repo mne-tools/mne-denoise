@@ -255,6 +255,38 @@ def test_mwf_removes_muscle_subspace():
     assert bp(cl, 8, 12) > 0.7 * bp(X, 8, 12)         # alpha preserved
 
 
+def test_adjust_flags_and_removes_blink_ic():
+    # ADJUST (Mognon 2011): flag the frontal high-kurtosis blink IC and remove it.
+    import mne
+
+    rng = np.random.default_rng(7)
+    ch = ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "C3", "Cz", "C4",
+          "P3", "Pz", "P4", "O1", "O2", "T7", "T8", "P7", "P8", "Oz"]
+    sf, nt, nep = 200.0, 200, 60
+    info = mne.create_info(ch, sf, "eeg")
+    info.set_montage(mne.channels.make_standard_montage("standard_1020"))
+    t = np.arange(nt) / sf
+    blink_topo = np.array([3, 3, 2, 2, 1.5, 2, 2, .5, .3, .5, .2, .1, .2, .05, .05, .4, .4, .15, .15, .05])
+    alpha_topo = rng.standard_normal(len(ch))
+    data = np.zeros((nep, len(ch), nt))
+    for e in range(nep):
+        alpha = np.sin(2 * np.pi * 10 * t + rng.uniform(0, 6))
+        blink = np.zeros(nt)
+        if e % 2 == 0:
+            c = int(rng.integers(40, 160)); blink[c - 10:c + 10] += np.hanning(20) * 8
+        data[e] = ((alpha_topo[:, None] * alpha + blink_topo[:, None] * blink) * 1e-6
+                   + rng.standard_normal((len(ch), nt)) * 0.3e-6)
+    epo = mne.EpochsArray(data, info, verbose=False)
+    comp = C.get("adjust", n_components=15)
+    res = comp.transform(epo, comp.fit(epo, {"sfreq": sf}), {"sfreq": sf})
+    assert res.status == "success"
+    assert res.diagnostics["n_excluded"] >= 1                        # flagged the blink IC
+
+    def fp(x):
+        return float((x[:, [0, 1], :] ** 2).mean())                  # Fp1/Fp2 power
+    assert fp(res.cleaned.get_data()) < 0.5 * fp(data)               # frontal blink removed
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):
