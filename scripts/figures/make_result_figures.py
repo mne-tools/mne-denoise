@@ -197,8 +197,8 @@ def fig_groundtruth():
     cfg = _load_cfg(str(pathlib.Path(__file__).resolve().parents[2] /
                        "configs/benchmarks/ground_truth_generic.yaml"))
     rows, methods = run(cfg, "D:/tmp/gtfig", synthetic=True)
-    order = ["oracle", "fastica", "infomax", "iterative_dss", "picard", "pca"]
-    lab = ["oracle", "FastICA", "Infomax", "IterDSS", "Picard", "PCA"]
+    order = ["oracle", "jade", "fastica", "infomax", "sobi", "iterative_dss", "picard", "pca"]
+    lab = ["oracle", "JADE", "FastICA", "Infomax", "SOBI", "IterDSS", "Picard", "PCA"]
     rr = {m: st.mean([r["rrmse"] for r in rows if r.get("method") == m and r.get("status") == "success"])
           for m in order if any(r.get("method") == m for r in rows)}
     fig, ax = plt.subplots(figsize=(6, 3.3))
