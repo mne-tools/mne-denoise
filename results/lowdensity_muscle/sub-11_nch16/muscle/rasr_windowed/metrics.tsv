@@ -1,2 +1,0 @@
-subject	method	status	tier	sweep_value	hf_power	emg_coupling	alpha_power	beta_power	runtime_s
-sub-11_nch16	rasr_windowed	success	reference_free		4.94153551407285e-12	0.6688601236352998	3.971777581654665e-13	2.691730375172488e-13	0.291054

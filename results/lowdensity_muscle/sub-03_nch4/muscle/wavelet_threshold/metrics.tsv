@@ -1,2 +1,0 @@
-subject	method	status	tier	sweep_value	hf_power	emg_coupling	alpha_power	beta_power	runtime_s
-sub-03_nch4	wavelet_threshold	success	reference_free		7.846246795321509e-16	0.015673973781363648	1.2674861567405047e-20	8.260755351687128e-18	0.040872

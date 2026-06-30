@@ -81,3 +81,4 @@ scripts/fir_run_asr_paper_validation.sbatch
 
 # Tutorial WIPs being staged on other branches
 examples/tutorials/Paper10_*.ipynb
+results/lowdensity_*/
