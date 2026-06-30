@@ -159,7 +159,8 @@ def _spatial_features(patterns: np.ndarray, ch_names: list[str]) -> tuple:
 # spectral fit (lambda, FitError) + 8-13 Hz power
 # ---------------------------------------------------------------------------
 def _spectral_model(x, f):
-    return np.exp(x[0]) / np.power(f, np.exp(x[1])) - x[2]
+    with np.errstate(over="ignore", invalid="ignore"):
+        return np.exp(x[0]) / np.power(f, np.exp(x[1])) - x[2]
 
 
 def _fit_spectrum(pX: np.ndarray, pY: np.ndarray) -> np.ndarray:
@@ -169,7 +170,8 @@ def _fit_spectrum(pX: np.ndarray, pY: np.ndarray) -> np.ndarray:
     x0 = np.array([4.0, -2.0, 54.0])
     try:
         res = least_squares(
-            lambda x: _spectral_model(x, pX) - pY, x0, method="lm", max_nfev=10000
+            lambda x: _spectral_model(x, pX) - pY, x0, method="trf",
+            bounds=([-30.0, -5.0, -np.inf], [30.0, 5.0, np.inf]), max_nfev=10000,
         )
         return res.x
     except Exception:  # noqa: BLE001 -- fall back to a derivative-free optimiser

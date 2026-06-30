@@ -33,13 +33,20 @@ def adjust_bad_components(ica, epochs):
     info = epochs.info
     picks = mne.pick_types(info, eeg=True)
     pos = np.array([info["chs"][i]["loc"][:3] for i in picks], dtype=float)
+    if not np.isfinite(pos).all() or np.allclose(pos, 0.0):
+        # positions missing (e.g. an EEGLAB .set without a montage) -> recover them from the
+        # standard 10-20 layout by channel name, so the spatial features stay defined
+        lut = {k.upper(): v for k, v in
+               mne.channels.make_standard_montage("standard_1020").get_positions()["ch_pos"].items()}
+        pos = np.array([lut.get(info["ch_names"][i].upper(), [np.nan, np.nan, np.nan])
+                        for i in picks], dtype=float)
     comps = np.abs(ica.get_components())                  # (n_ch, n_ic) |scalp topographies|
     src = ica.get_sources(epochs).get_data()             # (n_epochs, n_ic, n_times)
     n_ic = comps.shape[1]
 
     x, y = pos[:, 0], pos[:, 1]                           # left-right, anterior-posterior
-    front, back = y > np.percentile(y, 70), y < np.percentile(y, 30)
-    left, right = x < np.percentile(x, 30), x > np.percentile(x, 70)
+    front, back = y > np.nanpercentile(y, 70), y < np.nanpercentile(y, 30)
+    left, right = x < np.nanpercentile(x, 30), x > np.nanpercentile(x, 70)
     d = np.linalg.norm(pos[:, None, :] - pos[None, :, :], axis=-1)
     nn = np.argsort(d, axis=1)[:, 1:6]                    # 5 nearest neighbours per channel
 
