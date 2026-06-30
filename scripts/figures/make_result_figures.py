@@ -34,10 +34,17 @@ def vals(arm, method, metric):
 
 
 def msem(arm, method, metric):
+    # median + IQR/2 (robust; matches the paper's median aggregation, avoids outlier-driven means)
     v = vals(arm, method, metric)
     if not v:
         return None, None, 0
-    return st.mean(v), (st.pstdev(v) / max(1, len(v) ** 0.5)), len(v)
+    med = st.median(v)
+    if len(v) >= 4:
+        q = st.quantiles(v, n=4)
+        spread = (q[2] - q[0]) / 2
+    else:
+        spread = st.pstdev(v) / max(1, len(v) ** 0.5)
+    return med, spread, len(v)
 
 
 def barpanel(ax, arm, methods, metric, labels, ylabel, title, color=BLUE, hline=None):
@@ -148,23 +155,23 @@ def fig_evoked(arm, name, title):
 
 # --- 4. ocular -----------------------------------------------------------
 def fig_ocular():
-    meth = ["none", "eog_dss", "eog_regression", "ica_iclabel_rejection", "ssp_eog"]
-    lab = ["none", "EOG-DSS", "EOG-reg", "ICA+ICLabel", "SSP-EOG"]
+    meth = ["none", "eog_dss", "eog_regression", "ica_iclabel_rejection", "ssp_eog", "ssa", "wica", "wavelet_threshold"]
+    lab = ["none", "EOG-DSS", "EOG-reg", "ICA+ICLabel", "SSP-EOG", "SSA", "wICA", "wavelet"]
     fig, axs = plt.subplots(1, 2, figsize=(8.5, 3.3))
     barpanel(axs[0], "ocular_erp_core", meth, "blink_coupling", lab, "blink coupling (EOG)",
              "Blink removal (lower better, n=40)", color=RED)
     barpanel(axs[1], "ocular_erp_core", meth, "n170_amp", lab, "N170 amplitude (V)",
-             "N170 preservation", color=BLUE)
+             "N170 amplitude (raw; contrast $g$ in text)", color=BLUE)
     save(fig, "erp_core_eog_summary.png")
 
 
 # --- 5. muscle -----------------------------------------------------------
 def fig_muscle():
-    meth = ["none", "asr", "rasr_windowed", "tspca", "icanclean"]
-    lab = ["none", "ASR", "rASR", "TSPCA", "iCanClean"]
+    meth = ["none", "asr__cutoff-20", "rasr_windowed", "tspca", "icanclean", "autocca__rho_threshold-0.8", "wavelet_threshold"]
+    lab = ["none", "ASR", "rASR", "TSPCA", "iCanClean", "autoCCA", "wavelet"]
     fig, axs = plt.subplots(1, 3, figsize=(10, 3.2))
-    barpanel(axs[0], "muscle_ds004505", meth, "hf_power", lab, "HF power (20–100 Hz)",
-             "Muscle/HF (n=25)", color=RED)
+    barpanel(axs[0], "muscle_ds004505", meth, "emg_coupling", lab, "EMG--scalp coupling",
+             "EMG coupling (lower better, n=25)", color=RED)
     barpanel(axs[1], "muscle_ds004505", meth, "alpha_power", lab, "$\\alpha$ power", "Alpha preservation", color=GREEN)
     barpanel(axs[2], "muscle_ds004505", meth, "beta_power", lab, "$\\beta$ power", "Beta preservation", color=GREEN)
     save(fig, "tabletennis_reference_summary.png")
@@ -258,19 +265,20 @@ def fig_ssvep():
 def fig_cardiac():
     p = pathlib.Path(__file__).resolve().parents[2] / "docs/benchmarks/filled_values/cardiac_cap.json"
     m = json.load(open(p))
-    meth = ["none", "ecg_regression", "cardiac_dss"]; lab = ["none", "ECG-reg\n(lagged)", "CycleAvg\nDSS"]
+    meth = ["none", "ecg_regression", "cardiac_dss", "wavelet_threshold"]; lab = ["none", "ECG-reg\n(lagged)", "CycleAvg\nDSS", "wavelet"]
     qn, nn = st.median(m["none"]["qrs"]), st.median(m["none"]["neu"])
     removed = [100 * (1 - st.median(m[x]["qrs"]) / qn) for x in meth]
     retained = [100 * st.median(m[x]["neu"]) / nn for x in meth]
-    col = [GREY, GREEN, RED]
-    fig, axs = plt.subplots(1, 2, figsize=(7.4, 3.3))
-    axs[0].bar(range(3), removed, color=col, width=0.62)
-    axs[0].set_xticks(range(3)); axs[0].set_xticklabels(lab, fontsize=8)
+    col = [GREY, GREEN, RED, BLUE]
+    nx = range(len(meth))
+    fig, axs = plt.subplots(1, 2, figsize=(8.2, 3.3))
+    axs[0].bar(nx, removed, color=col, width=0.62)
+    axs[0].set_xticks(nx); axs[0].set_xticklabels(lab, fontsize=8)
     axs[0].set_ylabel("\\% QRS-locked cardiac removed"); axs[0].set_title("Cardiac removal (CAP, n=8)")
     for i, v in enumerate(removed):
         axs[0].text(i, v + 1.5, f"{v:.0f}\\%", ha="center", fontsize=8)
-    axs[1].bar(range(3), retained, color=col, width=0.62); axs[1].axhline(100, ls="--", c=GREY, lw=1)
-    axs[1].set_xticks(range(3)); axs[1].set_xticklabels(lab, fontsize=8)
+    axs[1].bar(nx, retained, color=col, width=0.62); axs[1].axhline(100, ls="--", c=GREY, lw=1)
+    axs[1].set_xticks(nx); axs[1].set_xticklabels(lab, fontsize=8)
     axs[1].set_ylabel("\\% neural band retained"); axs[1].set_title("Preservation (4--30 Hz)")
     for i, v in enumerate(retained):
         axs[1].text(i, v + 1.5, f"{v:.0f}\\%", ha="center", fontsize=8)
