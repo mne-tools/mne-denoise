@@ -774,8 +774,10 @@ class _EEMDCCA(Comparator):
     (broadband EMG) sources; the cleaned IMFs are summed back. Computationally heavy (EEMD per
     channel) -- a low-density / feasibility-tier method. Per-recording / unsupervised."""
 
-    def __init__(self, rho_threshold: float = 0.9, max_imf: int = 8, trials: int = 20,
+    def __init__(self, rho_threshold: float = 0.9, max_imf: int = 8, trials: int = 8,
                  **params: Any) -> None:
+        # trials=8: EEG EEMD performance plateaus at >=5 ensembles (Sweeney 2013); 8 keeps the
+        # per-channel EEMD cost tractable on full-length recordings (20 did not finish 16ch in 45 min).
         super().__init__(
             ComparatorMeta("eemd_cca", fit_scope="window_local", optional_dependency="EMD-signal"),
             rho_threshold=rho_threshold, max_imf=max_imf, trials=trials, **params,
