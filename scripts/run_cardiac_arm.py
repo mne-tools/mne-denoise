@@ -148,7 +148,7 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                 seg = np.stack([X[:, p + win[0]:p + win[1]] for p in rp
                                 if p + win[0] >= 0 and p + win[1] < X.shape[1]])
                 U, _, _ = np.linalg.svd(seg.mean(0), full_matrices=False)
-                P = U[:, :2]                       # top-2 cardiac spatial projectors
+                P = U[:, :1]                       # top cardiac spatial projector (1 ECG SSP, the convention)
                 cleaned = X - P @ (P.T @ X)
             elif mid == "ica_ecg":                 # ICA-ECG: drop components correlated with the ECG channel
                 from sklearn.decomposition import FastICA
@@ -156,7 +156,10 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                               random_state=0, whiten="unit-variance")
                 S = ica.fit_transform(X.T)         # (n_times, n_comp)
                 cors = np.array([abs(np.corrcoef(S[:, i], ecg[0])[0, 1]) for i in range(S.shape[1])])
-                S[:, cors > 0.3] = 0.0             # ECG-correlated -> remove
+                bad = cors > 0.15
+                if not bad.any() and cors.size and cors.max() > 0.1:
+                    bad[int(cors.argmax())] = True  # else drop the single most ECG-correlated IC
+                S[:, bad] = 0.0
                 cleaned = ica.inverse_transform(S).T
             else:                                  # registered comparator (ssa, wavelet_threshold, ...)
                 import mne_denoise.benchmarks.adapters  # noqa: F401  (populate registry)
