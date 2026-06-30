@@ -287,6 +287,44 @@ def test_adjust_flags_and_removes_blink_ic():
     assert fp(res.cleaned.get_data()) < 0.5 * fp(data)               # frontal blink removed
 
 
+def test_mara_flags_and_removes_blink_ic():
+    # MARA (Winkler 2011): flag an ocular IC via the six-feature linear discriminant and remove it.
+    # MARA keys on the current-density norm (leadfield-based, needs 10-20 names) and the spectral
+    # shape, so the artifact IC is built as a realistic blink: a focal frontal-outlier topography
+    # with a slow monophasic time course (high skewness, steep 1/f, ~no alpha-band power).
+    pytest.importorskip("scipy")
+    import mne
+
+    rng = np.random.default_rng(7)
+    ch = ["Fp1", "Fp2", "F7", "F3", "Fz", "F4", "F8", "C3", "Cz", "C4",
+          "P3", "Pz", "P4", "O1", "O2", "T7", "T8", "P7", "P8", "Oz"]
+    sf, nt, nep = 200.0, 400, 80
+    info = mne.create_info(ch, sf, "eeg")
+    info.set_montage(mne.channels.make_standard_montage("standard_1020"))
+    t = np.arange(nt) / sf
+    # focal frontal blink topography (near-zero away from frontal sites -> large pattern range)
+    blink_topo = np.array([10, 10, 4, 4, 2, 4, 4, .2, .1, .2, .05, .02, .05, .01, .01, .3, .3, .05, .05, .01])
+    alpha_topo = np.abs(rng.standard_normal(len(ch))); alpha_topo[:7] *= 0.2   # alpha posterior-weighted
+    data = np.zeros((nep, len(ch), nt))
+    for e in range(nep):
+        alpha = np.sin(2 * np.pi * 10 * t + rng.uniform(0, 6))
+        blink = np.zeros(nt)
+        if rng.random() < 0.6:
+            c = int(rng.integers(60, nt - 60)); w = 40
+            blink[c - w:c + w] += np.hanning(2 * w) ** 0.5 * 12               # broad, sharp-onset deflection
+        data[e] = ((alpha_topo[:, None] * alpha + blink_topo[:, None] * blink) * 1e-6
+                   + rng.standard_normal((len(ch), nt)) * 0.2e-6)
+    epo = mne.EpochsArray(data, info, verbose=False)
+    comp = C.get("mara", n_components=15)
+    res = comp.transform(epo, comp.fit(epo, {"sfreq": sf}), {"sfreq": sf})
+    assert res.status == "success"
+    assert res.diagnostics["n_excluded"] >= 1                        # flagged at least one artifact IC
+
+    def fp(x):
+        return float((x[:, [0, 1], :] ** 2).mean())                  # Fp1/Fp2 power
+    assert fp(res.cleaned.get_data()) < 0.5 * fp(data)               # frontal blink removed
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

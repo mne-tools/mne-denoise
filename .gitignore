@@ -64,6 +64,8 @@ condescending-liskov/data/
 cov_report.txt
 *.eeg
 *.mat
+# but DO track the vendored GPL-3.0 MARA leadfield (package data, not a local artifact)
+!mne_denoise/mara/data/inv_matrix_icbm152.mat
 
 # Tool / IDE / agent metadata
 .serena/

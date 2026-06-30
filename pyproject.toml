@@ -98,6 +98,11 @@ all = [
 [tool.setuptools]
 include-package-data = true
 
+[tool.setuptools.package-data]
+# Vendored GPL-3.0 MARA leadfield + per-module license note (the mara/ subpackage
+# is GPL-3.0-isolated; the rest of the package is BSD-3-Clause).
+"mne_denoise.mara" = ["data/*.mat", "LICENSE.md"]
+
 [tool.setuptools.packages.find]
 where = [""]
 

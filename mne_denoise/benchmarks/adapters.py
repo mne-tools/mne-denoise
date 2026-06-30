@@ -46,7 +46,8 @@ def _sfreq(evaluation: Any, ctx: dict) -> float:
 
 def _line_harmonics(line_freq, sfreq: float, n: int | None = None) -> list[float]:
     """Line fundamental(s) + harmonics strictly below Nyquist. Accepts a single
-    frequency or a list (e.g. dual 50+60 Hz injection)."""
+    frequency or a list (e.g. dual 50+60 Hz injection).
+    """
     nyq = sfreq / 2.0
     bases = line_freq if isinstance(line_freq, (list, tuple)) else [line_freq]
     out: list[float] = []
@@ -113,7 +114,8 @@ class _ZapLine(Comparator):
 # ---------------------------------------------------------------------------
 class _Notch(Comparator):
     """``notch`` = zero-phase FIR notch; ``non_spatial_line`` = MNE ``spectrum_fit``
-    multi-taper sinusoid removal (an approved CleanLine substitute)."""
+    multi-taper sinusoid removal (an approved CleanLine substitute).
+    """
 
     def __init__(self, method: str = "fir", **params: Any) -> None:
         cid = "non_spatial_line" if method == "spectrum_fit" else "notch"
@@ -157,7 +159,8 @@ class _SpectrumInterp(Comparator):
     10.1016/j.neuroimage.2019.01.026): per channel, replace the DFT-bin *magnitudes* at the
     line frequency and harmonics with magnitudes interpolated from neighbouring bins (phase
     preserved), then inverse-FFT. A non-spatial line comparator distinct from the multitaper
-    sinusoid-fit (``non_spatial_line``, CleanLine-equivalent)."""
+    sinusoid-fit (``non_spatial_line``, CleanLine-equivalent).
+    """
 
     def __init__(self, width_hz: float = 1.0, neighbor_hz: float = 2.0, **params: Any) -> None:
         super().__init__(
@@ -205,7 +208,8 @@ class _DSS(Comparator):
     """``dss`` — linear DSS denoising. Filters learned on TRAIN (leakage barrier),
     applied to EVAL. Bias defaults to ``AverageBias`` (trial-reproducibility →
     evoked enhancement); ``bias='bandpass'`` targets an oscillatory band via ctx.
-    Keeps the top ``n_components`` and reconstructs."""
+    Keeps the top ``n_components`` and reconstructs.
+    """
 
     def __init__(self, n_components: int = 5, bias: str = "average", **params: Any) -> None:
         super().__init__(
@@ -247,7 +251,8 @@ class _DSS(Comparator):
 # ---------------------------------------------------------------------------
 class _ICARankMatched(Comparator):
     """``ica_rank_matched`` — rank-k ICA fit on TRAIN, reconstructed on EVAL with
-    no component removed (a dimensionality-matched control for DSS/PCA)."""
+    no component removed (a dimensionality-matched control for DSS/PCA).
+    """
 
     def __init__(self, n_components: int = 5, **params: Any) -> None:
         super().__init__(
@@ -273,7 +278,8 @@ class _ICARankMatched(Comparator):
 
 class _ICAICLabel(Comparator):
     """``ica_iclabel_rejection`` — ICA fit on TRAIN, ocular ICs labelled by ICLabel
-    (falls back to EOG-correlation), removed on EVAL. Reference-blind ocular comparator."""
+    (falls back to EOG-correlation), removed on EVAL. Reference-blind ocular comparator.
+    """
 
     def __init__(self, n_components: int | None = None, **params: Any) -> None:
         super().__init__(
@@ -315,7 +321,8 @@ class _Xdawn(Comparator):
     DOI 10.1109/TBME.2009.2012869): fits xDAWN spatial filters that maximize the evoked
     signal-to-signal-plus-noise ratio on TRAIN using the condition labels, then reconstructs
     EVAL from the top ``n_components``. The purpose-matched supervised comparator for the
-    evoked-enhancement arms (task-supervised regime), complementing the native AverageBias DSS."""
+    evoked-enhancement arms (task-supervised regime), complementing the native AverageBias DSS.
+    """
 
     def __init__(self, n_components: int = 5, **params: Any) -> None:
         super().__init__(
@@ -352,7 +359,8 @@ class _SpatialPCA(Comparator):
     """``rank_matched_pca`` — spatial PCA across channels, fitted on TRAIN, applied
     to EVAL. For Epochs it reconstructs each trial from the top-k spatial
     components (the dimensionality-matched control for DSS); for a Raw/array it
-    reconstructs the 2-D signal."""
+    reconstructs the 2-D signal.
+    """
 
     def __init__(self, n_components: int = 5, **params: Any) -> None:
         super().__init__(
@@ -392,7 +400,8 @@ class _SpatialPCA(Comparator):
 # ---------------------------------------------------------------------------
 class _ASR(Comparator):
     """``asr`` (Euclidean) / ``rasr`` (``method='riemannian_windowed'``). Calibrated
-    on clean TRAIN data, then transforms EVAL. ``cutoff`` is the swept aggressiveness."""
+    on clean TRAIN data, then transforms EVAL. ``cutoff`` is the swept aggressiveness.
+    """
 
     def __init__(self, cutoff: float = 20.0, method: str = "standard", **params: Any) -> None:
         cid = "rasr" if method == "riemannian_windowed" else "asr"
@@ -422,7 +431,8 @@ class _ASR(Comparator):
 # ---------------------------------------------------------------------------
 class _ICanClean(Comparator):
     """``icanclean`` — reference-coupled CCA; removes the EEG subspace shared with
-    the reference channels (``ctx['ref_channels']``)."""
+    the reference channels (``ctx['ref_channels']``).
+    """
 
     def __init__(self, threshold: float = 0.7, **params: Any) -> None:
         super().__init__(
@@ -450,7 +460,8 @@ class _ICanClean(Comparator):
 
 class _RefRegression(Comparator):
     """``regression`` — least-squares regress the reference channels out of EEG
-    (per-recording; reference-aware baseline)."""
+    (per-recording; reference-aware baseline).
+    """
 
     def __init__(self, **params: Any) -> None:
         super().__init__(
@@ -493,7 +504,8 @@ def _flat(x):
 class _EOGDSS(Comparator):
     """``eog_dss`` — learn (on TRAIN) the rank-k spatial subspace of EEG most coupled
     to the EOG channels (``ctx['eog_channels']``) and project it out of EVAL. A spatial
-    ocular filter; the frozen cycle-average (blink-locked) variant is a refinement."""
+    ocular filter; the frozen cycle-average (blink-locked) variant is a refinement.
+    """
 
     def __init__(self, n_components: int = 2, **params: Any) -> None:
         super().__init__(ComparatorMeta("eog_dss", fit_scope="train_only", rank_reducing=True),
@@ -529,7 +541,8 @@ class _EOGDSS(Comparator):
 class _TSPCA(Comparator):
     """``tspca`` — time-shift PCA / regression (de Cheveigné & Simon 2007). Subtract
     from EEG the part predictable from time-LAGGED copies of the reference channels
-    (distinct from zero-lag ``regression``). Reference-aware (``ctx['ref_channels']``)."""
+    (distinct from zero-lag ``regression``). Reference-aware (``ctx['ref_channels']``).
+    """
 
     def __init__(self, n_shifts: int = 3, **params: Any) -> None:
         super().__init__(
@@ -569,7 +582,8 @@ class _TSPCA(Comparator):
 class _SSPEOG(Comparator):
     """``ssp_eog`` — SSP-style projectors from the blink-weighted EEG covariance learned
     on TRAIN (top-k PCs of the artifact subspace, the standard SSP convention), projected
-    out of EVAL. Distinct from EOG-DSS (which uses regression patterns)."""
+    out of EVAL. Distinct from EOG-DSS (which uses regression patterns).
+    """
 
     def __init__(self, n_components: int = 1, **params: Any) -> None:
         super().__init__(
@@ -610,7 +624,8 @@ class _AutoCCA(Comparator):
     one-sample lag orders components by autocorrelation; the low-autocorrelation
     (broadband EMG/muscle) components are dropped and the signal is reconstructed.
     Fitted on TRAIN, applied to EVAL -- the reference-free, canonical muscle counterpart
-    to iCanClean."""
+    to iCanClean.
+    """
 
     def __init__(self, rho_threshold: float = 0.9, n_keep: Any = None, **params: Any) -> None:
         super().__init__(
@@ -644,7 +659,8 @@ class _AutoCCA(Comparator):
 class _SSA(Comparator):
     """``ssa`` -- Singular Spectrum Analysis: per-channel eigentriple decomposition that
     drops slow / quasi-periodic (ocular drift, cardiac) components by their dominant
-    frequency and reconstructs by diagonal averaging. Per-recording / unsupervised."""
+    frequency and reconstructs by diagonal averaging. Per-recording / unsupervised.
+    """
 
     def __init__(self, drop_freq_max: float = 3.0, drop_band: Any = None,
                  window_length: Any = None, **params: Any) -> None:
@@ -681,7 +697,8 @@ class _Wavelet(Comparator):
     """``wavelet_threshold`` -- per-channel universal soft-thresholding (remove HF
     noise/muscle); ``wica`` -- wavelet-enhanced ICA (Castellanos & Makarov 2006): extract
     and subtract each ICA source's sparse high-amplitude transients. The most-used
-    wearable artifact methods for ocular and muscular contamination."""
+    wearable artifact methods for ocular and muscular contamination.
+    """
 
     def __init__(self, method: str = "threshold", wavelet: Any = None,
                  n_components: Any = None, **params: Any) -> None:
@@ -733,7 +750,8 @@ class _Wavelet(Comparator):
 class _EMD(Comparator):
     """``emd``/``eemd`` -- Empirical Mode Decomposition: decompose each channel into IMFs,
     drop the high-frequency (muscle/EMG) IMFs, reconstruct. Per-recording / unsupervised.
-    ``eemd`` is the noise-assisted ensemble variant (slower; sensitivity tier)."""
+    ``eemd`` is the noise-assisted ensemble variant (slower; sensitivity tier).
+    """
 
     def __init__(self, method: str = "emd", freq_cutoff: float = 30.0, max_imf: int = 8,
                  trials: int = 20, **params: Any) -> None:
@@ -772,7 +790,8 @@ class _EEMDCCA(Comparator):
     Per channel: EEMD decomposes the channel into IMFs; BSS-CCA on the IMF matrix (canonical
     variates vs the 1-sample lag, ordered by autocorrelation) drops the low-autocorrelation
     (broadband EMG) sources; the cleaned IMFs are summed back. Computationally heavy (EEMD per
-    channel) -- a low-density / feasibility-tier method. Per-recording / unsupervised."""
+    channel) -- a low-density / feasibility-tier method. Per-recording / unsupervised.
+    """
 
     def __init__(self, rho_threshold: float = 0.9, max_imf: int = 8, trials: int = 8,
                  **params: Any) -> None:
@@ -828,7 +847,8 @@ class _MWF(Comparator):
     10.1088/1741-2552/aaac92): a Wiener spatial filter from artifact- vs clean-segment
     covariances (clean = R_clean R_artifact^-1 X); the spatial-filter core of the RELAX
     pipeline. Artifact segments marked by HF power (no reference channel needed).
-    Per-recording / unsupervised."""
+    Per-recording / unsupervised.
+    """
 
     def __init__(self, hf_hz: float = 20.0, quantile: float = 0.6, **params: Any) -> None:
         super().__init__(ComparatorMeta("mwf", fit_scope="window_local"),
@@ -859,7 +879,8 @@ class _ADJUST(Comparator):
     """``adjust`` -- ADJUST automatic ocular IC classifier (Mognon et al. 2011,
     10.1111/j.1469-8986.2010.01061.x): ICA on TRAIN, flag blink / horizontal-eye / discontinuity
     ICs from spatial+temporal features (SAD/SED/GDSF/MEV/TK, EM thresholds), remove on EVAL.
-    The classic feature-based ocular ICA classifier (predecessor of ICLabel). Needs epoched data."""
+    The classic feature-based ocular ICA classifier (predecessor of ICLabel). Needs epoched data.
+    """
 
     def __init__(self, n_components: int | None = None, **params: Any) -> None:
         super().__init__(ComparatorMeta("adjust", fit_scope="train_only"),
@@ -868,6 +889,7 @@ class _ADJUST(Comparator):
 
     def _fit(self, train, ctx):
         import mne
+
         from mne_denoise.adjust import adjust_bad_components
 
         ica = mne.preprocessing.ICA(n_components=self.n_components, max_iter="auto",
@@ -876,6 +898,42 @@ class _ADJUST(Comparator):
         try:
             ica.exclude = adjust_bad_components(ica, train)
         except Exception:  # noqa: BLE001
+            ica.exclude = []
+        return ica
+
+    def _transform(self, evaluation, payload, ctx):
+        ica = payload
+        cleaned = ica.apply(evaluation.copy(), verbose=False)
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                diagnostics={"n_excluded": len(ica.exclude)})
+
+
+class _MARA(Comparator):
+    """``mara`` -- MARA automatic IC artifact classifier (Winkler, Haufe & Tangermann 2011,
+    10.1186/1744-9081-7-30): ICA on TRAIN, flag artifactual ICs from six spatial/spectral/temporal
+    features (current density norm, pattern range, local skewness, spectral lambda, 8-13 Hz power,
+    1/f fit error) via the published linear discriminant, remove on EVAL. The multi-domain
+    feature-based artifact ICA classifier. GPL-3.0-isolated module (mne_denoise.mara).
+    """
+
+    def __init__(self, n_components: int | None = None, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("mara", fit_scope="train_only", optional_dependency="scipy"),
+            n_components=n_components, **params,
+        )
+        self.n_components = n_components
+
+    def _fit(self, train, ctx):
+        import mne
+
+        from mne_denoise.mara import mara_bad_components
+
+        ica = mne.preprocessing.ICA(n_components=self.n_components, max_iter="auto",
+                                    random_state=97, verbose=False)
+        ica.fit(train, verbose=False)
+        try:
+            ica.exclude = mara_bad_components(ica, train)
+        except Exception:  # noqa: BLE001 -- any failure degrades to keeping all components
             ica.exclude = []
         return ica
 
@@ -917,3 +975,4 @@ register("eemd", lambda **p: _EMD(method="eemd", **p))
 register("eemd_cca", lambda **p: _EEMDCCA(**p))
 register("mwf", lambda **p: _MWF(**p))
 register("adjust", lambda **p: _ADJUST(**p))
+register("mara", lambda **p: _MARA(**p))
