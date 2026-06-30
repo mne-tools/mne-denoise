@@ -1,0 +1,2 @@
+subject	method	status	tier	sweep_value	hf_power	emg_coupling	alpha_power	beta_power	runtime_s
+sub-03_nch4	autocca	success	reference_free		3.093965789921641e-14	0.0025985302370184643	1.3632152226170125e-13	6.639068277610875e-14	0.012046

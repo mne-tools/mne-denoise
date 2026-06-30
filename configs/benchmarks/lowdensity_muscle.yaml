@@ -1,0 +1,16 @@
+# Low-density robustness arm (real data): subsample the ds004505 muscle recording to
+# decreasing channel counts and re-score the EMG-coupling endpoint. Tests the wearable-review
+# claim that source separation degrades at low channel counts while ASR/wavelet/autoCCA hold.
+arm: lowdensity_muscle
+base_arm: muscle
+channel_grid: [64, 32, 16, 8, 4]
+curve_metric: emg_coupling
+dataset:
+  id: ds004505
+  project_relative_path: openneuro/ds004505
+  subjects: [sub-01, sub-03, sub-05, sub-07, sub-09, sub-11]
+tiers:
+  reference_free: [none, asr, rasr_windowed, ica_fixed, autocca, wavelet_threshold]
+baseline_preprocessing:
+  steps:
+    highpass_hz: 1.0

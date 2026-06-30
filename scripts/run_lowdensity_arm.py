@@ -83,6 +83,66 @@ def _print_curve(arm, base, methods, rows, metric="rrmse"):
         print(f"  {mth:16} " + "  ".join(cells))
 
 
+def run_real_data(cfg, deriv_root, *, synthetic=False):
+    """Subsample a real arm's EEG channels to each density in ``channel_grid`` and re-score
+    with that arm's methods + metrics (reuses run_{muscle,ocular}_arm.run_subject via the
+    ``preloaded`` hook). Tests whether each method's primary endpoint degrades as channels fall."""
+    import importlib
+    import os
+
+    from mne_denoise.benchmarks import subsample as ss
+    from mne_denoise.benchmarks.preprocessing import apply_baseline
+
+    base = cfg.get("base_arm")
+    grid = cfg.get("channel_grid") or [64, 32, 16, 8, 4]
+    ds = cfg.get("dataset", {}) or {}
+    root = str(pathlib.Path(os.environ.get("DATASETS_ROOT", "/project/rrg-kjerbi/datasets"))
+               / ds.get("project_relative_path", ""))
+    subjects = ([os.environ["LD_SUBJECT"]] if os.environ.get("LD_SUBJECT")
+                else list(ds.get("subjects") or ([] if not synthetic else ["synthetic"])))
+    mod = importlib.import_module("run_muscle_arm" if base == "muscle" else "run_ocular_arm")
+    _t = cfg.get("tiers", {}) or {}
+    methods = list(dict.fromkeys(
+        list(cfg.get("methods_under_test", []) or [])
+        + list((cfg.get("comparators", {}) or {}).get("required", []) or [])
+        + [m for tier in _t.values() for m in (tier or [])]))
+    rows = []
+    for subject in subjects:
+        if base == "muscle":
+            if synthetic:
+                raw, fit_refs, eval_refs = mod._synth_muscle()
+            else:
+                raw, fit_refs, eval_refs = mod._load_ds004505(root, subject, cfg)
+                raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+            eeg_idx = [raw.ch_names.index(c) for c in raw.copy().pick("eeg").ch_names]
+            for n_ch in grid:
+                if n_ch > len(eeg_idx):
+                    continue
+                keep = ss.farthest_point_channels(raw.info, eeg_idx, int(n_ch))
+                sub = raw.copy().pick([raw.ch_names[i] for i in keep] + list(fit_refs) + list(eval_refs))
+                for r in mod.run_subject(cfg, f"{subject}_nch{n_ch}", root, deriv_root,
+                                         preloaded=(sub, fit_refs, eval_refs)):
+                    r["n_ch"] = int(n_ch); r["base_subject"] = subject; rows.append(r)
+        else:  # ocular
+            if synthetic:
+                epo, eog, win, picks = mod._synth_ocular()
+            else:
+                epo, eog, win, picks = mod._load_erp_core_ocular(root, subject, cfg)
+            roi = [epo.ch_names[i] for i in (picks or [])]
+            eeg_idx = [epo.ch_names.index(c) for c in epo.copy().pick("eeg").ch_names]
+            for n_ch in grid:
+                if n_ch > len(eeg_idx):
+                    continue
+                must = [epo.ch_names.index(c) for c in roi if c in epo.ch_names]
+                keep = ss.farthest_point_channels(epo.info, eeg_idx, int(n_ch), must_include=must)
+                sub = epo.copy().pick([epo.ch_names[i] for i in keep] + list(eog))
+                sub_picks = [sub.ch_names.index(c) for c in roi if c in sub.ch_names] or None
+                for r in mod.run_subject(cfg, f"{subject}_nch{n_ch}", root, deriv_root,
+                                         preloaded=(sub, eog, win, sub_picks)):
+                    r["n_ch"] = int(n_ch); r["base_subject"] = subject; rows.append(r)
+    return rows, methods
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--config", required=True)
@@ -95,9 +155,12 @@ def main(argv=None):
     base = cfg.get("base_arm", "ground_truth")
     if base == "ground_truth":
         rows, methods = run_ground_truth(cfg, deriv, synthetic=a.synthetic)
+    elif base in ("muscle", "ocular"):
+        rows, methods = run_real_data(cfg, deriv, synthetic=a.synthetic)
     else:
-        raise NotImplementedError(f"real-data low-density mode for base_arm={base!r} not yet implemented")
-    _print_curve(arm, base, methods, rows)
+        raise NotImplementedError(f"low-density mode for base_arm={base!r} not supported")
+    metric = cfg.get("curve_metric") or {"muscle": "emg_coupling", "ocular": "blink_coupling"}.get(base, "rrmse")
+    _print_curve(arm, base, methods, rows, metric=metric)
     return 0
 
 

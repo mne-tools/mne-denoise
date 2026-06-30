@@ -1,0 +1,2 @@
+subject	method	status	tier	sweep_value	hf_power	emg_coupling	alpha_power	beta_power	runtime_s
+sub-09_nch16	ica_fixed	success	reference_free		1.3591323799427788e-11	0.997635978006914	4.244802338261728e-13	5.552160394061606e-13	0.014619

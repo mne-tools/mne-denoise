@@ -142,14 +142,17 @@ def _load_ds004784(root, subject, cfg):
     return raw, exg, exg
 
 
-def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
-    if synthetic:
+def run_subject(cfg, subject, root, deriv_root, *, synthetic=False, preloaded=None):
+    if preloaded is not None:
+        raw, fit_refs, eval_refs = preloaded  # already baselined + channel-subsampled (low-density arm)
+    elif synthetic:
         raw, fit_refs, eval_refs = _synth_muscle()
     elif (cfg.get("dataset") or {}).get("id") == "phantom_ds004784":
         raw, fit_refs, eval_refs = _load_ds004784(root, subject, cfg)
     else:
         raw, fit_refs, eval_refs = _load_ds004505(root, subject, cfg)
-    raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
+    if preloaded is None:
+        raw, _ = apply_baseline(raw, cfg.get("baseline_preprocessing"))
     sfreq = float(raw.info["sfreq"])
     emg_eval = raw.copy().pick(eval_refs).get_data()  # independent neck-EMG (scoring ref)
     tmax = float(raw.times[-1])

@@ -1,0 +1,2 @@
+subject	method	status	blink_coupling	n170_amp	n170_diff	runtime_s
+sub-001_nch4	eog_regression	success	0.019260834756539898	-4.646113336741956e-07		0.003824

@@ -118,8 +118,10 @@ def _load_erp_core_ocular(root, subject, cfg):
     return epo, eog, (win[0] / 1000.0, win[1] / 1000.0), picks
 
 
-def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
-    if synthetic:
+def run_subject(cfg, subject, root, deriv_root, *, synthetic=False, preloaded=None):
+    if preloaded is not None:
+        epo, eog, (wlo, whi), picks = preloaded  # already baselined + channel-subsampled (low-density arm)
+    elif synthetic:
         epo, eog, (wlo, whi), picks = _synth_ocular()
     elif cfg.get("dataset", {}).get("id") == "erp_core_n170":
         epo, eog, (wlo, whi), picks = _load_erp_core_ocular(root, subject, cfg)
