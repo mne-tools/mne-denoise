@@ -265,13 +265,14 @@ def fig_ssvep():
 def fig_cardiac():
     p = pathlib.Path(__file__).resolve().parents[2] / "docs/benchmarks/filled_values/cardiac_cap.json"
     m = json.load(open(p))
-    meth = ["none", "ecg_regression", "cardiac_dss", "wavelet_threshold"]; lab = ["none", "ECG-reg\n(lagged)", "CycleAvg\nDSS", "wavelet"]
+    meth = ["none", "ecg_regression", "ica_ecg", "ssp_ecg", "cardiac_dss", "wavelet_threshold"]
+    lab = ["none", "ECG-reg\n(lagged)", "ICA-ECG", "SSP-ECG", "CycleAvg\nDSS", "wavelet"]
     qn, nn = st.median(m["none"]["qrs"]), st.median(m["none"]["neu"])
     removed = [100 * (1 - st.median(m[x]["qrs"]) / qn) for x in meth]
     retained = [100 * st.median(m[x]["neu"]) / nn for x in meth]
-    col = [GREY, GREEN, RED, BLUE]
+    col = [GREY, GREEN, GREEN, RED, RED, BLUE]   # green=clean removers, red=over-cleaners, blue=null
     nx = range(len(meth))
-    fig, axs = plt.subplots(1, 2, figsize=(8.2, 3.3))
+    fig, axs = plt.subplots(1, 2, figsize=(10.5, 3.4))
     axs[0].bar(nx, removed, color=col, width=0.62)
     axs[0].set_xticks(nx); axs[0].set_xticklabels(lab, fontsize=8)
     axs[0].set_ylabel("\\% QRS-locked cardiac removed"); axs[0].set_title("Cardiac removal (CAP, n=8)")
