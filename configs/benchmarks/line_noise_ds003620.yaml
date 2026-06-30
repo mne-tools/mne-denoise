@@ -15,7 +15,7 @@ dataset:
 
 methods_under_test: [zapline, zapline_plus]
 comparators:
-  required: [none, notch]
+  required: [none, notch, spectrum_interp]   # spectrum_interp = DFT-bin interpolation (Leske & Dalal 2019), distinct from non_spatial_line (multitaper sinusoid-fit)
   required_comparator_group:
     non_spatial_line_noise:
       preferred: cleanline

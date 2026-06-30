@@ -184,6 +184,29 @@ def test_xdawn_supervised_evoked_enhancement():
     assert res.rank_after == 4
 
 
+def test_spectrum_interp_removes_line_preserves_band():
+    import mne
+
+    rng = np.random.default_rng(2)
+    sf, nch, T = 500.0, 6, 5000
+    t = np.arange(T) / sf
+    data = np.stack([np.sin(2 * np.pi * 10 * t) + np.sin(2 * np.pi * 60 * t)
+                     + 0.1 * rng.standard_normal(T) for _ in range(nch)]) * 1e-6
+    raw = mne.io.RawArray(data, mne.create_info([f"E{i}" for i in range(nch)], sf, "eeg"), verbose=False)
+    comp = C.get("spectrum_interp")
+    ctx = {"sfreq": sf, "line_freq": 60.0}
+    res = comp.transform(raw, comp.fit(raw, ctx), ctx)
+    assert res.status == "success"
+    from scipy.signal import welch
+
+    def bp(x, lo, hi):
+        f, p = welch(x, sf, nperseg=1024, axis=-1)
+        return float(np.mean(p[..., (f >= lo) & (f <= hi)]))
+    cl = res.cleaned.get_data()
+    assert bp(cl, 59, 61) < 0.1 * bp(data, 59, 61)   # line removed
+    assert bp(cl, 9, 11) > 0.8 * bp(data, 9, 11)     # alpha band preserved
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

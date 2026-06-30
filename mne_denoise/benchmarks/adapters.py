@@ -152,6 +152,52 @@ class _Notch(Comparator):
         )
 
 
+class _SpectrumInterp(Comparator):
+    """``spectrum_interp`` -- spectrum-interpolation line removal (Leske & Dalal 2019,
+    10.1016/j.neuroimage.2019.01.026): per channel, replace the DFT-bin *magnitudes* at the
+    line frequency and harmonics with magnitudes interpolated from neighbouring bins (phase
+    preserved), then inverse-FFT. A non-spatial line comparator distinct from the multitaper
+    sinusoid-fit (``non_spatial_line``, CleanLine-equivalent)."""
+
+    def __init__(self, width_hz: float = 1.0, neighbor_hz: float = 2.0, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("spectrum_interp", fit_scope="per_recording_unsupervised", requires_fit=False),
+            **params,
+        )
+        self.width = float(width_hz)
+        self.neigh = float(neighbor_hz)
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        if not hasattr(evaluation, "apply_function"):
+            return ComparatorResult(status="skipped_missing_channels",
+                                    error="spectrum_interp requires an MNE Raw object")
+        sfreq = _sfreq(evaluation, ctx)
+        freqs = _line_harmonics(ctx.get("line_freq"), sfreq)
+        w, ng = self.width, self.neigh
+
+        def _interp(x):
+            n = x.shape[-1]
+            ff = np.fft.rfftfreq(n, 1.0 / sfreq)
+            F = np.fft.rfft(x)
+            mag, ph = np.abs(F), np.angle(F)
+            for f0 in freqs:
+                band = np.abs(ff - f0) <= w
+                if not band.any():
+                    continue
+                ref = np.concatenate([mag[(ff >= f0 - ng - w) & (ff < f0 - w)],
+                                      mag[(ff > f0 + w) & (ff <= f0 + ng + w)]])
+                if ref.size:
+                    mag[band] = ref.mean()
+            return np.fft.irfft(mag * np.exp(1j * ph), n=n)
+
+        out = evaluation.copy().apply_function(_interp, picks="data", channel_wise=True, verbose=False)
+        return ComparatorResult(cleaned=out, status="success",
+                                diagnostics={"freqs": freqs}, parameters={"width_hz": w})
+
+
 # ---------------------------------------------------------------------------
 # Linear DSS  (native; train_only — evoked enhancement / oscillatory extraction)
 # ---------------------------------------------------------------------------
@@ -740,6 +786,7 @@ register("zapline", lambda **p: _ZapLine(adaptive=False, **p))
 register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))
 register("notch", lambda **p: _Notch(method="fir", **p))
 register("non_spatial_line", lambda **p: _Notch(method="spectrum_fit", **p))
+register("spectrum_interp", lambda **p: _SpectrumInterp(**p))
 # wearable-review-driven literature-standard comparators
 register("autocca", lambda **p: _AutoCCA(**p))
 register("ssa", lambda **p: _SSA(**p))
