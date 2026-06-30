@@ -31,7 +31,7 @@ methods_under_test:
     ablations: [{nonlinearity: kurtosis}, {nonlinearity: wiener_mask}, {orthogonalization: deflation}]
     report: [convergence_rate, iterations, seed_variation, n_inits]
 comparators:
-  required: [pca, fastica, infomax, picard, oracle]   # oracle = A_brain·S_brain (upper bound, excluded from sig tests)
+  required: [pca, fastica, infomax, picard, sobi, jade, oracle]   # sobi=2nd-order/time-lagged, jade=4th-order cumulant; oracle = A_brain·S_brain (upper bound, excluded from sig tests)
   exploratory: [linear_dss_matched_bias]
   optional: [amica]
 

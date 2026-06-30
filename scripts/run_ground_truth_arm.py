@@ -35,9 +35,78 @@ def _load_cfg(path):
         return yaml.safe_load(f)
 
 
+def _rjd(A, eps=1e-12, maxiter=200):
+    """Real Jacobi joint approximate diagonaliser (Cardoso & Souloumiac 1996).
+    A: (k, n, n) stack of symmetric matrices -> rotation V (n, n) s.t. each
+    V.T @ A_i @ V is approximately diagonal."""
+    k, n, _ = A.shape
+    A = A.copy().astype(float)
+    V = np.eye(n)
+    for _ in range(maxiter):
+        changed = False
+        for p in range(n - 1):
+            for q in range(p + 1, n):
+                h = np.vstack([A[:, p, p] - A[:, q, q], A[:, p, q] + A[:, q, p]])  # (2, k)
+                hh = h @ h.T
+                ton, toff = hh[0, 0] - hh[1, 1], hh[0, 1] + hh[1, 0]
+                theta = 0.5 * np.arctan2(toff, ton + np.sqrt(ton * ton + toff * toff))
+                c, s = np.cos(theta), np.sin(theta)
+                if abs(s) > eps:
+                    changed = True
+                    Ap, Aq = A[:, p, :].copy(), A[:, q, :].copy()        # rotate rows
+                    A[:, p, :], A[:, q, :] = c * Ap + s * Aq, -s * Ap + c * Aq
+                    Ap, Aq = A[:, :, p].copy(), A[:, :, q].copy()        # rotate cols
+                    A[:, :, p], A[:, :, q] = c * Ap + s * Aq, -s * Ap + c * Aq
+                    Vp, Vq = V[:, p].copy(), V[:, q].copy()
+                    V[:, p], V[:, q] = c * Vp + s * Vq, -s * Vp + c * Vq
+        if not changed:
+            break
+    return V
+
+
+def _whiten(X, n_comp):
+    """Centre + PCA-whiten X (n_ch, T) to (n_comp, T); return (Z, Wh)."""
+    Xc = X - X.mean(1, keepdims=True)
+    d, E = np.linalg.eigh((Xc @ Xc.T) / Xc.shape[1])
+    idx = np.argsort(d)[::-1][:n_comp]
+    Wh = (E[:, idx] / np.sqrt(np.maximum(d[idx], 1e-18))).T          # (n_comp, n_ch)
+    return Wh @ Xc, Wh
+
+
+def _sobi(X, n_comp, n_lags=20):
+    """SOBI (Belouchrani 1997): joint-diagonalise time-lagged covariances."""
+    Z, Wh = _whiten(X, n_comp)
+    T = Z.shape[1]
+    covs = []
+    for tau in range(1, n_lags + 1):
+        Rt = (Z[:, tau:] @ Z[:, :-tau].T) / (T - tau)
+        covs.append(0.5 * (Rt + Rt.T))
+    V = _rjd(np.asarray(covs))
+    return V.T @ Wh                                                  # (n_comp, n_ch)
+
+
+def _jade(X, n_comp):
+    """JADE (Cardoso & Souloumiac 1993): joint-diagonalise 4th-order cumulant matrices."""
+    Z, Wh = _whiten(X, n_comp)
+    m, T = Z.shape
+    CM = []
+    for p in range(m):
+        for q in range(p, m):
+            M = (Z * (Z[p] * Z[q])) @ Z.T / T                       # E[z_k z_l z_p z_q]
+            M = M - (np.eye(m) if p == q else 0.0)
+            M[p, q] -= 1.0
+            M[q, p] -= 1.0
+            CM.append(0.5 * (M + M.T) * (1.0 if p == q else np.sqrt(2.0)))
+    V = _rjd(np.asarray(CM))
+    return V.T @ Wh
+
+
 def _fit_unmix(method: str, X_train: np.ndarray, n_comp: int):
     """Return ``(transform, W)``: ``transform(X) -> sources (n_comp, T)`` and an
     estimated unmixing ``W (n_comp, n_ch)`` (or None)."""
+    if method in ("sobi", "jade"):
+        W = (_sobi if method == "sobi" else _jade)(X_train, n_comp)
+        return (lambda X: W @ (X - X.mean(1, keepdims=True))), W
     if method == "pca":
         from sklearn.decomposition import PCA
 
