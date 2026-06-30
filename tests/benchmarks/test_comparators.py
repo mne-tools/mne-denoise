@@ -158,6 +158,32 @@ def test_new_comparators_handle_epochs_3d():
         assert res.cleaned.get_data().shape == data.shape, cid     # 3-D epochs shape preserved
 
 
+def test_xdawn_supervised_evoked_enhancement():
+    # xDAWN is supervised: fit on the combined two-condition train, transform one condition.
+    import mne
+
+    rng = np.random.default_rng(12)
+    sf, nch, ntr, nt = 256.0, 16, 40, 154
+    t = np.arange(nt) / sf - 0.1
+    erp = -np.exp(-((t - 0.155) ** 2) / (2 * 0.018 ** 2))
+    patt = rng.standard_normal(nch); patt /= np.linalg.norm(patt)
+    info = mne.create_info([f"E{i}" for i in range(nch)], sf, "eeg")
+
+    def make(amp, cid):
+        data = np.stack([patt[:, None] * (amp * erp)[None, :] * 4e-6
+                         + rng.standard_normal((nch, nt)) * 3e-6 for _ in range(ntr)])
+        ev = np.column_stack([np.arange(ntr) * nt, np.zeros(ntr, int), np.full(ntr, cid)])
+        return mne.EpochsArray(data, info, ev, tmin=-0.1, verbose=False)
+
+    a, b = make(1.0, 1), make(0.5, 2)
+    tr = mne.concatenate_epochs([a[::2], b[::2]], verbose=False)
+    comp = C.get("xdawn", n_components=4)
+    res = comp.transform(a[1::2], comp.fit(tr, {"sfreq": sf}), {"sfreq": sf})
+    assert res.status == "success"
+    assert res.cleaned.get_data().shape == a[1::2].get_data().shape   # shape preserved
+    assert res.rank_after == 4
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

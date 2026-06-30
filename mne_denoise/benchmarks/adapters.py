@@ -264,6 +264,41 @@ class _ICAICLabel(Comparator):
                                 diagnostics={"n_excluded": len(ica.exclude)})
 
 
+class _Xdawn(Comparator):
+    """``xdawn`` -- supervised evoked-enhancement spatial filter (Rivet et al. 2009,
+    DOI 10.1109/TBME.2009.2012869): fits xDAWN spatial filters that maximize the evoked
+    signal-to-signal-plus-noise ratio on TRAIN using the condition labels, then reconstructs
+    EVAL from the top ``n_components``. The purpose-matched supervised comparator for the
+    evoked-enhancement arms (task-supervised regime), complementing the native AverageBias DSS."""
+
+    def __init__(self, n_components: int = 5, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("xdawn", fit_scope="train_only", rank_reducing=True),
+            n_components=n_components, **params,
+        )
+        self.k = int(n_components)
+
+    def _fit(self, train, ctx):
+        import mne
+
+        xd = mne.preprocessing.Xdawn(n_components=self.k)
+        xd.fit(train)  # supervised: uses train.event_id
+        return xd
+
+    def _transform(self, evaluation, payload, ctx):
+        import mne
+
+        ev_ids = list(evaluation.event_id)  # denoise per the eval's OWN condition(s), not all fitted ones
+        out = payload.apply(evaluation.copy(), event_id=ev_ids)
+        if isinstance(out, dict):
+            cleaned = (out[ev_ids[0]] if len(ev_ids) == 1
+                       else mne.concatenate_epochs([out[e] for e in ev_ids]))
+        else:
+            cleaned = out
+        return ComparatorResult(cleaned=cleaned, status="success", rank_after=self.k,
+                                parameters={"n_components": self.k})
+
+
 # ---------------------------------------------------------------------------
 # Spatial rank-matched PCA  (handles Epochs per-trial AND continuous arrays)
 # ---------------------------------------------------------------------------
@@ -699,6 +734,7 @@ register("dss", lambda **p: _DSS(**p))
 register("dss_average_bias", lambda **p: _DSS(bias="average", **p))
 register("ica_rank_matched", lambda **p: _ICARankMatched(**p))
 register("ica_iclabel_rejection", lambda **p: _ICAICLabel(**p))
+register("xdawn", lambda **p: _Xdawn(**p))
 register("rank_matched_pca", lambda **p: _SpatialPCA(**p))
 register("zapline", lambda **p: _ZapLine(adaptive=False, **p))
 register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))

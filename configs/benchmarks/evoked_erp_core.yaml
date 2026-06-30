@@ -26,7 +26,7 @@ preprocessing:
 
 methods_under_test: [dss_average_bias]
 comparators:
-  required: [none, rank_matched_pca]
+  required: [none, rank_matched_pca, xdawn]   # xdawn = purpose-matched supervised ERP enhancer (Rivet 2009)
   secondary: [ica_rank_matched]
   null_condition: event_destroyed_dss     # independent per-trial circular time-shift; stored as NULL, not a comparator
 sweep: {dss: {param: n_components, grid: pending}}
