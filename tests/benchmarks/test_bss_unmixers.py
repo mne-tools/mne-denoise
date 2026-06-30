@@ -9,6 +9,7 @@ import os
 import sys
 
 import numpy as np
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
 from run_ground_truth_arm import _fit_unmix  # noqa: E402
@@ -28,3 +29,17 @@ def test_sobi_jade_separate_synthetic_mixing():
         assert W.shape == (n, n)
         assert transform(X).shape == (n, T)
         assert gt.amari_index(W, A) < 0.1, meth   # good separation (fastica reference ~0.012)
+
+
+def test_amica_recovers_mixing():
+    # AMICA (Palmer et al., GPU/JAX) on super-Gaussian sources; skipped where amica_python absent.
+    pytest.importorskip("jax")
+    pytest.importorskip("amica_python")
+    rng = np.random.default_rng(0)
+    n, T = 5, 4000
+    S = rng.laplace(size=(n, T))                  # super-Gaussian sources (AMICA's regime)
+    A = rng.standard_normal((n, n))
+    X = A @ S
+    _, W = _fit_unmix("amica", X, n)
+    assert W.shape == (n, n)
+    assert gt.amari_index(W, A) < 0.2            # recovers the mixing (verified ~0.05 vs fastica 0.06)

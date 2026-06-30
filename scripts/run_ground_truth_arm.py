@@ -107,6 +107,13 @@ def _fit_unmix(method: str, X_train: np.ndarray, n_comp: int):
     if method in ("sobi", "jade"):
         W = (_sobi if method == "sobi" else _jade)(X_train, n_comp)
         return (lambda X: W @ (X - X.mean(1, keepdims=True))), W
+    if method == "amica":
+        from amica_python import Amica, AmicaConfig   # GPU-accelerated AMICA (Palmer et al.); JAX uses GPU when available
+
+        cfg = AmicaConfig(pcakeep=int(n_comp), max_iter=2000, do_newton=True)
+        model = Amica(cfg, random_state=0).fit(np.asarray(X_train, dtype=float))
+        W = np.asarray(model.unmixing_matrix_sensor_)          # (n_comp, n_ch) full sensor-space unmixing
+        return (lambda X: np.asarray(model.transform(np.asarray(X, dtype=float)))), W
     if method == "pca":
         from sklearn.decomposition import PCA
 

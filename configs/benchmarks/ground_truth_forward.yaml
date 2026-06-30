@@ -22,7 +22,7 @@ methods_under_test:
     primary: {nonlinearity: tanh, orthogonalization: symmetric}
     ablations: [{nonlinearity: kurtosis}, {nonlinearity: wiener_mask}, {orthogonalization: deflation}]
 comparators:
-  required: [pca, fastica, infomax, picard, sobi, jade, oracle]
+  required: [pca, fastica, infomax, picard, sobi, jade, amica, oracle]
   exploratory: [linear_dss_matched_bias]
   optional: [amica]
 
