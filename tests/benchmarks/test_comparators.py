@@ -207,6 +207,29 @@ def test_spectrum_interp_removes_line_preserves_band():
     assert bp(cl, 9, 11) > 0.8 * bp(data, 9, 11)     # alpha band preserved
 
 
+def test_eemd_cca_removes_muscle_preserves_alpha():
+    pytest.importorskip("PyEMD")
+    from scipy.signal import butter, filtfilt, welch
+
+    rng = np.random.default_rng(3)
+    sf, nch, T = 200.0, 2, 1200
+    t = np.arange(T) / sf
+    alpha = np.sin(2 * np.pi * 10 * t)
+    b, a = butter(4, [35 / 100, 90 / 100], btype="band")
+    muscle = filtfilt(b, a, rng.standard_normal(T))
+    A = rng.standard_normal((nch, 2))
+    X = A[:, 0:1] * alpha + A[:, 1:2] * 2.0 * muscle
+    comp = C.get("eemd_cca", trials=6, max_imf=6)
+    res = comp.transform(X, comp.fit(X), {"sfreq": sf})
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape
+
+    def bp(z, lo, hi):
+        f, p = welch(z, sf, nperseg=512, axis=-1)
+        return float(np.mean(p[..., (f >= lo) & (f <= hi)]))
+    assert bp(np.asarray(res.cleaned), 35, 90) < 0.5 * bp(X, 35, 90)   # broadband muscle reduced
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

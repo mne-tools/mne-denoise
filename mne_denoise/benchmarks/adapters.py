@@ -766,6 +766,61 @@ class _EMD(Comparator):
         return ComparatorResult(cleaned=out, status="success", diagnostics={"method": self.method})
 
 
+class _EEMDCCA(Comparator):
+    """``eemd_cca`` -- EEMD-CCA hybrid muscle remover (Sweeney et al. 2013,
+    10.1109/TBME.2012.2225427; multichannel form Chen et al. 2019, 10.1109/JSEN.2018.2872623).
+    Per channel: EEMD decomposes the channel into IMFs; BSS-CCA on the IMF matrix (canonical
+    variates vs the 1-sample lag, ordered by autocorrelation) drops the low-autocorrelation
+    (broadband EMG) sources; the cleaned IMFs are summed back. Computationally heavy (EEMD per
+    channel) -- a low-density / feasibility-tier method. Per-recording / unsupervised."""
+
+    def __init__(self, rho_threshold: float = 0.9, max_imf: int = 8, trials: int = 20,
+                 **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("eemd_cca", fit_scope="window_local", optional_dependency="EMD-signal"),
+            rho_threshold=rho_threshold, max_imf=max_imf, trials=trials, **params,
+        )
+        self.rho_threshold = float(rho_threshold)
+        self.max_imf = int(max_imf)
+        self.trials = int(trials)
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _clean_channel(self, x, eemd):
+        from mne_denoise.cca import AutoCCA
+
+        imfs = eemd.eemd(np.asarray(x, dtype=float), max_imf=self.max_imf)  # (nIMF, T)
+        if imfs.ndim != 2 or imfs.shape[0] < 2:
+            return np.asarray(x, dtype=float)                              # cannot separate
+        cleaned = AutoCCA(rho_threshold=self.rho_threshold).fit_transform(imfs)
+        return np.asarray(cleaned).sum(axis=0)                            # sum cleaned IMFs
+
+    def _transform(self, evaluation, payload, ctx):
+        try:
+            from PyEMD import EEMD
+        except ImportError:
+            return ComparatorResult(status="unavailable_dependency",
+                                    error="eemd_cca needs EMD-signal (PyEMD)")
+        eemd = EEMD(trials=self.trials)
+        eemd.noise_seed(0)
+
+        def _clean_2d(x):
+            return np.stack([self._clean_channel(x[c], eemd) for c in range(x.shape[0])])
+
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data()
+            out = (np.stack([_clean_2d(x[i]) for i in range(x.shape[0])]) if x.ndim == 3
+                   else _clean_2d(x))
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success",
+                                    diagnostics={"rho_threshold": self.rho_threshold})
+        out = _clean_2d(np.asarray(evaluation))
+        return ComparatorResult(cleaned=out, status="success",
+                                diagnostics={"rho_threshold": self.rho_threshold})
+
+
 # ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
@@ -794,3 +849,4 @@ register("wavelet_threshold", lambda **p: _Wavelet(method="threshold", **p))
 register("wica", lambda **p: _Wavelet(method="wica", **p))
 register("emd", lambda **p: _EMD(method="emd", **p))
 register("eemd", lambda **p: _EMD(method="eemd", **p))
+register("eemd_cca", lambda **p: _EEMDCCA(**p))
