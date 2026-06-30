@@ -26,8 +26,11 @@ preprocessing:
 
 methods_under_test: [dss_average_bias]
 comparators:
-  required: [none, rank_matched_pca, xdawn]   # xdawn = purpose-matched supervised ERP enhancer (Rivet 2009)
+  required: [none, rank_matched_pca]
   secondary: [ica_rank_matched]
+  # xdawn (adapter + test retained): a single-class evoked-DETECTION filter; on this between-condition
+  # N170 CONTRAST it enhances the shared evoked response and shrinks the face-car difference (|g| 0.68 vs
+  # 0.96 uncorrected) + skipped 22/40 subjects. Its proper home is the single-class P300 arm (future work).
   null_condition: event_destroyed_dss     # independent per-trial circular time-shift; stored as NULL, not a comparator
 sweep: {dss: {param: n_components, grid: pending}}
 
