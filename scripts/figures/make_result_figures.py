@@ -285,12 +285,51 @@ def fig_cardiac():
     save(fig, "ecg_artifact_summary.png")
 
 
+def fig_lowdensity():
+    import json as _json
+    OR = "#DD8452"
+    specs = [
+        ("D:/tmp/ld_muscle.json", "Muscle (ds004505, n=6)", "emg_coupling", "alpha_power",
+         [("autocca", "autoCCA", RED), ("asr", "ASR", BLUE), ("rasr_windowed", "rASR", GREEN),
+          ("ica_fixed", "ICA", OR), ("wavelet_threshold", "wavelet", GREY)]),
+        ("D:/tmp/ld_ocular.json", "Ocular (ERP-CORE, n=6)", "blink_coupling", "n170_amp",
+         [("eog_regression", "EOG-reg", BLUE), ("eog_dss", "EOG-DSS", RED), ("ssa", "SSA", GREEN),
+          ("ica_iclabel_rejection", "ICA", OR), ("wavelet_threshold", "wavelet", GREY)]),
+    ]
+    fig, axs = plt.subplots(2, 2, figsize=(9, 6.6))
+    for col, (path, title, rem, pres, methods) in enumerate(specs):
+        try:
+            DD = _json.load(open(path))
+        except FileNotFoundError:
+            continue
+        for row, (metric, ylab) in enumerate([(rem, "removal (ratio vs none)"),
+                                              (pres, "preservation (ratio vs none)")]):
+            ax = axs[row, col]
+            ns_last = []
+            for mid, lab, c in methods:
+                d = DD.get(mid, {}).get(metric, {})
+                if not d:
+                    continue
+                ns = sorted(int(n) for n in d)
+                ax.plot(ns, [d[str(n)]["ratio_vs_none"] for n in ns], "o-", color=c, label=lab, ms=4)
+                ns_last = ns
+            ax.axhline(1.0, ls="--", c=GREY, lw=0.8)
+            if ns_last:
+                ax.set_xscale("log", base=2); ax.set_xticks(ns_last); ax.set_xticklabels(ns_last)
+            ax.set_xlabel("channels"); ax.set_ylabel(ylab)
+            if row == 0:
+                ax.set_title(title)
+            if row == 0:
+                ax.legend(fontsize=7, ncol=2)
+    save(fig, "lowdensity_summary.png")
+
+
 if __name__ == "__main__":
     fig_failure(); fig_line_group(); fig_line_qc(); fig_pareto()
     fig_evoked("evoked_erp_core", "evoked_erp_core_summary.png", "N170 (ERP-CORE, n=40)")
     fig_evoked("evoked_ds000117", "evoked_ds000117_summary.png", "M170 (MEG, n=16)")
     fig_ocular(); fig_muscle(); fig_megline(); fig_phantom(); fig_mobile_erp()
-    fig_ssvep(); fig_cardiac()
+    fig_ssvep(); fig_cardiac(); fig_lowdensity()
     try:
         fig_groundtruth()
     except Exception as exc:  # noqa: BLE001
