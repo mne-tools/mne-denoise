@@ -230,6 +230,31 @@ def test_eemd_cca_removes_muscle_preserves_alpha():
     assert bp(np.asarray(res.cleaned), 35, 90) < 0.5 * bp(X, 35, 90)   # broadband muscle reduced
 
 
+def test_mwf_removes_muscle_subspace():
+    # MWF (Somers 2018): clean and artifact segments -> Wiener filter removes the artifact subspace.
+    from scipy.signal import butter, filtfilt, welch
+
+    rng = np.random.default_rng(5)
+    sf, nch, T = 250.0, 8, 6000
+    t = np.arange(T) / sf
+    alpha = np.sin(2 * np.pi * 10 * t)
+    b, a = butter(4, [35 / 125, 90 / 125], btype="band")
+    muscle = filtfilt(b, a, rng.standard_normal(T)); muscle[: T // 2] = 0.0   # 2nd half only
+    A = rng.standard_normal((nch, 2))
+    X = A[:, 0:1] * alpha + A[:, 1:2] * 3.0 * muscle + 0.1 * rng.standard_normal((nch, T))
+    comp = C.get("mwf", quantile=0.5)
+    res = comp.transform(X, comp.fit(X), {"sfreq": sf})
+    assert res.status == "success"
+    assert np.asarray(res.cleaned).shape == X.shape
+
+    def bp(x, lo, hi):
+        f, p = welch(x, sf, nperseg=1024, axis=-1)
+        return float(np.mean(p[..., (f >= lo) & (f <= hi)]))
+    cl = np.asarray(res.cleaned)
+    assert bp(cl, 35, 90) < 0.3 * bp(X, 35, 90)       # muscle subspace removed
+    assert bp(cl, 8, 12) > 0.7 * bp(X, 8, 12)         # alpha preserved
+
+
 def test_transform_without_fit_state_raises():
     comp = C.get("pca_reconstruct", n_components=2)
     with pytest.raises(RuntimeError):

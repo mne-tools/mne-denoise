@@ -10,7 +10,7 @@ dataset:
   project_relative_path: openneuro/ds004505
   subjects: [sub-01, sub-03, sub-05, sub-07, sub-09, sub-11]
 tiers:
-  reference_free: [none, asr, rasr_windowed, ica_fixed, autocca, wavelet_threshold, eemd_cca]   # eemd_cca heavy (EEMD/channel) -> only run at the lower channel counts
+  reference_free: [none, asr, rasr_windowed, ica_fixed, autocca, wavelet_threshold, mwf, eemd_cca]   # mwf = multi-channel Wiener filter (Somers 2018), fast spatial filter; eemd_cca heavy (EEMD/channel) -> only run at the lower channel counts
 baseline_preprocessing:
   steps:
     highpass_hz: 1.0

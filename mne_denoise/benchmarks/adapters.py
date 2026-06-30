@@ -823,6 +823,38 @@ class _EEMDCCA(Comparator):
                                 diagnostics={"rho_threshold": self.rho_threshold})
 
 
+class _MWF(Comparator):
+    """``mwf`` -- multi-channel Wiener filter (Somers, Francart & Bertrand 2018,
+    10.1088/1741-2552/aaac92): a Wiener spatial filter from artifact- vs clean-segment
+    covariances (clean = R_clean R_artifact^-1 X); the spatial-filter core of the RELAX
+    pipeline. Artifact segments marked by HF power (no reference channel needed).
+    Per-recording / unsupervised."""
+
+    def __init__(self, hf_hz: float = 20.0, quantile: float = 0.6, **params: Any) -> None:
+        super().__init__(ComparatorMeta("mwf", fit_scope="window_local"),
+                         hf_hz=hf_hz, quantile=quantile, **params)
+        self.hf_hz = float(hf_hz)
+        self.quantile = float(quantile)
+
+    def _fit(self, train, ctx):
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        from mne_denoise.mwf import MWF
+
+        m = MWF(sfreq=_sfreq(evaluation, ctx), hf_hz=self.hf_hz, quantile=self.quantile)
+        if hasattr(evaluation, "get_data"):
+            x = evaluation.get_data()
+            out = (np.stack([m.transform(x[i]) for i in range(x.shape[0])]) if x.ndim == 3
+                   else m.transform(x))
+            cleaned = evaluation.copy()
+            cleaned._data = out
+            return ComparatorResult(cleaned=cleaned, status="success",
+                                    diagnostics={"hf_hz": self.hf_hz, "quantile": self.quantile})
+        out = m.transform(np.asarray(evaluation))
+        return ComparatorResult(cleaned=out, status="success", diagnostics={"hf_hz": self.hf_hz})
+
+
 # ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
@@ -852,3 +884,4 @@ register("wica", lambda **p: _Wavelet(method="wica", **p))
 register("emd", lambda **p: _EMD(method="emd", **p))
 register("eemd", lambda **p: _EMD(method="eemd", **p))
 register("eemd_cca", lambda **p: _EEMDCCA(**p))
+register("mwf", lambda **p: _MWF(**p))
