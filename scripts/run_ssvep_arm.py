@@ -70,6 +70,80 @@ def _cca_corr(X, Y):
     return float(s[0]) if s.size else 0.0
 
 
+def _corr1d(a, b):
+    a = a - a.mean(); b = b - b.mean()
+    d = np.linalg.norm(a) * np.linalg.norm(b)
+    return float(a @ b / d) if d > 0 else 0.0
+
+
+def _fbcca(X, refs, sf, n_sub=5):
+    """Filter-bank CCA (Chen et al. 2015): sub-band CCA correlations combined with
+    weights w(k)=k^-1.25+0.25; sub-band k passband [8k, 90] Hz (fundamental + harmonics).
+    Returns the index of the best-matching reference. Training-free."""
+    from scipy.signal import butter, sosfiltfilt
+
+    nyq = sf / 2.0
+    weights = np.array([k ** (-1.25) + 0.25 for k in range(1, n_sub + 1)])
+    Xb = []
+    for k in range(1, n_sub + 1):
+        lo, hi = 8.0 * k, min(90.0, nyq - 1.0)
+        if lo >= hi:
+            Xb.append(None); continue
+        sos = butter(4, [lo, hi], btype="band", fs=sf, output="sos")
+        Xb.append(sosfiltfilt(sos, X, axis=-1))
+    rho = np.zeros(len(refs))
+    for j, Y in enumerate(refs):
+        acc = 0.0
+        for k, Xf in enumerate(Xb):
+            if Xf is not None:
+                acc += weights[k] * _cca_corr(Xf, Y) ** 2
+        rho[j] = acc
+    return int(np.argmax(rho))
+
+
+def _trca_filter(trials):
+    """TRCA spatial filter (Nakanishi et al. 2018): leading eigenvector of Q^-1 S,
+    S summing cross-trial covariances (reproducibility) and Q the covariance of the
+    concatenated trials. `trials`: list of (ch, samp)."""
+    trials = [t - t.mean(1, keepdims=True) for t in trials]
+    nch = trials[0].shape[0]
+    S = np.zeros((nch, nch))
+    for i in range(len(trials)):
+        for k in range(len(trials)):
+            if i != k:
+                S += trials[i] @ trials[k].T
+    UX = np.concatenate(trials, axis=1)
+    Q = UX @ UX.T
+    try:
+        ev, V = np.linalg.eig(np.linalg.solve(Q, S))
+        return np.real(V[:, int(np.argmax(np.real(ev)))])
+    except np.linalg.LinAlgError:
+        return np.ones(nch)
+
+
+def _trca_decode(seg, sf):
+    """Basic TRCA with leave-one-block-out CV. seg: (ch, samp, target, block). Per
+    test block, each target's filter + template is trained on the other blocks; the
+    test trial goes to the target maximizing corr(filtered signal, filtered template)."""
+    nch, nsamp, ntar, nblk = seg.shape
+    if nblk < 3:
+        return float("nan")
+    hits = tot = 0
+    for b in range(nblk):
+        filts, templates = [], []
+        for j in range(ntar):
+            tr = [seg[:, :, j, bb] for bb in range(nblk) if bb != b]
+            w = _trca_filter(tr)
+            filts.append(w)
+            templates.append(w @ np.mean(tr, axis=0))
+        for j_true in range(ntar):
+            x = seg[:, :, j_true, b]
+            scores = [_corr1d(filts[j] @ x, templates[j]) for j in range(ntar)]
+            hits += int(np.argmax(scores) == j_true)
+            tot += 1
+    return hits / tot if tot else float("nan")
+
+
 def _load_tsinghua(root, subject):
     """Tsinghua/BETA .mat -> (data[ch, samp, target, block], freqs[target], sfreq)."""
     import scipy.io as sio
@@ -102,7 +176,7 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
     n_samp = seg.shape[1]
     info = mne.create_info([f"E{i}" for i in range(nch)], sf, "eeg")
     nharm = int((cfg.get("metrics", {}) or {}).get("n_harmonics", 3))
-    snr_raw, snr_dss, hits_cca, hits_dss, oob = [], [], 0, 0, []
+    snr_raw, snr_dss, hits_cca, hits_dss, hits_fbcca, oob = [], [], 0, 0, 0, []
     refs = [_ref(f, sf, n_samp, nharm) for f in freqs]
     for ti in range(ntar):
         f0 = float(freqs[ti])
@@ -126,12 +200,16 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
             cd = [_cca_corr(np.vstack([raw_b, comp[b % comp.shape[0]][None]]), refs[j]) for j in range(ntar)]
             if int(np.argmax(cd)) == ti:
                 hits_dss += 1
+            if _fbcca(raw_b, refs, sf) == ti:                # filter-bank CCA (training-free)
+                hits_fbcca += 1
     ntr = ntar * nblk
     row = {"status": "success", "n_targets": ntar,
            "harmonic_snr_raw": float(np.median(snr_raw)),
            "harmonic_snr_dss": float(np.median(snr_dss)),
            "snr_gain_db": float(10 * np.log10(np.median(snr_dss) / max(np.median(snr_raw), 1e-9))),
-           "acc_cca": hits_cca / ntr, "acc_dss_cca": hits_dss / ntr}
+           "acc_cca": hits_cca / ntr, "acc_dss_cca": hits_dss / ntr,
+           "acc_fbcca": hits_fbcca / ntr, "acc_trca": _trca_decode(seg, sf),  # standard SSVEP comparator battery
+           "window_s": float((w1 - w0) / sf)}                                 # analysis window, disclosed
     out_dir = pathlib.Path(deriv_root) / subject / BENCH / "ssvep_dss"
     bio.save_subject_benchmark_results(out_dir, subject=subject, method="ssvep_dss", metrics=row)
     return [{"method": "ssvep_dss", **row}]

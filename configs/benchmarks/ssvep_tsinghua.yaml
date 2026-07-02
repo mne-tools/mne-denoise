@@ -15,7 +15,7 @@ dataset:
 
 methods_under_test: [ssvep_dss]        # CombFilterBias comb-DSS / RESS
 comparators:
-  required: [cca, fbcca]
+  required: [cca, fbcca, trca]   # runner computes all three decoders inline (acc_cca/acc_fbcca/acc_trca) + harmonic SNR
 
 metrics:
   primary_target: extracted_component_harmonic_snr

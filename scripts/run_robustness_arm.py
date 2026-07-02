@@ -87,33 +87,36 @@ def run_subject(cfg, rec, root, deriv_root):
         rej = round(float(1.0 - retained), 3)            # fraction ASR repairs
     except Exception:  # noqa: BLE001
         rej = None
+    grid = ((cfg.get("sweep", {}) or {}).get("asr", {}) or {}).get("grid", [20.0])
     rows = []
     for method in ["asr", "rasr"]:
-        t0 = time.perf_counter()
-        try:
-            asr = ASR(sfreq=sf, cutoff=20.0,
-                      method=("riemannian_windowed" if method == "rasr" else "standard"))
-            asr.fit(calib)
-            cleaned = np.asarray(asr.transform(X), dtype=float)
-            if cleaned.shape != X.shape:
-                cleaned = cleaned.reshape(X.shape)
-            status = "success"
-        except Exception as exc:  # noqa: BLE001
-            rows.append({"method": method, "status": "failed_numerical",
-                         "error": f"{type(exc).__name__}: {exc}"})
-            continue
-        rt = time.perf_counter() - t0
-        row = {"status": status,
-               "n_ch": int(X.shape[0]),
-               "dur_min": round(dur_min, 1),
-               "runtime_s": round(rt, 1),
-               "throughput_x_realtime": round(dur_min * 60.0 / rt, 1) if rt > 0 else None,
-               "rejected_window_frac": rej,
-               "effective_rank_change": round(float(effective_rank_change(X, cleaned)), 3),
-               "neural_band_retained": round(_bandpow(cleaned, sf, 1, 30) / (_bandpow(X, sf, 1, 30) or 1), 3)}
-        rows.append({"method": method, **row})
-        out = pathlib.Path(deriv_root) / rec / BENCH / method
-        bio.save_subject_benchmark_results(out, subject=rec, method=method, metrics=row)
+        for cut in grid:
+            tag = f"{method}__cutoff-{cut}" if len(grid) > 1 else method
+            t0 = time.perf_counter()
+            try:
+                asr = ASR(sfreq=sf, cutoff=float(cut),
+                          method=("riemannian_windowed" if method == "rasr" else "standard"))
+                asr.fit(calib)
+                cleaned = np.asarray(asr.transform(X), dtype=float)
+                if cleaned.shape != X.shape:
+                    cleaned = cleaned.reshape(X.shape)
+                status = "success"
+            except Exception as exc:  # noqa: BLE001
+                rows.append({"method": tag, "status": "failed_numerical",
+                             "error": f"{type(exc).__name__}: {exc}"})
+                continue
+            rt = time.perf_counter() - t0
+            row = {"status": status, "variant": method, "cutoff": float(cut),
+                   "n_ch": int(X.shape[0]),
+                   "dur_min": round(dur_min, 1),
+                   "runtime_s": round(rt, 1),
+                   "throughput_x_realtime": round(dur_min * 60.0 / rt, 1) if rt > 0 else None,
+                   "rejected_window_frac": rej,
+                   "effective_rank_change": round(float(effective_rank_change(X, cleaned)), 3),
+                   "neural_band_retained": round(_bandpow(cleaned, sf, 1, 30) / (_bandpow(X, sf, 1, 30) or 1), 3)}
+            rows.append({"method": tag, **row})
+            out = pathlib.Path(deriv_root) / rec / BENCH / tag
+            bio.save_subject_benchmark_results(out, subject=rec, method=tag, metrics=row)
     return rows
 
 

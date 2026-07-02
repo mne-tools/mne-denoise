@@ -51,6 +51,32 @@ def _bandpow(data, sfreq, lo, hi):
     return float(np.mean(trapezoid(p[:, m], f[m], axis=1)))
 
 
+def _alpha_erd(eeg, emg_eval, sfreq, win_s=2.0):
+    """Task-band alpha (8-12 Hz) event-related (de)synchronization: the contrast
+    between high-motion (active) and low-motion (baseline) windows, segmented ONCE
+    by the INDEPENDENT neck-EMG envelope (identical windows for every method, so the
+    endpoint is fit-independent and task-locked). Returns
+    ``erd = (mean_active - mean_baseline) / mean_baseline`` on alpha power, or NaN
+    when the contrast is undefined (too few windows / one class empty)."""
+    from mne_denoise.qa.preservation import erd_ers
+
+    w = int(win_s * sfreq)
+    T = min(eeg.shape[1], emg_eval.shape[1])
+    nwin = T // w
+    if w < 8 or nwin < 4:
+        return float("nan")
+    emg_env = np.array([float(np.mean(emg_eval[:, i * w:(i + 1) * w] ** 2)) for i in range(nwin)])
+    a_alpha = np.array([_bandpow(eeg[:, i * w:(i + 1) * w], sfreq, 8.0, 12.0) for i in range(nwin)])
+    thr = float(np.median(emg_env))
+    active, baseline = a_alpha[emg_env > thr], a_alpha[emg_env <= thr]
+    if active.size == 0 or baseline.size == 0:
+        return float("nan")
+    try:
+        return float(erd_ers(active, baseline))
+    except Exception:  # noqa: BLE001
+        return float("nan")
+
+
 def _synth_muscle(sfreq=250.0, n_eeg=16, n_noise=12, n_emg=4, secs=120, seed=0):
     """EEG = alpha+beta brain rhythms + broadband muscle (HF, spatially structured);
     noise-layer + neck-EMG references both capture the muscle. Cleaning should cut
@@ -187,6 +213,7 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False, preloaded=No
                 "emg_coupling": reference_coupling(eeg, emg_eval),                      # independent neck-EMG (lower better)
                 "alpha_power": _bandpow(eeg, sfreq, 8, 12),                             # preservation
                 "beta_power": _bandpow(eeg, sfreq, 16, 24),                             # preservation
+                "erd_ers": _alpha_erd(eeg, emg_eval, sfreq),                            # task-locked alpha-ERD (fit-independent, pre-registered)
                 "runtime_s": res.runtime_seconds,
             }
             rows.append({"method": mid, "tag": tag, **row})
@@ -197,7 +224,8 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False, preloaded=No
                     "hf_power": hf_band_power(eeg0, sfreq, fmin=20.0, fmax=100.0),
                     "emg_coupling": reference_coupling(eeg0, emg_eval),
                     "alpha_power": _bandpow(eeg0, sfreq, 8, 12),
-                    "beta_power": _bandpow(eeg0, sfreq, 16, 24), "status": "reference"})
+                    "beta_power": _bandpow(eeg0, sfreq, 16, 24),
+                    "erd_ers": _alpha_erd(eeg0, emg_eval, sfreq), "status": "reference"})
     return rows
 
 

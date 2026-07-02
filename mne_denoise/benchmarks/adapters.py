@@ -945,6 +945,54 @@ class _MARA(Comparator):
 
 
 # ---------------------------------------------------------------------------
+# SSS / tSSS  (MEG environmental-interference standard; scored line comparator)
+# ---------------------------------------------------------------------------
+class _Maxwell(Comparator):
+    """Signal-Space Separation (SSS) and its temporal extension (tSSS) via
+    ``mne.preprocessing.maxwell_filter``. SSS is the MEG environmental-interference
+    standard; it is a spatial/environmental separator, NOT a targeted notch, so its
+    line attenuation is incidental and reported as such. Per-recording, unsupervised.
+    Requires an MNE Raw with valid device geometry (dev_head_t)."""
+
+    def __init__(self, st_duration: Any = None, **params: Any) -> None:
+        cid = "tsss" if st_duration else "sss"
+        super().__init__(
+            ComparatorMeta(
+                cid,
+                fit_scope="per_recording_unsupervised",
+                requires_fit=False,
+                deterministic=True,
+                optional_dependency="mne",
+            ),
+            st_duration=st_duration,
+            **params,
+        )
+        self.st_duration = st_duration
+
+    def _fit(self, train, ctx):  # per-recording: nothing learned from train
+        return None
+
+    def _transform(self, evaluation, payload, ctx):
+        import mne
+
+        if not hasattr(evaluation, "info"):
+            return ComparatorResult(cleaned=evaluation, status="unavailable_dependency",
+                                    diagnostics={"reason": "SSS needs an MNE Raw with device geometry"})
+        st = self.st_duration
+        if st is not None:
+            dur = evaluation.n_times / float(evaluation.info["sfreq"])
+            st = min(float(st), dur)
+        try:
+            cleaned = mne.preprocessing.maxwell_filter(
+                evaluation.copy(), st_duration=st, verbose=False)
+        except Exception as exc:  # noqa: BLE001 -- geometry / rank / fine-cal failures
+            return ComparatorResult(cleaned=evaluation, status="failed_numerical",
+                                    diagnostics={"error": f"{type(exc).__name__}: {exc}"})
+        return ComparatorResult(cleaned=cleaned, status="success",
+                                parameters={"st_duration": st, "method": ("tsss" if st else "sss")})
+
+
+# ---------------------------------------------------------------------------
 # registration
 # ---------------------------------------------------------------------------
 register("tspca", lambda **p: _TSPCA(**p))
@@ -965,6 +1013,8 @@ register("zapline_plus", lambda **p: _ZapLine(adaptive=True, **p))
 register("notch", lambda **p: _Notch(method="fir", **p))
 register("non_spatial_line", lambda **p: _Notch(method="spectrum_fit", **p))
 register("spectrum_interp", lambda **p: _SpectrumInterp(**p))
+register("sss", lambda **p: _Maxwell(**p))
+register("tsss", lambda **p: _Maxwell(st_duration=10.0, **p))
 # wearable-review-driven literature-standard comparators
 register("autocca", lambda **p: _AutoCCA(**p))
 register("ssa", lambda **p: _SSA(**p))

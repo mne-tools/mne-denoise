@@ -6,6 +6,7 @@ dataset: {id: sleep-edfx, project_relative_path: physionet/sleep-edfx, channel_t
           subjects: ["SC4311E0","SC4621E0","SC4352F0","SC4082E0"]}
 methods_under_test: [asr, rasr]
 comparators: {required: [none]}
+sweep: {asr: {param: cutoff, grid: [10, 20, 30, 50]}}   # ASR cutoff sweep x {asr, rasr} (was fixed k=20); tests "needs re-tuning" (MF5)
 metrics: {primary_target: throughput_x_realtime}
 unit_of_inference: recording
 seeds: {global: 42}

@@ -29,7 +29,7 @@ meg_line_noise:
 
 methods_under_test: [zapline, zapline_plus]
 comparators:
-  required: [none, notch, spectrum_interp]   # spectrum_interp = DFT-bin interpolation (Leske & Dalal 2019), distinct from non_spatial_line (multitaper sinusoid-fit)
+  required: [none, notch, spectrum_interp, sss, tsss]   # spectrum_interp = DFT-bin interpolation (Leske & Dalal 2019). sss/tsss = Maxwell filter run on the RAW as a scored comparator (MF4); Neuromag-only (HCP/KIT arms cannot use it -- a point in ZapLine's favour). SSS line attenuation is incidental, reported as such.
   required_comparator_group:
     non_spatial_line_noise:
       preferred: cleanline
