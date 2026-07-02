@@ -84,7 +84,16 @@ export PIP_CACHE_DIR="${XDG_CACHE_HOME}/pip"
 export MPLCONFIGDIR="${XDG_CACHE_HOME}/matplotlib"
 mkdir -p "${XDG_CACHE_HOME}" "${DATA_DIR}" 2>/dev/null
 
-# ── Sanity line (non-fatal) ───────────────────────────────────────────────────
+# ── Warm the NFS venv import cache with retry ─────────────────────────────────
+#  Many array tasks importing from the shared /scratch venv concurrently trip a
+#  transient ModuleNotFoundError (yaml.emitter / mne_denoise.asr._learner) as the
+#  NFS metadata cache races. Retrying until one import succeeds warms the node's
+#  cache so the subsequent runner import is reliable.
+for _try in 1 2 3 4 5 6; do
+    python -c "import mne_denoise, mne_denoise.asr, yaml, mne, numpy, scipy" 2>/dev/null && break
+    echo "  import warmup attempt ${_try} failed; backing off..."
+    sleep $(( (RANDOM % 8) + 2 ))
+done
 python -c "import mne_denoise, mne; print(f'  mne-denoise {mne_denoise.__version__} | mne {mne.__version__} | python {__import__(\"platform\").python_version()}')" \
-    || echo "WARNING: 'import mne_denoise' failed — check the build above."
+    || echo "WARNING: 'import mne_denoise' failed after warmup — check the build above."
 echo "=== environment ready ==="
