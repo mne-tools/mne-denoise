@@ -133,8 +133,14 @@ def _trca_decode(seg, sf):
     filter is trained on the other blocks; the ensemble filter bank W (all targets'
     filters stacked) projects both the test trial and each target's template, and the
     test trial is assigned to the target maximizing the 2-D correlation -- the
-    ensemble form is far stronger than per-target basic TRCA on many-target montages."""
+    ensemble form is far stronger than per-target basic TRCA on many-target montages.
+    Restricted to the parieto-occipital channels TRCA conventionally uses (Tsinghua
+    64-ch montage), which is essential for SSVEP TRCA performance."""
     nch, nsamp, ntar, nblk = seg.shape
+    OCC64 = [47, 53, 54, 55, 56, 57, 60, 61, 62]   # Pz,PO5,PO3,POz,PO4,PO6,O1,Oz,O2 (Tsinghua 64-ch, 0-based)
+    if nch == 64:
+        seg = seg[OCC64]
+        nch = len(OCC64)
     if nblk < 3:
         return float("nan")
     hits = tot = 0
