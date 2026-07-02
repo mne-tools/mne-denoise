@@ -10,7 +10,7 @@ dataset:
   project_relative_path: openneuro/ds000117
   version: pending
   expected_subjects: 19         # 16 = published subset; use 19 unless raw-QC excludes
-  subjects: pending
+  subjects: null                # glob the staged sub-* dirs (17 present); was a 'pending' placeholder string
   excluded_subjects: []
   channel_types: [mag, grad]    # denoise mag and grad SEPARATELY; EEG is a separate arm
   raw_or_processed: raw
