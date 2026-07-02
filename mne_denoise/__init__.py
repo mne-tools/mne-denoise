@@ -30,9 +30,12 @@ icanclean : Reference-Based Artifact Removal
 spectrum_interpolation : Spectrum Interpolation
     Removes power-line noise and its harmonics by interpolating spectral amplitudes
     while preserving phase.
+
+ssa : Singular Spectrum Analysis
+    Temporal decomposition for trend, oscillation, and residual reconstruction.
 """
 
-from . import asr, dss, icanclean, spectrum_interpolation, zapline
+from . import asr, dss, icanclean, spectrum_interpolation, ssa, zapline
 
 __version__ = "0.0.1"
 
@@ -41,5 +44,6 @@ __all__ = [
     "dss",
     "icanclean",
     "spectrum_interpolation",
+    "ssa",
     "zapline",
 ]

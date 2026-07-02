@@ -63,6 +63,16 @@ iCanClean
    mne_denoise.icanclean.ICanClean
    mne_denoise.icanclean.compute_icanclean
 
+SSA
+---
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.ssa.SSA
+   mne_denoise.ssa.compute_ssa
+   mne_denoise.ssa.ssa_clean_channel
+
 Denoisers
 ---------
 .. autosummary::
