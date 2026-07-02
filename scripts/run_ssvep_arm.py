@@ -76,6 +76,12 @@ def _corr1d(a, b):
     return float(a @ b / d) if d > 0 else 0.0
 
 
+def _corr2d(A, B):
+    a = A.ravel() - A.ravel().mean(); b = B.ravel() - B.ravel().mean()
+    d = np.linalg.norm(a) * np.linalg.norm(b)
+    return float(a @ b / d) if d > 0 else 0.0
+
+
 def _fbcca(X, refs, sf, n_sub=5):
     """Filter-bank CCA (Chen et al. 2015): sub-band CCA correlations combined with
     weights w(k)=k^-1.25+0.25; sub-band k passband [8k, 90] Hz (fundamental + harmonics).
@@ -122,23 +128,27 @@ def _trca_filter(trials):
 
 
 def _trca_decode(seg, sf):
-    """Basic TRCA with leave-one-block-out CV. seg: (ch, samp, target, block). Per
-    test block, each target's filter + template is trained on the other blocks; the
-    test trial goes to the target maximizing corr(filtered signal, filtered template)."""
+    """Ensemble TRCA (eTRCA, Nakanishi et al. 2018) with leave-one-block-out CV.
+    seg: (ch, samp, target, block). Per test block, every target's TRCA spatial
+    filter is trained on the other blocks; the ensemble filter bank W (all targets'
+    filters stacked) projects both the test trial and each target's template, and the
+    test trial is assigned to the target maximizing the 2-D correlation -- the
+    ensemble form is far stronger than per-target basic TRCA on many-target montages."""
     nch, nsamp, ntar, nblk = seg.shape
     if nblk < 3:
         return float("nan")
     hits = tot = 0
     for b in range(nblk):
-        filts, templates = [], []
+        W = np.zeros((ntar, nch))
+        templates = []
         for j in range(ntar):
             tr = [seg[:, :, j, bb] for bb in range(nblk) if bb != b]
-            w = _trca_filter(tr)
-            filts.append(w)
-            templates.append(w @ np.mean(tr, axis=0))
+            W[j] = _trca_filter(tr)
+            templates.append(np.mean(tr, axis=0))          # (nch, samp)
+        WT = [W @ T for T in templates]                     # ensemble-projected templates
         for j_true in range(ntar):
-            x = seg[:, :, j_true, b]
-            scores = [_corr1d(filts[j] @ x, templates[j]) for j in range(ntar)]
+            xp = W @ seg[:, :, j_true, b]                    # (ntar, samp)
+            scores = [_corr2d(xp, WT[j]) for j in range(ntar)]
             hits += int(np.argmax(scores) == j_true)
             tot += 1
     return hits / tot if tot else float("nan")
