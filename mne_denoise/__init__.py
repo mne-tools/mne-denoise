@@ -30,14 +30,19 @@ icanclean : Reference-Based Artifact Removal
 spectrum_interpolation : Spectrum Interpolation
     Removes power-line noise and its harmonics by interpolating spectral amplitudes
     while preserving phase.
+
+cca : Reference-Free Lagged CCA
+    Blind source separation based on canonical correlation with an explicitly
+    lagged copy of the data, primarily for broadband muscle-artifact attenuation.
 """
 
-from . import asr, dss, icanclean, spectrum_interpolation, zapline
+from . import asr, cca, dss, icanclean, spectrum_interpolation, zapline
 
 __version__ = "0.0.1"
 
 __all__ = [
     "asr",
+    "cca",
     "dss",
     "icanclean",
     "spectrum_interpolation",
