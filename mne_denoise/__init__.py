@@ -30,9 +30,13 @@ icanclean : Reference-Based Artifact Removal
 spectrum_interpolation : Spectrum Interpolation
     Removes power-line noise and its harmonics by interpolating spectral amplitudes
     while preserving phase.
+
+sns : Sensor Noise Suppression
+    Removes channel-specific noise by reconstructing each sensor from correlated
+    neighboring sensors.
 """
 
-from . import asr, dss, icanclean, spectrum_interpolation, zapline
+from . import asr, dss, icanclean, sns, spectrum_interpolation, zapline
 
 __version__ = "0.0.1"
 
@@ -41,5 +45,6 @@ __all__ = [
     "dss",
     "icanclean",
     "spectrum_interpolation",
+    "sns",
     "zapline",
 ]
