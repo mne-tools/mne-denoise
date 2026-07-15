@@ -1,0 +1,198 @@
+{
+  "configs": [
+    {
+      "arm": "asr_transient_ground_truth",
+      "path": "configs/benchmarks/asr_transient_ground_truth.yaml",
+      "sha256": "abbfdb72162625d98cb96c0ef7292a4f83f119ff887dcaa3af5591a1047015f7"
+    },
+    {
+      "arm": "cardiac_cap",
+      "path": "configs/benchmarks/cardiac_cap.yaml",
+      "sha256": "78e49c12b7ce8817eb560b1fc6e27b93a33bddc775073313a94ca0555ccd77ff"
+    },
+    {
+      "arm": "cardiac_ds007554",
+      "path": "configs/benchmarks/cardiac_ds007554.yaml",
+      "sha256": "af07b896371820a6948c86671df097b0f708f432bf3e7213d84cfd61ef7b92cb"
+    },
+    {
+      "arm": "evoked_ds000117",
+      "path": "configs/benchmarks/evoked_ds000117.yaml",
+      "sha256": "ea5ff4bf58f33648c66811581bb3095474ba87508465a457f3db8260a008dc54"
+    },
+    {
+      "arm": "evoked_erp_core",
+      "path": "configs/benchmarks/evoked_erp_core.yaml",
+      "sha256": "99d3808df387c75903bca51533e609ea7c4c936e43a5df36bbc184782663c61b"
+    },
+    {
+      "arm": "ground_truth_forward",
+      "path": "configs/benchmarks/ground_truth_forward.yaml",
+      "sha256": "79cc8ee76584cacc4ebd20b0636b1275917448bf184da82163077f953fcc366d"
+    },
+    {
+      "arm": "ground_truth_generic",
+      "path": "configs/benchmarks/ground_truth_generic.yaml",
+      "sha256": "04ed8b472d32325bcb4bb8b8076dc620108b9bc127a7f1d8203b311dc19f5733"
+    },
+    {
+      "arm": "icanclean_reference_ground_truth",
+      "path": "configs/benchmarks/icanclean_reference_ground_truth.yaml",
+      "sha256": "f1ef0743af913b9bb1fe30d082da0f3a4ef38220d02d0479a27cc074fe423ff0"
+    },
+    {
+      "arm": "line_ds003620_env",
+      "path": "configs/benchmarks/line_ds003620_env.yaml",
+      "sha256": "378a6b96bd603705695503539755d883d890b8fd4b15abdf03b35ab95c93887b"
+    },
+    {
+      "arm": "line_ds004475",
+      "path": "configs/benchmarks/line_ds004475.yaml",
+      "sha256": "a6e5dafde97f2b0f519bf3e2d2f8371883fe1e304e0a97472992c0be4e133cbc"
+    },
+    {
+      "arm": "line_hcp_meg",
+      "path": "configs/benchmarks/line_hcp_meg.yaml",
+      "sha256": "15db76fd209f644ad9af9c3ab1d4bff1a00e4ba500d07a2f3b3d8a3cb6541ffe"
+    },
+    {
+      "arm": "line_lemon",
+      "path": "configs/benchmarks/line_lemon.yaml",
+      "sha256": "34c07953b18789c30eda116a0364e89b5c9431cece65ca9dbaf59daa78069784"
+    },
+    {
+      "arm": "line_meg_masc",
+      "path": "configs/benchmarks/line_meg_masc.yaml",
+      "sha256": "8d28f64517d7e0db62c34bc71a4361d3a9f83c802d54d4230c391832cbde3f6c"
+    },
+    {
+      "arm": "line_ds000117",
+      "path": "configs/benchmarks/line_noise_ds000117.yaml",
+      "sha256": "e5f6ad421d9406208053eb2ce945a0995c5eb79e53c0c1459a666290c8e2637a"
+    },
+    {
+      "arm": "line_ds003620",
+      "path": "configs/benchmarks/line_noise_ds003620.yaml",
+      "sha256": "3cce1d0ad941c25521060d44a3c5ff01784a80a1f479c71b063df6875b26fa94"
+    },
+    {
+      "arm": "line_injection",
+      "path": "configs/benchmarks/line_noise_injection.yaml",
+      "sha256": "e9830ca839c0e8ce78100c1591223352fa2562abe8c722a99d7a72b4a25cc711"
+    },
+    {
+      "arm": "lowdensity_ground_truth",
+      "path": "configs/benchmarks/lowdensity_ground_truth.yaml",
+      "sha256": "4b258781845418f63c436da07465c1108f42ec71d709cbd4401aa514402bed25"
+    },
+    {
+      "arm": "lowdensity_muscle",
+      "path": "configs/benchmarks/lowdensity_muscle.yaml",
+      "sha256": "647c94abb03e366b4a7494ad77d1b30c71b72ce4b2db2a599aab36e440258bdc"
+    },
+    {
+      "arm": "lowdensity_ocular",
+      "path": "configs/benchmarks/lowdensity_ocular.yaml",
+      "sha256": "479f3b4eae13db2221a8aa34d650c6b2da178db948a4573d8a6c56b5a5a583d8"
+    },
+    {
+      "arm": "mi_eegmmidb",
+      "path": "configs/benchmarks/mi_eegmmidb.yaml",
+      "sha256": "8e6cb26fc4428be9900a18977d5862a222b1adcf84f880082fadaf53444d8c6f"
+    },
+    {
+      "arm": "muscle_ds004505",
+      "path": "configs/benchmarks/muscle_ds004505.yaml",
+      "sha256": "c3dacdf702b4823e05d10575b1a842b3be1c22c13bf74f02f0a036ff135ecb84"
+    },
+    {
+      "arm": "ocular_erp_core",
+      "path": "configs/benchmarks/ocular_erp_core.yaml",
+      "sha256": "90cc057b0b2f0b251817a0717b430531ad6e0541a692dad37eb6f30701088cf7"
+    },
+    {
+      "arm": "p300_brain_invaders",
+      "path": "configs/benchmarks/p300_brain_invaders.yaml",
+      "sha256": "3d22fc0a35785b56e22ba14e32c124935518c847d8b234627e0db0a6447e7d7c"
+    },
+    {
+      "arm": "p300_vr",
+      "path": "configs/benchmarks/p300_vr.yaml",
+      "sha256": "1630115140adef81a58c119b39b20672a14e1c7a40adde3d54e2fe80ab5ebd4e"
+    },
+    {
+      "arm": "phantom_ds004784",
+      "path": "configs/benchmarks/phantom_ds004784.yaml",
+      "sha256": "85bd1a33ea903781c525a01f260ecde8da096436c44a65974ba6963bbf6b7366"
+    },
+    {
+      "arm": "robustness_cap",
+      "path": "configs/benchmarks/robustness_cap.yaml",
+      "sha256": "4032198a07c174908128d81f2ce84401db0a360bd53ab25279d005d8c17ee7a7"
+    },
+    {
+      "arm": "robustness_chbmit",
+      "path": "configs/benchmarks/robustness_chbmit.yaml",
+      "sha256": "3e1b56053db16ff99688e3cb68c00d1f5fea242eeda5fb86ac75c5d3af176b46"
+    },
+    {
+      "arm": "robustness_sleep",
+      "path": "configs/benchmarks/robustness_sleep.yaml",
+      "sha256": "1fc3824ed34935aa38063bf67a0826d87492487f1994ed72d28d1505902ad466"
+    },
+    {
+      "arm": "sensor_forward_ground_truth",
+      "path": "configs/benchmarks/sensor_forward_ground_truth.yaml",
+      "sha256": "a54c42b901edf29ba21cd543349bb46333c40eaa6d39dc5df2fc15a7ef6b6703"
+    },
+    {
+      "arm": "ssvep_beta",
+      "path": "configs/benchmarks/ssvep_beta.yaml",
+      "sha256": "309dab1f75a141f57c5827a1a59e90915332820a23bc374ab335c50579a97b54"
+    },
+    {
+      "arm": "ssvep_tsinghua",
+      "path": "configs/benchmarks/ssvep_tsinghua.yaml",
+      "sha256": "c4004ff48fcaee31c6f4d84e755192b021821304e7b6442482ce629434a3faa7"
+    },
+    {
+      "arm": "streaming_replay",
+      "path": "configs/benchmarks/streaming_replay.yaml",
+      "sha256": "a14c80b154095cffa212a799b7e73556836b655244d730bf6a9a786c5f96e4f4"
+    },
+    {
+      "arm": "temporal_ground_truth",
+      "path": "configs/benchmarks/temporal_ground_truth.yaml",
+      "sha256": "a69dc4654f44fbed76173defd6bfef3e98be68ba89719316b84a2745375c1f9a"
+    }
+  ],
+  "environment": {
+    "implementation": "CPython",
+    "machine": "AMD64",
+    "packages": {
+      "EMD-signal": "1.10.0",
+      "PyWavelets": "1.9.0",
+      "matplotlib": "3.10.8",
+      "mne": "1.11.0",
+      "mne-denoise": "0.0.1",
+      "numpy": "2.4.4",
+      "pandas": "3.0.1",
+      "scikit-learn": "1.8.0",
+      "scipy": "1.17.1"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "environment_hash": "73a075dfa2b5c25e920ec1c2d0e8c9c2fac88bb6feee13c8fe50363fdaae229d",
+  "frozen_at_utc": "2026-07-15T05:01:16.801045Z",
+  "git": {
+    "branch": "codex/neuroimage-0.1-integration",
+    "commit": "6d08419ae7260348453f8d5a3ccdc00d409b146d",
+    "dirty": false,
+    "dirty_paths": [],
+    "root": "."
+  },
+  "manifest_hash": "0fd1f657c82f828ae5506af1e34db3e587462dcbf22d66253f113a5b9c23ffcc",
+  "protocol_id": "neuroimage-benchmark-v1",
+  "schema_version": 1
+}
