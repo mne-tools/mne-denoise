@@ -144,24 +144,30 @@ def freeze_protocol(
     allow_dirty: bool = False,
 ) -> dict[str, Any]:
     """Validate configurations and write an immutable protocol manifest."""
+    root = pathlib.Path(repo_root).resolve()
     configs = []
     for path in sorted(pathlib.Path(p).resolve() for p in config_paths):
         cfg = load_arm_config(path)
         assert_submission_ready(cfg, source=str(path))
+        try:
+            portable_path = path.relative_to(root).as_posix()
+        except ValueError:
+            portable_path = str(path)
         configs.append(
             {
                 "arm": cfg["arm"],
-                "path": str(path),
+                "path": portable_path,
                 "sha256": sha256_file(path),
             }
         )
-    state = git_state(repo_root)
+    state = git_state(root)
     if state["dirty"] and not allow_dirty:
         raise RuntimeError(
             "refusing to freeze a dirty worktree; commit the protocol first:\n"
             + "\n".join(state["dirty_paths"])
         )
     env_hash, env = environment_hash()
+    state["root"] = "."
     record = {
         "schema_version": 1,
         "protocol_id": protocol_id,
