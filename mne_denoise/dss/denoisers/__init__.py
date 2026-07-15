@@ -40,7 +40,6 @@ __all__ = [
     # Linear biases
     "AverageBias",
     "BandpassBias",
-    "BandpassBias",
     "LineNoiseBias",
     "PeakFilterBias",
     "CombFilterBias",

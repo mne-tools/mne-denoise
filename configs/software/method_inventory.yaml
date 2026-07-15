@@ -1,0 +1,397 @@
+schema_version: 1
+inventory_id: neuroimage_0.1_method_inventory
+integration_commit: 40322136ba932d08b3616a319d60421772f9295f
+generated_from:
+  base_branch: origin/benchmark/compute-canada
+  base_commit: 0abb149
+  integration_branch: codex/neuroimage-0.1-integration
+status_definitions:
+  released_estimator: public API inherited from the working package baseline
+  release_candidate_estimator: public API integrated for the 0.1 release candidate
+  experimental_estimator: public experimental API; no release-grade efficacy claim
+  native_operator: public target or contrast used by a native estimator
+  benchmark_comparator: evaluation-layer implementation, not a package efficacy claim
+  license_isolated_comparator: comparator excluded from the BSD wheel
+evidence_tiers:
+  E0: implementation only
+  E1: unit and invariant tests
+  E2: external numerical, behavioral, or subspace parity evidence
+  E3-dev: intended-regime development evidence; frozen rerun not yet complete
+  E4: completed frozen intended-regime validation
+
+methods:
+  - id: dss
+    family: target_aware_dss
+    status: released_estimator
+    target: covariance structure specified by a linear bias operator
+    information_access: blind or target-informed, depending on bias
+    import_path: mne_denoise.dss.DSS
+    source: origin/benchmark/compute-canada@0abb149 plus integration adaptations@40322136
+    fit_scope: transferable fit or recording-local segmented fit
+    fitted_state: [filters_, patterns_, eigenvalues_, n_selected_, segment_results_]
+    invariant_tests: [tests/test_linear_dss.py, tests/test_adaptive_dss.py, tests/test_multimodal_whitening.py]
+    external_parity: MATLAB DSS fixtures exist; runtime-dependent tests remain explicit skips when MATLAB is unavailable
+    intended_benchmark: ERP CORE N170, ds000117 M170, Tsinghua/BETA SSVEP, line and artifact regimes
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: iterative_dss
+    family: target_aware_dss
+    status: released_estimator
+    target: nonlinear source contrast
+    information_access: blind, contrast-selected
+    import_path: mne_denoise.dss.IterativeDSS
+    source: origin/benchmark/compute-canada@0abb149 plus symmetric-orientation fix@40322136
+    fit_scope: transferable fit
+    fitted_state: [filters_, patterns_, components_, scores_]
+    invariant_tests: [tests/test_iterative_dss.py, tests/denoisers]
+    external_parity: sign/permutation-aware source validation; no universal waveform identity claim
+    intended_benchmark: expanded factorial BSS known-source recovery
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: zapline
+    family: line_periodic
+    status: released_estimator
+    target: narrowband spatial line field
+    information_access: blind target-frequency informed
+    import_path: mne_denoise.zapline.ZapLine
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: recording-local
+    fitted_state: [filters_, patterns_, eigenvalues_, n_removed_]
+    invariant_tests: [tests/test_zapline.py, tests/parity/test_zapline_parity.py]
+    external_parity: MATLAB fixture tests are retained and explicitly skip without MATLAB
+    intended_benchmark: known-field line injection and multi-system real line noise
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: zapline_plus
+    family: line_periodic
+    status: released_estimator
+    target: nonstationary narrowband spatial line field
+    information_access: blind with automatic frequency and segment selection
+    import_path: mne_denoise.zapline.ZapLine
+    configuration: {adaptive: true}
+    source: origin/benchmark/compute-canada@0abb149 and adaptive segmentation from origin/feature/adaptive-dss@c7fab2f
+    fit_scope: recording-local segmented fit
+    fitted_state: [segment_results_, detected_freqs_, qa_results_]
+    invariant_tests: [tests/test_zapline_adaptive.py, tests/test_adaptive_dss.py]
+    external_parity: behavioral validation against published ZapLine-plus operating logic
+    intended_benchmark: line strength, spatial rank, harmonic, amplitude-drift, and frequency-drift campaign
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: asr_standard_and_riemannian
+    family: asr
+    status: released_estimator
+    target: transient high-variance covariance excursions
+    information_access: clean-calibration informed
+    import_path: mne_denoise.asr.ASR
+    configurations: [standard, riemannian, riemannian_windowed]
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: calibration fit followed by transferable or streaming transform
+    fitted_state: [state_, calibration_mask_, thresholds_, reconstruction_matrices_]
+    invariant_tests: [tests/asr/test_core.py, tests/parity/test_asr_parity.py, tests/parity/test_riemannian_windowed_parity.py]
+    external_parity: reference fixtures are mandatory archival work; missing fixtures remain explicit skips
+    intended_benchmark: Klados paired data and locked transient-artifact simulation
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: adaptive_asr
+    family: asr
+    status: released_estimator
+    target: transient covariance excursions under baseline drift
+    information_access: calibration plus adaptive state updates
+    import_path: mne_denoise.asr.AdaptiveASR
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: stateful adaptive fit and partial_fit
+    fitted_state: [state_, learner_, window_diagnostics_]
+    invariant_tests: [tests/asr/test_adaptive.py, tests/parity/test_aasr_parity.py]
+    external_parity: MATLAB fixture tests retained; archival fixtures still required
+    intended_benchmark: locked ASR core and sensitivity campaigns
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: juggler_asr
+    family: asr
+    status: released_estimator
+    target: transient covariance excursions with unstable clean-window availability
+    information_access: data-driven reference-window selection
+    import_path: mne_denoise.asr.JugglerASR
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: recording-local calibration selection and transform
+    fitted_state: [state_, reference_mask_, selection_diagnostics_]
+    invariant_tests: [tests/asr/test_juggler.py]
+    external_parity: algorithmic behavior tests; no external waveform-identity fixture yet
+    intended_benchmark: locked ASR calibration-contamination sensitivity
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: guided_asr
+    family: asr
+    status: experimental_estimator
+    target: transient covariance excursions softly weighted by DSS target energy
+    information_access: calibration plus user-specified target biases
+    import_path: mne_denoise.experimental.GuidedASR
+    source: origin/feature/guided-asr@ea7256e adapted at 40322136
+    fit_scope: calibration fit and adaptive transform
+    fitted_state: [state_, component_weights_, bias_energy_]
+    invariant_tests: [tests/test_guided_asr.py]
+    external_parity: none; method is explicitly experimental
+    intended_benchmark: locked ASR intended-regime simulation
+    evidence_tier: E1
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: icanclean
+    family: reference_aware
+    status: released_estimator
+    target: artifact subspace shared with reference channels
+    information_access: explicit artifact reference
+    import_path: mne_denoise.icanclean.ICanClean
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: window-local or recording-local CCA
+    fitted_state: [mixing_, unmixing_, canonical_correlations_, removed_components_]
+    invariant_tests: [tests/test_icanclean.py, tests/benchmarks/test_ds004784_phantom.py]
+    external_parity: intended public phantom protocol implemented; exact repeat-2 results remain locked
+    intended_benchmark: ds004784 six-condition repeat-2 replication and reference-leakage simulation
+    evidence_tier: E3-dev
+    benchmark_state: repeat1_development_complete_repeat2_locked
+    optional_dependencies: []
+    license: BSD-3-Clause; patent and institutional implementation determination required before submission
+
+  - id: autocca
+    family: reference_aware
+    status: release_candidate_estimator
+    target: autocorrelated components inferred without external reference
+    information_access: blind temporal structure
+    import_path: mne_denoise.cca.AutoCCA
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: recording-local
+    fitted_state: [weights_, canonical_correlations_, keep_mask_]
+    invariant_tests: [tests/test_cca.py]
+    external_parity: behavior tests only
+    intended_benchmark: muscle/movement and ds004784 information-tier comparison
+    evidence_tier: E3-dev
+    benchmark_state: development_results_available_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: mwf
+    family: mask_informed_spatial
+    status: release_candidate_estimator
+    target: covariance contrast between artifact and clean masks
+    information_access: artifact-mask informed
+    import_path: mne_denoise.mwf.MWF
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: recording-local mask-conditioned operator
+    fitted_state: [artifact_covariance_, clean_covariance_, operator_]
+    invariant_tests: [tests/test_mwf.py, tests/benchmarks/test_comparators.py]
+    external_parity: formula and behavior tests; no external waveform fixture
+    intended_benchmark: masked broadband, ASR oracle-mask, and ds004784 arms
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: sound
+    family: forward_model
+    status: release_candidate_estimator
+    target: sensor noise inconsistent with a forward model
+    information_access: lead-field informed
+    import_path: mne_denoise.SOUND
+    source: origin/feat/sound-sspsir-issue-32@df85388 integrated at 40322136
+    fit_scope: recording-local iterative operator
+    fitted_state: [operator_, noise_variances_, leadfield_, n_iter_]
+    invariant_tests: [tests/test_sound.py, tests/test_sound_sspsir_golden.py]
+    external_parity: golden outputs from MATLAB-parity-validated branch fixtures
+    intended_benchmark: EEG/MEG forward-model sensor-noise simulation
+    evidence_tier: E2
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: ssp_sir
+    family: forward_model
+    status: release_candidate_estimator
+    target: known artifact subspace with source-informed reconstruction
+    information_access: artifact mask/subspace plus lead field
+    import_path: mne_denoise.SSPSIR
+    source: origin/feat/sound-sspsir-issue-32@df85388 integrated at 40322136
+    fit_scope: recording-local projector and inverse reconstruction
+    fitted_state: [projector_, sir_operator_, artifact_basis_, rank_]
+    invariant_tests: [tests/test_sspsir.py, tests/test_sound_sspsir_golden.py]
+    external_parity: golden outputs from MATLAB-parity-validated branch fixtures
+    intended_benchmark: TMS-like and known-subspace forward-model simulation
+    evidence_tier: E2
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: spectrum_interpolation
+    family: line_periodic
+    status: release_candidate_estimator
+    target: narrowband spectral bins without spatial modeling
+    information_access: target-frequency informed
+    import_path: mne_denoise.SpectrumInterpolation
+    source: origin/feat/spectrum-interpolation-issue-30@b4b74e7 integrated at 40322136
+    fit_scope: inherently recording-local transform
+    fitted_state: [frequencies_, edited_bins_]
+    invariant_tests: [tests/test_spectrum_interpolation.py]
+    external_parity: FieldTrip-derived behavioral and edge-case tests
+    intended_benchmark: known-field and stable-spatial-line comparisons
+    evidence_tier: E2
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: continuous_dss
+    family: adaptive_streaming
+    status: experimental_estimator
+    target: blockwise target covariance under temporal drift
+    information_access: causal target-informed streaming state
+    import_path: mne_denoise.experimental.ContinuousDSS
+    source: origin/feature/continuous-dss@7ebc46f adapted at 40322136
+    fit_scope: stateful partial_fit and block transform
+    fitted_state: [filters_, patterns_, covariance_, target_covariance_, state_]
+    invariant_tests: [tests/test_continuous_dss.py, tests/benchmarks/test_streaming_metrics.py]
+    external_parity: offline subspace and replay invariants; no external implementation
+    intended_benchmark: stationary/change/drift/init/missing/reordered replay
+    evidence_tier: E1
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: ssa
+    family: temporal_decomposition
+    status: release_candidate_estimator
+    target: periodic or slowly varying univariate structure
+    information_access: blind temporal structure
+    import_path: mne_denoise.ssa.SSA
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: channel-local transform
+    fitted_state: [selected_eigentriples_]
+    invariant_tests: [tests/test_ssa.py]
+    external_parity: behavior tests only
+    intended_benchmark: periodic, chirped, and drifting temporal simulation
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: []
+    license: BSD-3-Clause
+
+  - id: emd_eemd
+    family: temporal_decomposition
+    status: release_candidate_estimator
+    target: IMF-resolvable temporal contamination
+    information_access: blind temporal structure
+    import_path: mne_denoise.emd.EMDDenoiser
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: channel-local transform
+    fitted_state: [imfs_, selected_imfs_]
+    invariant_tests: [tests/test_emd.py]
+    external_parity: behavior tests only
+    intended_benchmark: transient, drift, chirp, and broadband-muscle simulation
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: [EMD-signal]
+    license: BSD-3-Clause
+
+  - id: wavelet_and_wica
+    family: time_frequency
+    status: release_candidate_estimator
+    target: transient time-frequency contamination
+    information_access: blind or ICA-component informed
+    import_path: mne_denoise.wavelet.WaveletICA
+    related_paths: [mne_denoise.wavelet.wavelet_denoise, mne_denoise.wavelet.wavelet_denoise_multichannel]
+    source: origin/benchmark/compute-canada@0abb149
+    fit_scope: recording-local transform
+    fitted_state: [ica_, component_artifacts_, thresholds_]
+    invariant_tests: [tests/test_wavelet.py]
+    external_parity: behavior tests only
+    intended_benchmark: transient and broadband-muscle time-frequency simulation
+    evidence_tier: E3-dev
+    benchmark_state: frozen_protocol_ready_rerun_required
+    optional_dependencies: [PyWavelets]
+    license: BSD-3-Clause
+
+operators:
+  linear_biases:
+    - {id: average_bias, import_path: mne_denoise.dss.AverageBias, target: trial/event reproducibility, status: native_operator, evidence_tier: E3-dev}
+    - {id: bandpass_bias, import_path: mne_denoise.dss.BandpassBias, target: band-limited power, status: native_operator, evidence_tier: E3-dev}
+    - {id: line_noise_bias, import_path: mne_denoise.dss.LineNoiseBias, target: line-frequency power, status: native_operator, evidence_tier: E3-dev}
+    - {id: peak_filter_bias, import_path: mne_denoise.dss.PeakFilterBias, target: isolated spectral peak, status: native_operator, evidence_tier: E1}
+    - {id: comb_filter_bias, import_path: mne_denoise.dss.CombFilterBias, target: periodic fundamental and harmonics, status: native_operator, evidence_tier: E3-dev}
+    - {id: cycle_average_bias, import_path: mne_denoise.dss.CycleAverageBias, target: cycle-locked reproducibility, status: native_operator, evidence_tier: E3-dev}
+    - {id: reference_bias, import_path: mne_denoise.dss.ReferenceBias, target: reference-predictable covariance, status: experimental_estimator, evidence_tier: E1, source: integration@40322136}
+    - {id: spectrogram_bias, import_path: mne_denoise.dss.SpectrogramBias, target: time-frequency mask, status: native_operator, evidence_tier: E1}
+    - {id: time_shift_bias, import_path: mne_denoise.dss.TimeShiftBias, target: time-shift predictability, status: native_operator, evidence_tier: E1, deprecated: true}
+    - {id: smoothing_bias, import_path: mne_denoise.dss.SmoothingBias, target: slow temporal structure, status: native_operator, evidence_tier: E1, deprecated: true}
+  nonlinear_contrasts:
+    - {id: tanh_mask, import_path: mne_denoise.dss.TanhMaskDenoiser, target: super-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: robust_tanh, import_path: mne_denoise.dss.RobustTanhDenoiser, target: robust super-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: gauss, import_path: mne_denoise.dss.GaussDenoiser, target: non-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: skew, import_path: mne_denoise.dss.SkewDenoiser, target: asymmetric sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: smooth_tanh, import_path: mne_denoise.dss.SmoothTanhDenoiser, target: smoothly saturated super-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: kurtosis, import_path: mne_denoise.dss.KurtosisDenoiser, target: kurtotic sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: wiener_mask, import_path: mne_denoise.dss.WienerMaskDenoiser, target: Wiener-estimated source mask, status: native_operator, evidence_tier: E1}
+    - {id: variance_mask, import_path: mne_denoise.dss.VarianceMaskDenoiser, target: high-variance source intervals, status: native_operator, evidence_tier: E1}
+    - {id: dct, import_path: mne_denoise.dss.DCTDenoiser, target: sparse DCT structure, status: native_operator, evidence_tier: E3-dev}
+    - {id: quasi_periodic, import_path: mne_denoise.dss.QuasiPeriodicDenoiser, target: quasi-periodic sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: spectrogram, import_path: mne_denoise.dss.SpectrogramDenoiser, target: sparse time-frequency sources, status: native_operator, evidence_tier: E3-dev}
+  convenience_variants:
+    - {id: ssvep_dss, import_path: mne_denoise.dss.ssvep_dss, status: native_operator, evidence_tier: E3-dev}
+    - {id: narrowband_dss, import_path: mne_denoise.dss.narrowband_dss, status: native_operator, evidence_tier: E1}
+    - {id: time_shift_dss, import_path: mne_denoise.dss.time_shift_dss, status: native_operator, evidence_tier: E1}
+    - {id: smooth_dss, import_path: mne_denoise.dss.smooth_dss, status: native_operator, evidence_tier: E1}
+
+benchmark_comparators:
+  registry_path: mne_denoise.benchmarks.adapters
+  ids:
+    - {id: none, status: benchmark_comparator, license: BSD-compatible}
+    - {id: pca_reconstruct, status: benchmark_comparator, license: BSD-compatible}
+    - {id: tspca, status: benchmark_comparator, license: BSD-compatible}
+    - {id: regression, status: benchmark_comparator, license: BSD-compatible}
+    - {id: ssp_eog, status: benchmark_comparator, license: BSD-compatible}
+    - {id: eog_dss, status: benchmark_comparator, license: BSD-compatible}
+    - {id: ica_rank_matched, status: benchmark_comparator, license: BSD-compatible}
+    - {id: ica_iclabel_rejection, status: benchmark_comparator, license: optional_dependency_review_required}
+    - {id: xdawn, status: benchmark_comparator, license: BSD-compatible}
+    - {id: rank_matched_pca, status: benchmark_comparator, license: BSD-compatible}
+    - {id: notch, status: benchmark_comparator, license: BSD-compatible}
+    - {id: non_spatial_line, status: benchmark_comparator, license: BSD-compatible}
+    - {id: sss, status: benchmark_comparator, license: BSD-compatible}
+    - {id: tsss, status: benchmark_comparator, license: BSD-compatible}
+    - {id: eemd_cca, status: benchmark_comparator, license: optional_dependency_review_required}
+    - {id: adjust, status: benchmark_comparator, license: BSD-3-Clause}
+    - {id: mara, status: license_isolated_comparator, license: GPL-derived code excluded from BSD wheel, activation: MNE_DENOISE_ENABLE_GPL_MARA=1}
+  bss_external:
+    - {id: fastica, status: benchmark_comparator}
+    - {id: infomax, status: benchmark_comparator}
+    - {id: picard, status: benchmark_comparator}
+    - {id: jade, status: benchmark_comparator}
+    - {id: sobi, status: benchmark_comparator}
+    - {id: amica, status: benchmark_comparator}
+  ssvep_external:
+    - {id: fbcca, status: benchmark_comparator}
+    - {id: etrca, status: benchmark_comparator}
+
+submission_blockers:
+  - Complete all benchmark entries currently marked frozen_protocol_ready_rerun_required.
+  - Generate and archive missing MATLAB/external parity fixtures.
+  - Obtain and document the iCanClean patent and implementation-authorization determination.
+  - Assign the final 0.1.0 release tag, archive DOI, environment lock, and dependency-license inventory.
