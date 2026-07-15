@@ -22,6 +22,7 @@ from .denoisers import (
     NonlinearDenoiser,
     PeakFilterBias,
     QuasiPeriodicDenoiser,
+    ReferenceBias,
     RobustTanhDenoiser,
     SkewDenoiser,
     SmoothingBias,
@@ -40,6 +41,13 @@ from .nonlinear import IterativeDSS, iterative_dss, iterative_dss_one
 
 # Utils (exposed for convenience if needed)
 from .utils import convergence, whitening
+from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
+from .utils.selection import (
+    auto_select_components,
+    eigenvalue_ratio_selection,
+    iterative_outlier_removal,
+    max_gap_selection,
+)
 
 # Variants (Modules)
 from .variants import narrowband, ssvep, tsr
@@ -87,6 +95,13 @@ __all__ = [
     "SpectrogramBias",
     "SpectrogramDenoiser",
     "QuasiPeriodicDenoiser",
+    "ReferenceBias",
+    "CovarianceSegmenter",
+    "FixedWindowSegmenter",
+    "auto_select_components",
+    "eigenvalue_ratio_selection",
+    "iterative_outlier_removal",
+    "max_gap_selection",
     "KurtosisDenoiser",
     "SmoothTanhDenoiser",
     "beta_tanh",

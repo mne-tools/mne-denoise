@@ -9,6 +9,9 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 
 from __future__ import annotations
 
+import warnings
+from typing import Any
+
 import numpy as np
 
 
@@ -122,6 +125,42 @@ def compute_covariance(
     cov = (cov + cov.T) / 2
 
     return cov
+
+
+def compute_evoked_covariance(
+    evoked: Any,
+    method: str = "empirical",
+    **kwargs: Any,
+) -> Any:
+    """Compute an MNE sensor covariance from an averaged response.
+
+    Time samples are observations. Wrapping the response as one epoch lets us
+    use MNE's covariance estimators while ``keep_sample_mean=True`` prevents
+    subtraction of the only epoch (which would otherwise yield zero data).
+    """
+    import mne
+
+    data = np.asarray(evoked.data)
+    if data.ndim != 2:
+        raise ValueError(
+            f"Evoked data must be 2D (n_channels, n_times), got {data.ndim}D."
+        )
+    if data.shape[1] < 2:
+        raise ValueError(
+            "Evoked must have at least 2 time samples to estimate a covariance."
+        )
+    epochs = mne.EpochsArray(
+        data[np.newaxis], evoked.info, tmin=float(evoked.times[0]), verbose=False
+    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="Epochs are not baseline corrected",
+            category=RuntimeWarning,
+        )
+        return mne.compute_covariance(
+            epochs, method=method, keep_sample_mean=True, **kwargs
+        )
 
 
 def _ledoit_wolf_shrinkage(data: np.ndarray) -> float:

@@ -28,13 +28,32 @@ icanclean : Reference-Based Artifact Removal
     out based on dedicated reference channels (e.g., EOG or EMG).
 """
 
-from . import asr, dss, icanclean, zapline
+from . import (
+    asr,
+    dss,
+    experimental,
+    icanclean,
+    sound,
+    spectrum_interpolation,
+    sspsir,
+    zapline,
+)
+from .sound import SOUND
+from .spectrum_interpolation import SpectrumInterpolation
+from .sspsir import SSPSIR
 
 __version__ = "0.0.1"
 
 __all__ = [
     "asr",
     "dss",
+    "experimental",
     "icanclean",
+    "sound",
+    "spectrum_interpolation",
+    "sspsir",
     "zapline",
+    "SOUND",
+    "SpectrumInterpolation",
+    "SSPSIR",
 ]

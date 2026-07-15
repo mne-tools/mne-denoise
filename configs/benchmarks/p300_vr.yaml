@@ -35,3 +35,4 @@ baseline_preprocessing:
   excluded_from_baseline: [dss, pca, ica]
 
 sweep: {dss: {param: n_components, grid: [2, 4, 6, 8]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

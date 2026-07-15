@@ -3,14 +3,14 @@
 # removed and are FORBIDDEN for the line-noise arm.
 arm: line_ds000117
 runner: line_noise
-status: not_started
+status: protocol_frozen_v1
 
 dataset:
   id: ds000117
   project_relative_path: openneuro/ds000117
-  version: pending
+  version: openneuro_snapshot_manifest
   expected_subjects: 19         # 16 = published subset; use 19 unless raw-QC excludes
-  subjects: null                # glob the staged sub-* dirs (17 present); was a 'pending' placeholder string
+  subjects: manifest_subjects   # exact usable subject list is frozen in the dataset manifest
   excluded_subjects: []
   channel_types: [mag, grad]    # denoise mag and grad SEPARATELY; EEG is a separate arm
   raw_or_processed: raw
@@ -23,8 +23,8 @@ meg_line_noise:
   cleaning_order: clean_raw_then_optional_sss   # PRIMARY: operate on raw (full rank), report rank
   sss_applied: false                            # primary arm; sensitivity branch below
   sensitivity_branch: {sss_applied: true, line_frequency_removal_in_sss: false}
-  rank_before: pending
-  rank_after: pending
+  rank_before: recorded_per_subject
+  rank_after: recorded_per_subject
   sensor_types_fit_separately: true
 
 methods_under_test: [zapline, zapline_plus]
@@ -38,8 +38,8 @@ sweep: {zapline: {param: n_remove, grid: [1, 2, 3, 4, 6, 8]}}
 
 psd_spec:
   estimator: welch
-  nperseg: pending
-  sideband_hz: pending
+  nperseg: 4400
+  sideband_hz: [1.0, 3.0]
   channel_aggregation: [per_sensor_type, per_channel_distribution]
 
 metrics:
@@ -49,12 +49,12 @@ metrics:
 preservation_reference:
   source: held_out_low_artifact_trials
   independent_from_method_fit: true
-equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+equivalence_margin: {value: 0.10, scale: neighboring_band_relative_power, direction: non_inferiority, justification: ten_percent_off_target_power_change_fixed_before_rerun}
 
 unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays]
-  save_cleaned: {mode: selected_subjects, subjects: pending}
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-08, sub-16]}
 
 baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
   source: "Wakeman & Henson 2015 (10.1038/sdata.2015.1)"

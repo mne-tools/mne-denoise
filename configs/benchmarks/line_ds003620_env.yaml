@@ -38,3 +38,4 @@ baseline_preprocessing:
                                    # ZapLine, leaving only a weak spatial residual to act on.
   branch_point: scalp_eeg_pre_line_removal
   excluded_from_baseline: [average_reference, notch, zapline]
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

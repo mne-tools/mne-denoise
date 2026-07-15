@@ -2,15 +2,15 @@
 # Reference-aware vs reference-free reported in SEPARATE tiers. Implemented LAST (most complexity).
 arm: muscle_ds004505
 runner: muscle
-status: not_started
+status: protocol_frozen_v1
 
 dataset:
   id: ds004505
   project_relative_path: openneuro/ds004505
-  version: pending
-  subjects: pending            # 25 available
+  version: openneuro_snapshot_verified_2026-06-21
+  subjects: manifest_subjects  # 25 available
   channel_types: [eeg, noise_layer, neck_emg]
-  reference_channels: {noise_layer: pending, neck_emg: pending}
+  reference_channels: {noise_layer: 120_channels_named_N_prefix, neck_emg: 8_channels_typed_EMG}
 
 tiers:                         # do NOT rank free vs reference-aware together
   reference_free: [none, ica_fixed, asr, rasr_windowed, autocca, wavelet_threshold, mwf]   # AMICA optional; autocca = BSS-CCA (De Clercq 2006); wavelet_threshold = literature-standard muscle method; mwf = multi-channel Wiener filter (Somers 2018, the RELAX-pipeline core), fast spatial filter. NB: emd/eemd excluded here -- per-channel EMD on 120ch exceeds the wall-clock budget (timed out at 45min/subject on Fir); EMD is reserved for the low-density/wearable arm (few channels, its native regime).
@@ -18,10 +18,11 @@ tiers:                         # do NOT rank free vs reference-aware together
 compact_asr:                   # the minimum ASR sub-analysis lives here
   methods: [asr_euclidean, rasr_windowed]
   cutoffs: [10, 20, 30]
-  calibration: {source: pending, duration_s: pending, contamination_fraction: pending,
-                external_or_internal: pending, shared_across_methods: true, excluded_from_eval: true}
+  calibration: {source: lowest_variance_windows_from_first_40_percent, duration_s: 60,
+                contamination_fraction: 0.05, external_or_internal: internal_training_split,
+                shared_across_methods: true, excluded_from_eval: true}
   compare_at: matched_attenuation
-sweep: {asr: {param: cutoff, grid: [10, 20, 30]}, icanclean: {param: r2_threshold, grid: pending},
+sweep: {asr: {param: cutoff, grid: [10, 20, 30]}, icanclean: {param: threshold, grid: [0.50, 0.70, 0.85, 0.95]},
         autocca: {param: rho_threshold, grid: [0.8, 0.9, 0.95]}}   # expose autoCCA autocorrelation-threshold sensitivity
 
 reference_fairness:            # match information across reference-aware methods
@@ -33,10 +34,10 @@ anti_circularity:              # fit and evaluate coupling on DIFFERENT referenc
   cross_fit: blockwise
 
 downstream_eval_ica:           # identical across cleaned datasets (else differences are the ICA's, not the cleaner's)
-  algorithm: pending
-  n_components: pending
-  hp_hz: pending
-  duration_s: pending
+  algorithm: extended_infomax_plus_iclabel
+  n_components: data_rank_minus_one
+  hp_hz: 1.0
+  duration_s: 300
   seed: 42
   record: iclabel_probability_distributions   # not only thresholded counts
 
@@ -46,24 +47,24 @@ metrics:
   emg_attenuation_hierarchy: [hf_zero_lag_coupling, noise_layer_coupling, independent_neck_emg_coupling, muscle_spatial_topography, phantom_ground_truth]
   preserve_separately: [low_freq_motor_task_effects, beta_erd, task_topography, plausible_non_zero_lag_coupling]
   secondary: [iclabel_brain_count, dipole_residual_variance, effective_rank_change, retained_variance, runtime]
-  negative_control: {band: pending, roi: pending}
+  negative_control: {band: [1, 4], roi: [C3, Cz, C4]}
 preservation:
-  contrast: pending_feasibility   # freeze ONE after ds004505 feasibility (no fallback list in final)
-  frequency_band: pending_feasibility
-  roi_channels: pending_feasibility
-  time_window: pending_feasibility
-  baseline: pending_feasibility
-  direction_expected: pending_feasibility
-  equivalence_margin: pending_feasibility
+  contrast: alpha_erd_high_motion_vs_low_motion_windows
+  frequency_band: [8, 12]
+  roi_channels: manifest_sensorimotor_roi
+  time_window: two_second_nonoverlapping_windows
+  baseline: lowest_50_percent_independent_neck_emg_envelope
+  direction_expected: negative_erd
+  equivalence_margin: {value: 0.5, scale: within_subject_raw_split_sd}
 preservation_reference:
   source: low_motion_intervals_and_conservative_rejection_contrast
   independent_from_method_fit: true
 
-ip_disclosure: {icanclean_patent: "WO 2022/061322", python_impl_authorization: pending, license_compatibility: pending}
+ip_disclosure: {icanclean_patent: "WO 2022/061322 and US20230363718A1", python_impl_authorization: public_reimplementation_with_explicit_patent_notice, license_compatibility: institutional_review_required_before_release}
 unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays]
-  save_cleaned: {mode: selected_subjects, subjects: pending}
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-13, sub-25]}
 
 baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
   source: "Studnicki 2024 DiB (10.1016/j.dib.2023.110024) + 2022 Sensors (10.3390/s22155867)"

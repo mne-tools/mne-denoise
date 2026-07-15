@@ -25,3 +25,4 @@ metrics:
 
 unit_of_inference: subject
 seeds: {global: 42}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

@@ -1,5 +1,21 @@
 # mne-denoise CPU benchmarking on Fir (Compute Canada)
 
+## Submission controller
+
+Full paper runs must pass the configuration and provenance gate. The older generic
+registry smoke test remains useful for environment diagnosis, but it is not a paper
+benchmark and must never substitute synthetic data when a real dataset is missing.
+
+```bash
+python -m mne_denoise.benchmarks validate configs/benchmarks/<arm>.yaml
+python scripts/cc/submission_controller.py preflight \
+    --config configs/benchmarks/<arm>.yaml
+```
+
+Every array element is wrapped by `submission_controller.py run`, which writes an
+atomic `terminal_status.json` before computation and updates it on success or failure.
+The wrapper requires a dataset manifest, a clean Git commit, and a frozen config.
+
 Scaffolding to run the mne-denoise denoisers (ASR, ZapLine, DSS, ICanClean) on the
 **Fir** cluster, **CPU-only**, charged to **`rrg-kjerbi`**. The actual benchmark
 metrics/datasets are wired in a follow-up step; what's here makes the branch

@@ -48,6 +48,7 @@ from ._reconstruction import process_asr
 from ._windowing import compute_clean_window_mask
 from .adaptive import AdaptiveASR
 from .core import ASR
+from .guided import GuidedASR
 from .juggler import JugglerASR, select_juggler_reference_samples
 
 __all__ = [
@@ -55,6 +56,7 @@ __all__ = [
     "ASR",
     "AdaptiveASR",
     "JugglerASR",
+    "GuidedASR",
     # Core Functions
     "calibrate_asr",
     "process_asr",

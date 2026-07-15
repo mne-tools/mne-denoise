@@ -578,8 +578,13 @@ def _iterative_dss_symmetric(
         # W: (n_comp, n_white), X: (n_white, n_times) -> S: (n_comp, n_times)
         S = W @ X_whitened
 
-        # 2. Apply denoiser (vectorized)
-        S_denoised = denoiser(S)
+        # 2. Apply the nonlinear operator independently to each component.
+        # NonlinearDenoiser's documented 2-D convention is
+        # (n_times, n_epochs), whereas S is (n_components, n_times). Passing
+        # S directly therefore makes stateful/masking operators interpret time
+        # samples as epochs and is both numerically wrong and prohibitively
+        # slow. Component-wise application also matches the deflation path.
+        S_denoised = np.vstack([np.asarray(denoiser(source)) for source in S])
 
         # Apply alpha
         if alpha_func is not None:

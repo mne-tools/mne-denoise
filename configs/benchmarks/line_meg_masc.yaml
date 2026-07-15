@@ -41,3 +41,4 @@ baseline_preprocessing:
   excluded_from_baseline: [sss_maxfilter, notch, zapline]
 
 sweep: {zapline: {param: n_remove, grid: [1, 2, 4, 8, 16]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

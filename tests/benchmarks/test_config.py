@@ -10,17 +10,20 @@ CONFIG_DIR = pathlib.Path(__file__).resolve().parents[2] / "configs" / "benchmar
 ARMS = sorted(CONFIG_DIR.glob("*.yaml"))
 
 
-def test_config_dir_has_ten_arms():
-    assert len(ARMS) == 10
+def test_config_dir_has_benchmark_arms():
+    assert len(ARMS) >= 10
 
 
 @pytest.mark.parametrize("path", ARMS, ids=lambda p: p.stem)
-def test_skeletons_parse_and_are_not_submission_ready(path):
+def test_configs_parse(path):
     cfg = cfgmod.load_arm_config(path)
     assert cfg.get("arm") and cfg.get("runner")
-    issues = cfgmod.validate_for_submission(cfg)
-    # P0 skeletons intentionally carry pending/pending_feasibility placeholders.
-    assert issues, f"{path.name} unexpectedly looks submission-ready"
+
+
+@pytest.mark.parametrize("path", ARMS, ids=lambda p: p.stem)
+def test_all_configs_are_submission_ready(path):
+    cfg = cfgmod.load_arm_config(path)
+    assert cfgmod.validate_for_submission(cfg) == []
 
 
 def test_validator_flags_each_placeholder_kind():
@@ -36,10 +39,13 @@ def test_validator_flags_each_placeholder_kind():
 
 def test_fully_specified_config_is_ready():
     good = {
-        "arm": "demo", "runner": "line_noise",
+        "arm": "demo", "runner": "line_noise", "status": "frozen",
         "dataset": {"id": "ds", "version": "1.0.0", "subjects": ["sub-01"]},
+        "methods_under_test": ["demo"],
         "metrics": {"primary_target": "R_f0", "primary_preservation": "sideband"},
         "equivalence_margin": {"value": 0.1, "direction": "non_inferiority"},
+        "unit_of_inference": "subject",
+        "storage": {"always_save": ["metrics"]},
     }
     assert cfgmod.is_submission_ready(good)
     assert cfgmod.validate_for_submission(good) == []

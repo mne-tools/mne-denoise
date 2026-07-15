@@ -287,12 +287,13 @@ def test_adjust_flags_and_removes_blink_ic():
     assert fp(res.cleaned.get_data()) < 0.5 * fp(data)               # frontal blink removed
 
 
-def test_mara_flags_and_removes_blink_ic():
+def test_mara_flags_and_removes_blink_ic(monkeypatch):
     # MARA (Winkler 2011): flag an ocular IC via the six-feature linear discriminant and remove it.
     # MARA keys on the current-density norm (leadfield-based, needs 10-20 names) and the spectral
     # shape, so the artifact IC is built as a realistic blink: a focal frontal-outlier topography
     # with a slow monophasic time course (high skewness, steep 1/f, ~no alpha-band power).
     pytest.importorskip("scipy")
+    monkeypatch.setenv("MNE_DENOISE_ENABLE_GPL_MARA", "1")
     import mne
 
     rng = np.random.default_rng(7)

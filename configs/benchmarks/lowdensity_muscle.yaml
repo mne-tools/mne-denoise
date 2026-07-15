@@ -2,7 +2,9 @@
 # decreasing channel counts and re-score the EMG-coupling endpoint. Tests the wearable-review
 # claim that source separation degrades at low channel counts while ASR/wavelet/autoCCA hold.
 arm: lowdensity_muscle
+runner: lowdensity
 base_arm: muscle
+status: protocol_frozen_v1
 channel_grid: [64, 32, 16, 8, 4]
 curve_metric: emg_coupling
 dataset:
@@ -11,6 +13,9 @@ dataset:
   subjects: [sub-01, sub-03, sub-05, sub-07, sub-09, sub-11]
 tiers:
   reference_free: [none, asr, rasr_windowed, ica_fixed, autocca, wavelet_threshold, mwf, eemd_cca]   # mwf = multi-channel Wiener filter (Somers 2018), fast spatial filter; eemd_cca heavy (EEMD/channel) -> only run at the lower channel counts
+metrics: {primary_target: independent_neck_emg_coupling, primary_preservation: alpha_erd, secondary: [rank_change, runtime]}
+unit_of_inference: subject
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
 baseline_preprocessing:
   steps:
     highpass_hz: 1.0

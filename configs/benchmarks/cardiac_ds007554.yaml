@@ -22,3 +22,4 @@ baseline_preprocessing:
   steps: {highpass_hz: 0.5}
   branch_point: scalp_eeg_pre_cardiac_removal
   excluded_from_baseline: [ica, ssp, cardiac_dss]
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

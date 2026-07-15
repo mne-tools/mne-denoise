@@ -277,6 +277,7 @@ class ASR(BaseEstimator, TransformerMixin):
         self.method = method
         self.experimental = experimental
         self.calibration = calibration
+        self.picks = picks
         self.calibration_window_length = calibration_window_length
         self.calibration_window_overlap = calibration_window_overlap
         self.ref_max_bad_channels = ref_max_bad_channels

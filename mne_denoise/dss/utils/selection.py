@@ -91,6 +91,31 @@ def auto_select_components(eigenvalues: np.ndarray, threshold: float = 3.0) -> i
     return iterative_outlier_removal(eigenvalues, threshold)
 
 
+def eigenvalue_ratio_selection(
+    eigenvalues: np.ndarray, ratio_threshold: float = 2.0
+) -> int:
+    """Return the count before the first consecutive eigenvalue-ratio drop."""
+    values = np.maximum(np.asarray(eigenvalues, dtype=float), 0.0)
+    if values.size < 2:
+        return int(values.size)
+    for index in range(values.size - 1):
+        if values[index + 1] < 1e-15:
+            return index + 1
+        if values[index] / values[index + 1] >= float(ratio_threshold):
+            return index + 1
+    return 0
+
+
+def max_gap_selection(eigenvalues: np.ndarray, min_ratio: float = 1.2) -> int:
+    """Return the count at the largest meaningful consecutive eigenvalue gap."""
+    values = np.maximum(np.asarray(eigenvalues, dtype=float), 0.0)
+    if values.size < 2:
+        return int(values.size)
+    ratios = values[:-1] / np.maximum(values[1:], 1e-15)
+    index = int(np.argmax(ratios))
+    return index + 1 if ratios[index] >= float(min_ratio) else 0
+
+
 def detect_eigenvalue_knee(
     scores: np.ndarray,
     rel_floor: float = 0.01,

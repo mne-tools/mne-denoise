@@ -105,6 +105,16 @@ Quality Assurance
    mne_denoise.qa.max_abs_change
    mne_denoise.qa.channel_variance_ratio
 
+Sensor, forward-model, and spectral estimators
+----------------------------------------------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.SOUND
+   mne_denoise.SSPSIR
+   mne_denoise.SpectrumInterpolation
+
 Visualization
 -------------
 .. autosummary::

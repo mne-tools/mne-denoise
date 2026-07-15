@@ -33,6 +33,7 @@ class MixtureReplicate:
     snr_db: float
     seed: int
     regime: str
+    source_regime: str = "mixed"
 
     @property
     def brain_idx(self) -> np.ndarray:
@@ -50,19 +51,32 @@ class MixtureReplicate:
 # ---------------------------------------------------------------------------
 # Source generation
 # ---------------------------------------------------------------------------
-def _nongaussian_sources(n: int, t: int, rng: np.random.Generator) -> np.ndarray:
-    """Mutually-independent, mostly non-Gaussian sources (ICA-identifiable)."""
+def _nongaussian_sources(
+    n: int,
+    t: int,
+    rng: np.random.Generator,
+    source_regime: str = "mixed",
+) -> np.ndarray:
+    """Mutually independent sources from one declared BSS regime."""
     src = np.empty((n, t))
     tt = np.arange(t)
     for i in range(n):
         kind = i % 4
+        if source_regime == "supergaussian_artifact":
+            kind = 0 if i % 2 == 0 else 3
+        elif source_regime == "periodic_subgaussian":
+            kind = 1
+        elif source_regime == "temporally_autocorrelated":
+            kind = 2
+        elif source_regime != "mixed":
+            raise ValueError(f"unknown source_regime {source_regime!r}")
         if kind == 0:                      # super-Gaussian (Laplace)
             src[i] = rng.laplace(size=t)
         elif kind == 1:                    # sinusoid (sub-Gaussian)
             f = 0.01 + 0.04 * rng.random()
             src[i] = np.sin(2 * np.pi * f * tt + rng.random() * 6.28)
         elif kind == 2:                    # AR(1) coloured noise
-            a = 0.7
+            a = 0.65 + 0.3 * rng.random()
             e = rng.standard_normal(t)
             s = np.zeros(t)
             for k in range(1, t):
@@ -79,15 +93,21 @@ def _nongaussian_sources(n: int, t: int, rng: np.random.Generator) -> np.ndarray
 
 
 def _well_conditioned_mixing(
-    n_channels: int, n_sources: int, rng: np.random.Generator, max_cond: float | None
+    n_channels: int,
+    n_sources: int,
+    rng: np.random.Generator,
+    max_cond: float | None,
+    min_cond: float = 1.0,
 ) -> np.ndarray:
-    A = rng.standard_normal((n_channels, n_sources))
-    if max_cond is not None:
-        for _ in range(100):
-            if np.linalg.cond(A) <= max_cond:
-                break
-            A = rng.standard_normal((n_channels, n_sources))
-    return A
+    if max_cond is None:
+        return rng.standard_normal((n_channels, n_sources))
+    if not 1.0 <= min_cond <= max_cond:
+        raise ValueError("condition-number bounds must satisfy 1 <= min <= max")
+    left, _ = np.linalg.qr(rng.standard_normal((n_channels, n_sources)))
+    right, _ = np.linalg.qr(rng.standard_normal((n_sources, n_sources)))
+    condition = float(np.exp(rng.uniform(np.log(min_cond), np.log(max_cond))))
+    singular_values = np.geomspace(1.0, 1.0 / condition, n_sources)
+    return left @ np.diag(singular_values) @ right.T
 
 
 def _ring_positions(n: int) -> np.ndarray:
@@ -128,23 +148,30 @@ def simulate_replicate(
     snr_db: float = 0.0,
     seed: int = 0,
     max_cond: float | None = 50.0,
+    min_cond: float = 1.0,
+    source_regime: str = "mixed",
+    source_seed: int | None = None,
+    mixing_seed: int | None = None,
 ) -> MixtureReplicate:
     """Build one replicate; train and test share the SAME mixing ``A``."""
-    rng = np.random.default_rng(seed)
+    mixing_rng = np.random.default_rng(seed if mixing_seed is None else mixing_seed)
+    source_rng = np.random.default_rng(seed if source_seed is None else source_seed)
     n_sources = n_brain + n_artifact
     if n_channels < n_sources:
         raise ValueError("n_channels must be >= n_brain + n_artifact")
     if regime == "generic":
-        A = _well_conditioned_mixing(n_channels, n_sources, rng, max_cond)
+        A = _well_conditioned_mixing(
+            n_channels, n_sources, mixing_rng, max_cond, min_cond=min_cond
+        )
     elif regime == "forward":
-        A = _forward_mixing(n_channels, n_brain, n_artifact, rng)
+        A = _forward_mixing(n_channels, n_brain, n_artifact, mixing_rng)
     else:
         raise ValueError(f"unknown regime {regime!r}")
 
     labels = np.array(["brain"] * n_brain + ["artifact"] * n_artifact)
 
     def _make(t: int) -> tuple[np.ndarray, np.ndarray]:
-        S = _nongaussian_sources(n_sources, t, rng)
+        S = _nongaussian_sources(n_sources, t, source_rng, source_regime)
         # scale artifacts vs brain to hit the target input SNR (sensor space)
         brain = labels == "brain"
         gain = 10 ** (-snr_db / 20.0)
@@ -154,7 +181,18 @@ def simulate_replicate(
 
     S_tr, X_tr = _make(n_train)
     S_te, X_te = _make(n_test)
-    return MixtureReplicate(A, S_tr, X_tr, S_te, X_te, labels, float(snr_db), int(seed), regime)
+    return MixtureReplicate(
+        A,
+        S_tr,
+        X_tr,
+        S_te,
+        X_te,
+        labels,
+        float(snr_db),
+        int(seed),
+        regime,
+        source_regime,
+    )
 
 
 def oracle_reconstruction(A: np.ndarray, S: np.ndarray, brain_idx: np.ndarray) -> np.ndarray:

@@ -1,13 +1,13 @@
 # Arm: line_ds003620 — real mobile EEG line noise (50 Hz). Skeleton (P0).
 arm: line_ds003620
 runner: line_noise
-status: not_started
+status: protocol_frozen_v1
 
 dataset:
   id: ds003620
   project_relative_path: openneuro/ds003620
-  version: pending
-  subjects: pending            # all available unless raw-QC excludes (blind to method)
+  version: 1.1.1
+  subjects: manifest_subjects  # all available unless raw-QC excludes (blind to method)
   excluded_subjects: []
   channel_types: [eeg]
   raw_or_processed: raw        # raw sample rate; do NOT use a 40-Hz-LP file
@@ -28,12 +28,12 @@ sweep:
 psd_spec:
   estimator: welch
   window: hann
-  nperseg: pending
-  noverlap: pending
-  resolution_hz: pending
-  center_bin_hz: pending
-  sideband_hz: pending
-  harmonics_hz: pending        # only < Nyquist
+  nperseg: 2000
+  noverlap: 1000
+  resolution_hz: 0.25
+  center_bin_hz: 0.5
+  sideband_hz: [1.0, 3.0]
+  harmonics_hz: [50, 100, 150, 200]  # only < Nyquist
   channel_aggregation: [geometric_mean, per_channel_distribution]
 
 guards:
@@ -52,7 +52,7 @@ preservation_reference:
   source: sideband_continuity_and_task_response
   construction: proxy (no clean ground truth on real data)
   independent_from_method_fit: true
-equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+equivalence_margin: {value: 0.10, scale: neighboring_band_relative_power, direction: non_inferiority, justification: ten_percent_off_target_power_change_fixed_before_rerun}
 
 unit_of_inference: subject
 storage:

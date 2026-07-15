@@ -875,6 +875,82 @@ class _MWF(Comparator):
         return ComparatorResult(cleaned=out, status="success", diagnostics={"hf_hz": self.hf_hz})
 
 
+class _SOUND(Comparator):
+    """``sound`` -- forward-consistency sensor-noise suppression."""
+
+    def __init__(self, lambda_: float = 0.1, n_iter: int = 5, **params: Any) -> None:
+        super().__init__(
+            ComparatorMeta("sound", fit_scope="train_only", deterministic=True),
+            lambda_=lambda_,
+            n_iter=n_iter,
+            **params,
+        )
+        self.lambda_ = float(lambda_)
+        self.n_iter = int(n_iter)
+
+    def _fit(self, train, ctx):
+        from mne_denoise.sound import SOUND
+
+        return SOUND(
+            lambda_=self.lambda_,
+            n_iter=self.n_iter,
+            forward=ctx.get("forward"),
+            random_state=ctx.get("seed", 0),
+        ).fit(train)
+
+    def _transform(self, evaluation, payload, ctx):
+        cleaned = payload.transform(evaluation)
+        return ComparatorResult(
+            cleaned=cleaned,
+            status="success",
+            diagnostics={
+                "sigmas": payload.sigmas_.tolist(),
+                "convergence": payload.convergence_.tolist(),
+            },
+        )
+
+
+class _SSPSIR(Comparator):
+    """``ssp_sir`` -- artifact projection plus source-informed reconstruction."""
+
+    def __init__(
+        self,
+        n_components: int | float = 2,
+        high_pass: float = 100.0,
+        **params: Any,
+    ) -> None:
+        super().__init__(
+            ComparatorMeta("ssp_sir", fit_scope="train_only", rank_reducing=True),
+            n_components=n_components,
+            high_pass=high_pass,
+            **params,
+        )
+        self.n_components = n_components
+        self.high_pass = float(high_pass)
+
+    def _fit(self, train, ctx):
+        from mne_denoise.sspsir import SSPSIR
+
+        sfreq = _sfreq(train, ctx)
+        high_pass = min(self.high_pass, sfreq / 2.0 - 1.0)
+        return SSPSIR(
+            n_components=self.n_components,
+            high_pass=high_pass,
+            forward=ctx.get("forward"),
+            art_window=ctx.get("artifact_window"),
+            sfreq=sfreq,
+        ).fit(train)
+
+    def _transform(self, evaluation, payload, ctx):
+        cleaned = payload.transform(evaluation)
+        return ComparatorResult(
+            cleaned=cleaned,
+            status="success",
+            rank_after=payload.M_,
+            diagnostics={"n_components": payload.n_components_, "M": payload.M_},
+        )
+
+
 class _ADJUST(Comparator):
     """``adjust`` -- ADJUST automatic ocular IC classifier (Mognon et al. 2011,
     10.1111/j.1469-8986.2010.01061.x): ICA on TRAIN, flag blink / horizontal-eye / discontinuity
@@ -924,6 +1000,14 @@ class _MARA(Comparator):
         self.n_components = n_components
 
     def _fit(self, train, ctx):
+        import os
+
+        if os.environ.get("MNE_DENOISE_ENABLE_GPL_MARA") != "1":
+            raise ImportError(
+                "MARA is a GPL-isolated benchmark comparator and is excluded from "
+                "the BSD package. Set MNE_DENOISE_ENABLE_GPL_MARA=1 only in a "
+                "separately licensed source-checkout environment."
+            )
         import mne
 
         from mne_denoise.mara import mara_bad_components
@@ -1024,5 +1108,7 @@ register("emd", lambda **p: _EMD(method="emd", **p))
 register("eemd", lambda **p: _EMD(method="eemd", **p))
 register("eemd_cca", lambda **p: _EEMDCCA(**p))
 register("mwf", lambda **p: _MWF(**p))
+register("sound", lambda **p: _SOUND(**p))
+register("ssp_sir", lambda **p: _SSPSIR(**p))
 register("adjust", lambda **p: _ADJUST(**p))
 register("mara", lambda **p: _MARA(**p))

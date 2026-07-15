@@ -1,18 +1,22 @@
 # Arm: ground_truth_generic — nonlinear BSS on random known-mixing simulation. Skeleton (P0).
 arm: ground_truth_generic
 runner: ground_truth
-status: not_started
+status: protocol_frozen_v1
 
 simulation:
   regime: generic_random_mixing
   source: eegdenoisenet            # clean EEG + EOG/EMG artifact segments → X = A·S
   project_relative_path: zenodo/eegdenoisenet
   cases: [eog_only, emg_only, eog_plus_emg]
-  snr_levels_db: pending
-  channel_counts: pending
-  source_counts: pending
-  mixing: {same_A_within_replicate: true, independent_A_across_replicates: true, min_condition_number: pending}
-  n_replicates: pending
+  source_regimes: [supergaussian_artifact, periodic_subgaussian, temporally_autocorrelated]
+  snr_levels_db: [-6, 0, 6]
+  channel_counts: [8, 16, 32]
+  source_counts: [8]
+  mixing: {same_A_within_replicate: true, independent_A_across_replicates: true, condition_number_range: [1.5, 10.0]}
+  n_replicates: 50
+  crossed_design: {source_sets: 10, mixing_matrices: 5}
+  n_train_samples: 4000
+  n_test_samples: 4000
   seeds: {global: 42}
   split: by_source_recording_before_segmenting     # no same-recording window leakage
   amplitude_normalization: preserve_ratios
@@ -20,15 +24,17 @@ simulation:
 
 source_matching:                  # solved on TRAIN, applied to test
   assignment: hungarian_on_train_similarity
-  sign_rule: pending
-  scale_rule: pending
+  sign_rule: positive_train_correlation
+  scale_rule: least_squares_coefficient_on_train
   uses: train_only
   report: [unmatched, duplicated, collapsed]
 
 methods_under_test:
   iterative_dss:
+    fit: {max_iter: 100, tolerance: 1.0e-6, random_initializations: 1}
     primary: {nonlinearity: tanh, orthogonalization: symmetric}
     ablations: [{nonlinearity: kurtosis}, {nonlinearity: wiener_mask}, {orthogonalization: deflation}]
+    implemented_contrasts: [tanh, robust_tanh, gauss, skew, smooth_tanh, kurtosis, wiener_mask, variance_mask, dct, quasi_periodic, spectrogram]
     report: [convergence_rate, iterations, seed_variation, n_inits]
 comparators:
   required: [pca, fastica, infomax, picard, sobi, jade, amica, oracle]   # sobi=2nd-order/time-lagged, jade=4th-order cumulant, amica=adaptive-mixture ICA (Palmer et al., GPU/JAX); oracle = A_brain·S_brain (upper bound, excluded from sig tests)
@@ -45,6 +51,7 @@ preservation_reference: {source: known_clean_neural_sources, independent_from_me
 unit_of_inference: nested_over_source_set_A_snr_artifact_seed   # mixed models; no window-level pseudoreplication
 storage:
   always_save: [metrics, model_json, recovered_sources_summary]
+  terminal_status: required_per_attempt
 
 baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
   source: "controlled simulation (EEGdenoiseNet sources, known random mixing A)"

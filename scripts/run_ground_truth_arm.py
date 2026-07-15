@@ -1,21 +1,15 @@
 #!/usr/bin/env python
-"""Ground-truth source-recovery runner (arms: ground_truth_generic, ground_truth_forward).
-
-Pure simulation. Each replicate has known clean sources S and mixing A. Methods unmix
-on TRAIN, are matched to the clean brain sources on TRAIN (Hungarian; sign/scale frozen
-on train), applied to TEST, and scored against known truth: RRMSE, clean-source
-correlation, SIR/SDR/SAR, Amari (square identifiable mixing only). No real data; the
-unit of inference is the replicate (nested over A x SNR x seed).
-
-    python scripts/run_ground_truth_arm.py --config configs/benchmarks/ground_truth_generic.yaml --synthetic
-    python scripts/run_ground_truth_arm.py --config ... --all
-"""
+"""Run frozen factorial BSS recovery on known sources and mixing matrices."""
 
 from __future__ import annotations
 
 import argparse
+import contextlib
+import csv
+import json
 import pathlib
 import sys
+from time import perf_counter
 
 import numpy as np
 import yaml
@@ -23,233 +17,488 @@ import yaml
 _REPO = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
-from mne_denoise.benchmarks import io as bio
 from mne_denoise.benchmarks import simulation as sim
+from mne_denoise.benchmarks.config import assert_submission_ready
+from mne_denoise.benchmarks.intended import locked_seed
+from mne_denoise.benchmarks.provenance import AttemptRecorder, build_run_record
 from mne_denoise.qa import ground_truth as gt
 
-BENCH = "ground_truth"
 
-
-def _load_cfg(path):
-    with open(path) as f:
-        return yaml.safe_load(f)
-
-
-def _rjd(A, eps=1e-12, maxiter=200):
-    """Real Jacobi joint approximate diagonaliser (Cardoso & Souloumiac 1996).
-    A: (k, n, n) stack of symmetric matrices -> rotation V (n, n) s.t. each
-    V.T @ A_i @ V is approximately diagonal."""
-    k, n, _ = A.shape
-    A = A.copy().astype(float)
-    V = np.eye(n)
+def _rjd(matrices, eps=1e-12, maxiter=200):
+    """Real Jacobi joint approximate diagonalization."""
+    matrices = np.asarray(matrices, dtype=float).copy()
+    _, count, _ = matrices.shape
+    rotation = np.eye(count)
     for _ in range(maxiter):
         changed = False
-        for p in range(n - 1):
-            for q in range(p + 1, n):
-                h = np.vstack([A[:, p, p] - A[:, q, q], A[:, p, q] + A[:, q, p]])  # (2, k)
+        for left in range(count - 1):
+            for right in range(left + 1, count):
+                h = np.vstack(
+                    [
+                        matrices[:, left, left] - matrices[:, right, right],
+                        matrices[:, left, right] + matrices[:, right, left],
+                    ]
+                )
                 hh = h @ h.T
-                ton, toff = hh[0, 0] - hh[1, 1], hh[0, 1] + hh[1, 0]
-                theta = 0.5 * np.arctan2(toff, ton + np.sqrt(ton * ton + toff * toff))
-                c, s = np.cos(theta), np.sin(theta)
-                if abs(s) > eps:
-                    changed = True
-                    Ap, Aq = A[:, p, :].copy(), A[:, q, :].copy()        # rotate rows
-                    A[:, p, :], A[:, q, :] = c * Ap + s * Aq, -s * Ap + c * Aq
-                    Ap, Aq = A[:, :, p].copy(), A[:, :, q].copy()        # rotate cols
-                    A[:, :, p], A[:, :, q] = c * Ap + s * Aq, -s * Ap + c * Aq
-                    Vp, Vq = V[:, p].copy(), V[:, q].copy()
-                    V[:, p], V[:, q] = c * Vp + s * Vq, -s * Vp + c * Vq
+                diagonal = hh[0, 0] - hh[1, 1]
+                off_diagonal = hh[0, 1] + hh[1, 0]
+                angle = 0.5 * np.arctan2(
+                    off_diagonal,
+                    diagonal + np.sqrt(diagonal**2 + off_diagonal**2),
+                )
+                cosine, sine = np.cos(angle), np.sin(angle)
+                if abs(sine) <= eps:
+                    continue
+                changed = True
+                row_l = matrices[:, left, :].copy()
+                row_r = matrices[:, right, :].copy()
+                matrices[:, left, :] = cosine * row_l + sine * row_r
+                matrices[:, right, :] = -sine * row_l + cosine * row_r
+                col_l = matrices[:, :, left].copy()
+                col_r = matrices[:, :, right].copy()
+                matrices[:, :, left] = cosine * col_l + sine * col_r
+                matrices[:, :, right] = -sine * col_l + cosine * col_r
+                vector_l = rotation[:, left].copy()
+                vector_r = rotation[:, right].copy()
+                rotation[:, left] = cosine * vector_l + sine * vector_r
+                rotation[:, right] = -sine * vector_l + cosine * vector_r
         if not changed:
             break
-    return V
+    return rotation
 
 
-def _whiten(X, n_comp):
-    """Centre + PCA-whiten X (n_ch, T) to (n_comp, T); return (Z, Wh)."""
-    Xc = X - X.mean(1, keepdims=True)
-    d, E = np.linalg.eigh((Xc @ Xc.T) / Xc.shape[1])
-    idx = np.argsort(d)[::-1][:n_comp]
-    Wh = (E[:, idx] / np.sqrt(np.maximum(d[idx], 1e-18))).T          # (n_comp, n_ch)
-    return Wh @ Xc, Wh
+def _whiten(data, n_components):
+    centered = data - data.mean(axis=1, keepdims=True)
+    values, vectors = np.linalg.eigh(centered @ centered.T / centered.shape[1])
+    order = np.argsort(values)[::-1][:n_components]
+    whitener = (
+        vectors[:, order] / np.sqrt(np.maximum(values[order], 1e-18))
+    ).T
+    return whitener @ centered, whitener
 
 
-def _sobi(X, n_comp, n_lags=20):
-    """SOBI (Belouchrani 1997): joint-diagonalise time-lagged covariances."""
-    Z, Wh = _whiten(X, n_comp)
-    T = Z.shape[1]
-    covs = []
-    for tau in range(1, n_lags + 1):
-        Rt = (Z[:, tau:] @ Z[:, :-tau].T) / (T - tau)
-        covs.append(0.5 * (Rt + Rt.T))
-    V = _rjd(np.asarray(covs))
-    return V.T @ Wh                                                  # (n_comp, n_ch)
+def _sobi(data, n_components, n_lags=20):
+    whitened, whitener = _whiten(data, n_components)
+    covariances = []
+    for lag in range(1, n_lags + 1):
+        covariance = (
+            whitened[:, lag:] @ whitened[:, :-lag].T
+        ) / (whitened.shape[1] - lag)
+        covariances.append((covariance + covariance.T) / 2.0)
+    return _rjd(np.asarray(covariances)).T @ whitener
 
 
-def _jade(X, n_comp):
-    """JADE (Cardoso & Souloumiac 1993): joint-diagonalise 4th-order cumulant matrices."""
-    Z, Wh = _whiten(X, n_comp)
-    m, T = Z.shape
-    CM = []
-    for p in range(m):
-        for q in range(p, m):
-            M = (Z * (Z[p] * Z[q])) @ Z.T / T                       # E[z_k z_l z_p z_q]
-            M = M - (np.eye(m) if p == q else 0.0)
-            M[p, q] -= 1.0
-            M[q, p] -= 1.0
-            CM.append(0.5 * (M + M.T) * (1.0 if p == q else np.sqrt(2.0)))
-    V = _rjd(np.asarray(CM))
-    return V.T @ Wh
+def _jade(data, n_components):
+    whitened, whitener = _whiten(data, n_components)
+    count, samples = whitened.shape
+    cumulants = []
+    for left in range(count):
+        for right in range(left, count):
+            matrix = (
+                whitened * (whitened[left] * whitened[right])
+            ) @ whitened.T / samples
+            matrix -= np.eye(count) if left == right else 0.0
+            matrix[left, right] -= 1.0
+            matrix[right, left] -= 1.0
+            scale = 1.0 if left == right else np.sqrt(2.0)
+            cumulants.append((matrix + matrix.T) * scale / 2.0)
+    return _rjd(np.asarray(cumulants)).T @ whitener
 
 
-def _fit_unmix(method: str, X_train: np.ndarray, n_comp: int):
-    """Return ``(transform, W)``: ``transform(X) -> sources (n_comp, T)`` and an
-    estimated unmixing ``W (n_comp, n_ch)`` (or None)."""
-    if method in ("sobi", "jade"):
-        W = (_sobi if method == "sobi" else _jade)(X_train, n_comp)
-        return (lambda X: W @ (X - X.mean(1, keepdims=True))), W
+def _iterative_denoiser(name):
+    from mne_denoise.dss.denoisers import (
+        DCTDenoiser,
+        GaussDenoiser,
+        KurtosisDenoiser,
+        QuasiPeriodicDenoiser,
+        RobustTanhDenoiser,
+        SkewDenoiser,
+        SmoothTanhDenoiser,
+        SpectrogramDenoiser,
+        TanhMaskDenoiser,
+        VarianceMaskDenoiser,
+        WienerMaskDenoiser,
+    )
+
+    factories = {
+        "tanh": TanhMaskDenoiser,
+        "robust_tanh": RobustTanhDenoiser,
+        "gauss": GaussDenoiser,
+        "skew": SkewDenoiser,
+        "smooth_tanh": SmoothTanhDenoiser,
+        "kurtosis": KurtosisDenoiser,
+        "wiener_mask": WienerMaskDenoiser,
+        "variance_mask": VarianceMaskDenoiser,
+        "dct": DCTDenoiser,
+        "quasi_periodic": QuasiPeriodicDenoiser,
+        "spectrogram": SpectrogramDenoiser,
+    }
+    if name not in factories:
+        raise KeyError(name)
+    return factories[name]()
+
+
+def _fit_unmix_with_metadata(method, data, n_components, seed, *, max_iter):
+    """Return transform, sensor-space unmixing, and convergence metadata."""
+    train_mean = data.mean(axis=1, keepdims=True)
+    if method in {"sobi", "jade"}:
+        unmixing = (_sobi if method == "sobi" else _jade)(data, n_components)
+        return lambda value: unmixing @ (value - train_mean), unmixing, {}
     if method == "amica":
-        from amica import Amica, AmicaConfig   # GPU-accelerated AMICA (Palmer et al.); github.com/snesmaeili/amica, JAX uses GPU when available
+        from amica import Amica, AmicaConfig
 
-        cfg = AmicaConfig(pcakeep=int(n_comp), max_iter=2000, do_newton=True)
-        model = Amica(cfg, random_state=0)
-        result = model.fit(np.asarray(X_train, dtype=float))   # .fit() returns AmicaResult; the model keeps .transform() via result_
-        W = np.asarray(result.unmixing_matrix_sensor_)         # (n_comp, n_ch) full sensor-space unmixing
-        return (lambda X: np.asarray(model.transform(np.asarray(X, dtype=float)))), W
+        model = Amica(
+            AmicaConfig(pcakeep=int(n_components), max_iter=2000, do_newton=True),
+            random_state=seed,
+        )
+        result = model.fit(np.asarray(data, dtype=float))
+        unmixing = np.asarray(result.unmixing_matrix_sensor_)
+        return lambda value: np.asarray(model.transform(value)), unmixing, {}
     if method == "pca":
         from sklearn.decomposition import PCA
 
-        p = PCA(n_components=n_comp, whiten=True, svd_solver="full")
-        p.fit(X_train.T)
-        return (lambda X: p.transform(X.T).T), p.components_
+        model = PCA(n_components=n_components, whiten=True, svd_solver="full")
+        model.fit(data.T)
+        return lambda value: model.transform(value.T).T, model.components_, {}
     if method == "fastica":
         from sklearn.decomposition import FastICA
 
-        ica = FastICA(n_components=n_comp, whiten="unit-variance", max_iter=600, random_state=0)
-        ica.fit(X_train.T)
-        return (lambda X: ica.transform(X.T).T), ica.components_
+        model = FastICA(
+            n_components=n_components,
+            whiten="unit-variance",
+            max_iter=1000,
+            random_state=seed,
+        )
+        model.fit(data.T)
+        meta = {"converged": bool(model.n_iter_ < model.max_iter), "iterations": int(model.n_iter_)}
+        return lambda value: model.transform(value.T).T, model.components_, meta
     if method == "infomax":
         import mne
 
-        W = mne.preprocessing.infomax(X_train.T, extended=True, random_state=0)  # (n_ch, n_ch)
-        return (lambda X: (W @ X)[:n_comp]), W[:n_comp]
+        unmixing = mne.preprocessing.infomax(
+            (data - train_mean).T,
+            extended=True,
+            random_state=seed,
+            max_iter=1000,
+        )[:n_components]
+        return lambda value: unmixing @ (value - train_mean), unmixing, {}
     if method == "picard":
         from picard import picard
 
-        K, W, _ = picard(X_train, n_components=n_comp, ortho=False, random_state=0, max_iter=300)
-        WK = W @ K  # compose whitening (K) with the whitened-space unmixing (W)
-        return (lambda X: WK @ X), WK
-    if method == "iterative_dss":
+        whitening, unmixing_white, _ = picard(
+            data - train_mean,
+            n_components=n_components,
+            ortho=False,
+            random_state=seed,
+            max_iter=500,
+        )
+        unmixing = unmixing_white @ whitening
+        return lambda value: unmixing @ (value - train_mean), unmixing, {}
+    if method.startswith("iterative_dss_"):
         from mne_denoise.dss import iterative_dss
-        from mne_denoise.dss.denoisers import TanhMaskDenoiser, beta_tanh
+        from mne_denoise.dss.denoisers import beta_tanh
 
-        filt, _, _, _ = iterative_dss(X_train, TanhMaskDenoiser(), n_comp, method="symmetric",
-                                      beta=beta_tanh, max_iter=300)
-        return (lambda X: filt @ X), filt
+        contrast = method.removeprefix("iterative_dss_")
+        denoiser = _iterative_denoiser(contrast)
+        unmixing, _, _, convergence = iterative_dss(
+            data,
+            denoiser,
+            n_components,
+            method="symmetric",
+            beta=beta_tanh if contrast == "tanh" else None,
+            max_iter=max_iter,
+            random_state=seed,
+        )
+        convergence = np.asarray(convergence)
+        meta = {
+            "converged_fraction": float(np.mean(convergence[:, 1]))
+            if convergence.ndim == 2
+            else None,
+            "iterations_mean": float(np.mean(convergence[:, 0]))
+            if convergence.ndim == 2
+            else None,
+        }
+        return lambda value: unmixing @ (value - train_mean), unmixing, meta
     raise KeyError(method)
 
 
-def _align(src_test, m, n_ref):
-    """Reorder sign/scale-applied recovered sources to (n_ref, T) aligned to references."""
-    applied = sim.apply_source_matching(src_test, m)
-    out = np.zeros((n_ref, applied.shape[1]))
-    for i, ref_j in enumerate(m.perm):
-        if 0 <= ref_j < n_ref:
-            out[ref_j] = applied[i]
-    return out
+def _fit_unmix(method, data, n_components, seed=0, *, max_iter=None):
+    """Fit a BSS transform, preserving the historical two-value helper API.
+
+    Benchmark execution passes ``max_iter`` and receives convergence metadata;
+    older downstream code that calls the helper with three positional arguments
+    continues to receive ``(transform, unmixing)``.
+    """
+    result = _fit_unmix_with_metadata(
+        method,
+        data,
+        n_components,
+        seed,
+        max_iter=1000 if max_iter is None else max_iter,
+    )
+    return result[:2] if max_iter is None else result
 
 
-def run_replicate(rep, methods, *, min_corr=0.5):
-    bi = np.asarray(rep.brain_idx)
-    S_tr_b, S_te_b = rep.S_train[bi], rep.S_test[bi]
-    n_brain = int(np.size(bi))
-    n_comp = min(rep.A.shape[1], rep.X_train.shape[0])   # clamp to channel count (enables the low-density sweep)
-    rows = []
-    for method in methods:
-        try:
-            W = None
-            if method == "oracle":
-                est = S_te_b.copy()  # known clean sources = upper bound
-            else:
-                transform, W = _fit_unmix(method, rep.X_train, n_comp)
-                m = sim.fit_source_matching(transform(rep.X_train), S_tr_b, min_corr=min_corr)
-                est = _align(transform(rep.X_test), m, n_brain)
-            row = {
-                "status": "success",
-                "rrmse": float(gt.rrmse(est, S_te_b)),
-                "corr_clean": float(gt.correlation_with_clean(est, S_te_b)),
-                "snr_db": float(rep.snr_db),
-                "seed": int(rep.seed),
-                "regime": rep.regime,
+def _align(recovered, matching, n_reference):
+    applied = sim.apply_source_matching(recovered, matching)
+    aligned = np.zeros((n_reference, applied.shape[1]))
+    for recovered_index, reference_index in enumerate(matching.perm):
+        if 0 <= reference_index < n_reference:
+            aligned[reference_index] = applied[recovered_index]
+    return aligned
+
+
+def _method_list(cfg):
+    contrasts = cfg["methods_under_test"]["iterative_dss"]["implemented_contrasts"]
+    methods = [f"iterative_dss_{contrast}" for contrast in contrasts]
+    methods.extend(cfg["comparators"]["required"])
+    return list(dict.fromkeys(methods))
+
+
+def _score_method(method, replicate, seed, *, max_iter):
+    brain = np.asarray(replicate.brain_idx)
+    truth_train = replicate.S_train[brain]
+    truth_test = replicate.S_test[brain]
+    if method == "oracle":
+        estimate = truth_test.copy()
+        unmixing = None
+        matching = None
+        meta = {"converged": True, "iterations": 0}
+    else:
+        n_components = min(replicate.A.shape[1], replicate.X_train.shape[0])
+        transform, unmixing, meta = _fit_unmix(
+            method,
+            replicate.X_train,
+            n_components,
+            seed,
+            max_iter=max_iter,
+        )
+        matching = sim.fit_source_matching(
+            transform(replicate.X_train), truth_train, min_corr=0.5
+        )
+        estimate = _align(transform(replicate.X_test), matching, len(brain))
+
+    sensor_truth = replicate.A[:, brain] @ truth_test
+    sensor_estimate = replicate.A[:, brain] @ estimate
+    bss_metrics = [
+        gt.bss_eval(estimate[index], truth_test, index)
+        for index in range(len(brain))
+    ]
+    metrics = {
+        "method": method,
+        "status": "success",
+        "neural_source_rrmse": float(gt.rrmse(estimate, truth_test)),
+        "permutation_aligned_clean_source_correlation": float(
+            gt.correlation_with_clean(estimate, truth_test)
+        ),
+        "sensor_source_reconstruction_error": float(
+            gt.rrmse(sensor_estimate, sensor_truth)
+        ),
+        "known_neural_signal_preservation": float(
+            gt.correlation_with_clean(sensor_estimate, sensor_truth)
+        ),
+        "sir_db": float(np.mean([value["sir"] for value in bss_metrics])),
+        "sdr_db": float(np.mean([value["sdr"] for value in bss_metrics])),
+        "sar_db": float(np.mean([value["sar"] for value in bss_metrics])),
+        "condition_number": float(np.linalg.cond(replicate.A)),
+        **meta,
+    }
+    if matching is not None:
+        metrics.update(
+            {
+                "unmatched_sources": len(matching.unmatched),
+                "collapsed_sources": len(matching.collapsed),
+                "mean_train_match_correlation": float(
+                    np.mean(matching.matched_corr)
+                ),
             }
-            if W is not None and rep.is_square:
-                try:
-                    row["amari"] = float(gt.amari_index(W, rep.A))
-                except Exception:  # noqa: BLE001
-                    pass
-            rows.append({"method": method, **row})
-        except Exception as exc:  # noqa: BLE001
-            rows.append({"method": method, "status": "failed_numerical",
-                         "error": f"{type(exc).__name__}: {exc}"})
+        )
+    if unmixing is not None:
+        with contextlib.suppress(ValueError):
+            metrics["mixing_recovery_error"] = float(
+                gt.mixing_recovery_error(np.linalg.pinv(unmixing), replicate.A)
+            )
+        if replicate.is_square:
+            metrics["amari"] = float(gt.amari_index(unmixing, replicate.A))
+    return metrics
+
+
+def _write_tsv(path, rows):
+    path = pathlib.Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fields = sorted({key for row in rows for key in row})
+    temporary = path.with_suffix(".tsv.tmp")
+    with temporary.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, delimiter="\t")
+        writer.writeheader()
+        writer.writerows(rows)
+    temporary.replace(path)
+
+
+def run(args):
+    config_path = pathlib.Path(args.config).resolve()
+    cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    assert_submission_ready(cfg, source=str(config_path))
+    specification = cfg["simulation"]
+    regime = "forward" if "forward" in str(specification["regime"]) else "generic"
+    source_regimes = list(specification["source_regimes"])
+    snrs = list(specification["snr_levels_db"])
+    channels = list(specification["channel_counts"])
+    n_sources = int(specification["source_counts"][0])
+    repetitions = int(specification["n_replicates"])
+    train_samples = int(specification["n_train_samples"])
+    test_samples = int(specification["n_test_samples"])
+    source_sets = int(specification["crossed_design"]["source_sets"])
+    mixing_matrices = int(specification["crossed_design"]["mixing_matrices"])
+    if source_sets * mixing_matrices != repetitions:
+        raise ValueError("crossed_design cells must equal n_replicates")
+    methods = _method_list(cfg)
+    max_iter = int(
+        cfg["methods_under_test"]["iterative_dss"]["fit"]["max_iter"]
+    )
+    if args.smoke:
+        source_regimes = source_regimes[:1]
+        snrs = [0]
+        channels = [max(8, n_sources)]
+        repetitions = source_sets = mixing_matrices = 1
+        train_samples = test_samples = 1200
+        max_iter = min(max_iter, 20)
+    if args.methods:
+        requested = args.methods.split(",")
+        missing = sorted(set(requested) - set(methods))
+        if missing:
+            raise ValueError(f"unknown requested methods: {missing}")
+        methods = requested
+
+    condition_range = specification.get("mixing", {}).get(
+        "condition_number_range", [1.0, 10.0]
+    )
+    global_seed = int(specification["seeds"]["global"])
+    root = pathlib.Path(args.output_root).resolve()
+    rows = []
+    for source_regime in source_regimes:
+        for snr in snrs:
+            for n_channels in channels:
+                for replicate_index in range(repetitions):
+                    source_set = replicate_index % source_sets
+                    mixing_matrix = (replicate_index // source_sets) % mixing_matrices
+                    source_seed = locked_seed(
+                        global_seed, cfg["arm"], source_regime, "source", source_set
+                    )
+                    mixing_seed = locked_seed(
+                        global_seed, cfg["arm"], n_channels, "mixing", mixing_matrix
+                    )
+                    seed = locked_seed(source_seed, mixing_seed, snr)
+                    replicate = sim.simulate_replicate(
+                        regime=regime,
+                        source_regime=source_regime,
+                        n_channels=int(n_channels),
+                        n_brain=n_sources // 2,
+                        n_artifact=n_sources - n_sources // 2,
+                        n_train=train_samples,
+                        n_test=test_samples,
+                        snr_db=float(snr),
+                        seed=seed,
+                        source_seed=source_seed,
+                        mixing_seed=mixing_seed,
+                        min_cond=float(condition_range[0]),
+                        max_cond=float(condition_range[1]),
+                    )
+                    unit_id = (
+                        f"{source_regime}_snr{snr}_ch{n_channels}_"
+                        f"source{source_set:02d}_mix{mixing_matrix:02d}"
+                    )
+                    for method in methods:
+                        method_dir = root / unit_id / method
+                        record = build_run_record(
+                            arm=cfg["arm"],
+                            method=method,
+                            unit_id=unit_id,
+                            config_path=config_path,
+                            dataset_manifest=args.dataset_manifest,
+                            repo_root=_REPO,
+                            seed=seed,
+                            information_tier="oracle" if method == "oracle" else "blind",
+                            allow_dirty=args.allow_dirty,
+                        )
+                        try:
+                            with AttemptRecorder(method_dir, record) as active:
+                                started = perf_counter()
+                                try:
+                                    metrics = _score_method(
+                                        method,
+                                        replicate,
+                                        seed,
+                                        max_iter=max_iter,
+                                    )
+                                except (ImportError, ModuleNotFoundError) as error:
+                                    active.status = "unavailable_dependency"
+                                    metrics = {
+                                        "method": method,
+                                        "status": "unavailable_dependency",
+                                        "error": f"{type(error).__name__}: {error}",
+                                    }
+                                metrics.update(
+                                    {
+                                        "unit_id": unit_id,
+                                        "source_regime": source_regime,
+                                        "mixing_regime": regime,
+                                        "snr_db": snr,
+                                        "n_channels": n_channels,
+                                        "source_set": source_set,
+                                        "mixing_matrix": mixing_matrix,
+                                        "seed": seed,
+                                        "runtime_seconds_method": perf_counter() - started,
+                                    }
+                                )
+                                (method_dir / "metrics.json").write_text(
+                                    json.dumps(metrics, indent=2, sort_keys=True),
+                                    encoding="utf-8",
+                                )
+                                (method_dir / "model.json").write_text(
+                                    json.dumps(
+                                        {
+                                            "method": method,
+                                            "train_only": True,
+                                            "source_matching": cfg["source_matching"],
+                                        },
+                                        indent=2,
+                                        sort_keys=True,
+                                    ),
+                                    encoding="utf-8",
+                                )
+                                rows.append(metrics)
+                        except Exception as error:
+                            rows.append(
+                                {
+                                    "method": method,
+                                    "status": "failed",
+                                    "unit_id": unit_id,
+                                    "source_regime": source_regime,
+                                    "seed": seed,
+                                    "error": f"{type(error).__name__}: {error}",
+                                }
+                            )
+    _write_tsv(root / "raw_metrics.tsv", rows)
     return rows
 
 
-def _grid(cfg, *, synthetic):
-    s = cfg.get("simulation", {}) or {}
-    raw = f"{s.get('regime', '')} {cfg.get('arm', '')}"
-    regime = "forward" if "forward" in raw else "generic"
-    snrs = s.get("snr_levels_db")
-    snrs = snrs if isinstance(snrs, list) else [-6.0, 0.0, 6.0]
-    nrep = s.get("n_replicates")
-    nrep = (3 if synthetic else (nrep if isinstance(nrep, int) else 20))
-    return regime, snrs, nrep
-
-
-def run(cfg, deriv_root, *, synthetic=False):
-    regime, snrs, nrep = _grid(cfg, synthetic=synthetic)
-    methods = list(cfg.get("methods_under_test", []) or []) + \
-        list((cfg.get("comparators", {}) or {}).get("required", []) or [])
-    # map config ids to local unmixers; keep order, de-dup
-    alias = {"iterativedss": "iterative_dss", "iterative_dss_tanh": "iterative_dss",
-             "iterative_dss_symmetric": "iterative_dss", "fastICA": "fastica"}
-    methods = list(dict.fromkeys(alias.get(m, m) for m in methods)) or \
-        ["pca", "fastica", "iterative_dss", "oracle"]
-    allrows = []
-    for snr in snrs:
-        for seed in range(nrep):
-            rep = sim.simulate_replicate(regime=regime, n_channels=8, n_brain=4, n_artifact=4,
-                                         n_train=2000, n_test=2000, snr_db=float(snr), seed=seed)
-            for r in run_replicate(rep, methods):
-                r["replicate"] = f"snr{snr}_seed{seed}"
-                allrows.append(r)
-                if not synthetic:
-                    out = pathlib.Path(deriv_root) / f"snr{snr}_seed{seed}" / BENCH / r["method"]
-                    bio.save_subject_benchmark_results(out, subject=f"snr{snr}_seed{seed}",
-                                                       method=r["method"], metrics=r)
-    return allrows, methods
-
-
 def main(argv=None):
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--config", required=True)
-    p.add_argument("--all", action="store_true")
-    p.add_argument("--synthetic", action="store_true")
-    p.add_argument("--deriv-root", default=None)
-    a = p.parse_args(argv)
-    cfg = _load_cfg(a.config)
-    arm = cfg.get("arm", "ground_truth")
-    deriv_root = pathlib.Path(a.deriv_root or (_REPO / "results" / arm))
-    rows, methods = run(cfg, deriv_root, synthetic=a.synthetic)
-    # summarise per method (mean over replicates)
-    import statistics
-    print(f"arm={arm}  replicates={len({r.get('replicate') for r in rows})}  methods={methods}")
-    print(f"  {'method':16}{'rrmse':>9}{'corr':>8}{'amari':>9}  n")
-    for mth in methods:
-        rs = [r for r in rows if r.get("method") == mth and r.get("status") == "success"]
-        if not rs:
-            print(f"  {mth:16}{'FAILED':>9}"); continue
-        me = lambda k: round(statistics.mean([r[k] for r in rs if k in r]), 4) if any(k in r for r in rs) else "-"
-        print(f"  {mth:16}{str(me('rrmse')):>9}{str(me('corr_clean')):>8}{str(me('amari')):>9}  {len(rs)}")
-    return 0
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", required=True)
+    parser.add_argument(
+        "--dataset-manifest", default=str(_REPO / "configs/manifests/synthetic_v1.json")
+    )
+    parser.add_argument("--output-root", default=str(_REPO / "results/ground_truth"))
+    parser.add_argument("--methods", help="comma-separated subset for preflight")
+    parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--allow-dirty", action="store_true")
+    args = parser.parse_args(argv)
+    rows = run(args)
+    acceptable = {"success", "unavailable_dependency"}
+    accepted = sum(row.get("status") in acceptable for row in rows)
+    print(f"attempts={len(rows)} accepted={accepted} output={args.output_root}")
+    return 0 if accepted == len(rows) else 1
 
 
 if __name__ == "__main__":

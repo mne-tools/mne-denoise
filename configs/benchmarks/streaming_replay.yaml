@@ -1,0 +1,23 @@
+arm: streaming_replay
+runner: streaming_replay
+status: protocol_frozen_v1
+simulation:
+  regimes: [stationary, abrupt_target_change, gradual_spatial_drift, contaminated_initialization, missing_block, reordered_block]
+  block_sizes: [32, 64, 128]
+  replicates_per_cell: 20
+  sfreq_hz: 256
+  duration_s: 300
+  seeds: {global: 240714, generation: sha256_arm_cell_and_replicate}
+  settling_angle_degrees: 10.0
+  settling_consecutive_blocks: 3
+methods_under_test: [continuous_dss, adaptive_dss]
+comparators: {required: [offline_dss], secondary: [rolling_batch_dss]}
+metrics:
+  primary_target: subspace_angle_to_offline_reference
+  primary_preservation: known_clean_waveform_relative_rmse
+  secondary: [settling_time_s, boundary_discontinuity, algorithmic_latency_ms, end_to_end_latency_ms, peak_memory_mb, realtime_factor, failure]
+metric_definitions:
+  boundary_discontinuity: rms_output_jump_at_block_boundaries_divided_by_rms_nonboundary_first_difference
+  settling_time_s: first_post_event_run_of_three_blocks_with_filter_angle_at_or_below_10_degrees_to_offline_reference
+unit_of_inference: simulation_seed_nested_in_regime_and_block_size
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

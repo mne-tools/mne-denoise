@@ -33,7 +33,8 @@ except ImportError:
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from .denoisers import LinearDenoiser
-from .utils import compute_covariance
+from .utils import compute_covariance, compute_evoked_covariance
+from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +261,13 @@ class DSS(BaseEstimator, TransformerMixin):
         Bias function to define the signal of interest. Must be an instance of
         `mne_denoise.dss.LinearDenoiser` (e.g. `BandpassBias`, `TrialAverageBias`)
         or a callable that takes data and returns biased data.
+    n_select : int | 'auto' | None
+        Component count used for artifact subtraction by ``fit_transform``.
+        ``'auto'`` applies ``selection_method`` to fitted eigenvalues.
+    selection_method : {'combined', 'outlier', 'ratio', 'max_gap'}
+        Automatic component-selection rule.
+    selection_threshold : float
+        Threshold for the selected rule.
     rank : int or dict, optional
         Rank of the data for whitening. If None, rank is estimated automatically.
     reg : float
@@ -267,6 +275,28 @@ class DSS(BaseEstimator, TransformerMixin):
     normalize_input : bool
         If True, normalize input data channel-wise (L2 norm) before fitting/transforming.
         Useful when mixing sensors with different scales (e.g. MAG and GRAD). Default True.
+        Ignored when ``whiten=True``.
+    whiten : bool
+        If True, jointly decompose all M/EEG data-channel types after spatial
+        whitening. This is the explicit multi-modal path; the default continues
+        to isolate one homogeneous sensor type. Default False.
+    noise_cov : mne.Covariance, optional
+        Named noise covariance used when ``whiten=True``. If omitted, a
+        diagonal per-channel standard-deviation whitener is fitted from X.
+    smooth : SmoothingBias | int | None
+        Optional smoothing decomposition; DSS is fitted to the residual.
+    segmented : bool
+        Fit and clean independently within stationary segments. This mode is
+        available only through ``fit_transform``.
+    segmenter : CovarianceSegmenter | FixedWindowSegmenter | None
+        Explicit segmentation strategy. A covariance segmenter is created when
+        omitted in segmented mode.
+    crossfade : float
+        Seconds of overlap-add crossfade around segment boundaries.
+    max_prop_remove : float | None
+        Per-segment cap on the proportion of removed components.
+    min_select : int
+        Per-segment floor on the removed component count.
     cov_method : str
         Method for covariance estimation.
         For MNE objects, passed as `method` to `mne.compute_covariance`.
@@ -314,22 +344,44 @@ class DSS(BaseEstimator, TransformerMixin):
         self,
         bias: LinearDenoiser | Callable,
         n_components: int | None = None,
+        n_select: int | str | None = None,
+        selection_method: str = "combined",
+        selection_threshold: float = 3.0,
         rank: int | dict | None = None,
         reg: float = 1e-9,
         normalize_input: bool = True,
         cov_method: str = "empirical",
         cov_kws: dict | None = None,
         return_type: str = "sources",
+        whiten: bool = False,
+        noise_cov=None,
+        smooth: LinearDenoiser | int | None = None,
+        segmented: bool = False,
+        segmenter: CovarianceSegmenter | FixedWindowSegmenter | None = None,
+        crossfade: float = 0.0,
+        max_prop_remove: float | None = None,
+        min_select: int = 0,
         verbose: bool | str | int | None = None,
     ) -> None:
         self.n_components = n_components
         self.bias = bias
+        self.n_select = n_select
+        self.selection_method = selection_method
+        self.selection_threshold = selection_threshold
         self.rank = rank
         self.reg = reg
         self.normalize_input = normalize_input
         self.cov_method = cov_method
         self.cov_kws = cov_kws
         self.return_type = return_type
+        self.whiten = whiten
+        self.noise_cov = noise_cov
+        self.smooth = smooth
+        self.segmented = segmented
+        self.segmenter = segmenter
+        self.crossfade = crossfade
+        self.max_prop_remove = max_prop_remove
+        self.min_select = min_select
         self.verbose = verbose
         set_log_level_from_verbose(self.verbose)
 
@@ -340,7 +392,65 @@ class DSS(BaseEstimator, TransformerMixin):
         self.eigenvalues_: np.ndarray | None = None
         self.explained_variance_: np.ndarray | None = None
         self.channel_norms_: np.ndarray | None = None
+        self._whitener_: np.ndarray | None = None
+        self._unwhitener_: np.ndarray | None = None
+        self.n_selected_: int | None = None
+        self.segment_results_: list[dict] | None = None
+        self._smoother = None
         self._mne_info = None
+
+    def _resolve_smoother(self) -> None:
+        from .denoisers.temporal import SmoothingBias
+
+        if self.smooth is None:
+            self._smoother = None
+        elif isinstance(self.smooth, int):
+            self._smoother = SmoothingBias(window=self.smooth, iterations=1)
+        elif isinstance(self.smooth, SmoothingBias) or hasattr(self.smooth, "apply"):
+            self._smoother = self.smooth
+        else:
+            raise TypeError(
+                "smooth must be SmoothingBias, an integer window, or None; "
+                f"got {type(self.smooth)}"
+            )
+
+    def _decompose_smooth(self, data: np.ndarray) -> tuple[np.ndarray | None, np.ndarray]:
+        if self._smoother is None:
+            return None, data
+        smooth = self._smoother.apply(data)
+        return smooth, data - smooth
+
+    def auto_select(self, threshold=None, method=None) -> int:
+        """Select a fitted DSS component count using the configured rule."""
+        if self.eigenvalues_ is None:
+            raise RuntimeError("DSS not fitted. Call fit() first.")
+        from .utils.selection import (
+            eigenvalue_ratio_selection,
+            iterative_outlier_removal,
+            max_gap_selection,
+        )
+
+        if isinstance(self.n_select, int):
+            return min(max(self.n_select, 0), len(self.eigenvalues_))
+        threshold = self.selection_threshold if threshold is None else threshold
+        method = self.selection_method if method is None else method
+        if method == "outlier":
+            return iterative_outlier_removal(self.eigenvalues_, threshold)
+        if method == "ratio":
+            return eigenvalue_ratio_selection(self.eigenvalues_, threshold)
+        if method == "max_gap":
+            return max_gap_selection(self.eigenvalues_, min(float(threshold), 1.2))
+        if method == "combined":
+            count = iterative_outlier_removal(self.eigenvalues_, threshold)
+            if count:
+                return count
+            count = eigenvalue_ratio_selection(
+                self.eigenvalues_, min(float(threshold), 2.0)
+            )
+            return count or max_gap_selection(self.eigenvalues_, 1.2)
+        raise ValueError(
+            "selection_method must be 'combined', 'outlier', 'ratio', or 'max_gap'"
+        )
 
     def fit(
         self,
@@ -371,21 +481,38 @@ class DSS(BaseEstimator, TransformerMixin):
             The fitted transformer.
         """
         set_log_level_from_verbose(self.verbose)
-        if self.normalize_input:
-            X_norm = self._normalize(X, fit=True)
+        if self.segmented:
+            raise RuntimeError(
+                "Segmented mode requires simultaneous fit and transform; use fit_transform()."
+            )
+        self._resolve_smoother()
+        if self.whiten and self._smoother is not None:
+            raise ValueError("whiten=True and smooth are separate operating modes")
+        if self.whiten:
+            self._fit_whitened(X, weights=weights)
         else:
-            X_norm = X
-
-        if mne is not None and isinstance(X_norm, BaseRaw | BaseEpochs | Evoked):
-            self._fit_mne(X_norm, weights=weights)
-        elif isinstance(X_norm, np.ndarray):
-            self._fit_numpy(X_norm, weights=weights)
-        else:
-            raise TypeError(f"Unsupported input type: {type(X_norm)}")
+            if self.normalize_input:
+                X_norm = self._normalize(X, fit=True)
+            else:
+                X_norm = X
+            if self._smoother is not None:
+                data, _, mne_type, _, _, _ = extract_data_from_mne(X_norm)
+                if mne_type == "epochs":
+                    data = np.transpose(data, (1, 2, 0))
+                _, residual = self._decompose_smooth(data)
+                self._fit_numpy(residual, weights=weights)
+            elif mne is not None and isinstance(X_norm, BaseRaw | BaseEpochs | Evoked):
+                self._fit_mne(X_norm, weights=weights)
+            elif isinstance(X_norm, np.ndarray):
+                self._fit_numpy(X_norm, weights=weights)
+            else:
+                raise TypeError(f"Unsupported input type: {type(X_norm)}")
 
         # Compute mixing matrix
         # self.patterns_ from compute_dss already satisfy X = P @ S
         self.mixing_ = self.patterns_
+        if self.n_select is not None:
+            self.n_selected_ = self.auto_select()
 
         return self
 
@@ -527,9 +654,12 @@ class DSS(BaseEstimator, TransformerMixin):
             biased_inst = mne.EpochsArray(biased_data, inst.info, verbose=False)
             biased_cov = mne.compute_covariance(biased_inst, method=method, **kws)
 
-        else:  # Evoked - use numpy path since MNE doesn't support Evoked covariance
-            self._fit_numpy(data, weights=weights)
-            return
+        else:  # Evoked
+            baseline_cov = compute_evoked_covariance(inst, method=method, **kws)
+            biased_inst = mne.EvokedArray(
+                biased_data, inst.info, tmin=float(inst.times[0]), verbose=False
+            )
+            biased_cov = compute_evoked_covariance(biased_inst, method=method, **kws)
 
         # Extract data from MNE covariances
         self.filters_, self.patterns_, self.eigenvalues_ = compute_dss(
@@ -572,6 +702,112 @@ class DSS(BaseEstimator, TransformerMixin):
         sources_cov = self.filters_ @ baseline_cov @ self.filters_.T
         self.explained_variance_ = np.diag(sources_cov)
 
+    @staticmethod
+    def _whiten_apply(whitener: np.ndarray, data: np.ndarray) -> np.ndarray:
+        """Apply a spatial whitener along the channel axis."""
+        if data.ndim == 2:
+            return whitener @ data
+        n_channels = data.shape[0]
+        flat = data.reshape(n_channels, -1)
+        return (whitener @ flat).reshape(data.shape)
+
+    def _noise_cov_matrix(self, ch_names: list[str]) -> np.ndarray:
+        names = list(self.noise_cov.ch_names)
+        missing = [name for name in ch_names if name not in names]
+        if missing:
+            raise ValueError(f"noise_cov is missing required channels: {missing[:5]}")
+        indices = [names.index(name) for name in ch_names]
+        return np.asarray(self.noise_cov.data)[np.ix_(indices, indices)]
+
+    def _compute_whitener(
+        self, data: np.ndarray, ch_names: list[str] | None
+    ) -> tuple[np.ndarray, np.ndarray]:
+        n_channels = data.shape[0]
+        if self.noise_cov is not None:
+            if ch_names is None:
+                raise ValueError("noise_cov requires an MNE input with named channels.")
+            covariance = self._noise_cov_matrix(ch_names)
+            covariance = (covariance + covariance.T) / 2.0
+            eigenvalues, eigenvectors = np.linalg.eigh(covariance)
+            eigenvalues = np.abs(eigenvalues)
+            maximum = float(eigenvalues.max(initial=0.0))
+            floor = self.reg * maximum if maximum > 0 else self.reg
+            eigenvalues = np.maximum(eigenvalues, floor)
+            whitener = (eigenvectors * (1.0 / np.sqrt(eigenvalues))) @ eigenvectors.T
+            unwhitener = (eigenvectors * np.sqrt(eigenvalues)) @ eigenvectors.T
+        else:
+            flat = data.reshape(n_channels, -1)
+            standard_deviation = flat.std(axis=1)
+            standard_deviation = np.where(standard_deviation > 0, standard_deviation, 1.0)
+            whitener = np.diag(1.0 / standard_deviation)
+            unwhitener = np.diag(standard_deviation)
+        return whitener, unwhitener
+
+    def _fit_whitened(
+        self,
+        X: BaseRaw | BaseEpochs | Evoked | np.ndarray,
+        weights: np.ndarray | None = None,
+    ) -> None:
+        """Fit a joint multi-sensor DSS decomposition after whitening."""
+        method = self.cov_method
+        kws = self.cov_kws.copy() if self.cov_kws else {}
+        for key in ("rank", "verbose", "tstep"):
+            kws.pop(key, None)
+
+        if mne is not None and isinstance(X, BaseRaw | BaseEpochs | Evoked):
+            self.info_ = X.info
+            self._mne_info = X.info
+            picks = mne.pick_types(
+                X.info,
+                meg=True,
+                eeg=True,
+                seeg=True,
+                ecog=True,
+                dbs=True,
+                fnirs=True,
+                exclude=[],
+            )
+            if len(picks) == 0:
+                raise ValueError("No data channels found to fit DSS with whiten=True.")
+            ch_names = [X.ch_names[pick] for pick in picks]
+            self._mne_ch_names_ = ch_names
+            data, _, mne_type, _, _, _ = extract_data_from_mne(X, ch_names=ch_names)
+            if mne_type == "epochs":
+                data = np.transpose(data, (1, 2, 0))
+        elif isinstance(X, np.ndarray):
+            data = np.asarray(X)
+            ch_names = None
+            self._mne_ch_names_ = None
+        else:
+            raise TypeError(f"Unsupported input type: {type(X)}")
+
+        whitener, unwhitener = self._compute_whitener(data, ch_names)
+        self._whitener_ = whitener
+        self._unwhitener_ = unwhitener
+        whitened = self._whiten_apply(whitener, data)
+        biased = self._apply_bias(whitened)
+        baseline_covariance = compute_covariance(
+            whitened, method=method, weights=weights, **kws
+        )
+        biased_covariance = compute_covariance(
+            biased, method=method, weights=weights, **kws
+        )
+        rank = self.rank if isinstance(self.rank, int) else None
+        filters, patterns, self.eigenvalues_ = compute_dss(
+            baseline_covariance,
+            biased_covariance,
+            n_components=self.n_components,
+            rank=rank,
+            reg=self.reg,
+        )
+        # Bake whitening into the fitted state so transform/inverse_transform
+        # continue to operate in the original sensor units.
+        self.filters_ = filters @ whitener
+        self.patterns_ = unwhitener @ patterns
+        self.explained_variance_ = np.diag(
+            filters @ baseline_covariance @ filters.T
+        )
+
     def transform(
         self, X: BaseRaw | BaseEpochs | Evoked | np.ndarray
     ) -> np.ndarray | BaseRaw | BaseEpochs | Evoked:
@@ -594,7 +830,7 @@ class DSS(BaseEstimator, TransformerMixin):
         if self.filters_ is None:
             raise RuntimeError("DSS not fitted. Call fit() first.")
 
-        if self.normalize_input:
+        if self.normalize_input and not self.whiten:
             # Apply normalization using fitted norms
             X_in = self._normalize(X, fit=False)
         else:
@@ -609,13 +845,18 @@ class DSS(BaseEstimator, TransformerMixin):
         if mne_type == "epochs":
             data = np.transpose(data, (1, 2, 0))
 
-        orig_shape = data.shape
-        if data.ndim == 3:
-            n_ch, n_times, n_epochs = data.shape
-            data_2d = data.reshape(n_ch, -1)
+        if self._smoother is not None:
+            data_smooth, data_for_dss = self._decompose_smooth(data)
         else:
-            n_ch, n_times = data.shape
-            data_2d = data
+            data_smooth, data_for_dss = None, data
+
+        orig_shape = data_for_dss.shape
+        if data_for_dss.ndim == 3:
+            n_ch, n_times, n_epochs = data_for_dss.shape
+            data_2d = data_for_dss.reshape(n_ch, -1)
+        else:
+            n_ch, n_times = data_for_dss.shape
+            data_2d = data_for_dss
 
         # Center using mean on data_2d
         # DSS implies zero-mean assumption for correct projection
@@ -639,13 +880,15 @@ class DSS(BaseEstimator, TransformerMixin):
         # mixing shape: (n_channels, n_components)
         rec = self.mixing_[:, :n_keep] @ sources[:n_keep]
         rec += mean_
+        if data_smooth is not None:
+            rec += data_smooth.reshape(data_smooth.shape[0], -1)
 
         # Reshape to original
         if len(orig_shape) == 3:
             rec = rec.reshape(orig_shape)  # (n_ch, n_times, n_epochs)
 
         # De-normalization
-        if self.normalize_input:
+        if self.normalize_input and not self.whiten:
             if len(orig_shape) == 3:  # (n_ch, n_times, n_epochs)
                 rec = rec * self.channel_norms_[:, np.newaxis, np.newaxis]
             else:  # (n_ch, n_times)
@@ -726,7 +969,7 @@ class DSS(BaseEstimator, TransformerMixin):
         else:
             rec = rec_internal
 
-        if self.normalize_input:
+        if self.normalize_input and not self.whiten:
             # rec is (n_epochs, n_ch, n_times) OR (n_ch, n_times, n_epochs) OR (n_ch, n_times)
             if is_epochs_mne:
                 rec = rec * self.channel_norms_[np.newaxis, :, np.newaxis]
@@ -736,6 +979,188 @@ class DSS(BaseEstimator, TransformerMixin):
                 rec = rec * self.channel_norms_[:, np.newaxis]
 
         return rec
+
+    def fit_transform(self, X, y=None, **fit_params):
+        """Fit and transform, including adaptive segmented artifact subtraction."""
+        if not self.segmented:
+            self.fit(X, **fit_params)
+            if self.return_type == "sources":
+                return self.transform(X)
+            data, _, mne_type, original, picks, _ = extract_data_from_mne(
+                X, ch_names=getattr(self, "_mne_ch_names_", None)
+            )
+            n_remove = int(self.n_selected_ or 0)
+            if n_remove <= 0:
+                cleaned = data.copy()
+            else:
+                saved = self.return_type
+                self.return_type = "sources"
+                try:
+                    sources = self.transform(X)
+                finally:
+                    self.return_type = saved
+                n_remove = min(n_remove, sources.shape[1] if mne_type == "epochs" else sources.shape[0])
+                artifact = self.inverse_transform(
+                    sources, component_indices=np.arange(n_remove)
+                )
+                cleaned = data - artifact
+            return reconstruct_mne_object(
+                cleaned, original, mne_type, picks=picks, verbose=False
+            )
+
+        if self.whiten:
+            raise ValueError("segmented=True and whiten=True are not yet composable")
+        data, extracted_sfreq, mne_type, original, picks, _ = extract_data_from_mne(X)
+        sfreq = extracted_sfreq or getattr(self.bias, "sfreq", None)
+        if sfreq is None:
+            raise ValueError(
+                "Cannot determine sfreq for segmented mode; use an MNE object or a bias with sfreq."
+            )
+        if mne_type == "epochs":
+            n_epochs, n_channels, n_times = data.shape
+            continuous = data.transpose(1, 0, 2).reshape(n_channels, -1)
+        elif data.ndim == 2:
+            continuous = data
+            n_epochs = n_channels = n_times = None
+        else:
+            raise ValueError("segmented DSS accepts continuous 2D arrays or MNE Epochs")
+        self._resolve_smoother()
+        cleaned = self._run_segmented(continuous, float(sfreq))
+        if mne_type == "epochs":
+            cleaned = cleaned.reshape(n_channels, n_epochs, n_times).transpose(1, 0, 2)
+        return reconstruct_mne_object(
+            cleaned, original, mne_type, picks=picks, verbose=False
+        )
+
+    def _resolve_segmenter(self, sfreq: float):
+        if self.segmenter is not None:
+            return self.segmenter
+        bandpass = None
+        if hasattr(self.bias, "freq_band"):
+            bandpass = tuple(float(value) for value in self.bias.freq_band)
+        elif getattr(self.bias, "freq", None) is not None:
+            frequency = float(self.bias.freq)
+            bandpass = (max(1.0, frequency - 3.0), min(sfreq / 2 - 1, frequency + 3.0))
+        return CovarianceSegmenter(
+            sfreq=sfreq, min_chunk_len=30.0, bandpass=bandpass
+        )
+
+    def _run_segmented(self, data: np.ndarray, sfreq: float) -> np.ndarray:
+        segments = self._resolve_segmenter(sfreq).segment(data)
+        if not segments:
+            raise ValueError("segmenter returned no segments")
+        overlap = max(0, int(round(float(self.crossfade) * sfreq)))
+        use_crossfade = overlap > 0 and len(segments) > 1
+        if use_crossfade:
+            overlap = min(overlap, max(1, min(end - start for start, end in segments) // 2))
+        chunks = []
+        self.segment_results_ = []
+        selected = []
+        for index, (start, end) in enumerate(segments):
+            extended_start = start if index == 0 or not use_crossfade else max(0, start - overlap)
+            extended_end = (
+                end
+                if index == len(segments) - 1 or not use_crossfade
+                else min(data.shape[1], end + overlap)
+            )
+            result = self._process_segment(data[:, extended_start:extended_end])
+            chunks.append(
+                {
+                    "cleaned": result["cleaned"],
+                    "ext_start": extended_start,
+                    "ext_end": extended_end,
+                    "start": start,
+                    "end": end,
+                }
+            )
+            selected.append(result["n_selected"])
+            self.segment_results_.append(
+                {
+                    "start": start,
+                    "end": end,
+                    "extended_start": extended_start,
+                    "extended_end": extended_end,
+                    "n_selected": result["n_selected"],
+                    "eigenvalues": result["eigenvalues"],
+                    "patterns": result["patterns"],
+                }
+            )
+            self.filters_ = result["filters"]
+            self.patterns_ = result["patterns"]
+            self.eigenvalues_ = result["eigenvalues"]
+            self.mixing_ = result["mixing"]
+        self.n_selected_ = max(selected, default=0)
+        if use_crossfade:
+            return self._crossfade_combine(data.shape, chunks)
+        return np.concatenate([chunk["cleaned"] for chunk in chunks], axis=1)
+
+    @staticmethod
+    def _crossfade_combine(shape: tuple[int, int], chunks: list[dict]) -> np.ndarray:
+        output = np.zeros(shape)
+        weights = np.zeros(shape[1])
+        for chunk in chunks:
+            start, end = chunk["ext_start"], chunk["ext_end"]
+            window = np.ones(end - start)
+            leading = chunk["start"] - start
+            trailing = end - chunk["end"]
+            if leading:
+                phase = np.arange(leading, dtype=float)
+                window[:leading] = 0.5 * (1.0 - np.cos(np.pi * phase / leading))
+            if trailing:
+                phase = np.arange(trailing, dtype=float)
+                window[-trailing:] = 0.5 * (1.0 + np.cos(np.pi * phase / trailing))
+            output[:, start:end] += chunk["cleaned"] * window
+            weights[start:end] += window
+        return output / np.maximum(weights, 1e-10)[None]
+
+    def _process_segment(self, chunk: np.ndarray) -> dict:
+        model = DSS(
+            bias=self.bias,
+            n_components=self.n_components,
+            n_select=self.n_select,
+            selection_method=self.selection_method,
+            selection_threshold=self.selection_threshold,
+            rank=self.rank if self.rank is None or isinstance(self.rank, int) else None,
+            reg=self.reg,
+            normalize_input=self.normalize_input,
+            cov_method=self.cov_method,
+            cov_kws=self.cov_kws,
+            return_type="sources",
+            smooth=self.smooth,
+            segmented=False,
+            verbose=self.verbose,
+        ).fit(chunk)
+        count = int(model.n_selected_ or 0)
+        if self.max_prop_remove is not None:
+            count = min(count, int(chunk.shape[0] * float(self.max_prop_remove)))
+        count = min(chunk.shape[0], max(count, int(self.min_select)))
+        return {
+            "cleaned": self._clean_segment(chunk, model, count),
+            "n_selected": count,
+            "eigenvalues": model.eigenvalues_,
+            "patterns": model.patterns_,
+            "filters": model.filters_,
+            "mixing": model.mixing_,
+        }
+
+    @staticmethod
+    def _clean_segment(data: np.ndarray, model: DSS, n_remove: int) -> np.ndarray:
+        if n_remove <= 0:
+            return data.copy()
+        if model.normalize_input:
+            working = data / model.channel_norms_[:, None]
+        else:
+            working = data
+        smooth, residual = model._decompose_smooth(working)
+        if smooth is None:
+            smooth = np.zeros_like(residual)
+        mean = residual.mean(axis=1, keepdims=True)
+        sources = model.filters_[:n_remove] @ (residual - mean)
+        artifact = model.mixing_[:, :n_remove] @ sources
+        cleaned = smooth + residual - artifact
+        if model.normalize_input:
+            cleaned = cleaned * model.channel_norms_[:, None]
+        return cleaned
 
     def get_normalized_patterns(self) -> np.ndarray:
         """Get L2-normalized spatial patterns for visualization.

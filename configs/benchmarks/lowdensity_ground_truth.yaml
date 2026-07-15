@@ -12,3 +12,4 @@ comparators: {required: [pca, fastica, oracle]}
 metrics: {primary_target: rrmse_vs_channels, degradation: slope_rrmse_vs_log2_nch}
 unit_of_inference: replicate
 seeds: {global: 42}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

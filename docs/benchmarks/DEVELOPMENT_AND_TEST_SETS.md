@@ -1,28 +1,44 @@
-# Development vs Test-Set Declaration
+# Development, reanalysis, and locked-test declaration
 
-To guard against benchmark overfitting, every dataset's role in package development is declared here, and the
-final test sets + code/config freeze are tagged **before** any full multi-subject array. Reviewers will ask
-whether benchmark data influenced algorithm development, default parameters, component-selection rules, plots,
-QA metrics, or debugging — this document answers that explicitly.
+This registry prevents retrospective relabelling of data after algorithm development.
+The original benchmark outputs and plots were inspected before the NeuroImage protocol
+was frozen; those datasets therefore support pre-specified reanalysis or external
+utility, not untouched confirmatory claims.
 
-> Fill the `?` fields during P1–P2. The protocol must be frozen (git tag / preregistration) before P4 full runs.
-
-| Dataset | Used in package dev? | Used for debugging? | Used for parameter/default tuning? | Final locked test subjects/runs | Notes |
-|---|---|---|---|---|---|
-| ds003620 | ? | ? | ? | ? | tutorials/examples reference this dataset — disclose |
-| ds004505 | ? | ? | ? | ? | muscle contrast frozen after feasibility (pre-comparison) |
-| ds000117 | ? | ? | ? | ? | raw-vs-SSS branches; 19 subjects |
-| ERP CORE N170 | ? | ? | ? | ? | ROI/window adopted from the ERP CORE resource, not chosen post-hoc |
-| EEGdenoiseNet | ? | ? | ? | ? | source-level split; no same-recording leakage |
-| ds004784 (phantom) | ? | ? | ? | ? | author-created; held-out tuning |
+| Dataset or substrate | Used in development/debugging? | Used for tuning? | Final role | Locked unit |
+|---|---:|---:|---|---|
+| ds003620 | yes | yes | frozen reanalysis and environmental boundary test | none; all available recordings were previously inspected |
+| ds004505 | yes | yes | frozen reanalysis of movement/reference regimes | none; all available subjects were previously inspected |
+| ds000117 | yes | yes | frozen EEG/MEG reanalysis | none; existing line and evoked outputs were inspected |
+| ERP CORE N170 | yes | yes | frozen ocular/evoked reanalysis | none; all 40-subject outputs were inspected |
+| Tsinghua SSVEP | yes | yes | frozen external-utility reanalysis | none; group outputs were inspected |
+| BETA SSVEP | no | no | locked lower-SNR external replication | complete subjects listed in its pre-run manifest |
+| EEGdenoiseNet source pool | yes | yes | source library for simulations | new source-set assignments and seeds created only after protocol freeze |
+| ds004784 repeat 1 | yes | yes | development and parameter selection | none |
+| ds004784 repeat 2 | no | no | locked technical replication across Clean/Eyes/Jaw/Motion/Neck/All | complete repeat-2 recordings; hash before first numerical load |
+| Klados clean/contaminated pairs | yes | yes | external paired known-truth validation | none; all loadable trials were previously inspected |
+| New synthetic transient/reference/BSS/forward/streaming seeds | no | no | locked known-target evidence | seed lists and generator commit frozen before generation |
 
 ## Freeze record
-- Code + config freeze date: `pending`
-- Freeze git tag: `pending` (e.g. `benchmark-protocol-v1`)
-- Preregistration link (optional): `pending`
-- Any change made **after** inspecting locked test results: must be logged here with justification. Default: none.
+
+- Candidate protocol authored: 2026-07-14.
+- Candidate protocol ID: `neuroimage-benchmark-v1`.
+- Freeze tag: created only after the integration worktree is clean and all selected
+  configurations pass `python -m mne_denoise.benchmarks validate`.
+- Preregistration: the archived protocol manifest and Git tag are the timestamped
+  specification; an external registration may mirror the same files but cannot alter them.
+- Any post-freeze change requires a new protocol ID, a machine-readable diff, and a
+  sensitivity analysis retaining the original result.
 
 ## Holdout policy
-Hold out complete subjects / complete runs / or an entire external dataset (not trials within a subject). Do not
-modify default parameters after observing locked test outcomes. Subject exclusion is decided from raw-data QC
-criteria evaluated **before** method comparison, blind to method performance.
+
+- Hold out complete subjects, complete technical repeats, or new simulation seeds; never
+  split adjacent windows from the same recording between development and test.
+- Real datasets previously inspected are labelled reanalyses even when their rerun is
+  fully pre-specified.
+- BETA and ds004784 repeat 2 are not numerically loaded until their dataset manifests,
+  target mappings, inclusion rules, and analysis configs are hashed.
+- Subject exclusion uses raw-data QC evaluated before method comparison and is written to
+  the terminal-status registry for every attempted unit.
+- Defaults are not changed after locked outputs are opened. A method failure remains in
+  the denominator.

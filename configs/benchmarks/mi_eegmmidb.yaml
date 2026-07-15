@@ -10,3 +10,4 @@ metrics: {primary_target: cv_accuracy}
 unit_of_inference: subject
 seeds: {global: 42}
 baseline_preprocessing: {source: "eegmmidb BCI2000; 64 EEG 10-10, 160 Hz", steps: {bandpass_hz: [8, 30]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

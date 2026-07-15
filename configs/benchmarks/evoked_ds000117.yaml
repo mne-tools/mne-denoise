@@ -1,14 +1,14 @@
 # Arm: evoked_ds000117 — DSS evoked enhancement, MEG (ds000117 faces vs scrambled, M170). Skeleton (P0).
 arm: evoked_ds000117
 runner: evoked
-status: not_started
+status: protocol_frozen_v1
 
 dataset:
   id: ds000117
   project_relative_path: openneuro/ds000117
-  version: pending
+  version: openneuro_snapshot_manifest
   expected_subjects: 19
-  subjects: pending
+  subjects: manifest_subjects
   excluded_subjects: []
   channel_types: [mag, grad]   # denoised SEPARATELY by sensor type; EEG is a separate simultaneous arm
 
@@ -16,9 +16,9 @@ preprocessing:
   input: sss_recomputed_without_notch     # evoked arm may use SSS; identical across methods
   preprocessing_identical_across_methods: true
   reference: na_meg
-  hp_hz: pending
-  lp_hz: pending
-  resample_hz: pending
+  hp_hz: 0.1
+  lp_hz: 40.0
+  resample_hz: 250
 
 m170_outcome:                  # frozen so signed MEG fields are not cancelled by pooling
   conditions: [faces, scrambled]
@@ -27,8 +27,8 @@ m170_outcome:                  # frozen so signed MEG fields are not cancelled b
   roi_selection: literature_or_training_runs_only
   magnetometers: {outcome: roi_mean_or_gfp}
   planar_gradiometers: {combine_pairs: rms, outcome: roi_rms}
-  polarity_convention: pending
-  topographic_similarity: pending
+  polarity_convention: sign_aligned_to_training_roi_then_frozen_on_test
+  topographic_similarity: absolute_spatial_correlation_on_held_out_evoked
 
 methods_under_test: [dss_average_bias]
 comparators:
@@ -46,12 +46,12 @@ metrics:
 preservation_reference:
   source: held_out_low_artifact_trials_common_meg_preproc
   independent_from_method_fit: true
-equivalence_margin: {value: pending_feasibility, direction: non_inferiority, justification: pending}
+equivalence_margin: {value: 0.5, scale: within_subject_raw_split_sd, direction: two_sided_equivalence, justification: half_split_half_measurement_sd_estimated_on_development_runs_before_evaluation}
 
 unit_of_inference: subject
 storage:
   always_save: [metrics, model_json, qc_arrays, evoked_arrays]
-  save_cleaned: {mode: selected_subjects, subjects: pending}
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-08, sub-16]}
 
 baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
   source: "Wakeman & Henson 2015 (10.1038/sdata.2015.1)"

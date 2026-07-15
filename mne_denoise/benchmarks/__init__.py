@@ -18,3 +18,10 @@ from .io import (  # noqa: F401
     load_subject_benchmark_results,
     save_subject_benchmark_results,
 )
+from .provenance import (  # noqa: F401
+    AttemptRecorder,
+    RunRecord,
+    build_run_record,
+    freeze_protocol,
+    inventory_results,
+)

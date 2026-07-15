@@ -2,16 +2,22 @@
 # Source-recovery ground truth is EEG-only; MEG evidence is empirical + parity.
 arm: ground_truth_forward
 runner: ground_truth
-status: not_started
+status: protocol_frozen_v1
 
 simulation:
   regime: forward_model
-  forward: {lead_field: pending, montage: pending, head_model: pending}
+  forward: {lead_field: mne_sample_fixed_orientation_ico4, montage: standard_1020_64, head_model: three_layer_bem}
   neural_sources: cortical_spatially_correlated
   artifact_sources: {ocular: realistic_topography, muscle: realistic_topography}
   optional_nonstationarity: [time_varying_mixing, convolutive]
-  snr_levels_db: pending
-  n_replicates: pending
+  source_regimes: [supergaussian_artifact, periodic_subgaussian, temporally_autocorrelated]
+  channel_counts: [64]
+  source_counts: [8]
+  snr_levels_db: [-6, 0, 6]
+  n_replicates: 50
+  crossed_design: {source_sets: 10, mixing_matrices: 5}
+  n_train_samples: 4000
+  n_test_samples: 4000
   seeds: {global: 42}
   split: by_source_before_segmenting
 
@@ -19,8 +25,10 @@ source_matching: {assignment: hungarian_on_train_similarity, uses: train_only, r
 
 methods_under_test:
   iterative_dss:
+    fit: {max_iter: 100, tolerance: 1.0e-6, random_initializations: 1}
     primary: {nonlinearity: tanh, orthogonalization: symmetric}
     ablations: [{nonlinearity: kurtosis}, {nonlinearity: wiener_mask}, {orthogonalization: deflation}]
+    implemented_contrasts: [tanh, robust_tanh, gauss, skew, smooth_tanh, kurtosis, wiener_mask, variance_mask, dct, quasi_periodic, spectrogram]
 comparators:
   required: [pca, fastica, infomax, picard, sobi, jade, amica, oracle]
   exploratory: [linear_dss_matched_bias]
@@ -36,6 +44,7 @@ preservation_reference: {source: known_clean_neural_sources, independent_from_me
 unit_of_inference: nested_over_source_set_A_snr_artifact_seed
 storage:
   always_save: [metrics, model_json, recovered_sources_summary]
+  terminal_status: required_per_attempt
 
 baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
   source: "controlled simulation (EEG lead-field forward model, cortical + ocular/muscle topographies)"

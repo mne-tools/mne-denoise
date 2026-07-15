@@ -21,6 +21,7 @@ from .masking import (
     WienerMaskDenoiser,
 )
 from .periodic import CombFilterBias, PeakFilterBias, QuasiPeriodicDenoiser
+from .reference import ReferenceBias
 from .spectral import (
     BandpassBias,
     LineNoiseBias,
@@ -44,6 +45,7 @@ __all__ = [
     "PeakFilterBias",
     "CombFilterBias",
     "CycleAverageBias",
+    "ReferenceBias",
     # Nonlinear denoisers (paper-faithful)
     "VarianceMaskDenoiser",
     "WienerMaskDenoiser",

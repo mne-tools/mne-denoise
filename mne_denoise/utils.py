@@ -93,7 +93,8 @@ def _get_homogeneous_picks(
         msg = (
             f"Found multiple data channel types {present_types} in the object. "
             "MNE-Denoise estimators should be fitted on a single homogeneous channel type. "
-            "Please use `inst.pick()` or `inst.pick_types()` to select a single data channel type before fitting."
+            "Please use `inst.pick()` or `inst.pick_types()` to select a single data channel type before fitting, "
+            "or pass `whiten=True` to decompose the channel types jointly via whitening."
         )
         if auto_pick == "auto" or auto_pick is True:
             msg += f" Automatically picking '{best_type}'."

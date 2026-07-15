@@ -35,3 +35,4 @@ baseline_preprocessing:
   excluded_from_baseline: [average_reference, notch, zapline]
 
 sweep: {zapline: {param: n_remove, grid: [1, 2, 4, 8]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
