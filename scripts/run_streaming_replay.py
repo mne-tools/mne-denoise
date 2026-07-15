@@ -22,6 +22,7 @@ from mne_denoise.benchmarks.intended import (
     relative_rmse,
 )
 from mne_denoise.benchmarks.provenance import AttemptRecorder, build_run_record
+from mne_denoise.benchmarks.sharding import add_shard_arguments, args_select_unit
 from mne_denoise.dss import DSS, BandpassBias
 from mne_denoise.experimental import ContinuousDSS
 
@@ -235,6 +236,8 @@ def run(args):
                 observed, target, _, event_block = _replay_substrate(regime, sfreq, duration, block_size, seed)
                 offline_output, offline_model = _offline(observed, sfreq)
                 unit_id = f"{regime}_block{block_size}_seed{replicate:03d}"
+                if not args_select_unit(args, unit_id):
+                    continue
                 for method in methods:
                     method_dir = root / unit_id / method
                     record = build_run_record(
@@ -274,6 +277,7 @@ def main(argv=None):
     parser.add_argument("--output-root", default=str(_REPO / "results/streaming_replay"))
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
+    add_shard_arguments(parser)
     args = parser.parse_args(argv)
     rows = run(args)
     success = sum(row.get("status") == "success" for row in rows)

@@ -66,6 +66,10 @@ if [ ! -d "${MNE_DENOISE_VENV}" ]; then
     # whole env builds offline (compute nodes have no internet). openneuro-py is
     # only used on login nodes (downloads); pooch for OSF/Zenodo fetchers.
     python -m pip install --no-index pandas seaborn pytest pyyaml openneuro-py pooch
+    # Frozen BSS comparators. If either wheel is absent, the preflight must fail
+    # visibly; array jobs refuse an unavailable_dependency result.
+    python -m pip install --no-index python-picard==0.8.2 amica==0.0.1 \
+        || echo "WARNING: Picard/AMICA wheels unavailable; do not submit BSS arrays."
 else
     echo "--- Activating existing virtualenv ---"
     # shellcheck disable=SC1091

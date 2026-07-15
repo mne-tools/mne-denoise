@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use mne-denoise, please cite this software and the primary methods you apply."
+title: "mne-denoise"
+type: software
+version: 0.0.1
+authors:
+  - family-names: Esmaeili
+    given-names: Sina
+    email: sina.esmaeili@umontreal.ca
+    affiliation: Université de Montréal
+  - family-names: Abdelhedi
+    given-names: Hamza
+    email: hamza.abdelhedi@umontreal.ca
+    affiliation: Université de Montréal
+repository-code: "https://github.com/mne-tools/mne-denoise"
+url: "https://mne.tools/mne-denoise/"
+license: BSD-3-Clause
+keywords:
+  - EEG
+  - MEG
+  - denoising
+  - MNE-Python
+  - signal processing

@@ -24,6 +24,7 @@ from mne_denoise.benchmarks.intended import (
     relative_rmse,
 )
 from mne_denoise.benchmarks.provenance import AttemptRecorder, build_run_record
+from mne_denoise.benchmarks.sharding import add_shard_arguments, args_select_unit
 from mne_denoise.dss.denoisers import QuasiPeriodicDenoiser
 from mne_denoise.emd import EMDDenoiser
 from mne_denoise.ssa import SSA
@@ -180,6 +181,8 @@ def run(args):
                     n_channels,
                 )
                 unit_id = f"{artifact_type}_db{ratio}_seed{replicate:03d}"
+                if not args_select_unit(args, unit_id):
+                    continue
                 for method in methods:
                     method_dir = root / unit_id / method
                     record = build_run_record(arm=cfg["arm"], method=method, unit_id=unit_id, config_path=config_path, dataset_manifest=args.dataset_manifest, repo_root=_REPO, seed=seed, information_tier="recording_local", allow_dirty=args.allow_dirty)
@@ -246,6 +249,7 @@ def main(argv=None):
     parser.add_argument("--output-root", default=str(_REPO / "results/temporal_ground_truth"))
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
+    add_shard_arguments(parser)
     args = parser.parse_args(argv)
     rows = run(args)
     accepted = sum(

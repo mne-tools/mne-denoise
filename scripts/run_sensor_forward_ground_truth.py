@@ -23,6 +23,7 @@ from mne_denoise.benchmarks.intended import (
     relative_rmse,
 )
 from mne_denoise.benchmarks.provenance import AttemptRecorder, build_run_record
+from mne_denoise.benchmarks.sharding import add_shard_arguments, args_select_unit
 from mne_denoise.mwf import MWF
 from mne_denoise.sound import SOUND
 from mne_denoise.sspsir import SSPSIR
@@ -265,6 +266,8 @@ def run(args):
                         seed = locked_seed(spec["seeds"]["global"], cfg["arm"], modality, artifact, severity, mismatch, replicate)
                         substrate = _substrate(modality, artifact, severity, cfg, seed, mismatch)
                         unit_id = f"{modality}_{artifact}_db{severity}_{mismatch}_seed{replicate:03d}"
+                        if not args_select_unit(args, unit_id):
+                            continue
                         for method in methods:
                             method_dir = root / unit_id / method
                             tier = (
@@ -317,6 +320,7 @@ def main(argv=None):
     parser.add_argument("--output-root", default=str(_REPO / "results/sensor_forward_ground_truth"))
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
+    add_shard_arguments(parser)
     args = parser.parse_args(argv)
     rows = run(args)
     success = sum(row.get("status") == "success" for row in rows)

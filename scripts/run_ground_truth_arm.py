@@ -21,6 +21,7 @@ from mne_denoise.benchmarks import simulation as sim
 from mne_denoise.benchmarks.config import assert_submission_ready
 from mne_denoise.benchmarks.intended import locked_seed
 from mne_denoise.benchmarks.provenance import AttemptRecorder, build_run_record
+from mne_denoise.benchmarks.sharding import add_shard_arguments, args_select_unit
 from mne_denoise.qa import ground_truth as gt
 
 
@@ -408,6 +409,8 @@ def run(args):
                         f"{source_regime}_snr{snr}_ch{n_channels}_"
                         f"source{source_set:02d}_mix{mixing_matrix:02d}"
                     )
+                    if not args_select_unit(args, unit_id):
+                        continue
                     for method in methods:
                         method_dir = root / unit_id / method
                         record = build_run_record(
@@ -493,6 +496,7 @@ def main(argv=None):
     parser.add_argument("--methods", help="comma-separated subset for preflight")
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
+    add_shard_arguments(parser)
     args = parser.parse_args(argv)
     rows = run(args)
     acceptable = {"success", "unavailable_dependency"}

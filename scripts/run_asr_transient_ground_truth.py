@@ -27,6 +27,7 @@ from mne_denoise.benchmarks.provenance import (
     AttemptRecorder,
     build_run_record,
 )
+from mne_denoise.benchmarks.sharding import add_shard_arguments, args_select_unit
 from mne_denoise.dss.denoisers import BandpassBias
 from mne_denoise.mwf import MWF
 from mne_denoise.wavelet import wavelet_denoise_multichannel
@@ -241,6 +242,8 @@ def run(args) -> list[dict]:
                         f"{args.campaign}_{factor_label}-{cell['level']}_"
                         f"{artifact_type}_db{severity}_seed{replicate:03d}"
                     )
+                    if not args_select_unit(args, unit_id):
+                        continue
                     for method in methods:
                         method_dir = output_root / unit_id / method
                         tier = (
@@ -351,6 +354,7 @@ def main(argv=None) -> int:
     parser.add_argument("--methods", help="Comma-separated method subset")
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
+    add_shard_arguments(parser)
     args = parser.parse_args(argv)
     rows = run(args)
     successes = sum(row.get("status") == "success" for row in rows)
