@@ -49,8 +49,8 @@ methods:
     invariant_tests: [tests/test_iterative_dss.py, tests/denoisers]
     external_parity: sign/permutation-aware source validation; no universal waveform identity claim
     intended_benchmark: expanded factorial BSS known-source recovery
-    evidence_tier: E3-dev
-    benchmark_state: frozen_protocol_ready_rerun_required
+    evidence_tier: E4
+    benchmark_state: generic_bss_factorial_complete_forward_mixing_pending
     optional_dependencies: []
     license: BSD-3-Clause
 
@@ -168,10 +168,10 @@ methods:
     fit_scope: window-local or recording-local CCA
     fitted_state: [mixing_, unmixing_, canonical_correlations_, removed_components_]
     invariant_tests: [tests/test_icanclean.py, tests/benchmarks/test_ds004784_phantom.py]
-    external_parity: intended public phantom protocol implemented; exact repeat-2 results remain locked
+    external_parity: intended public phantom protocol implemented; exact repeat-2 and reference-factorial results are locked and complete
     intended_benchmark: ds004784 six-condition repeat-2 replication and reference-leakage simulation
-    evidence_tier: E3-dev
-    benchmark_state: repeat1_development_complete_repeat2_locked
+    evidence_tier: E4
+    benchmark_state: ds004784_repeat2_and_reference_factorial_complete
     optional_dependencies: []
     license: BSD-3-Clause; patent and institutional implementation determination required before submission
 
@@ -187,8 +187,8 @@ methods:
     invariant_tests: [tests/test_cca.py]
     external_parity: behavior tests only
     intended_benchmark: muscle/movement and ds004784 information-tier comparison
-    evidence_tier: E3-dev
-    benchmark_state: development_results_available_rerun_required
+    evidence_tier: E4
+    benchmark_state: reference_factorial_and_ds004784_repeat2_complete_muscle_arm_development
     optional_dependencies: []
     license: BSD-3-Clause
 
@@ -204,8 +204,8 @@ methods:
     invariant_tests: [tests/test_mwf.py, tests/benchmarks/test_comparators.py]
     external_parity: formula and behavior tests; no external waveform fixture
     intended_benchmark: masked broadband, ASR oracle-mask, and ds004784 arms
-    evidence_tier: E3-dev
-    benchmark_state: frozen_protocol_ready_rerun_required
+    evidence_tier: E4
+    benchmark_state: reference_factorial_and_ds004784_repeat2_complete_other_arms_pending
     optional_dependencies: []
     license: BSD-3-Clause
 
@@ -337,22 +337,22 @@ operators:
     - {id: peak_filter_bias, import_path: mne_denoise.dss.PeakFilterBias, target: isolated spectral peak, status: native_operator, evidence_tier: E1}
     - {id: comb_filter_bias, import_path: mne_denoise.dss.CombFilterBias, target: periodic fundamental and harmonics, status: native_operator, evidence_tier: E3-dev}
     - {id: cycle_average_bias, import_path: mne_denoise.dss.CycleAverageBias, target: cycle-locked reproducibility, status: native_operator, evidence_tier: E3-dev}
-    - {id: reference_bias, import_path: mne_denoise.dss.ReferenceBias, target: reference-predictable covariance, status: experimental_estimator, evidence_tier: E1, source: integration@40322136}
+    - {id: reference_bias, import_path: mne_denoise.dss.ReferenceBias, target: reference-predictable covariance, status: experimental_estimator, evidence_tier: E4, source: integration@40322136, benchmark_state: reference_factorial_complete}
     - {id: spectrogram_bias, import_path: mne_denoise.dss.SpectrogramBias, target: time-frequency mask, status: native_operator, evidence_tier: E1}
     - {id: time_shift_bias, import_path: mne_denoise.dss.TimeShiftBias, target: time-shift predictability, status: native_operator, evidence_tier: E1, deprecated: true}
     - {id: smoothing_bias, import_path: mne_denoise.dss.SmoothingBias, target: slow temporal structure, status: native_operator, evidence_tier: E1, deprecated: true}
   nonlinear_contrasts:
-    - {id: tanh_mask, import_path: mne_denoise.dss.TanhMaskDenoiser, target: super-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: robust_tanh, import_path: mne_denoise.dss.RobustTanhDenoiser, target: robust super-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: gauss, import_path: mne_denoise.dss.GaussDenoiser, target: non-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: skew, import_path: mne_denoise.dss.SkewDenoiser, target: asymmetric sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: smooth_tanh, import_path: mne_denoise.dss.SmoothTanhDenoiser, target: smoothly saturated super-Gaussian sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: kurtosis, import_path: mne_denoise.dss.KurtosisDenoiser, target: kurtotic sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: wiener_mask, import_path: mne_denoise.dss.WienerMaskDenoiser, target: Wiener-estimated source mask, status: native_operator, evidence_tier: E1}
-    - {id: variance_mask, import_path: mne_denoise.dss.VarianceMaskDenoiser, target: high-variance source intervals, status: native_operator, evidence_tier: E1}
-    - {id: dct, import_path: mne_denoise.dss.DCTDenoiser, target: sparse DCT structure, status: native_operator, evidence_tier: E3-dev}
-    - {id: quasi_periodic, import_path: mne_denoise.dss.QuasiPeriodicDenoiser, target: quasi-periodic sources, status: native_operator, evidence_tier: E3-dev}
-    - {id: spectrogram, import_path: mne_denoise.dss.SpectrogramDenoiser, target: sparse time-frequency sources, status: native_operator, evidence_tier: E3-dev}
+    - {id: tanh_mask, import_path: mne_denoise.dss.TanhMaskDenoiser, target: super-Gaussian sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: robust_tanh, import_path: mne_denoise.dss.RobustTanhDenoiser, target: robust super-Gaussian sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: gauss, import_path: mne_denoise.dss.GaussDenoiser, target: non-Gaussian sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: skew, import_path: mne_denoise.dss.SkewDenoiser, target: asymmetric sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: smooth_tanh, import_path: mne_denoise.dss.SmoothTanhDenoiser, target: smoothly saturated super-Gaussian sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: kurtosis, import_path: mne_denoise.dss.KurtosisDenoiser, target: kurtotic sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: wiener_mask, import_path: mne_denoise.dss.WienerMaskDenoiser, target: Wiener-estimated source mask, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: variance_mask, import_path: mne_denoise.dss.VarianceMaskDenoiser, target: high-variance source intervals, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: dct, import_path: mne_denoise.dss.DCTDenoiser, target: sparse DCT structure, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: quasi_periodic, import_path: mne_denoise.dss.QuasiPeriodicDenoiser, target: quasi-periodic sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
+    - {id: spectrogram, import_path: mne_denoise.dss.SpectrogramDenoiser, target: sparse time-frequency sources, status: native_operator, evidence_tier: E4, benchmark_state: generic_bss_factorial_complete}
   convenience_variants:
     - {id: ssvep_dss, import_path: mne_denoise.dss.ssvep_dss, status: native_operator, evidence_tier: E3-dev}
     - {id: narrowband_dss, import_path: mne_denoise.dss.narrowband_dss, status: native_operator, evidence_tier: E1}
