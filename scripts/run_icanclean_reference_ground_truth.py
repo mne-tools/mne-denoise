@@ -12,6 +12,7 @@ import sys
 import numpy as np
 import yaml
 from scipy import signal
+from scipy.integrate import trapezoid
 
 _REPO = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
@@ -124,7 +125,7 @@ def _clean(method, mixture, sfreq, cfg):
 def _band_power(data, sfreq, low=8.0, high=30.0):
     frequencies, psd = signal.welch(data, sfreq, nperseg=min(512, data.shape[1]), axis=1)
     keep = (frequencies >= low) & (frequencies <= high)
-    return float(np.trapezoid(psd[:, keep], frequencies[keep], axis=1).mean())
+    return float(trapezoid(psd[:, keep], frequencies[keep], axis=1).mean())
 
 
 def _max_reference_correlation(data, reference):
