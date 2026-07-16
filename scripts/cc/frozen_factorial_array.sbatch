@@ -27,7 +27,20 @@ if [ "${SHARD_INDEX}" -lt 0 ] || [ "${SHARD_INDEX}" -ge "${SHARD_COUNT}" ]; then
     exit 2
 fi
 
-ROOT="${SCRATCH}/mne-denoise-neuroimage-v1/${ARM}/shards"
+RESULT_ARM="${ARM}"
+if [ "${ARM}" = "asr_sensitivity" ]; then
+    : "${SENSITIVITY_INDEX:?export SENSITIVITY_INDEX for this sensitivity array}"
+    if ! [[ "${SENSITIVITY_INDEX}" =~ ^[0-9]+$ ]]; then
+        echo "SENSITIVITY_INDEX must be a non-negative integer" >&2
+        exit 2
+    fi
+    # Each one-factor-at-a-time sensitivity cell is an independent factorial.
+    # Keep its shards isolated so separately submitted arrays cannot overwrite
+    # shard-00000 ... shard-N or their merged evidence.
+    RESULT_ARM="${ARM}/cell-$(printf '%02d' "${SENSITIVITY_INDEX}")"
+fi
+
+ROOT="${SCRATCH}/mne-denoise-neuroimage-v1/${RESULT_ARM}/shards"
 OUT="${ROOT}/shard-$(printf '%05d' "${SHARD_INDEX}")"
 mkdir -p "${OUT}" logs
 
@@ -52,7 +65,6 @@ case "${ARM}" in
         ;;
     asr_sensitivity)
         CONFIG=configs/benchmarks/asr_transient_ground_truth.yaml
-        : "${SENSITIVITY_INDEX:?export SENSITIVITY_INDEX for this sensitivity array}"
         RUNNER=(python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}")
         ;;
     reference)

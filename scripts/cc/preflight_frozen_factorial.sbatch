@@ -31,11 +31,24 @@ case "${ARM}" in
         python scripts/run_ground_truth_arm.py --config "${CONFIG}" --methods "${METHODS}" \
             --smoke --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}"
         ;;
-    asr_core|asr_sensitivity)
+    asr_core)
         CONFIG=configs/benchmarks/asr_transient_ground_truth.yaml
         python -m mne_denoise.benchmarks validate "${CONFIG}"
         python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --smoke \
             --campaign core --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}"
+        ;;
+    asr_sensitivity)
+        CONFIG=configs/benchmarks/asr_transient_ground_truth.yaml
+        : "${SENSITIVITY_INDEX:?export SENSITIVITY_INDEX for the sensitivity preflight}"
+        if ! [[ "${SENSITIVITY_INDEX}" =~ ^[0-9]+$ ]]; then
+            echo "SENSITIVITY_INDEX must be a non-negative integer" >&2
+            exit 2
+        fi
+        CELL="cell-$(printf '%02d' "${SENSITIVITY_INDEX}")"
+        python -m mne_denoise.benchmarks validate "${CONFIG}"
+        python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --smoke \
+            --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}" \
+            --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}/${CELL}"
         ;;
     reference)
         CONFIG=configs/benchmarks/icanclean_reference_ground_truth.yaml
