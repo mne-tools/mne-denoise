@@ -170,29 +170,29 @@
     "implementation": "CPython",
     "machine": "AMD64",
     "packages": {
-      "EMD-signal": "1.10.0",
+      "EMD-signal": "1.9.0",
       "PyWavelets": "1.9.0",
       "matplotlib": "3.10.8",
       "mne": "1.11.0",
       "mne-denoise": "0.0.1",
-      "numpy": "2.4.4",
-      "pandas": "3.0.1",
+      "numpy": "2.4.1",
+      "pandas": "2.3.3",
       "scikit-learn": "1.8.0",
       "scipy": "1.17.1"
     },
     "platform": "Windows-11-10.0.26200-SP0",
     "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]"
   },
-  "environment_hash": "73a075dfa2b5c25e920ec1c2d0e8c9c2fac88bb6feee13c8fe50363fdaae229d",
-  "frozen_at_utc": "2026-07-16T18:20:19.147384Z",
+  "environment_hash": "2c8c5fd224316ec4720eeaa4003507c23dd8f19e5d24872a1751c7c8227ae295",
+  "frozen_at_utc": "2026-07-16T18:45:10.630125Z",
   "git": {
     "branch": "codex/neuroimage-0.1-integration",
-    "commit": "afb93e5fc2c7c73b505573885d447ab93d633665",
+    "commit": "b163edfed800b747804778f90bce4a5dd3c1611f",
     "dirty": false,
     "dirty_paths": [],
     "root": "."
   },
-  "manifest_hash": "6ef83f1db885824030a52773fa4f2c0a6cbe81313e3fa502895feb58d90d44f9",
+  "manifest_hash": "a7c54e7d994a88219ffbe6c92baf6cc44e3a1f919b6a46ebe5d3ed97d7820c06",
   "protocol_id": "neuroimage-benchmark-v1",
   "schema_version": 1
 }
