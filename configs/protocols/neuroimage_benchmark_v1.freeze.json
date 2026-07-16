@@ -184,15 +184,15 @@
     "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]"
   },
   "environment_hash": "2c8c5fd224316ec4720eeaa4003507c23dd8f19e5d24872a1751c7c8227ae295",
-  "frozen_at_utc": "2026-07-16T18:45:10.630125Z",
+  "frozen_at_utc": "2026-07-16T19:24:31.244278Z",
   "git": {
     "branch": "codex/neuroimage-0.1-integration",
-    "commit": "b163edfed800b747804778f90bce4a5dd3c1611f",
+    "commit": "302d3540424a90b38edf7abeca4275993494b9d2",
     "dirty": false,
     "dirty_paths": [],
     "root": "."
   },
-  "manifest_hash": "a7c54e7d994a88219ffbe6c92baf6cc44e3a1f919b6a46ebe5d3ed97d7820c06",
+  "manifest_hash": "27513d9a1d4bd6a4cb2bd12fcabe216adbaa159ecd7b954a4ce6b90d17516598",
   "protocol_id": "neuroimage-benchmark-v1",
   "schema_version": 1
 }
