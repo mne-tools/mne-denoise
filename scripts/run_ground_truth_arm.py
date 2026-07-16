@@ -249,6 +249,16 @@ def _align(recovered, matching, n_reference):
     return aligned
 
 
+def _supports_amari(unmixing: np.ndarray, mixing: np.ndarray) -> bool:
+    """Return whether ``unmixing @ mixing`` is square and identifiable."""
+    return (
+        unmixing.ndim == 2
+        and mixing.ndim == 2
+        and unmixing.shape[1] == mixing.shape[0]
+        and unmixing.shape[0] == mixing.shape[1]
+    )
+
+
 def _method_list(cfg):
     contrasts = cfg["methods_under_test"]["iterative_dss"]["implemented_contrasts"]
     methods = [f"iterative_dss_{contrast}" for contrast in contrasts]
@@ -319,7 +329,7 @@ def _score_method(method, replicate, seed, *, max_iter):
             metrics["mixing_recovery_error"] = float(
                 gt.mixing_recovery_error(np.linalg.pinv(unmixing), replicate.A)
             )
-        if replicate.is_square:
+        if _supports_amari(unmixing, replicate.A):
             metrics["amari"] = float(gt.amari_index(unmixing, replicate.A))
     return metrics
 
