@@ -56,6 +56,12 @@ case "${ARM}" in
             --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}" \
             --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}/${CELL}"
         ;;
+    asr_juggler)
+        CONFIG=configs/benchmarks/asr_juggler_kim2025.yaml
+        python -m mne_denoise.benchmarks validate "${CONFIG}"
+        python scripts/run_asr_juggler_kim2025.py --config "${CONFIG}" --smoke \
+            --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}"
+        ;;
     reference)
         CONFIG=configs/benchmarks/icanclean_reference_ground_truth.yaml
         python -m mne_denoise.benchmarks validate "${CONFIG}"
