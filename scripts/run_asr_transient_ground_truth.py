@@ -320,6 +320,22 @@ def run(args) -> list[dict]:
                                     encoding="utf-8",
                                 )
                                 rows.append(metrics)
+                        except (ImportError, ModuleNotFoundError) as error:
+                            # Missing required method code is an execution failure,
+                            # not a scientific failure rate.  The Slurm wrapper
+                            # must fail closed so the environment can be repaired.
+                            rows.append(
+                                {
+                                    "method": method,
+                                    "status": "unavailable_dependency",
+                                    "unit_id": unit_id,
+                                    "artifact_type": artifact_type,
+                                    "artifact_to_signal_db": severity,
+                                    "replicate": replicate,
+                                    "seed": seed,
+                                    "error": f"{type(error).__name__}: {error}",
+                                }
+                            )
                         except Exception as error:  # terminal record contains traceback
                             rows.append(
                                 {
@@ -335,6 +351,19 @@ def run(args) -> list[dict]:
                             )
     _write_tsv(output_root / "raw_metrics.tsv", rows)
     return rows
+
+
+def _runner_exit_status(rows) -> int:
+    """Return success when every scheduled attempt produced a terminal result.
+
+    Method-level numerical or calibration failures are benchmark outcomes and
+    must remain in the failure denominator. Missing dependencies and unknown
+    statuses instead indicate that the frozen execution environment is invalid.
+    """
+    if not rows:
+        return 1
+    accepted = {"success", "failed"}
+    return int(any(row.get("status") not in accepted for row in rows))
 
 
 def main(argv=None) -> int:
@@ -358,8 +387,12 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     rows = run(args)
     successes = sum(row.get("status") == "success" for row in rows)
-    print(f"attempts={len(rows)} successes={successes} output={args.output_root}")
-    return 0 if successes == len(rows) else 1
+    failures = sum(row.get("status") == "failed" for row in rows)
+    print(
+        f"attempts={len(rows)} successes={successes} failures={failures} "
+        f"output={args.output_root}"
+    )
+    return _runner_exit_status(rows)
 
 
 if __name__ == "__main__":
