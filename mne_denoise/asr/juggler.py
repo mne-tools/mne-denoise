@@ -20,8 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from scipy import stats
-from sklearn.cluster import DBSCAN
+from scipy import spatial, stats
 
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne
@@ -561,13 +560,11 @@ def _select_dbscan_reference_mask(
         estimated_clean_count,
         features.shape[0],
     )
-    clusterer = DBSCAN(
+    labels, dbscan_memory_info = _dbscan_chebyshev_memory_bounded(
+        features,
         eps=eps,
         min_samples=min_samples,
-        metric="chebyshev",
-        n_jobs=None,
     )
-    labels = clusterer.fit_predict(features)
     candidate_labels = np.unique(labels[labels >= 0])
     if candidate_labels.size == 0:
         raise RuntimeError(
@@ -600,8 +597,178 @@ def _select_dbscan_reference_mask(
         "juggler_dbscan_cluster_sizes": np.asarray(cluster_sizes, dtype=int),
         "juggler_dbscan_cluster_scores": np.asarray(cluster_scores, dtype=np.float64),
         "juggler_dbscan_estimated_clean_count": int(estimated_clean_count),
+        **dbscan_memory_info,
     }
     return sample_mask, diagnostics
+
+
+def _dbscan_chebyshev_memory_bounded(
+    features: np.ndarray,
+    *,
+    eps: float,
+    min_samples: int,
+    count_batch_size: int = 4096,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Run exact Chebyshev DBSCAN without materializing all neighborhoods.
+
+    Scikit-learn's DBSCAN stores the complete radius-neighborhood graph. Dense
+    reference clusters can therefore require quadratic memory, which is
+    prohibitive for the 100,000-sample Juggler simulation. This implementation
+    preserves the DBSCAN definition while keeping only batched neighbor counts,
+    occupied grid cells, and one border-point neighborhood in memory.
+
+    Parameters
+    ----------
+    features : ndarray, shape (n_samples, n_features)
+        Feature vectors to cluster.
+    eps : float
+        Chebyshev neighborhood radius.
+    min_samples : int
+        Minimum neighborhood size, including the point itself, for a core
+        sample.
+    count_batch_size : int
+        Number of points used per radius-count query.
+
+    Returns
+    -------
+    labels : ndarray, shape (n_samples,)
+        DBSCAN cluster labels, with ``-1`` denoting noise.
+    diagnostics : dict
+        Memory-backend and core-sample diagnostics.
+    """
+    features = np.ascontiguousarray(features, dtype=np.float64)
+    if features.ndim != 2 or features.shape[0] == 0:
+        raise ValueError("features must be a non-empty 2D array")
+    if not np.isfinite(eps) or eps <= 0:
+        raise ValueError("eps must be positive and finite")
+    if min_samples < 1:
+        raise ValueError("min_samples must be at least 1")
+    count_batch_size = max(1, int(count_batch_size))
+
+    n_samples = features.shape[0]
+    tree = spatial.cKDTree(features)
+    neighbor_counts = np.empty(n_samples, dtype=np.int64)
+    for start in range(0, n_samples, count_batch_size):
+        stop = min(start + count_batch_size, n_samples)
+        neighbor_counts[start:stop] = tree.query_ball_point(
+            features[start:stop],
+            r=eps,
+            p=np.inf,
+            return_length=True,
+            workers=1,
+        )
+    core_mask = neighbor_counts >= int(min_samples)
+    core_indices = np.flatnonzero(core_mask)
+    labels = np.full(n_samples, -1, dtype=np.int64)
+    if core_indices.size == 0:
+        return labels, {
+            "juggler_dbscan_backend": "ckdtree_grid_memory_bounded",
+            "juggler_dbscan_core_samples": 0,
+            "juggler_dbscan_core_cells": 0,
+            "juggler_dbscan_count_batch_size": count_batch_size,
+        }
+
+    # Every pair of points in the same eps-wide Chebyshev grid cell is a
+    # neighbor. Connected components can therefore be found at cell level,
+    # avoiding a radius query for every point in a dense core cluster.
+    cell_coordinates = np.floor(features / eps).astype(np.int64)
+    core_cells: dict[tuple[int, ...], list[int]] = {}
+    for index in core_indices:
+        key = tuple(int(value) for value in cell_coordinates[index])
+        core_cells.setdefault(key, []).append(int(index))
+    cell_keys = sorted(core_cells, key=lambda key: core_cells[key][0])
+    parent = np.arange(len(cell_keys), dtype=np.int64)
+    cell_min_index = np.asarray(
+        [core_cells[key][0] for key in cell_keys], dtype=np.int64
+    )
+
+    def find(position: int) -> int:
+        while parent[position] != position:
+            parent[position] = parent[parent[position]]
+            position = int(parent[position])
+        return position
+
+    def union(left: int, right: int) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root == right_root:
+            return
+        if cell_min_index[left_root] <= cell_min_index[right_root]:
+            parent[right_root] = left_root
+            cell_min_index[left_root] = min(
+                cell_min_index[left_root], cell_min_index[right_root]
+            )
+        else:
+            parent[left_root] = right_root
+            cell_min_index[right_root] = min(
+                cell_min_index[left_root], cell_min_index[right_root]
+            )
+
+    cell_trees = {
+        key: spatial.cKDTree(features[np.asarray(indices, dtype=int)])
+        for key, indices in core_cells.items()
+    }
+    cell_coordinate_tree = spatial.cKDTree(
+        np.asarray(cell_keys, dtype=np.float64)
+    )
+    for left_position, left_key in enumerate(cell_keys):
+        left_points = features[np.asarray(core_cells[left_key], dtype=int)]
+        neighbor_positions = cell_coordinate_tree.query_ball_point(
+            np.asarray(left_key, dtype=np.float64),
+            r=1.0,
+            p=np.inf,
+            workers=1,
+        )
+        for right_position in neighbor_positions:
+            right_position = int(right_position)
+            if right_position <= left_position:
+                continue
+            right_key = cell_keys[right_position]
+            right_points = features[np.asarray(core_cells[right_key], dtype=int)]
+            if left_points.shape[0] <= right_points.shape[0]:
+                distances, _ = cell_trees[right_key].query(
+                    left_points,
+                    k=1,
+                    p=np.inf,
+                    distance_upper_bound=eps,
+                    workers=1,
+                )
+            else:
+                distances, _ = cell_trees[left_key].query(
+                    right_points,
+                    k=1,
+                    p=np.inf,
+                    distance_upper_bound=eps,
+                    workers=1,
+                )
+            if np.any(np.isfinite(distances)):
+                union(left_position, right_position)
+
+    roots = np.asarray([find(position) for position in range(len(cell_keys))])
+    unique_roots = sorted(set(roots.tolist()), key=lambda root: cell_min_index[root])
+    root_to_label = {root: label for label, root in enumerate(unique_roots)}
+    for position, key in enumerate(cell_keys):
+        label = root_to_label[int(roots[position])]
+        labels[np.asarray(core_cells[key], dtype=int)] = label
+
+    # A non-core point is a DBSCAN border point when it neighbors a core
+    # sample. When it touches more than one component, assigning the earliest
+    # component matches the deterministic input-order convention.
+    for index in np.flatnonzero(~core_mask):
+        neighbors = np.asarray(
+            tree.query_ball_point(features[index], r=eps, p=np.inf, workers=1),
+            dtype=int,
+        )
+        core_labels = labels[neighbors[core_mask[neighbors]]]
+        if core_labels.size:
+            labels[index] = int(np.min(core_labels))
+
+    return labels, {
+        "juggler_dbscan_backend": "ckdtree_grid_memory_bounded",
+        "juggler_dbscan_core_samples": int(core_indices.size),
+        "juggler_dbscan_core_cells": int(len(core_cells)),
+        "juggler_dbscan_count_batch_size": count_batch_size,
+    }
 
 
 def _select_gev_reference_mask(

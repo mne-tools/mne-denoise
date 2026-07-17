@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from scipy import signal
@@ -103,25 +105,31 @@ def test_calibrate_asr_riemannian_method():
     assert state.M.shape == (4, 4)
 
 
-def test_calibrate_asr_not_enough_clean_windows_raises():
-    """All-artifact data should fail the minimum clean window check."""
+def test_min_clean_fraction_does_not_impose_a_retained_window_quota():
+    """MinCleanFraction controls distribution fitting, as in clean_windows."""
     rng = np.random.default_rng(99)
-    # Create data with massive artifacts everywhere so no windows pass
     data = rng.standard_normal((4, 2000))
-    data *= 100.0  # Make everything look like an artifact
-    # Add random spikes to break channel correlations
-    for ch in range(4):
-        spikes = rng.choice(2000, size=500, replace=False)
-        data[ch, spikes] += rng.uniform(500, 1000, size=500)
-    with pytest.raises(ValueError, match="Not enough clean calibration windows"):
-        calibrate_asr(
+
+    def select_five_contiguous_windows(X, starts, win_len, **kwargs):
+        del X, win_len, kwargs
+        mask = np.zeros(len(starts), dtype=bool)
+        mask[5:10] = True
+        return mask, np.zeros((len(starts), data.shape[0]))
+
+    with patch(
+        "mne_denoise.asr._calibration._select_clean_windows",
+        side_effect=select_five_contiguous_windows,
+    ):
+        _, diagnostics = calibrate_asr(
             data,
             SFREQ,
             cutoff=20.0,
             calibration="auto",
             filter_kind="none",
-            ref_tolerances=(-np.inf, 0.01),
         )
+    assert 0 < diagnostics["n_clean_windows"] < (
+        0.25 * diagnostics["n_calibration_windows"]
+    )
 
 
 def test_asr_statistics_filter_is_applied_causally_before_calibration():

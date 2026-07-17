@@ -166,12 +166,6 @@ def calibrate_asr(
             max_dropout_fraction=max_dropout_fraction,
             min_clean_fraction=min_clean_fraction,
         )
-        min_clean_windows = max(1, int(np.ceil(min_clean_fraction * len(cal_starts))))
-        if clean_window_mask.sum() < min_clean_windows:
-            raise ValueError(
-                "Not enough clean calibration windows: "
-                f"{clean_window_mask.sum()} found, {min_clean_windows} required"
-            )
         clean_sample_mask = _create_sample_mask_from_windows(
             n_times,
             cal_starts,
