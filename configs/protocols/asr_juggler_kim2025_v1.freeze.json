@@ -1,0 +1,38 @@
+{
+  "configs": [
+    {
+      "arm": "asr_juggler_kim2025",
+      "path": "configs/benchmarks/asr_juggler_kim2025.yaml",
+      "sha256": "9d51e731ad11ffe0f958f204d76c1942010377d998b0abae3ae206b03b4600fe"
+    }
+  ],
+  "environment": {
+    "implementation": "CPython",
+    "machine": "AMD64",
+    "packages": {
+      "EMD-signal": "not-installed",
+      "PyWavelets": "1.9.0",
+      "matplotlib": "3.10.8",
+      "mne": "1.11.0",
+      "mne-denoise": "0.0.1",
+      "numpy": "2.4.2",
+      "pandas": "3.0.1",
+      "scikit-learn": "1.8.0",
+      "scipy": "1.17.1"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.9 (tags/v3.12.9:fdb8142, Feb  4 2025, 15:27:58) [MSC v.1942 64 bit (AMD64)]"
+  },
+  "environment_hash": "2577fb239ef6bdc4a9ae98026df71204ba729350a69125e2d8aaaa1f910beaad",
+  "frozen_at_utc": "2026-07-17T21:07:20.438258Z",
+  "git": {
+    "branch": "codex/asr-replication-hardening",
+    "commit": "5f4d86edde4b2935cc1d713e43b5d6567df86fcd",
+    "dirty": false,
+    "dirty_paths": [],
+    "root": "."
+  },
+  "manifest_hash": "f74675b6592fe632e59110fa17864495b973638f33704d3bfbef37cd48563c1c",
+  "protocol_id": "asr-juggler-kim2025-v1",
+  "schema_version": 1
+}
