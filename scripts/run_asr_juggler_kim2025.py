@@ -11,7 +11,7 @@ import sys
 
 import numpy as np
 import yaml
-from scipy import signal
+from scipy import integrate, signal
 
 _REPO = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
@@ -249,7 +249,7 @@ def _band_power(data: np.ndarray, sfreq: float, low: float, high: float) -> floa
         data, fs=sfreq, nperseg=min(data.shape[1], int(round(4 * sfreq))), axis=1
     )
     keep = (frequencies >= low) & (frequencies <= high)
-    return float(np.trapezoid(psd[:, keep], frequencies[keep], axis=1).mean())
+    return float(integrate.trapezoid(psd[:, keep], frequencies[keep], axis=1).mean())
 
 
 def _score(model, simulation: dict[str, np.ndarray | float]) -> dict:
@@ -432,7 +432,7 @@ def main(argv=None) -> int:
         f"attempts={len(rows)} successes={successes} failures={failures} "
         f"output={args.output_root}"
     )
-    return int(not rows or any(row.get("status") not in {"success", "failed"} for row in rows))
+    return int(not rows or failures > 0)
 
 
 if __name__ == "__main__":
