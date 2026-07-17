@@ -1,0 +1,91 @@
+arm: asr_juggler_kim2025
+runner: asr_juggler_kim2025
+status: protocol_frozen_v1
+citation:
+  doi: 10.1016/j.jneumeth.2025.110465
+  title: "Juggler's ASR: Unpacking the principles of artifact subspace reconstruction for revision toward extreme MoBI"
+evidence:
+  tier: procedural_replication
+  reason: published code, empirical juggling data, and numerical artifact waveforms are unavailable
+  reported_fields:
+    - channel_count
+    - sample_count
+    - sampling_frequency
+    - cross_channel_correlation
+    - alpha_frequency_and_amplitude
+    - artifact_timing_and_spatial_weights
+    - cutoff_grid
+    - ASR_blocksize
+    - reference_selection_rules
+    - post_ASR_window_rejection
+  under_specified_fields:
+    artifact_waveforms: operationalized_from_the_qualitative_Figure_2_descriptions
+    dbscan_mode_estimator: operationalized_as_histogram_mode_of_top_five_feature_L2_norm
+simulation:
+  n_channels: 100
+  n_times: 100000
+  sfreq_hz: 256
+  background: pink_noise
+  cross_channel_correlation: 0.2
+  background_scale_uv: 1.0
+  alpha_frequency_hz: 10.0
+  alpha_peak_amplitude_uv: 5.0
+  motion_1_intervals_s: [0.10, 0.15, 0.20, 0.25, 0.30]
+  blink_interval_s: 1.2
+  motion_2_interval_s: 1.4
+  motion_1_support_fraction: [0.0, 0.5]
+  blink_support_fraction: [0.15, 0.85]
+  motion_2_support_fraction: [0.5, 1.0]
+  motion_1_channel_weights: [1.0, 1.0, 0.8, 0.6, 0.4, 0.2]
+  blink_channel_weights: [1.0, 1.0, 0.8, 0.8, 0.5, 0.5, 0.3, 0.3, 0.2, 0.2]
+  motion_2_channel_weights: [1.0, 1.0, 1.0, 0.5, 0.5, 0.3, 0.3, -0.2, -0.2, -0.2]
+  waveform_operationalization:
+    motion_1: {kind: biphasic_gaussian_derivative, duration_s: 0.04, peak_uv: 80.0}
+    blink: {kind: raised_cosine, duration_s: 0.25, peak_uv: 100.0}
+    motion_2: {kind: low_frequency_half_sine, duration_s: 0.45, peak_uv: 80.0}
+  replicates_per_interval: 1
+  seeds: {global: 250503, generation: sha256_arm_interval_and_replicate}
+methods:
+  asr_original_5pct:
+    class: mne_denoise.asr.ASR
+    calibration: automatic_clean_windows
+    ref_max_bad_channels: 0.05
+  juggler_dbscan:
+    class: mne_denoise.asr.JugglerASR
+    strategy: dbscan
+    dbscan_top_k: 5
+    dbscan_eps: paper
+    dbscan_min_samples: paper
+  juggler_gev:
+    class: mne_denoise.asr.JugglerASR
+    strategy: gev
+common_parameters:
+  cutoffs: [3, 5, 10, 20, 30]
+  blocksize: 10
+  filter_kind: asr
+  window_length_s: 0.5
+  post_asr_window_rejection:
+    z_tolerances: [-3.5, 5.0]
+    retained_bad_channel_fraction: 0.0
+metrics:
+  primary_target: motion_1_residual_energy_ratio
+  primary_preservation: clean_interval_relative_rmse
+  secondary:
+    - whole_signal_relative_rmse
+    - alpha_10hz_power_retention
+    - reference_selected_fraction
+    - post_rejection_retained_fraction
+    - fraction_reconstructed_windows
+    - effective_rank
+    - runtime
+    - failure
+preservation_reference:
+  source: known_pre_injection_pink_noise_plus_10hz_alpha
+  independent_from_method_fit: true
+unit_of_inference: simulation_realization_nested_in_motion_1_interval
+reported_result_pattern:
+  juggler_methods_remove_short_interval_motion_1_more_completely_than_original: true
+  alpha_peak_preserved_across_methods: true
+storage:
+  always_save: [metrics, model_json, terminal_status, provenance]
+  save_cleaned: {mode: selected, interval_s: [0.10, 0.20, 0.30], cutoff: 5}
