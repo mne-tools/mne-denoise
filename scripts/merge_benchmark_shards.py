@@ -19,12 +19,12 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def main() -> int:
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("shards_root", type=Path)
     parser.add_argument("--expected-shards", type=int, required=True)
     parser.add_argument("--output", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     root = args.shards_root.resolve()
     shard_dirs = [root / f"shard-{index:05d}" for index in range(args.expected_shards)]
@@ -35,13 +35,23 @@ def main() -> int:
     rows: list[dict[str, str]] = []
     shard_records = []
     attempts: set[tuple[str, str]] = set()
-    allowed_terminal = {"completed", "skipped_outside_intended_regime"}
+    allowed_terminal = {
+        "completed",
+        "failed",
+        "skipped_outside_intended_regime",
+    }
     for index, shard in enumerate(shard_dirs):
         raw = shard / "raw_metrics.tsv"
         if not raw.is_file():
             raise RuntimeError(f"missing shard metrics: {raw}")
         with raw.open(encoding="utf-8", newline="") as stream:
             shard_rows = list(csv.DictReader(stream, delimiter="\t"))
+        rows_by_attempt = {}
+        for row in shard_rows:
+            key = (str(row.get("unit_id")), str(row.get("method")))
+            if key in rows_by_attempt:
+                raise RuntimeError(f"shard {index}: duplicate metrics row: {key}")
+            rows_by_attempt[key] = row
         terminals = sorted(shard.rglob("terminal_status.json"))
         if len(terminals) != len(shard_rows):
             raise RuntimeError(
@@ -56,6 +66,27 @@ def main() -> int:
                     f"{terminal.get('status')}"
                 )
             key = (str(terminal.get("unit_id")), str(terminal.get("method")))
+            row = rows_by_attempt.get(key)
+            if row is None:
+                raise RuntimeError(
+                    f"shard {index}: terminal has no matching metrics row: {key}"
+                )
+            terminal_status = str(terminal.get("status"))
+            row_status = str(row.get("status"))
+            if row_status == "unavailable_dependency":
+                raise RuntimeError(
+                    f"shard {index}: unavailable dependency in metrics row: {key}"
+                )
+            if terminal_status == "failed" and row_status != "failed":
+                raise RuntimeError(
+                    f"shard {index}: failed terminal disagrees with metrics row "
+                    f"for {key}: {row_status}"
+                )
+            if terminal_status != "failed" and row_status == "failed":
+                raise RuntimeError(
+                    f"shard {index}: successful terminal disagrees with failed metrics "
+                    f"row for {key}"
+                )
             if key in attempts:
                 raise RuntimeError(f"duplicate attempt across shards: {key}")
             attempts.add(key)
