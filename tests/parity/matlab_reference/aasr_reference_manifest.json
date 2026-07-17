@@ -1,0 +1,32 @@
+{
+  "reference": {
+    "repository": "https://github.com/t5i0m7/AASR",
+    "commit": "9f0e7365984d6cc47f034cdb8ef8121d4339d97b",
+    "matlab": "R2025b",
+    "generated_on": "Compute Canada Fir",
+    "generated_utc": "2026-07-17T11:51:00Z"
+  },
+  "generators": [
+    "generate_aasr_input.py",
+    "generate_aasr_reference.m",
+    "generate_aasr_filter_reference.m"
+  ],
+  "fixtures": {
+    "aasr_case_reference_moderate_psp_1updates.mat": "f30f8af91e5e95c872579005e3a3a2262d1db24a63a015606387511a3672ab00",
+    "aasr_case_reference_moderate_psp_3updates.mat": "0131417ed401363aee0cf06cff3a33186ab72aea197c74c6da6ee8185186c605",
+    "aasr_case_reference_moderate_psw_1updates.mat": "066303d7e5618890add146b786ac84d0fc4e74bedd1513bd13da385ee29c8bb3",
+    "aasr_case_reference_moderate_psw_3updates.mat": "487761f889c69c7b4953787bef7ffcaeb6b4e38539988a6bf98e741fee4248b5",
+    "aasr_case_reference_strong_psp_1updates.mat": "659ab8ec43afe02f9d6603f98dffdf3a52bb36d98d9734f75917cdebfd651871",
+    "aasr_case_reference_strong_psp_3updates.mat": "e9c01c1048c08802572a6538759c906a4b1a511c5d03d775279404a59a268a44",
+    "aasr_case_reference_strong_psw_1updates.mat": "746c499821bdec5b0d12bbe68de59a568e4a12c5aeeea29e79222f745fa2d55d",
+    "aasr_case_reference_strong_psw_3updates.mat": "11dc9e4d4b5ef00977b6d6fee4fb91e248bd54d01054b8a0b9596d5df64cf35c",
+    "aasr_filter_input.mat": "439a1cd6a7f3ef80a77ab728dd67262c37016d42394e786053efb5a99ffd3e56",
+    "aasr_filter_reference.mat": "7fb3005744912862151ba0f59cc82c8c73d832ebc25fa3556410953386480d1d"
+  },
+  "scope": {
+    "adaptive_variants": ["psp", "psw"],
+    "update_counts": [1, 3],
+    "contamination_levels": ["moderate", "strong"],
+    "protocol_filter": "datafiltering2"
+  }
+}

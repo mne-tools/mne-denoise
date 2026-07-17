@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "reference": {
+    "implementation": "s4rify/rASRMatlab",
+    "repository": "https://github.com/s4rify/rASRMatlab.git",
+    "commit": "0e1ead42028bf18d023e9ace96e234ca12afd437",
+    "manopt_commit": "11722be8bb5a7cd76bee2019bd40c2a2a9b7d60d",
+    "matlab": "R2025b",
+    "cluster_job": "49337429"
+  },
+  "package": {
+    "commit": "229232675e1286681c147822d5170a3d69e29c28"
+  },
+  "generation": {
+    "input_script": "generate_asr_input.py",
+    "reference_script": "generate_rasr_reference.m"
+  },
+  "verification": {
+    "command": "pytest tests/parity/test_asr_parity.py -q -k 'rasr_calibration or rasr_process'",
+    "result": "14 passed, 3 deselected"
+  },
+  "files": {
+    "rasr_case_reference_auto_moderate_cutoff20.mat": "ed155b5214d7212560429bb30fdb172aa2df4a36c674d8295b45511f2f8a7fa5",
+    "rasr_case_reference_auto_moderate_cutoff5.mat": "ba87cc1b56bb3bda08ced8418f688f400817b2a9158688bb1281ef0fdb73ade5",
+    "rasr_case_reference_auto_strong_sfreq200_maxdims05.mat": "92dafa678ba742e1ab7f4d56ccae9b5699076b1bb0ef3fd432aca1bc7d936248",
+    "rasr_case_reference_manual_moderate_cutoff20.mat": "34ab2e6529b5c1bf70c1d423f504382b9163f57b981f77c7c879130b86023fb1",
+    "rasr_case_reference_manual_moderate_cutoff5.mat": "8020e83abd8978c3be1af93cc910c9a5ec71651f98465a12548a75b316a8e4a7",
+    "rasr_case_reference_manual_strong_cutoff20.mat": "00cc7f198618d1a89428160868057888ace6678054df5f20d138eafda6377a6b",
+    "rasr_case_reference_manual_strong_sfreq200_maxdims05.mat": "a7675fa6e55cdfa97c4d8945d2a71a956840736a3a28a487d276d432b2bf218e"
+  }
+}

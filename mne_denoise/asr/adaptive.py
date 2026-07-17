@@ -146,8 +146,11 @@ class AdaptiveASR(ASR):
     mw_window_length : float, default=20.0
         The length of the moving window (in seconds) over which covariance is
         aggregated before triggering adaptive updates.
-    mw_mode : {'final_state', 'cumulative'}, default='final_state'
-        Mode for moving-window aggregation.
+    mw_mode : {'final_state', 'sliding'}, default='final_state'
+        Moving-window reconstruction semantics. ``'final_state'`` recalibrates
+        on successive windows and reconstructs the full stream with the final
+        valid state, matching the public AASR demonstration. ``'sliding'``
+        calibrates and reconstructs each window with its local state.
     random_state : int | None, default=None
         Random state for reproducibility in stochastic internal steps.
     n_jobs : int | None, default=None
@@ -907,7 +910,6 @@ class AdaptiveASR(ASR):
                     window, sfreq
                 )
             except Exception as exc:  # noqa: BLE001
-                print("CAUGHT:", repr(exc))
                 diagnostics_list.append(
                     {
                         "window_idx": int(window_idx),

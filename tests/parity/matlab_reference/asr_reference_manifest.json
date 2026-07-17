@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "reference": {
+    "implementation": "sccn/clean_rawdata",
+    "repository": "https://github.com/sccn/clean_rawdata.git",
+    "commit": "d4b143f2a7719cf12d46c9b3e15aa827edb05614",
+    "matlab": "R2025b",
+    "cluster_job": "49337283"
+  },
+  "package": {
+    "commit": "229232675e1286681c147822d5170a3d69e29c28"
+  },
+  "generation": {
+    "input_script": "generate_asr_input.py",
+    "standard_reference_script": "generate_asr_reference.m",
+    "windowed_input_script": "generate_riemannian_windowed_input.py",
+    "windowed_reference_script": "generate_riemannian_windowed_reference.m"
+  },
+  "verification": {
+    "command": "pytest tests/parity/test_asr_parity.py tests/parity/test_riemannian_windowed_parity.py -q -k 'not rasr_calibration and not rasr_process'",
+    "result": "30 passed, 2 deselected"
+  },
+  "files": {
+    "asr_case_reference_auto_moderate_cutoff20.mat": "e8309add88bac0473649a12047951eecd9469d3d3b0641dd5cdd1865af9d4a91",
+    "asr_case_reference_auto_moderate_cutoff5.mat": "f35c43398d0d6e14b28d48132eeff39a615bf18ab2e735d96772ca25253e97ea",
+    "asr_case_reference_auto_strong_sfreq200_maxdims05.mat": "5cd918a85195dfe0d482262599b376307b21cd3cb5b8223d6ea7491f020afa1a",
+    "asr_case_reference_manual_moderate_cutoff20.mat": "2e20b07393637f4c38a3665c6b7cf23e68f96e39953c99df4b6ad8066e5fae35",
+    "asr_case_reference_manual_moderate_cutoff5.mat": "29977db6a1bd3ccf4cf8713c4fa722f19fb3c8a5dad2defca8c733928b18b0cd",
+    "asr_case_reference_manual_strong_cutoff20.mat": "c81655d6f619e9fa1eb39c99d700edadaf9b09d3bec4f63891c2405919b7fc88",
+    "asr_case_reference_manual_strong_sfreq200_maxdims05.mat": "3a7bada303f68537699cd9ecbb50671b368655ab8459347aed9e22429fd3c6cc",
+    "riemannian_windowed_xcheck_input.mat": "6c1ce730ed7fe6f0e7558e3d33fd7b939c4ef03deccbfaa201c863d191b831b8",
+    "riemannian_windowed_xcheck_reference.mat": "bef44a89fd8d258ba230658d6e91a00ebd5b9ec3e098bf013ecf57fa0d1e002f"
+  }
+}

@@ -1,6 +1,6 @@
-"""Paper-driven ASR validation.
+"""Cross-dataset ASR metrics mapped to published validation questions.
 
-Reproduces the headline metrics from:
+Computes metrics motivated by:
 - Chang et al. 2020 (IEEE TBME 67:1114-1121): cutoff sweep, % data modified,
   % variance reduced.
 - Blum et al. 2019 (Front. Hum. Neurosci. 13:141): computation time per variant,
@@ -8,9 +8,10 @@ Reproduces the headline metrics from:
 - Kim et al. 2025 (J. Neurosci. Methods 420:110465): PSD 1/f-bump parameter,
   reference-data fraction selected per variant.
 
-This script does NOT cover the ICLabel / dipolar-IC metrics from those papers
-(Tier B/C). Tier A metrics are designed to run end-to-end without optional
-deps beyond mne, numpy, scipy, matplotlib.
+This is a generalized cross-dataset benchmark, not a numerical reproduction
+of those studies. Paper-specific reproduction protocols live in separate
+scripts and the frozen protocol registry. ICLabel and dipolar-IC metrics are
+not included here.
 """
 
 # ruff: noqa: I001
@@ -43,12 +44,28 @@ if str(ROOT) not in sys.path:
 
 from mne_denoise.asr import ASR, AdaptiveASR, JugglerASR
 
-DEFAULT_CUTOFFS = (1.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0, 120.0)
+DEFAULT_CUTOFFS = (
+    1.0,
+    2.5,
+    3.0,
+    5.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    70.0,
+    100.0,
+    200.0,
+    500.0,
+    1000.0,
+)
 
 VARIANTS = (
     "standard",
     "standard_lowmem",
-    "riemannian",
+    "riemannian_windowed",
+    "riemannian_legacy",
     "adaptive_psw",
     "adaptive_psp",
     "juggler_dbscan",
@@ -144,7 +161,7 @@ def _parse_args() -> argparse.Namespace:
         type=float,
         nargs="+",
         default=list(DEFAULT_CUTOFFS),
-        help="Cutoff values for the sweep (Chang 2020 style)",
+        help="Cutoff values for the published-study sensitivity grid",
     )
     parser.add_argument(
         "--sweep-variants",
@@ -427,7 +444,9 @@ def _run_variant(
             est = ASR(**common)
         elif variant == "standard_lowmem":
             est = ASR(**{**common, "max_mem_mb": 8})
-        elif variant == "riemannian":
+        elif variant == "riemannian_windowed":
+            est = ASR(**common, method="riemannian_windowed")
+        elif variant == "riemannian_legacy":
             est = ASR(**common, method="riemannian", experimental=True)
         elif variant == "adaptive_psw":
             est = AdaptiveASR(**{**common, "max_mem_mb": 8}, variant="psw")
@@ -457,9 +476,10 @@ def _run_variant(
     after = cleaned.get_data(picks=eeg_picks)
     diag = est.diagnostics_
 
-    # Chang 2020 Fig 2a: fraction of WINDOWS in which any component was
-    # rejected. Sample-mask fraction is always ~100% for standard ASR because
-    # its sliding cosine blend touches every sample.
+    # Generalized analogue of the modified-window endpoint: fraction of
+    # windows in which any component was rejected. The sample-mask fraction
+    # is usually near 100% for standard ASR because cosine blending touches
+    # every sample.
     pct_data_modified = float(diag.get("fraction_reconstructed_windows", 0.0))
     pct_data_modified_samples = float(
         np.mean(diag.get("sample_mask", np.zeros(before.shape[1])))
@@ -743,12 +763,12 @@ def _plot_cutoff_sweep(
         (
             ax1,
             "% windows with rejection",
-            "Chang 2020 Fig 2a (fraction of windows where ASR rejected a PC)",
+            "Modified-window fraction",
         ),
         (
             ax2,
             "% background-variance reduced",
-            "Chang 2020 Fig 2a (non-burst variance reduction)",
+            "Background-variance reduction",
         ),
     ):
         ax.set_xlabel("Cutoff k (SDs)")
@@ -784,7 +804,7 @@ def _plot_computation_time(
     for variant, t in zip(variants, times):
         ax.text(t * 1.01, variant, f"{t:.1f}s", va="center", fontsize=9)
     ax.set_xlabel("Wall time per fit_transform (s)")
-    ax.set_title(f"{label} — Blum 2019 Fig 5 equivalent (k={cross_cutoff})")
+    ax.set_title(f"{label} — cross-variant runtime (k={cross_cutoff})")
     ax.grid(True, axis="x", alpha=0.3)
     fig.tight_layout()
     fig.savefig(out_dir / "fig_blum2019_computation_time.png", dpi=140)
@@ -816,7 +836,7 @@ def _plot_reference_fraction(
     ax.set_xscale("log")
     ax.set_xlabel("Cutoff k (SDs)")
     ax.set_ylabel("% reference samples / windows used")
-    ax.set_title(f"{label} — Kim 2025 Fig 8 equivalent")
+    ax.set_title(f"{label} — retained calibration reference")
     ax.grid(True, alpha=0.3)
     ax.legend(loc="best", fontsize=8)
     fig.tight_layout()
@@ -874,7 +894,7 @@ def _plot_psd_overlay(
         ax.legend(loc="best", fontsize=8)
     for j in range(len(use), n_rows * n_cols):
         axes[j // n_cols, j % n_cols].axis("off")
-    fig.suptitle(f"{label} — Kim 2025 Fig 9 equivalent (k={cross_cutoff})")
+    fig.suptitle(f"{label} — spectral comparison (k={cross_cutoff})")
     fig.tight_layout()
     fig.savefig(out_dir / "fig_kim2025_psd_overlay.png", dpi=140)
     plt.close(fig)
@@ -906,7 +926,7 @@ def _plot_blink_reduction(
     ax.set_xticks(x)
     ax.set_xticklabels([r["variant"] for r in use], rotation=20, ha="right")
     ax.set_ylabel("Frontal Pp 95th percentile (µV)")
-    ax.set_title(f"{label} — Blum 2019 Fig 3 equivalent (k={cross_cutoff})")
+    ax.set_title(f"{label} — frontal amplitude comparison (k={cross_cutoff})")
     ax.grid(True, axis="y", alpha=0.3)
     ax.legend()
     fig.tight_layout()

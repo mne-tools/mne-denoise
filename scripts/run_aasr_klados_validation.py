@@ -1,11 +1,11 @@
-"""Tier-A AASR validation on the Klados semi-simulated EEG/EOG dataset.
+"""Generalized paired-data AASR validation on the Klados EEG/EOG dataset.
 
-For each of the 41 paired trials in
+For each loadable paired recording in
 ``refs/asr/datasets/mendeley_klados_eog/data/``:
 
 1. Load the clean (``Pure_Data.mat``) and contaminated (``Contaminated_Data.mat``)
    versions of trial ``i``.
-2. Apply 1-50 Hz bandpass (matches the MATLAB AASR demo's ``datafiltering2``).
+2. Apply a zero-phase 1-50 Hz Butterworth bandpass.
 3. For each of the 4 AASR variants -- Init-ASR, MW-ASR, PSP-ASR, PSW-ASR --
    run ``AdaptiveASR`` at the paper's ``cutoff=20`` and compute paired
    ground-truth metrics:
@@ -15,14 +15,16 @@ For each of the 41 paired trials in
    - SNR improvement in dB
    - wall time
 
-Each (trial, variant) is one row. The 41 x 4 = 164 rows are written to
+Each (recording, variant) is one row. Results are written to
 ``reports/paper_validation/aasr/tier_A_klados_per_trial.csv`` and
 aggregated (median + IQR per variant) into
 ``tier_A_klados_aggregate.json``. Per-variant ``mw_diagnostics_`` is preserved
 when present, so Stage 3 plots can read it back from the JSON.
 
-This is the **first sprint with true paired ground truth** -- earlier
-sprints used synthetic burst injection.
+This runner is a broad paired recovery benchmark. It is not an exact numerical
+replication of Tsai et al.: their prepared 18-subject EOG/EMG file, subject
+selection, repeated contamination generator, FFT filter, 240-second sequence,
+and scoring regions are handled by the dedicated paper-replication protocol.
 """
 
 # ruff: noqa: I001
@@ -30,7 +32,6 @@ sprints used synthetic burst injection.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import csv
 import gc
 import json
@@ -113,7 +114,7 @@ def _load_pair(
 
 
 def _bandpass(data: np.ndarray, sfreq: float, low: float, high: float) -> np.ndarray:
-    """Zero-phase 1-50 Hz Butterworth (4th order). Matches demo's datafiltering2."""
+    """Apply the generalized benchmark's zero-phase fourth-order bandpass."""
     sos = butter(4, [low, high], btype="bandpass", fs=sfreq, output="sos")
     # sosfiltfilt operates along axis=-1 by default; our shape is (channels, samples)
     return sosfiltfilt(sos, data, axis=-1)
@@ -138,7 +139,7 @@ def _run_variant(
     psw_samples = max(1, int(round(psw_window_s * sfreq)))
 
     if variant == "init":
-        asr = AdaptiveASR(sfreq=sfreq, cutoff=cutoff, variant="psp", verbose=False)
+        asr = AdaptiveASR(sfreq=sfreq, cutoff=cutoff, variant="psw", verbose=False)
         first = contaminated[:, : min(init_samples, contaminated.shape[1])]
         t0 = time.perf_counter()
         asr.fit(first)
@@ -147,7 +148,16 @@ def _run_variant(
     elif variant == "psp":
         asr = AdaptiveASR(sfreq=sfreq, cutoff=cutoff, variant="psp", verbose=False)
         t0 = time.perf_counter()
-        cleaned = asr.fit_transform(contaminated)
+        first = contaminated[:, : min(psw_samples, contaminated.shape[1])]
+        asr.fit(first)
+        cursor = psw_samples
+        while cursor < contaminated.shape[1]:
+            stop = min(cursor + psw_samples, contaminated.shape[1])
+            chunk = contaminated[:, cursor:stop]
+            if chunk.shape[1] >= asr.blocksize:
+                asr.partial_fit(chunk)
+            cursor = stop
+        cleaned = asr.transform(contaminated)
         dt = time.perf_counter() - t0
     elif variant == "psw":
         asr = AdaptiveASR(sfreq=sfreq, cutoff=cutoff, variant="psw", verbose=False)
@@ -159,9 +169,7 @@ def _run_variant(
             stop = min(cursor + psw_samples, contaminated.shape[1])
             chunk = contaminated[:, cursor:stop]
             if chunk.shape[1] >= asr.blocksize:
-                # too-short tail or per-window failure -- skip the update
-                with contextlib.suppress(Exception):
-                    asr.partial_fit(chunk)
+                asr.partial_fit(chunk)
             cursor = stop
         cleaned = asr.transform(contaminated)
         dt = time.perf_counter() - t0
@@ -277,6 +285,7 @@ def _serialize_mw_diagnostics(asr: AdaptiveASR) -> list[dict[str, Any]]:
 
 def _plot_boxplots(rows: list[dict[str, Any]], out_dir: Path) -> dict[str, dict]:
     out_payload: dict[str, dict] = {}
+    n_recordings = len({r["trial_idx"] for r in rows})
     metrics = [
         ("mean_rmse", "Per-trial mean RMSE (uV)", "rmse_boxplot"),
         (
@@ -300,7 +309,10 @@ def _plot_boxplots(rows: list[dict[str, Any]], out_dir: Path) -> dict[str, dict]
         ax.boxplot(data, labels=labels, showmeans=True)
         ax.set_xlabel("AASR variant")
         ax.set_ylabel(ylabel)
-        ax.set_title(f"Tsai et al. — {ylabel} across 41 Klados paired trials")
+        ax.set_title(
+            f"Generalized Klados validation: {ylabel} "
+            f"across {n_recordings} paired recordings"
+        )
         ax.grid(True, axis="y", alpha=0.3)
         fig.tight_layout()
         png = out_dir / f"fig_tsai_per_variant_{slug}.png"
@@ -319,6 +331,7 @@ def _plot_boxplots(rows: list[dict[str, Any]], out_dir: Path) -> dict[str, dict]
 
 def _plot_wall_time(rows: list[dict[str, Any]], out_dir: Path) -> dict:
     variant_order = list(VARIANTS)
+    n_recordings = len({r["trial_idx"] for r in rows})
     medians = []
     for v in variant_order:
         vals = [
@@ -331,7 +344,10 @@ def _plot_wall_time(rows: list[dict[str, Any]], out_dir: Path) -> dict:
     ax.bar(variant_order, medians, color="steelblue", edgecolor="white")
     ax.set_xlabel("AASR variant")
     ax.set_ylabel("Median wall time per trial (s)")
-    ax.set_title("Tsai et al. — Per-variant wall time on Klados (41 trials, k=20)")
+    ax.set_title(
+        f"Generalized Klados validation: wall time "
+        f"({n_recordings} recordings, k=20)"
+    )
     ax.grid(True, axis="y", alpha=0.3)
     fig.tight_layout()
     png = out_dir / "fig_tsai_per_variant_wall_time.png"
@@ -494,7 +510,7 @@ def _parse_args() -> argparse.Namespace:
         "--max-trials",
         type=int,
         default=41,
-        help="Cap on the number of paired trials (paper-faithful default = 41).",
+        help="Cap on the number of loadable paired recordings.",
     )
     p.add_argument(
         "--demo-trial",
@@ -537,7 +553,7 @@ def main() -> int:
         pure = pair.pure[:, :n_common]
         contam_raw = pair.contaminated[:, :n_common]
 
-        # 1-50 Hz bandpass on both (matches demo)
+        # Generalized 1-50 Hz Butterworth bandpass on both signals.
         pure_filt = _bandpass(pure, args.sfreq, args.highpass, args.lowpass)
         contam_filt = _bandpass(contam_raw, args.sfreq, args.highpass, args.lowpass)
 

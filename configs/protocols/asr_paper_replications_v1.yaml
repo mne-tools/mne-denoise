@@ -1,0 +1,291 @@
+protocol_id: asr_paper_replications_v1
+scope: principal_algorithm_and_validation_papers
+status_vocabulary:
+  exact_numerical: same executable reference and fixture with declared tolerance
+  algorithmic: same published algorithmic stages with equivalence judged on the
+    appropriate state, waveform, or subspace invariant
+  verification_required: implementation exists, but its external oracle has not
+    yet passed the frozen parity gate
+  procedural: same public data, preprocessing, method parameters, and endpoints
+  result_pattern: original data unavailable; reproduce the declared direction and regime
+  blocked_external: required data or code is not publicly obtainable
+
+implementations:
+  standard:
+    symbol: mne_denoise.asr.ASR
+    parameters: {method: standard}
+  riemannian_windowed:
+    symbol: mne_denoise.asr.ASR
+    parameters: {method: riemannian_windowed}
+  riemannian_legacy:
+    symbol: mne_denoise.asr.ASR
+    parameters: {method: riemannian, experimental: true}
+  adaptive_psp:
+    symbol: mne_denoise.asr.AdaptiveASR
+    parameters: {variant: psp}
+  adaptive_psw:
+    symbol: mne_denoise.asr.AdaptiveASR
+    parameters: {variant: psw}
+  adaptive_mw_final_state:
+    symbol: mne_denoise.asr.AdaptiveASR
+    parameters: {variant: mw, mw_mode: final_state}
+  adaptive_mw_sliding:
+    symbol: mne_denoise.asr.AdaptiveASR
+    parameters: {variant: mw, mw_mode: sliding}
+  juggler_dbscan:
+    symbol: mne_denoise.asr.JugglerASR
+    parameters: {strategy: dbscan, blocksize: 10}
+  juggler_gev:
+    symbol: mne_denoise.asr.JugglerASR
+    parameters: {strategy: gev, blocksize: 10}
+  guided:
+    symbol: mne_denoise.asr.GuidedASR
+
+studies:
+  chang_2020:
+    citation:
+      doi: 10.1109/TBME.2019.2930186
+      title: Evaluation of Artifact Subspace Reconstruction for Automatic Artifact Components Removal in Multi-Channel EEG Recordings
+    implementation: standard
+    source_oracle:
+      repository: https://github.com/sccn/clean_rawdata
+      audited_commit: d4b143f2a7719cf12d46c9b3e15aa827edb05614
+    original_data:
+      description: 20 recordings from 10 participants in a 90-minute simulated-driving experiment
+      public: false
+      status: blocked_external
+    preprocessing:
+      acquisition_sfreq_hz: 500
+      bandpass_hz: [0.5, 100.0]
+      analysis_sfreq_hz: 250
+      flatline_s: 5
+      line_noise_sd: 4
+      channel_correlation: 0.8
+    calibration:
+      window_s: 1.0
+      z_tolerances: [-3.5, 5.5]
+      max_bad_channel_fraction: 0.075
+    processing:
+      window_s: 0.5
+      step_s: 0.25
+      cutoffs: [1, 2.5, 3, 5, 10, 20, 30, 40, 50, 70, 100, 200, 500, 1000]
+    endpoints:
+      - modified_sample_fraction
+      - variance_reduction_fraction
+      - matched_ic_scalp_map_correlation
+      - retained_iclabel_class_power
+      - dipolar_component_fraction_rv_lt_0.05
+    evidence:
+      algorithm: exact_numerical
+      published_dataset_result: result_pattern
+
+  blum_2019:
+    citation:
+      doi: 10.3389/fnhum.2019.00141
+      title: A Riemannian Modification of Artifact Subspace Reconstruction for EEG Artifact Handling
+    implementation: riemannian_windowed
+    source_oracle:
+      repository: https://github.com/s4rify/rASRMatlab
+      audited_commit: 0e1ead42028bf18d023e9ace96e234ca12afd437
+    original_data:
+      description: 27 participants, 24-channel indoor/outdoor standing and walking EEG
+      public: false
+      status: blocked_external
+    preprocessing:
+      sfreq_hz: 250
+      lowpass_hz: 40.0
+      lowpass_fir_order: 166
+      highpass_hz: 0.25
+      highpass_fir_order: 3300
+      calibration: one-minute rest at the start of each block
+    reference_parameters:
+      standard:
+        flatline_s: 5
+        highpass_transition_hz: [0.25, 0.95]
+        channel_correlation: 0.9
+        line_noise_sd: 3
+        burst_cutoff: 5
+        window_rejection: 0.5
+        stepsize: 32
+        max_dims: 0.66
+      riemannian:
+        flatline_s: 1
+        highpass_transition_hz: [0.25, 0.95]
+        channel_correlation: disabled
+        line_noise_sd: disabled
+        burst_cutoff: 1
+        window_rejection: 0.3
+        stepsize: 16
+        max_dims: 1.0
+    endpoints: [blink_sensitivity, vep_specificity, vep_snr, vep_amplitude, runtime]
+    evidence:
+      original_rasr_backend: exact_numerical
+      production_windowed_backend: algorithmic
+      published_dataset_result: result_pattern
+
+  anders_2020:
+    citation:
+      doi: 10.1007/s11517-020-02252-3
+      title: The influence of motor tasks and cut-off parameter selection on artifact subspace reconstruction in EEG recordings
+    implementation: standard
+    original_data:
+      description: cognitive task, single-leg stance, and fast walking EEG
+      public: false
+      status: blocked_external
+    preprocessing:
+      average_reference: true
+      analysis_sfreq_hz: 250
+      channel_correlation: 0.85
+      line_noise_sd: 4
+      max_reconstructed_channel_fraction: 0.25
+    processing:
+      cutoffs: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
+    endpoints:
+      - removed_or_reconstructed_fraction
+      - relica_reproducibility
+      - dipolarity
+      - automated_brain_component_count
+    evidence:
+      published_dataset_result: result_pattern
+
+  richer_2020:
+    citation:
+      doi: 10.1109/TNSRE.2020.3000971
+      title: Motion and Muscle Artifact Removal Validation Using an Electrical Head Phantom, Robotic Motion Platform, and Dual Layer Mobile EEG
+    implementation: standard
+    original_data:
+      doi: 10.18112/openneuro.ds004784.v1.0.1
+      public: true
+      status: available
+      conditions: [clean, eyes, jaw, motion, neck, all_artifacts]
+      technical_repeats: [1, 2]
+    split:
+      development: technical_repeat_1
+      locked_replication: technical_repeat_2
+    endpoints:
+      - ground_truth_data_quality
+      - clean_waveform_error
+      - clean_waveform_correlation
+      - signal_power_retention
+    evidence:
+      published_dataset_result: procedural
+
+  tsai_2023:
+    citation:
+      doi: 10.1109/TNNLS.2022.3174528
+      title: Development of an Adaptive Artifact Subspace Reconstruction Based on Hebbian/Anti-Hebbian Learning Networks for Enhancing BCI Performance
+    implementations:
+      - standard
+      - adaptive_mw_final_state
+      - adaptive_psp
+      - adaptive_psw
+    source_oracle:
+      repository: https://github.com/t5i0m7/AASR
+      audited_commit: 9f0e7365984d6cc47f034cdb8ef8121d4339d97b
+    algorithm_parity:
+      variants: [adaptive_psp, adaptive_psw]
+      contamination_levels: [moderate, strong]
+      update_counts: [1, 3]
+      cleaned_relative_error_max: 1.0e-5
+      state_relative_error_max: 1.0e-4
+      test: tests/parity/test_aasr_parity.py
+      status: exact_numerical
+    benchmark_data:
+      public_raw_dataset_doi: 10.17632/wb6yvr725d.4
+      prepared_file: data_extract_cell.mat
+      prepared_file_public_link_status: unavailable
+      paper_subject_count: 18
+      status: blocked_external
+    benchmark_preprocessing:
+      sfreq_hz: 200
+      filter_hz: [1.0, 50.0]
+      filter_implementation: AASR_datafiltering2_FFT
+      crop_s: [2.0, 26.0]
+      duplicated_segment_s: 48.0
+      constructed_stream_s: 240.0
+      update_window_s: 20.0
+      cutoff: 20
+    benchmark_scoring_channels:
+      eog: [Fp1, Fp2, F3, F4]
+      emg: [T3, T4, T5, T6]
+    benchmark_endpoints: [channelwise_rmse, channelwise_snr_db, correlation]
+    bci_arms:
+      - {name: ssvep, participants: 15, filter_hz: [1.0, 50.0], endpoint: classification_accuracy}
+      - {name: rsvp, participants: 14, filter_hz: [1.0, 50.0], endpoint: leave_one_session_out_accuracy}
+      - {name: motor_imagery, participants: 13, filter_hz: [8.0, 50.0], endpoint: tenfold_svm_accuracy}
+    evidence:
+      algorithm: exact_numerical
+      public_demo_protocol: procedural
+      published_benchmark_result: blocked_external
+
+  kim_2025:
+    citation:
+      doi: 10.1016/j.jneumeth.2025.110465
+      title: Juggler's ASR - Unpacking the principles of Artifact Subspace Reconstruction for revision toward extreme MoBI
+    implementations: [standard, juggler_dbscan, juggler_gev]
+    source_oracle:
+      public_code: false
+      status: blocked_external
+    empirical_data:
+      description: 13 participants, 205-channel three-ball juggling EEG
+      public: false
+      status: blocked_external
+    simulation:
+      channels: 100
+      samples: 100000
+      sfreq_hz: 256
+      background: pink_noise
+      cross_channel_correlation: 0.2
+      oscillation_hz: 10
+      artifact_intervals_s: [0.1, 0.15, 0.2, 0.25, 0.3]
+      cutoffs: [3, 5, 10, 20, 30]
+      blocksize: 10
+    reference_selection:
+      filter: ASR_preemphasis_IIR
+      dbscan:
+        features: five_largest_absolute_channel_amplitudes_per_sample
+        metric: chebyshev
+        epsilon: one_tenth_of_mode
+        minimum_neighbors: ten_percent_of_clean_samples
+      gev:
+        feature: maximum_absolute_channel_amplitude_per_sample
+        clean_rule: left_tail_through_fitted_mode
+    post_asr_window_rejection:
+      z_tolerances: [-3.5, 5.0]
+      retained_bad_channels: 0
+    public_ssvep:
+      participants: 10
+      remove_channels: [M1, M2, CB1, CB2]
+      sfreq_hz: 125
+      cutoff: 5
+      frequencies_hz: [12, 40]
+      signal_channel: Oz
+      blink_noise_channel: Fz
+      endpoint: delta_snr_db
+    evidence:
+      published_algorithm_description: procedural
+      simulation: procedural
+      public_ssvep: procedural
+      empirical_juggling: blocked_external
+
+execution_policy:
+  tuning_split: development_only
+  held_out_split: locked_until_protocol_hash
+  inferential_units: [participant, recording, simulation_seed]
+  required_outputs:
+    - terminal_status
+    - package_commit
+    - dirty_state
+    - config_hash
+    - environment_hash
+    - dataset_version
+    - dataset_manifest_hash
+    - method_parameters
+    - runtime_seconds
+    - peak_memory_mb
+    - effective_rank
+    - warnings
+    - failures
+    - exclusions
+    - attenuation_endpoint
+    - preservation_endpoint
