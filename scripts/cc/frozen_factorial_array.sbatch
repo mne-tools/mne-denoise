@@ -18,7 +18,7 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 source scripts/cc/fir_env.sh
 
-: "${ARM:?export ARM (bss_generic, bss_amica, bss_forward, asr_core, asr_sensitivity, reference, sensor_forward, temporal, or streaming)}"
+: "${ARM:?export ARM (bss_generic, bss_amica, bss_forward, asr_core, asr_variants, asr_sensitivity, reference, sensor_forward, temporal, or streaming)}"
 : "${SHARD_COUNT:?export SHARD_COUNT matching the array length}"
 SHARD_INDEX="${SLURM_ARRAY_TASK_ID:?submit as a zero-based array}"
 
@@ -61,6 +61,10 @@ case "${ARM}" in
         ;;
     asr_core)
         CONFIG=configs/benchmarks/asr_transient_ground_truth.yaml
+        RUNNER=(python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --campaign core)
+        ;;
+    asr_variants)
+        CONFIG=configs/benchmarks/asr_variant_ground_truth.yaml
         RUNNER=(python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --campaign core)
         ;;
     asr_sensitivity)

@@ -178,6 +178,48 @@ def test_mw_sliding_fit_transform_returns_cleaned_shape():
     assert asr.calibration_info_["adaptive_variant"] == "mw"
 
 
+def test_mw_sliding_rejects_separate_calibration():
+    """Sliding MW self-calibrates the target and rejects ambiguous calibration."""
+    sfreq = 250.0
+    data = _make_synthetic(n_samples=6000, sfreq=sfreq, seed=78)
+    calibration = _make_synthetic(n_samples=2000, sfreq=sfreq, seed=79)
+    asr = AdaptiveASR(
+        sfreq=sfreq,
+        cutoff=20.0,
+        variant="mw",
+        mw_window_length=8.0,
+        mw_mode="sliding",
+        verbose=False,
+    )
+
+    with pytest.raises(ValueError, match="does not accept a separate calibration"):
+        asr.fit_transform(data, calibration=calibration)
+
+
+def test_mw_sliding_failed_windows_do_not_write_stdout(capsys):
+    """A failed local calibration is recorded without direct console output."""
+    sfreq = 250.0
+    data = _make_synthetic(n_samples=4000, sfreq=sfreq, seed=80)
+    asr = AdaptiveASR(
+        sfreq=sfreq,
+        variant="mw",
+        mw_mode="sliding",
+        mw_window_length=8.0,
+        verbose=False,
+    )
+
+    import unittest.mock as mock
+
+    with mock.patch.object(
+        AdaptiveASR, "_fit_adaptive_state", side_effect=ValueError("mock error")
+    ):
+        with pytest.raises(RuntimeError, match="found no usable window"):
+            asr.fit_transform(data)
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
 def test_mw_sliding_diagnostics_one_per_window():
     """Sliding mode records one mw_diagnostics_ entry per processing window."""
     sfreq = 250.0

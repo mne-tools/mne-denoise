@@ -599,7 +599,9 @@ class AdaptiveASR(ASR):
         y : None
             Ignored. Present for scikit-learn compatibility.
         calibration : mne.io.Raw | mne.Epochs | np.ndarray | None, default=None
-            Optional separate calibration dataset.
+            Optional separate calibration dataset. Must be ``None`` for
+            ``variant='mw', mw_mode='sliding'`` because that mode calibrates
+            each target window locally.
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)``.
 
@@ -612,8 +614,14 @@ class AdaptiveASR(ASR):
             ``return_diagnostics=True``.
         """
         if self.variant == "mw" and self.mw_mode == "sliding":
+            if calibration is not None:
+                raise ValueError(
+                    "AdaptiveASR with variant='mw' and mw_mode='sliding' "
+                    "self-calibrates each target window and does not accept "
+                    "a separate calibration input."
+                )
             return self._fit_transform_mw_sliding(
-                X, calibration=calibration, return_diagnostics=return_diagnostics
+                X, return_diagnostics=return_diagnostics
             )
         self.fit(X, y=y, calibration=calibration)
         return self.transform(X, return_diagnostics=return_diagnostics)
@@ -640,8 +648,7 @@ class AdaptiveASR(ASR):
         X : mne.io.Raw | mne.Epochs | np.ndarray
             The input data to be processed using the sliding window approach.
         calibration : mne.io.Raw | mne.Epochs | np.ndarray | None, default=None
-            Optional separate calibration dataset. For sliding MW mode, this is
-            rarely used, as the calibration usually happens dynamically per window.
+            Must be ``None``. Sliding MW calibrates each target window locally.
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)`` where
             ``diagnostics`` compiles metadata across all processed windows.
@@ -681,7 +688,11 @@ class AdaptiveASR(ASR):
             mw_window_length=self.mw_window_length,
             mw_mode=self.mw_mode,
         )
-        fit_input = X if calibration is None else calibration
+        if calibration is not None:
+            raise ValueError(
+                "MW-ASR sliding mode does not accept a separate calibration input."
+            )
+        fit_input = X
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
             fit_input, auto_pick=True
         )
@@ -758,7 +769,6 @@ class AdaptiveASR(ASR):
                 )
                 last = (state, cal_info, learner, process_state)
             except Exception as exc:  # noqa: BLE001
-                print("CAUGHT:", repr(exc))
                 entry.update(
                     {
                         "status": "failed",

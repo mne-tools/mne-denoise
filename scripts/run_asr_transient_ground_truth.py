@@ -32,6 +32,11 @@ from mne_denoise.dss.denoisers import BandpassBias
 from mne_denoise.mwf import MWF
 from mne_denoise.wavelet import wavelet_denoise_multichannel
 
+_AUTO_CALIBRATION_METHODS = {"asr_standard_auto", "rasr_windowed_auto"}
+_ADAPTIVE_UPDATE_METHODS = {"adaptive_psp", "adaptive_psw"}
+_ADAPTIVE_MW_METHODS = {"adaptive_mw_final_state", "adaptive_mw_sliding"}
+_JUGGLER_METHODS = {"juggler_dbscan", "juggler_gev"}
+
 
 def _method(method: str, artifact_type: str, sfreq: float, cutoff: float):
     common = {
@@ -75,6 +80,52 @@ def _method(method: str, artifact_type: str, sfreq: float, cutoff: float):
             preserve_biases=[BandpassBias((8.0, 12.0), sfreq)],
             **{key: value for key, value in common.items() if key != "experimental"},
         )
+    published_common = {
+        **common,
+        "filter_kind": "asr",
+    }
+    if method == "asr_standard":
+        return ASR(method="standard", **published_common)
+    if method == "asr_standard_auto":
+        return ASR(
+            method="standard", **{**published_common, "calibration": "auto"}
+        )
+    if method == "rasr_windowed":
+        return ASR(method="riemannian_windowed", **published_common)
+    if method == "rasr_windowed_auto":
+        return ASR(
+            method="riemannian_windowed",
+            **{**published_common, "calibration": "auto"},
+        )
+    if method == "rasr_legacy":
+        return ASR(method="riemannian", experimental=True, **published_common)
+    if method in _ADAPTIVE_UPDATE_METHODS:
+        return AdaptiveASR(
+            variant=method.removeprefix("adaptive_"),
+            sfreq=sfreq,
+            cutoff=cutoff,
+            picks=None,
+            verbose=False,
+        )
+    if method in _ADAPTIVE_MW_METHODS:
+        return AdaptiveASR(
+            variant="mw",
+            mw_mode=method.removeprefix("adaptive_mw_"),
+            sfreq=sfreq,
+            cutoff=cutoff,
+            picks=None,
+            verbose=False,
+        )
+    if method in _JUGGLER_METHODS:
+        return JugglerASR(
+            strategy=method.removeprefix("juggler_"),
+            sfreq=sfreq,
+            cutoff=cutoff,
+            picks=None,
+            filter_kind="asr",
+            selection_filter_kind="asr",
+            verbose=False,
+        )
     if method == "none":
         return None
     raise KeyError(method)
@@ -89,7 +140,14 @@ def _f1(truth: np.ndarray, prediction: np.ndarray | None) -> float | None:
     return float(2 * tp / max(2 * tp + fp + fn, 1))
 
 
-def _score(model, mixture, method: str, sfreq: float) -> tuple[np.ndarray, dict]:
+def _score(
+    model,
+    mixture,
+    method: str,
+    sfreq: float,
+    *,
+    adaptive_update_chunk_s: float = 20.0,
+) -> tuple[np.ndarray, dict]:
     if method == "mwf":
         model = MWF(sfreq=sfreq, reg=1e-6)
         cleaned = np.asarray(model.fit_transform(mixture.contaminated, mask=mixture.artifact_mask))
@@ -101,6 +159,32 @@ def _score(model, mixture, method: str, sfreq: float) -> tuple[np.ndarray, dict]
     elif model is None:
         cleaned = mixture.contaminated.copy()
         diagnostics = {}
+    elif method in _ADAPTIVE_MW_METHODS:
+        cleaned = np.asarray(model.fit_transform(mixture.contaminated))
+        diagnostics = model.get_diagnostics()
+    elif method in _AUTO_CALIBRATION_METHODS | _JUGGLER_METHODS:
+        model.fit(mixture.contaminated)
+        cleaned = np.asarray(model.transform(mixture.contaminated))
+        diagnostics = model.get_diagnostics()
+    elif method in _ADAPTIVE_UPDATE_METHODS:
+        model.fit(mixture.calibration)
+        update_samples = max(
+            int(model.blocksize), int(round(adaptive_update_chunk_s * sfreq))
+        )
+        update_count = 0
+        for start in range(0, mixture.contaminated.shape[1], update_samples):
+            chunk = mixture.contaminated[:, start : start + update_samples]
+            if chunk.shape[1] < model.blocksize:
+                continue
+            model.partial_fit(chunk)
+            update_count += 1
+        model.reset_process_state()
+        cleaned = np.asarray(model.transform(mixture.contaminated))
+        diagnostics = model.get_diagnostics()
+        diagnostics["benchmark_adaptive_update_count"] = int(update_count)
+        diagnostics["benchmark_adaptive_update_chunk_s"] = float(
+            adaptive_update_chunk_s
+        )
     else:
         model.fit(mixture.calibration)
         cleaned = np.asarray(model.transform(mixture.contaminated))
@@ -129,7 +213,23 @@ def _score(model, mixture, method: str, sfreq: float) -> tuple[np.ndarray, dict]
         "fraction_samples_flagged": float(np.mean(sample_mask))
         if isinstance(sample_mask, np.ndarray)
         else None,
+        "adaptive_update_count": diagnostics.get(
+            "benchmark_adaptive_update_count"
+        ),
+        "adaptive_update_chunk_s": diagnostics.get(
+            "benchmark_adaptive_update_chunk_s"
+        ),
+        "mw_window_count": len(getattr(model, "mw_diagnostics_", []))
+        if model is not None
+        else None,
     }
+    calibration_info = getattr(model, "calibration_info_", {}) or {}
+    metrics["calibration_clean_sample_fraction"] = calibration_info.get(
+        "calibration_clean_sample_fraction"
+    )
+    metrics["calibration_clean_window_fraction"] = calibration_info.get(
+        "calibration_clean_window_fraction"
+    )
     return cleaned, metrics
 
 
@@ -182,6 +282,7 @@ def run(args) -> list[dict]:
     n_channels = int(simulation["n_channels"])
     duration_s = float(simulation["duration_s"])
     calibration_s = float(simulation["clean_calibration_s"])
+    adaptive_update_chunk_s = float(simulation.get("adaptive_update_chunk_s", 20.0))
     repetitions = int(simulation["core_replicates_per_cell"])
     artifact_types = list(simulation["artifact_types"])
     severities = list(simulation["artifact_to_signal_db"])
@@ -251,9 +352,17 @@ def run(args) -> list[dict]:
                             if method == "mwf"
                             else "target_aware_local"
                             if method == "guided_asr"
+                            else "blind_recording_adaptive"
+                            if method
+                            in (
+                                _AUTO_CALIBRATION_METHODS
+                                | _ADAPTIVE_UPDATE_METHODS
+                                | _ADAPTIVE_MW_METHODS
+                                | _JUGGLER_METHODS
+                            )
                             else "blind_local"
                             if method == "wavelet_threshold"
-                            else "blind"
+                            else "blind_calibration"
                         )
                         record = build_run_record(
                             arm=cfg["arm"],
@@ -275,7 +384,13 @@ def run(args) -> list[dict]:
                                         method, artifact_type, sfreq, float(cell["cutoff"])
                                     )
                                 )
-                                _, metrics = _score(model, mixture, method, sfreq)
+                                _, metrics = _score(
+                                    model,
+                                    mixture,
+                                    method,
+                                    sfreq,
+                                    adaptive_update_chunk_s=adaptive_update_chunk_s,
+                                )
                                 metrics.update(
                                     {
                                         "unit_id": unit_id,

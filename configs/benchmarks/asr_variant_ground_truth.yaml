@@ -1,0 +1,60 @@
+arm: asr_variant_ground_truth
+runner: asr_transient_ground_truth
+status: protocol_frozen_v1
+simulation:
+  clean_source: held_out_clean_multichannel_eeg
+  artifact_types: [blink, emg_burst, electrode_pop, low_rank_covariance_burst]
+  artifact_to_signal_db: [-6, 0, 6]
+  core_replicates_per_cell: 50
+  sensitivity_replicates_per_cell: 20
+  sfreq_hz: 250
+  n_channels: 64
+  duration_s: 60
+  clean_calibration_s: 20
+  adaptive_update_chunk_s: 20
+  seeds: {global: 240817, generation: sha256_arm_cell_and_replicate}
+methods_under_test:
+  - asr_standard
+  - asr_standard_auto
+  - rasr_windowed
+  - rasr_windowed_auto
+  - rasr_legacy
+  - adaptive_psp
+  - adaptive_psw
+  - adaptive_mw_final_state
+  - adaptive_mw_sliding
+  - juggler_dbscan
+  - juggler_gev
+  - guided_asr
+comparators:
+  required: [none]
+  secondary: [mwf, wavelet_threshold]
+sensitivity_design:
+  strategy: one_factor_at_a_time
+  fixed_defaults:
+    cutoff: 20
+    calibration_contamination_fraction: 0.0
+    channel_count: 64
+    burst_duration_s: 1.0
+sensitivity:
+  cutoff: [10, 20, 30, 50]
+  calibration_contamination_fraction: [0.0, 0.10, 0.25]
+  channel_count: [64, 32, 16]
+  burst_duration_s: [0.25, 1.0, 5.0]
+metrics:
+  primary_target: contaminated_interval_residual_energy_ratio
+  primary_preservation: clean_interval_relative_rmse
+  secondary:
+    - whole_signal_rrmse
+    - clean_correlation
+    - contaminated_window_f1
+    - rank_change
+    - runtime
+    - failure
+preservation_reference:
+  source: known_pre_injection_clean_signal
+  independent_from_method_fit: true
+unit_of_inference: simulation_seed_nested_in_artifact_type_and_severity
+storage:
+  always_save: [metrics, model_json, terminal_status, provenance]
+  save_cleaned: {mode: selected_replicates, ids: [seed-000, seed-024, seed-049]}

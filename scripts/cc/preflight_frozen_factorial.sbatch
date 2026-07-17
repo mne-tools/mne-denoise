@@ -37,6 +37,12 @@ case "${ARM}" in
         python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --smoke \
             --campaign core --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}"
         ;;
+    asr_variants)
+        CONFIG=configs/benchmarks/asr_variant_ground_truth.yaml
+        python -m mne_denoise.benchmarks validate "${CONFIG}"
+        python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --smoke \
+            --campaign core --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}"
+        ;;
     asr_sensitivity)
         CONFIG=configs/benchmarks/asr_transient_ground_truth.yaml
         : "${SENSITIVITY_INDEX:?export SENSITIVITY_INDEX for the sensitivity preflight}"
