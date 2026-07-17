@@ -19,7 +19,7 @@ import numpy as np
 
 from ._covariance import _aggregate_block_covariances
 from ._distribution import fit_rms_distribution
-from ._filters import _apply_statistics_filter, _design_statistics_filter
+from ._filters import _design_statistics_filter, _lfilter_channels
 from ._spd import (
     _regularize_spd,
     _riemannian_nonlinear_eigenspace,
@@ -98,9 +98,9 @@ def calibrate_asr(
     regularization : float
         Relative eigenvalue floor used for SPD regularization.
     filter_kind : {'none', 'asr', 'highpass'}
-        Statistics-only filter. ``'none'`` avoids implicit filtering;
-        ``'asr'`` and ``'highpass'`` apply a conservative high-pass filter to
-        the statistics path only.
+        Statistics-only filter. ``'asr'`` applies the original inverse-EEG
+        Yule-Walker pre-emphasis filter, ``'highpass'`` applies a lightweight
+        high-pass filter, and ``'none'`` avoids implicit filtering.
     max_mem_mb : int | None
         Reserved memory limit for future chunking. Present for API stability.
 
@@ -149,19 +149,16 @@ def calibrate_asr(
     n_channels, n_times = X.shape
     _check_enough_samples(n_times, sfreq, min(window_length, calibration_window_length))
 
-    filter_b, filter_a = _design_statistics_filter(sfreq, filter_kind)
-    X_stats = _apply_statistics_filter(X, filter_b, filter_a)
-
     cal_len = _round_half_up(calibration_window_length * sfreq)
-    cal_starts = _get_fractional_window_starts(
-        n_times,
-        cal_len,
-        calibration_window_overlap,
-    )
 
     if calibration == "auto":
+        cal_starts = _get_fractional_window_starts(
+            n_times,
+            cal_len,
+            calibration_window_overlap,
+        )
         clean_window_mask, clean_window_scores = _select_clean_windows(
-            X_stats,
+            X,
             cal_starts,
             cal_len,
             ref_max_bad_channels=ref_max_bad_channels,
@@ -181,12 +178,19 @@ def calibrate_asr(
             cal_len,
             ~clean_window_mask,
         )
-        X_clean = X_stats[:, clean_sample_mask]
+        X_calibration = X[:, clean_sample_mask]
     else:
+        # Manual calibration consumes all supplied samples directly. Do not
+        # impose the longer automatic-selection window on pointwise backends
+        # such as Juggler; only the threshold window must fit.
+        cal_starts = np.array([], dtype=int)
         clean_window_mask = np.ones(len(cal_starts), dtype=bool)
         clean_window_scores = np.zeros((len(cal_starts), n_channels), dtype=np.float64)
         clean_sample_mask = np.ones(n_times, dtype=bool)
-        X_clean = X_stats
+        X_calibration = X
+
+    filter_b, filter_a = _design_statistics_filter(sfreq, filter_kind)
+    X_clean, filter_zi = _lfilter_channels(X_calibration, filter_b, filter_a)
     riemannian_info: dict[str, Any] = {}
     # Both Riemannian variants aggregate block covariances with Riemannian primitives
     # (geometric median + Karcher-style block reduction). The difference is the
@@ -235,6 +239,7 @@ def calibrate_asr(
         calibration_patterns=V,
         filter_b=filter_b,
         filter_a=filter_a,
+        filter_zi=filter_zi,
         cov=C,
         rank=rank,
         method=method,

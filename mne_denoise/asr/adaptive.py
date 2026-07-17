@@ -997,6 +997,7 @@ class AdaptiveASR(ASR):
             calibration_patterns=V,
             filter_b=filter_b,
             filter_a=filter_a,
+            filter_zi=iir_state,
             cov=C,
             rank=int(np.sum(eigvals > self.regularization * np.max(eigvals))),
             method="standard",

@@ -20,13 +20,13 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from scipy import optimize, stats
+from scipy import stats
 from sklearn.cluster import DBSCAN
 
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne
 from ._calibration import calibrate_asr
-from ._filters import _apply_statistics_filter, _design_statistics_filter
+from ._filters import _design_statistics_filter, _lfilter_channels
 from ._validation import (
     _validate_array_2d,
     _validate_backend_params,
@@ -88,7 +88,9 @@ def select_juggler_reference_samples(
     Returns
     -------
     X_ref : ndarray, shape (n_channels, n_selected_times)
-        Selected reference samples from the original input data.
+        Selected samples from the causally pre-emphasized data. Juggler applies
+        the ASR IIR filter before pointwise selection and calibrates from the
+        resulting filtered reference samples.
     sample_mask : ndarray, shape (n_times,)
         Boolean mask of the retained reference samples.
     diagnostics : dict
@@ -121,8 +123,7 @@ def select_juggler_reference_samples(
     )
 
     filter_b, filter_a = _design_statistics_filter(sfreq, selection_filter_kind)
-    X_stats = _apply_statistics_filter(X, filter_b, filter_a)
-    X_stats = X_stats - np.median(X_stats, axis=1, keepdims=True)
+    X_stats, filter_zi = _lfilter_channels(X, filter_b, filter_a)
 
     amplitude = np.abs(X_stats)
     sorted_amplitude = np.sort(amplitude, axis=0)[::-1]
@@ -135,6 +136,7 @@ def select_juggler_reference_samples(
         "selection_filter_kind": selection_filter_kind,
         "selection_filter_b": filter_b.copy(),
         "selection_filter_a": filter_a.copy(),
+        "selection_filter_zi": filter_zi.copy(),
         "leading_amplitude": leading_amplitude.copy(),
         "dbscan_top_k": int(top_k),
     }
@@ -154,18 +156,20 @@ def select_juggler_reference_samples(
         )
         diagnostics.update(gev_info)
 
-    keep_fraction = float(np.mean(sample_mask))
-    if keep_fraction < min_reference_fraction:
+    selected_samples = int(np.sum(sample_mask))
+    keep_fraction = float(selected_samples / sample_mask.size)
+    minimum_samples = max(1, int(np.floor(min_reference_fraction * sample_mask.size)))
+    if selected_samples < minimum_samples:
         raise RuntimeError(
             "Juggler reference selection retained too little data: "
             f"{keep_fraction * 100:.1f}% < {min_reference_fraction * 100:.1f}%."
         )
 
-    X_ref = X[:, sample_mask]
+    X_ref = X_stats[:, sample_mask]
     diagnostics.update(
         {
             "reference_sample_mask": sample_mask.copy(),
-            "reference_selected_samples": int(X_ref.shape[1]),
+            "reference_selected_samples": selected_samples,
             "reference_candidate_samples": int(X.shape[1]),
             "reference_selected_fraction": keep_fraction,
         }
@@ -390,6 +394,12 @@ class JugglerASR(ASR):
             gev_grid_size=self.gev_grid_size,
             min_reference_fraction=self.min_reference_fraction,
         )
+        if self.filter_kind != self.selection_filter_kind:
+            raise ValueError(
+                "JugglerASR requires filter_kind and selection_filter_kind to "
+                "match so calibration and reconstruction use the same "
+                "statistics filter"
+            )
 
         fit_input = X if calibration is None else calibration
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
@@ -447,11 +457,19 @@ class JugglerASR(ASR):
             min_clean_fraction=self.min_clean_fraction,
             cov_estimator=self.cov_estimator,
             regularization=self.regularization,
-            filter_kind=self.filter_kind,
+            # Reference samples have already been filtered continuously before
+            # pointwise selection. Filtering their concatenation again would
+            # introduce discontinuity transients and alter the calibration.
+            filter_kind="none",
             method="standard",
             max_mem_mb=self.max_mem_mb,
         )
+        state.filter_b = np.asarray(reference_info["selection_filter_b"]).copy()
+        state.filter_a = np.asarray(reference_info["selection_filter_a"]).copy()
+        state.filter_zi = np.asarray(reference_info["selection_filter_zi"]).copy()
         cal_info.update(reference_info)
+        cal_info["filter_kind"] = self.filter_kind
+        cal_info["calibration_input_filtering"] = "continuous_before_selection"
         cal_info["clean_window_mask"] = np.array([], dtype=bool)
         cal_info["clean_window_scores"] = np.empty(
             (0, data_2d.shape[0]), dtype=np.float64
@@ -606,36 +624,55 @@ def _select_gev_reference_mask(
     diagnostics : dict
         A dictionary containing the fitted GEV parameters and mode.
     """
+    amplitude_scale = float(np.median(leading_amplitude))
+    if not np.isfinite(amplitude_scale) or amplitude_scale <= 0:
+        amplitude_scale = float(np.max(leading_amplitude))
+    if not np.isfinite(amplitude_scale) or amplitude_scale <= 0:
+        raise RuntimeError("GEV fitting requires at least one positive amplitude")
+    normalized = leading_amplitude / amplitude_scale
     try:
-        shape, loc, scale = stats.genextreme.fit(leading_amplitude)
+        shape, loc_normalized, scale_normalized = stats.genextreme.fit(normalized)
     except Exception as exc:
         raise RuntimeError(f"GEV fitting failed: {exc}") from exc
-    if not np.isfinite(scale) or scale <= np.finfo(float).eps:
+    if not np.isfinite(scale_normalized) or scale_normalized <= 0:
         raise RuntimeError("GEV fitting returned a non-positive scale")
 
-    distribution = stats.genextreme(shape, loc=loc, scale=scale)
-    lower = max(float(np.min(leading_amplitude)), float(distribution.ppf(1e-6)))
-    upper = min(float(np.max(leading_amplitude)), float(distribution.ppf(1 - 1e-6)))
-    if not np.isfinite(lower) or not np.isfinite(upper) or upper <= lower:
-        mode = _histogram_mode(leading_amplitude)
+    distribution = stats.genextreme(
+        shape,
+        loc=loc_normalized,
+        scale=scale_normalized,
+    )
+    if shape < 1.0 and abs(shape) > 1e-10:
+        standardized_mode = (1.0 - (1.0 - shape) ** shape) / shape
+        mode_normalized = loc_normalized + scale_normalized * standardized_mode
+    elif abs(shape) <= 1e-10:
+        mode_normalized = float(loc_normalized)
     else:
-        objective = lambda x: -distribution.pdf(x)
-        optimum = optimize.minimize_scalar(
-            objective, bounds=(lower, upper), method="bounded"
-        )
-        if optimum.success and np.isfinite(optimum.x):
-            mode = float(optimum.x)
+        # For boundary-mode shapes, evaluate a fixed probability grid. Working
+        # in normalized coordinates keeps this fallback invariant to EEG units.
+        probabilities = np.linspace(1e-6, 1.0 - 1e-6, int(grid_size))
+        grid = np.asarray(distribution.ppf(probabilities), dtype=np.float64)
+        logpdf = np.asarray(distribution.logpdf(grid), dtype=np.float64)
+        valid = np.isfinite(grid) & np.isfinite(logpdf)
+        if grid.shape == probabilities.shape and np.any(valid):
+            valid_grid = grid[valid]
+            valid_logpdf = logpdf[valid]
+            mode_normalized = float(valid_grid[int(np.argmax(valid_logpdf))])
         else:
-            grid = np.linspace(lower, upper, int(grid_size))
-            pdf = distribution.pdf(grid)
-            mode = float(grid[int(np.nanargmax(pdf))])
-    sample_mask = leading_amplitude <= mode
+            mode_normalized = _histogram_mode(normalized)
+    if not np.isfinite(mode_normalized):
+        mode_normalized = _histogram_mode(normalized)
+    mode = float(mode_normalized * amplitude_scale)
+    sample_mask = normalized <= mode_normalized
+    loc = float(loc_normalized * amplitude_scale)
+    scale = float(scale_normalized * amplitude_scale)
     diagnostics = {
         "juggler_gev_shape": float(shape),
-        "juggler_gev_loc": float(loc),
-        "juggler_gev_scale": float(scale),
-        "juggler_gev_mode": float(mode),
+        "juggler_gev_loc": loc,
+        "juggler_gev_scale": scale,
+        "juggler_gev_mode": mode,
         "juggler_gev_grid_size": int(grid_size),
+        "juggler_gev_normalization_scale": amplitude_scale,
     }
     return sample_mask, diagnostics
 
@@ -657,7 +694,8 @@ def _histogram_mode(values: np.ndarray) -> float:
     values = values[np.isfinite(values)]
     if values.size == 0:
         raise ValueError("Cannot estimate a mode from empty values")
-    if np.allclose(values, values[0]):
+    scale = max(float(np.max(np.abs(values))), np.finfo(float).tiny)
+    if float(np.ptp(values)) <= np.finfo(float).eps * scale:
         return float(values[0])
     edges = np.histogram_bin_edges(values, bins="fd")
     if edges.size < 2:

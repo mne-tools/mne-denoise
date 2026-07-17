@@ -6,6 +6,7 @@ from mne_denoise.asr._filters import (
     _apply_statistics_filter,
     _apply_statistics_filter_streaming,
     _design_aasr_filter,
+    _design_asr_filter,
     _design_statistics_filter,
     _prepend_streaming_carry,
 )
@@ -114,6 +115,73 @@ def test__design_aasr_filter() -> None:
     assert len(a) == 9
     assert np.all(np.isfinite(b))
     assert np.all(np.isfinite(a))
+
+
+@pytest.mark.parametrize(
+    ("sfreq", "expected_b", "expected_a"),
+    [
+        (
+            128.0,
+            [
+                1.1027301639165037,
+                -2.0025621813611867,
+                0.8942119516481342,
+                0.1549979524226999,
+                0.0192366904488084,
+                0.1782897770278735,
+                -0.5280306696498717,
+                0.2913540603407520,
+                -0.0262209802526358,
+            ],
+            [
+                1.0,
+                -1.1042042046423233,
+                -0.3319558528606542,
+                0.5802946221107337,
+                -0.0010360013915635,
+                0.0382167091925086,
+                -0.2609928034425362,
+                0.0298719057761086,
+                0.0935044692959187,
+            ],
+        ),
+        (
+            256.0,
+            [
+                1.7587013141770287,
+                -4.3267624394458641,
+                5.7999880031015953,
+                -6.2396625463547508,
+                5.3768079046882207,
+                -3.7938218893374835,
+                2.1649108095226470,
+                -0.8591392569863763,
+                0.2569361125627988,
+            ],
+            [
+                1.0,
+                -1.7008039639301735,
+                1.9232830391058724,
+                -2.0826929726929797,
+                1.5982638742557307,
+                -1.0735854183930011,
+                0.5679719225652651,
+                -0.1886181499768189,
+                0.0572954115997261,
+            ],
+        ),
+    ],
+)
+def test_design_asr_filter_matches_clean_rawdata_coefficients(
+    sfreq, expected_b, expected_a
+):
+    """The paper-default filter matches clean_rawdata's published fixtures."""
+    b, a = _design_asr_filter(sfreq)
+    np.testing.assert_allclose(b, expected_b, rtol=0.0, atol=1e-12)
+    np.testing.assert_allclose(a, expected_a, rtol=0.0, atol=1e-12)
+    b_dispatch, a_dispatch = _design_statistics_filter(sfreq, "asr")
+    np.testing.assert_allclose(b_dispatch, b, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(a_dispatch, a, rtol=0.0, atol=0.0)
 
 
 def test_lfilter_channels() -> None:
