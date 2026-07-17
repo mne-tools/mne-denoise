@@ -12,6 +12,11 @@ from mne_denoise.asr import (
 SFREQ = 250.0
 
 
+def test_asr_default_uses_original_spectral_shaping_filter():
+    """The estimator default follows the clean_rawdata paper implementation."""
+    assert ASR().filter_kind == "asr"
+
+
 def _epochs(n_epochs=3, n_per=2000):
     mne = pytest.importorskip("mne")
     X = _eeg(n_times=n_epochs * n_per, bursts=6)
@@ -37,6 +42,22 @@ def test_asrcore_numpy_qc_and_no_repair_cap(synthetic_burst_data):
     assert asr.n_components_reconstructed_.shape == (asr.n_windows_,)
     assert asr.n_components_reconstructed_.sum() == 0
     assert asr.get_calibration_mask().shape == asr.clean_window_mask_.shape
+
+
+def test_asr_cleaning_is_invariant_to_eeg_unit_scaling(synthetic_burst_data):
+    """Equivalent signals in volts and microvolts receive equivalent cleaning."""
+    data_uv, _, _, sfreq = synthetic_burst_data
+    model_uv = ASR(sfreq=sfreq, cutoff=3.0, calibration="manual", verbose=False)
+    clean_uv = model_uv.fit_transform(data_uv)
+
+    data_v = data_uv * 1e-6
+    model_v = ASR(sfreq=sfreq, cutoff=3.0, calibration="manual", verbose=False)
+    clean_v = model_v.fit_transform(data_v)
+
+    np.testing.assert_allclose(clean_v * 1e6, clean_uv, rtol=2e-7, atol=2e-8)
+    np.testing.assert_array_equal(
+        model_v.n_components_reconstructed_, model_uv.n_components_reconstructed_
+    )
 
 
 def test_asr_mne_raw_preserves_non_picked_channels(synthetic_burst_data):

@@ -1,8 +1,8 @@
 """Filter design and streaming-edge helpers for ASR and Adaptive ASR.
 
 This module provides internal signal processing utilities for ASR variants:
-1. A lightweight high-pass filter to shape the signal driving ASR variance
-   statistics (preventing slow drifts from skewing calibration thresholds).
+1. The inverse-EEG spectral shaping filter from the original ASR algorithm,
+   plus an optional lightweight high-pass statistics filter.
 2. Boundary padding helpers (lookahead tail and carry reflection) used by
    streaming/chunked ASR processors to mitigate edge artifacts.
 3. An 8th-order Yule-Walker IIR pre-emphasis filter used strictly by the
@@ -20,7 +20,7 @@ def _design_statistics_filter(
     sfreq: float,
     filter_kind: str,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Design a lightweight high-pass filter for ASR statistics calibration.
+    """Design the requested ASR statistics filter.
 
     Parameters
     ----------
@@ -40,6 +40,8 @@ def _design_statistics_filter(
         return np.array([1.0]), np.array([1.0])
     if filter_kind not in ("asr", "highpass"):
         raise ValueError("filter_kind must be 'none', 'asr', or 'highpass'")
+    if filter_kind == "asr":
+        return _design_asr_filter(sfreq)
     cutoff = min(0.5, sfreq * 0.1)
     if cutoff >= sfreq / 2:
         return np.array([1.0]), np.array([1.0])
@@ -284,8 +286,8 @@ def _yulewalk(
     return np.asarray(B, dtype=np.float64), np.asarray(A, dtype=np.float64)
 
 
-def _design_aasr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
-    """Design the AASR 1-50 Hz pre-emphasis statistics filter (b, a).
+def _design_asr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
+    """Design the original ASR inverse-EEG pre-emphasis filter.
 
     Parameters
     ----------
@@ -299,25 +301,38 @@ def _design_aasr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
     a : np.ndarray
         Denominator coefficients.
     """
-    freqs = (
-        np.array(
-            [
-                0.0,
-                2.0,
-                3.0,
-                13.0,
-                16.0,
-                40.0,
-                min(80.0, (sfreq / 2.0) - 1.0),
-                sfreq / 2.0,
-            ],
-            dtype=np.float64,
-        )
-        * 2.0
-        / sfreq
+    if sfreq <= 0:
+        raise ValueError("sfreq must be positive for the ASR statistics filter")
+    freq_hz = np.array(
+        [
+            0.0,
+            2.0,
+            3.0,
+            13.0,
+            16.0,
+            40.0,
+            min(80.0, (sfreq / 2.0) - 1.0),
+            sfreq / 2.0,
+        ],
+        dtype=np.float64,
     )
     mags = np.array([3.0, 0.75, 0.33, 0.33, 1.0, 1.0, 3.0, 3.0], dtype=np.float64)
+    if sfreq < 80.0:
+        # Match clean_rawdata/asr_calibrate.m: omit the 40-Hz breakpoint and
+        # its otherwise duplicated final gain when Nyquist is below 40 Hz.
+        freq_hz = np.delete(freq_hz, -3)
+        mags = mags[:-1]
+    freqs = freq_hz * 2.0 / sfreq
     return _yulewalk(8, freqs, mags)
+
+
+def _design_aasr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
+    """Design the ASR/AASR inverse-EEG pre-emphasis filter.
+
+    This compatibility name is retained because the adaptive implementation
+    and its external parity fixtures use the same filter as standard ASR.
+    """
+    return _design_asr_filter(sfreq)
 
 
 def _lfilter_channels(

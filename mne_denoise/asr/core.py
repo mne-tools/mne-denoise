@@ -256,7 +256,7 @@ class ASR(BaseEstimator, TransformerMixin):
         skip_by_annotation: tuple[str, ...] = ("bad", "bad_acq_skip"),
         cov_estimator: str = "geometric_median",
         regularization: float = 1e-8,
-        filter_kind: str = "none",
+        filter_kind: str = "asr",
         window_criterion: float | int | None = None,
         window_criterion_tolerances: tuple[float, float] = (-np.inf, 7.0),
         lookahead: float | None = None,

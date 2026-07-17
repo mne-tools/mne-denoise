@@ -30,6 +30,9 @@ class ASRState:
         Numerator coefficients for the statistics-only filter.
     filter_a : ndarray
         Denominator coefficients for the statistics-only filter.
+    filter_zi : ndarray
+        Final causal filter state from calibration, used to initialize the
+        statistics path during reconstruction as in clean_rawdata.
     cov : ndarray, shape (n_channels, n_channels)
         Robust calibration covariance.
     rank : int
@@ -48,6 +51,7 @@ class ASRState:
     filter_a: np.ndarray
     cov: np.ndarray
     rank: int
+    filter_zi: np.ndarray | None = None
     method: str = "standard"
     riemannian_solver: str | None = None
 
@@ -72,6 +76,7 @@ def _copy_asr_state(state: ASRState) -> ASRState:
         calibration_patterns=state.calibration_patterns.copy(),
         filter_b=state.filter_b.copy(),
         filter_a=state.filter_a.copy(),
+        filter_zi=None if state.filter_zi is None else state.filter_zi.copy(),
         cov=state.cov.copy(),
         rank=int(state.rank),
         method=state.method,
