@@ -4,11 +4,61 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from sklearn.cluster import DBSCAN
 
 from mne_denoise.asr import JugglerASR, select_juggler_reference_samples
 from mne_denoise.asr._filters import _design_statistics_filter, _lfilter_channels
+from mne_denoise.asr.juggler import _dbscan_chebyshev_memory_bounded
 
 SFREQ = 250.0
+
+
+@pytest.mark.parametrize("seed", [3, 17, 91])
+def test_memory_bounded_dbscan_matches_sklearn(seed):
+    """The bounded backend preserves exact Chebyshev DBSCAN memberships."""
+    rng = np.random.default_rng(seed)
+    features = np.vstack(
+        [
+            rng.normal(-1.0, 0.12, size=(80, 5)),
+            rng.normal(1.0, 0.12, size=(70, 5)),
+            rng.uniform(-3.0, 3.0, size=(20, 5)),
+        ]
+    )
+    expected = DBSCAN(eps=0.32, min_samples=6, metric="chebyshev").fit_predict(
+        features
+    )
+    observed, diagnostics = _dbscan_chebyshev_memory_bounded(
+        features,
+        eps=0.32,
+        min_samples=6,
+        count_batch_size=23,
+    )
+
+    np.testing.assert_array_equal(observed == -1, expected == -1)
+    expected_same_cluster = expected[:, None] == expected[None, :]
+    observed_same_cluster = observed[:, None] == observed[None, :]
+    non_noise_pairs = (expected[:, None] >= 0) & (expected[None, :] >= 0)
+    np.testing.assert_array_equal(
+        observed_same_cluster[non_noise_pairs],
+        expected_same_cluster[non_noise_pairs],
+    )
+    assert diagnostics["juggler_dbscan_backend"] == (
+        "ckdtree_grid_memory_bounded"
+    )
+
+
+def test_memory_bounded_dbscan_handles_one_dense_cell():
+    """A dense 100k-style cluster is compressed to one occupied core cell."""
+    rng = np.random.default_rng(8)
+    features = rng.uniform(0.0, 0.01, size=(5000, 5))
+    labels, diagnostics = _dbscan_chebyshev_memory_bounded(
+        features,
+        eps=1.0,
+        min_samples=500,
+        count_batch_size=127,
+    )
+    np.testing.assert_array_equal(labels, np.zeros(features.shape[0], dtype=int))
+    assert diagnostics["juggler_dbscan_core_cells"] == 1
 
 
 def _make_synthetic_eeg(
@@ -612,7 +662,10 @@ def test_juggler_edge_cases():
     with pytest.raises(RuntimeError, match="zero-amplitude"):
         _resolve_dbscan_eps("auto", 0.0, np.zeros(10))
 
-    with patch("sklearn.cluster.DBSCAN.fit_predict", return_value=np.full(100, -1)):
+    with patch(
+        "mne_denoise.asr.juggler._dbscan_chebyshev_memory_bounded",
+        return_value=(np.full(100, -1), {}),
+    ):
         with pytest.raises(RuntimeError, match="DBSCAN found no non-noise cluster"):
             select_juggler_reference_samples(clean, SFREQ, strategy="dbscan")
 
