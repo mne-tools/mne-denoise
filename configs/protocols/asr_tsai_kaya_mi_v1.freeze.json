@@ -1,0 +1,38 @@
+{
+  "configs": [
+    {
+      "arm": "asr_tsai_kaya_mi",
+      "path": "configs/benchmarks/asr_tsai_kaya_mi.yaml",
+      "sha256": "a141bbf6d1e3407ef97d68725d4b70b3a43aa72d4fc028fdc03a72070b01f607"
+    }
+  ],
+  "environment": {
+    "implementation": "CPython",
+    "machine": "AMD64",
+    "packages": {
+      "EMD-signal": "not-installed",
+      "PyWavelets": "1.7.0",
+      "matplotlib": "3.9.2",
+      "mne": "1.9.0",
+      "mne-denoise": "0.0.1",
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "scikit-learn": "1.7.2",
+      "scipy": "1.11.4"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.10.15 | packaged by conda-forge | (main, Oct 16 2024, 01:15:49) [MSC v.1941 64 bit (AMD64)]"
+  },
+  "environment_hash": "7c5da10f0ff3b42b9956924d6dcdc658267eb3978dc157adeb20ce4bbe46c31f",
+  "frozen_at_utc": "2026-07-18T07:53:53.851136Z",
+  "git": {
+    "branch": "codex/asr-replication-hardening",
+    "commit": "78bd0287bc5d4412e4853c7db5eb8cc81f3950fc",
+    "dirty": false,
+    "dirty_paths": [],
+    "root": "."
+  },
+  "manifest_hash": "245951c2309fe8506ea71176956c7bb2bd67f90c1e48af6560b979af36185699",
+  "protocol_id": "asr-tsai-kaya-mi-v1",
+  "schema_version": 1
+}
