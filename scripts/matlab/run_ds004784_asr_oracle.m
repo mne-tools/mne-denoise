@@ -15,13 +15,11 @@ clean_rawdata_root = fullfile(oracle_root, "clean_rawdata");
 script_root = fullfile(dataset_root, "derivatives", "Scripts");
 comparison_root = fullfile(script_root, "Compare_Ground_Truth");
 
-addpath(eeglab_root);
+addpath(genpath(eeglab_root));
 addpath(clean_rawdata_root);
-addpath(fullfile(clean_rawdata_root, "private"));
 addpath(fullfile(script_root, "Preprocessing"));
 addpath(comparison_root);
 addpath(fullfile(comparison_root, "helper"));
-eeglab("nogui");
 
 input_root = fullfile(dataset_root, "derivatives", "Data", "Imported");
 target_name = "NMM10_" + condition + "_1.set";
