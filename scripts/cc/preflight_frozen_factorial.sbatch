@@ -56,6 +56,19 @@ case "${ARM}" in
             --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}" \
             --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}/${CELL}"
         ;;
+    asr_variant_sensitivity)
+        CONFIG=configs/benchmarks/asr_variant_ground_truth.yaml
+        : "${SENSITIVITY_INDEX:?export SENSITIVITY_INDEX for the sensitivity preflight}"
+        if ! [[ "${SENSITIVITY_INDEX}" =~ ^[0-9]+$ ]]; then
+            echo "SENSITIVITY_INDEX must be a non-negative integer" >&2
+            exit 2
+        fi
+        CELL="cell-$(printf '%02d' "${SENSITIVITY_INDEX}")"
+        python -m mne_denoise.benchmarks validate "${CONFIG}"
+        python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --smoke \
+            --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}" \
+            --output-root "${SCRATCH}/mne-denoise-neuroimage-v1/preflight/${ARM}/${CELL}"
+        ;;
     asr_juggler)
         CONFIG=configs/benchmarks/asr_juggler_kim2025.yaml
         python -m mne_denoise.benchmarks validate "${CONFIG}"

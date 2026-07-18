@@ -18,7 +18,7 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 source scripts/cc/fir_env.sh
 
-: "${ARM:?export ARM (bss_generic, bss_amica, bss_forward, asr_core, asr_variants, asr_sensitivity, asr_juggler, reference, sensor_forward, temporal, or streaming)}"
+: "${ARM:?export ARM (bss_generic, bss_amica, bss_forward, asr_core, asr_variants, asr_sensitivity, asr_variant_sensitivity, asr_juggler, reference, sensor_forward, temporal, or streaming)}"
 : "${SHARD_COUNT:?export SHARD_COUNT matching the array length}"
 SHARD_INDEX="${SLURM_ARRAY_TASK_ID:?submit as a zero-based array}"
 
@@ -28,7 +28,7 @@ if [ "${SHARD_INDEX}" -lt 0 ] || [ "${SHARD_INDEX}" -ge "${SHARD_COUNT}" ]; then
 fi
 
 RESULT_ARM="${ARM}"
-if [ "${ARM}" = "asr_sensitivity" ]; then
+if [ "${ARM}" = "asr_sensitivity" ] || [ "${ARM}" = "asr_variant_sensitivity" ]; then
     : "${SENSITIVITY_INDEX:?export SENSITIVITY_INDEX for this sensitivity array}"
     if ! [[ "${SENSITIVITY_INDEX}" =~ ^[0-9]+$ ]]; then
         echo "SENSITIVITY_INDEX must be a non-negative integer" >&2
@@ -69,6 +69,10 @@ case "${ARM}" in
         ;;
     asr_sensitivity)
         CONFIG=configs/benchmarks/asr_transient_ground_truth.yaml
+        RUNNER=(python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}")
+        ;;
+    asr_variant_sensitivity)
+        CONFIG=configs/benchmarks/asr_variant_ground_truth.yaml
         RUNNER=(python scripts/run_asr_transient_ground_truth.py --config "${CONFIG}" --campaign sensitivity --sensitivity-index "${SENSITIVITY_INDEX}")
         ;;
     asr_juggler)
