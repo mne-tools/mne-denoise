@@ -44,6 +44,7 @@ published_protocol:
     highpass_in_clean_rawdata: disabled
     window_criterion: disabled
     burst_rejection: false
+    reference_window_tolerances: [-3.5, 5.5]
     calibration_sources: [external_clean_recording, target_clean_window_selection]
   exact_cutoff_grid:
     segments:
@@ -139,4 +140,3 @@ unit_of_inference: phantom_technical_repeat
 storage:
   always_save: [metrics, model_json, terminal_status, provenance]
   save_cleaned: {mode: published_reference_cells_only}
-

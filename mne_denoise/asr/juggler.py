@@ -212,7 +212,7 @@ class JugglerASR(ASR):
         Fallback calibration overlap.
     ref_max_bad_channels : float, default=0.075
         Maximum fraction of bad channels in a window.
-    ref_tolerances : tuple[float, float], default=(-np.inf, 5.5)
+    ref_tolerances : tuple[float, float], default=(-3.5, 5.5)
         Z-score tolerances for fallback rejection.
     blocksize : int, default=10
         Processing blocksize for covariance matrix memory.
@@ -275,7 +275,7 @@ class JugglerASR(ASR):
         calibration_window_length: float = 1.0,
         calibration_window_overlap: float = 0.66,
         ref_max_bad_channels: float = 0.075,
-        ref_tolerances: tuple[float, float] = (-np.inf, 5.5),
+        ref_tolerances: tuple[float, float] = (-3.5, 5.5),
         blocksize: int = 10,
         max_dims: float | int = 0.66,
         reject_by_annotation: bool = True,

@@ -50,7 +50,7 @@ def calibrate_asr(
     calibration_window_length: float = 1.0,
     calibration_window_overlap: float = 0.66,
     ref_max_bad_channels: float = 0.075,
-    ref_tolerances: tuple[float, float] = (-np.inf, 5.5),
+    ref_tolerances: tuple[float, float] = (-3.5, 5.5),
     blocksize: int = 10,
     max_dropout_fraction: float = 0.1,
     min_clean_fraction: float = 0.25,

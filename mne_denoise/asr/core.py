@@ -110,7 +110,7 @@ class ASR(BaseEstimator, TransformerMixin):
     ref_max_bad_channels : float, default=0.2
         Maximum fraction of channels exceeding robust tolerances in a clean
         calibration window.
-    ref_tolerances : tuple of float, default=(-3.5, 5.0)
+    ref_tolerances : tuple of float, default=(-3.5, 5.5)
         Lower and upper robust z-score bounds for clean-window selection.
     blocksize : int, default=10
         Number of successive samples averaged into each covariance block for
@@ -249,7 +249,7 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration_window_length: float = 1.0,
         calibration_window_overlap: float = 0.66,
         ref_max_bad_channels: float = 0.075,
-        ref_tolerances: tuple[float, float] = (-np.inf, 5.5),
+        ref_tolerances: tuple[float, float] = (-3.5, 5.5),
         blocksize: int = 10,
         max_dims: float | int = 0.66,
         reject_by_annotation: bool = True,
