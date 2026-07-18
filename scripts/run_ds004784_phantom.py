@@ -18,7 +18,7 @@ from fractions import Fraction
 
 import numpy as np
 import yaml
-from scipy import interpolate, io, signal
+from scipy import integrate, interpolate, io, signal
 
 _REPO = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
@@ -298,7 +298,7 @@ def _band_power(data, sfreq=512.0, low=8.0, high=30.0):
         data, sfreq, nperseg=min(1024, data.shape[1]), axis=1
     )
     keep = (frequencies >= low) & (frequencies <= high)
-    return float(np.trapezoid(psd[:, keep], frequencies[keep], axis=1).mean())
+    return float(integrate.trapezoid(psd[:, keep], frequencies[keep], axis=1).mean())
 
 
 def _effective_rank(data: np.ndarray) -> int:

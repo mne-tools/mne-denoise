@@ -42,3 +42,9 @@ def test_lagged_reference_does_not_wrap_boundaries():
     np.testing.assert_array_equal(lagged[0], [1, 2, 3, 4, 0])
     np.testing.assert_array_equal(lagged[1], [0, 1, 2, 3, 4])
     np.testing.assert_array_equal(lagged[2], [0, 0, 1, 2, 3])
+
+
+def test_band_power_supports_numpy_one_compatible_stack():
+    time = np.arange(4096) / 512.0
+    data = np.sin(2 * np.pi * 10.0 * time)[None]
+    assert MODULE._band_power(data, 512.0) > 0.0

@@ -94,7 +94,7 @@ from config import (  # noqa: E402
 )
 from mne.preprocessing import ICA, Xdawn  # noqa: E402
 from mne_icalabel import label_components  # noqa: E402
-from scipy import signal, stats  # noqa: E402
+from scipy import integrate, signal, stats  # noqa: E402
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis  # noqa: E402
 from sklearn.model_selection import StratifiedKFold, cross_val_score  # noqa: E402
 from sklearn.pipeline import make_pipeline  # noqa: E402
@@ -222,8 +222,8 @@ def below_noise_distortion(
     mask = (freqs >= f0 - low_offset) & (freqs <= f0 - high_offset)
     if not mask.any():
         return np.nan
-    a_pre = np.trapezoid(psd_pre[mask], freqs[mask])
-    a_post = np.trapezoid(psd_post[mask], freqs[mask])
+    a_pre = integrate.trapezoid(psd_pre[mask], freqs[mask])
+    a_post = integrate.trapezoid(psd_post[mask], freqs[mask])
     if a_pre <= 0:
         return np.nan
     return 100.0 * (a_post - a_pre) / a_pre

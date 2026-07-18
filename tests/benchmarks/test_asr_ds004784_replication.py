@@ -8,6 +8,7 @@ import pathlib
 import sys
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 import yaml
 
@@ -42,6 +43,12 @@ def test_exact_published_cutoff_grid_matches_released_matlab():
     assert values[:3] == [1.0, 1.05, 1.1]
     assert values[180:184] == [10.0, 10.5, 11.0, 11.5]
     assert values[-3:] == [248.0, 249.0, 250.0]
+
+
+def test_band_power_supports_numpy_one_compatible_stack():
+    time = np.arange(4096) / 512.0
+    data = np.sin(2 * np.pi * 10.0 * time)[None]
+    assert MODULE._band_power(data, 512.0) > 0.0
 
 
 def test_published_reference_cells_cover_raw_external_and_target_selection():
