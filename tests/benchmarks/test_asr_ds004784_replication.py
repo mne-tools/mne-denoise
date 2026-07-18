@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import pathlib
@@ -45,6 +46,12 @@ def test_exact_published_cutoff_grid_matches_released_matlab():
     assert values[-3:] == [248.0, 249.0, 250.0]
 
 
+def test_phantom_protocol_uses_clean_rawdata_reference_tolerances():
+    assert _config()["published_protocol"]["method"][
+        "reference_window_tolerances"
+    ] == ["-inf", 5.5]
+
+
 def test_band_power_supports_numpy_one_compatible_stack():
     time = np.arange(4096) / 512.0
     data = np.sin(2 * np.pi * 10.0 * time)[None]
@@ -75,6 +82,9 @@ def test_calibration_metrics_preserve_sample_and_window_denominators():
     assert metrics["calibration_reference_samples"] == 3
     assert metrics["calibration_candidate_samples"] == 4
     assert metrics["calibration_reference_fraction"] == pytest.approx(0.75)
+    assert metrics["calibration_reference_mask_sha256"] == hashlib.sha256(
+        np.packbits(np.array([True, False, True, True]), bitorder="little").tobytes()
+    ).hexdigest()
     assert metrics["calibration_clean_windows"] == 2
     assert metrics["calibration_candidate_windows"] == 3
     assert metrics["calibration_clean_window_fraction"] == pytest.approx(2 / 3)

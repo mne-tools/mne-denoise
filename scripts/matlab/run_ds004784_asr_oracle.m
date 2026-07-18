@@ -39,7 +39,7 @@ if use_external
     reference_sample_mask = true(1, calibration.pnts);
 else
     [~, reference_sample_mask] = clean_windows( ...
-        EEG_only, 0.075, [-3.5 5.5], 1, 0.66, 0.1, 0.25);
+        EEG_only, 0.075, [-inf 5.5], 1, 0.66, 0.1, 0.25);
 end
 
 tic_id = tic;
@@ -60,6 +60,7 @@ metrics.corrected_dqs = corrected_dqs;
 metrics.reference_samples = nnz(reference_sample_mask);
 metrics.reference_candidate_samples = numel(reference_sample_mask);
 metrics.reference_fraction = mean(reference_sample_mask);
+metrics.reference_tolerances = "[-Inf, 5.5]";
 metrics.runtime_seconds = runtime_seconds;
 metrics.matlab_version = version;
 metrics.eeglab_commit = "5fe9e2982f350ac90d0b48c2b215ea93b63efd38";

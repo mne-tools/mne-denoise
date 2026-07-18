@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import pathlib
 import sys
@@ -287,12 +288,22 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
         "max_mem_mb": 2048,
         "verbose": False,
     }
+    reference_tolerances = tuple(
+        float(value)
+        for value in config["published_protocol"]["method"][
+            "reference_window_tolerances"
+        ]
+    )
     if cell.method == "asr_standard":
         calibration = (
             "manual" if cell.calibration_source == "external_clean" else "auto"
         )
         return ASR(
-            method="standard", calibration=calibration, filter_kind="asr", **common
+            method="standard",
+            calibration=calibration,
+            filter_kind="asr",
+            ref_tolerances=reference_tolerances,
+            **common,
         )
     if cell.method == "rasr_windowed":
         calibration = (
@@ -302,6 +313,7 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
             method="riemannian_windowed",
             calibration=calibration,
             filter_kind="asr",
+            ref_tolerances=reference_tolerances,
             **common,
         )
     if cell.method == "rasr_legacy":
@@ -313,6 +325,7 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
             experimental=True,
             calibration=calibration,
             filter_kind="asr",
+            ref_tolerances=reference_tolerances,
             **common,
         )
     if cell.method in {"adaptive_psp", "adaptive_psw"}:
@@ -350,6 +363,7 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
             method="riemannian_windowed",
             calibration=calibration,
             filter_kind="asr",
+            ref_tolerances=reference_tolerances,
             reconstruction="soft",
             artifact_biases=artifact_biases,
             preserve_biases=preserve_biases,
@@ -425,12 +439,13 @@ def _sample_mask(diagnostics: dict, n_times: int) -> np.ndarray | None:
     return value.astype(bool)
 
 
-def _calibration_metrics(model: Any) -> dict[str, int | float | None]:
+def _calibration_metrics(model: Any) -> dict[str, int | float | str | None]:
     if model is None:
         return {
             "calibration_reference_samples": None,
             "calibration_candidate_samples": None,
             "calibration_reference_fraction": None,
+            "calibration_reference_mask_sha256": None,
             "calibration_clean_windows": None,
             "calibration_candidate_windows": None,
             "calibration_clean_window_fraction": None,
@@ -445,6 +460,7 @@ def _calibration_metrics(model: Any) -> dict[str, int | float | None]:
     selected_samples = info.get("reference_selected_samples")
     candidate_samples = info.get("reference_candidate_samples")
     if isinstance(sample_mask, np.ndarray):
+        sample_mask = np.asarray(sample_mask, dtype=bool).ravel()
         selected_samples = int(np.sum(sample_mask))
         candidate_samples = int(sample_mask.size)
     elif selected_samples is None:
@@ -468,6 +484,13 @@ def _calibration_metrics(model: Any) -> dict[str, int | float | None]:
             None
             if selected_samples is None or not candidate_samples
             else float(selected_samples / candidate_samples)
+        ),
+        "calibration_reference_mask_sha256": (
+            None
+            if not isinstance(sample_mask, np.ndarray)
+            else hashlib.sha256(
+                np.packbits(sample_mask, bitorder="little").tobytes()
+            ).hexdigest()
         ),
         "calibration_clean_windows": selected_windows,
         "calibration_candidate_windows": candidate_windows,
