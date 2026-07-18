@@ -17,22 +17,23 @@
       "mne-denoise": "0.0.1",
       "numpy": "2.4.2",
       "pandas": "3.0.1",
+      "pymatreader": "not-installed",
       "scikit-learn": "1.8.0",
       "scipy": "1.17.1"
     },
     "platform": "Windows-11-10.0.26200-SP0",
     "python": "3.12.9 (tags/v3.12.9:fdb8142, Feb  4 2025, 15:27:58) [MSC v.1942 64 bit (AMD64)]"
   },
-  "environment_hash": "2577fb239ef6bdc4a9ae98026df71204ba729350a69125e2d8aaaa1f910beaad",
-  "frozen_at_utc": "2026-07-18T09:52:53.031850Z",
+  "environment_hash": "4a66e66c2a9b30fb865c5dd0fa438f49e74d13df49e75fc6870d9779abf5780e",
+  "frozen_at_utc": "2026-07-18T10:01:12.795089Z",
   "git": {
     "branch": "codex/asr-replication-hardening",
-    "commit": "9f8ac6feec9976280c37a71eddef0a6cb3496954",
+    "commit": "1672f60a2190ef45073e2f0b93e7c97f238f0a2d",
     "dirty": false,
     "dirty_paths": [],
     "root": "."
   },
-  "manifest_hash": "957dbc68437830aab31910585dccc22e22130d62f08156e2ce66132e0d4eeae2",
+  "manifest_hash": "14af9d44f17cb6265cb0b307cab94c477bbed92ced78e011c2f0bda881ca6577",
   "protocol_id": "asr_ds004784_replication_v1",
   "schema_version": 1
 }
