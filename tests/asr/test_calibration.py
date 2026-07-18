@@ -5,6 +5,7 @@ import pytest
 from scipy import signal
 
 from mne_denoise.asr import calibrate_asr
+from mne_denoise.asr._calibration import _resolve_calibration_blocksize
 from mne_denoise.asr._filters import _design_statistics_filter
 from mne_denoise.asr._types import ASRState
 
@@ -85,6 +86,16 @@ def test_calibrate_asr_bad_method_raises():
 def test_calibrate_asr_bad_blocksize_raises():
     with pytest.raises(ValueError, match="blocksize"):
         calibrate_asr(_eeg(), SFREQ, blocksize=0, filter_kind="none")
+
+
+def test_clean_rawdata_blocksize_matches_matlab_memory_rule():
+    assert _resolve_calibration_blocksize(128, 45_105, "clean_rawdata", 64) == 265
+    assert _resolve_calibration_blocksize(128, 182_784, "clean_rawdata", 64) == 1071
+
+
+def test_clean_rawdata_blocksize_requires_memory_budget():
+    with pytest.raises(ValueError, match="positive max_mem_mb"):
+        _resolve_calibration_blocksize(8, 1000, "clean_rawdata", None)
 
 
 def test_calibrate_asr_riemannian_method():

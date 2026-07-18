@@ -13,7 +13,7 @@ The primary entry point, ``calibrate_asr``, executes a multi-step pipeline:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -40,6 +40,37 @@ from ._windowing import (
 )
 
 
+def _resolve_calibration_blocksize(
+    n_channels: int,
+    n_samples: int,
+    blocksize: int | Literal["clean_rawdata"],
+    max_mem_mb: int | float | None,
+) -> int:
+    """Resolve fixed or MATLAB-compatible calibration covariance blocks."""
+    if isinstance(blocksize, str):
+        if blocksize != "clean_rawdata":
+            raise ValueError("blocksize must be an integer or 'clean_rawdata'")
+        if max_mem_mb is None or max_mem_mb <= 0:
+            raise ValueError(
+                "blocksize='clean_rawdata' requires a positive max_mem_mb"
+            )
+        memory_blocksize = int(
+            np.ceil(
+                n_channels
+                * n_channels
+                * n_samples
+                * 8
+                * 3
+                * 2
+                / (float(max_mem_mb) * (2**21))
+            )
+        )
+        return max(10, memory_blocksize)
+    if blocksize < 1:
+        raise ValueError("blocksize must be at least 1")
+    return int(blocksize)
+
+
 def calibrate_asr(
     X: np.ndarray,
     sfreq: float,
@@ -51,7 +82,7 @@ def calibrate_asr(
     calibration_window_overlap: float = 0.66,
     ref_max_bad_channels: float = 0.075,
     ref_tolerances: tuple[float, float] = (-np.inf, 5.5),
-    blocksize: int = 10,
+    blocksize: int | Literal["clean_rawdata"] = 10,
     max_dropout_fraction: float = 0.1,
     min_clean_fraction: float = 0.25,
     cov_estimator: str = "geometric_median",
@@ -86,9 +117,11 @@ def calibrate_asr(
         calibration window to be retained.
     ref_tolerances : tuple of float
         Lower and upper robust z-score tolerances for clean-window selection.
-    blocksize : int
+    blocksize : int | 'clean_rawdata'
         Number of successive samples averaged into each covariance block for
-        robust calibration covariance estimation.
+        robust calibration covariance estimation. ``'clean_rawdata'`` applies
+        the reference MATLAB implementation's memory-dependent block-size
+        rule using ``max_mem_mb`` and a minimum block size of 10.
     max_dropout_fraction : float
         Fraction of the lowest RMS values excluded while fitting thresholds.
     min_clean_fraction : float
@@ -142,7 +175,9 @@ def calibrate_asr(
         raise ValueError(
             "method must be 'standard', 'riemannian', or 'riemannian_windowed'"
         )
-    if blocksize < 1:
+    if isinstance(blocksize, str) and blocksize != "clean_rawdata":
+        raise ValueError("blocksize must be an integer or 'clean_rawdata'")
+    if not isinstance(blocksize, str) and blocksize < 1:
         raise ValueError("blocksize must be at least 1")
 
     X = _validate_array_2d(X)
@@ -182,6 +217,16 @@ def calibrate_asr(
         clean_window_scores = np.zeros((len(cal_starts), n_channels), dtype=np.float64)
         clean_sample_mask = np.ones(n_times, dtype=bool)
         X_calibration = X
+
+    requested_blocksize = blocksize
+    # The factor of two in the clean_rawdata rule is retained verbatim so
+    # compatibility mode remains numerically reproducible.
+    blocksize = _resolve_calibration_blocksize(
+        n_channels,
+        X_calibration.shape[1],
+        blocksize,
+        max_mem_mb,
+    )
 
     filter_b, filter_a = _design_statistics_filter(sfreq, filter_kind)
     X_clean, filter_zi = _lfilter_channels(X_calibration, filter_b, filter_a)
@@ -250,6 +295,8 @@ def calibrate_asr(
         "calibration_window_starts": cal_starts,
         "calibration_window_length_samples": cal_len,
         "blocksize": int(blocksize),
+        "blocksize_requested": requested_blocksize,
+        "blocksize_effective": int(blocksize),
         "n_clean_windows": int(clean_window_mask.sum()),
         "n_calibration_windows": int(len(cal_starts)),
         "calibration_samples": int(X_clean.shape[1]),

@@ -281,11 +281,16 @@ def _band_power(
 def _estimator(config: dict, cell: Cell, sfreq: float):
     if cell.method == "none":
         return None
+    published_method = config["published_protocol"]["method"]
     common = {
         "sfreq": sfreq,
         "cutoff": float(cell.cutoff),
         "picks": None,
-        "max_mem_mb": 2048,
+        "max_mem_mb": (
+            float(published_method["max_mem_mb"])
+            if cell.campaign == "published_reference"
+            else 2048
+        ),
         "verbose": False,
     }
     reference_tolerances = tuple(
@@ -303,6 +308,11 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
             calibration=calibration,
             filter_kind="asr",
             ref_tolerances=reference_tolerances,
+            blocksize=(
+                str(published_method["calibration_blocksize"])
+                if cell.campaign == "published_reference"
+                else 10
+            ),
             **common,
         )
     if cell.method == "rasr_windowed":
@@ -449,6 +459,8 @@ def _calibration_metrics(model: Any) -> dict[str, int | float | str | None]:
             "calibration_clean_windows": None,
             "calibration_candidate_windows": None,
             "calibration_clean_window_fraction": None,
+            "calibration_blocksize_requested": None,
+            "calibration_blocksize_effective": None,
         }
     info = getattr(model, "calibration_info_", {})
     if not isinstance(info, dict):
@@ -499,6 +511,8 @@ def _calibration_metrics(model: Any) -> dict[str, int | float | str | None]:
             if selected_windows is None or not candidate_windows
             else float(selected_windows / candidate_windows)
         ),
+        "calibration_blocksize_requested": info.get("blocksize_requested"),
+        "calibration_blocksize_effective": info.get("blocksize_effective"),
     }
 
 

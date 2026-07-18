@@ -47,9 +47,10 @@ def test_exact_published_cutoff_grid_matches_released_matlab():
 
 
 def test_phantom_protocol_uses_clean_rawdata_reference_tolerances():
-    assert _config()["published_protocol"]["method"][
-        "reference_window_tolerances"
-    ] == ["-inf", 5.5]
+    method = _config()["published_protocol"]["method"]
+    assert method["reference_window_tolerances"] == ["-inf", 5.5]
+    assert method["calibration_blocksize"] == "clean_rawdata"
+    assert method["max_mem_mb"] == 64
 
 
 def test_band_power_supports_numpy_one_compatible_stack():
@@ -76,6 +77,8 @@ def test_calibration_metrics_preserve_sample_and_window_denominators():
         calibration_info_={
             "clean_sample_mask": np.array([True, False, True, True]),
             "clean_window_mask": np.array([True, False, True]),
+            "blocksize_requested": "clean_rawdata",
+            "blocksize_effective": 265,
         }
     )
     metrics = MODULE._calibration_metrics(model)
@@ -88,6 +91,8 @@ def test_calibration_metrics_preserve_sample_and_window_denominators():
     assert metrics["calibration_clean_windows"] == 2
     assert metrics["calibration_candidate_windows"] == 3
     assert metrics["calibration_clean_window_fraction"] == pytest.approx(2 / 3)
+    assert metrics["calibration_blocksize_requested"] == "clean_rawdata"
+    assert metrics["calibration_blocksize_effective"] == 265
 
 
 def test_calibration_metrics_prefer_juggler_reference_mask():
