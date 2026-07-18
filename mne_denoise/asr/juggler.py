@@ -17,6 +17,7 @@ This module exposes the following core components:
 
 from __future__ import annotations
 
+import itertools
 from typing import Any
 
 import numpy as np
@@ -646,17 +647,64 @@ def _dbscan_chebyshev_memory_bounded(
     count_batch_size = max(1, int(count_batch_size))
 
     n_samples = features.shape[0]
-    tree = spatial.cKDTree(features)
+    cell_coordinates = np.floor(features / eps).astype(np.int64)
+    sample_cells: dict[tuple[int, ...], list[int]] = {}
+    for index in range(n_samples):
+        key = tuple(int(value) for value in cell_coordinates[index])
+        sample_cells.setdefault(key, []).append(index)
+    sample_cell_keys = sorted(sample_cells, key=lambda key: sample_cells[key][0])
+    sample_cell_positions = {
+        key: position for position, key in enumerate(sample_cell_keys)
+    }
+    sample_cell_trees = {
+        key: spatial.cKDTree(features[np.asarray(indices, dtype=int)])
+        for key, indices in sample_cells.items()
+    }
+    neighbor_offsets = tuple(
+        itertools.product((-1, 0, 1), repeat=features.shape[1])
+    )
+
+    # Points in the same eps-wide Chebyshev cell are all mutual neighbors.
+    # Accumulate exact counts only across occupied adjacent cells. This avoids
+    # a dense all-point radius query, whose running time can become quadratic
+    # even when ``return_length=True`` keeps its memory bounded.
     neighbor_counts = np.empty(n_samples, dtype=np.int64)
-    for start in range(0, n_samples, count_batch_size):
-        stop = min(start + count_batch_size, n_samples)
-        neighbor_counts[start:stop] = tree.query_ball_point(
-            features[start:stop],
-            r=eps,
-            p=np.inf,
-            return_length=True,
-            workers=1,
-        )
+    for indices in sample_cells.values():
+        neighbor_counts[np.asarray(indices, dtype=int)] = len(indices)
+    for left_position, left_key in enumerate(sample_cell_keys):
+        left_indices = np.asarray(sample_cells[left_key], dtype=int)
+        left_points = features[left_indices]
+        for offset in neighbor_offsets:
+            right_key = tuple(
+                coordinate + delta for coordinate, delta in zip(left_key, offset)
+            )
+            right_position = sample_cell_positions.get(right_key)
+            if right_position is None or right_position <= left_position:
+                continue
+            right_indices = np.asarray(sample_cells[right_key], dtype=int)
+            right_points = features[right_indices]
+            left_needed = neighbor_counts[left_indices] < int(min_samples)
+            if np.any(left_needed):
+                neighbor_counts[left_indices[left_needed]] += sample_cell_trees[
+                    right_key
+                ].query_ball_point(
+                    left_points[left_needed],
+                    r=eps,
+                    p=np.inf,
+                    return_length=True,
+                    workers=1,
+                )
+            right_needed = neighbor_counts[right_indices] < int(min_samples)
+            if np.any(right_needed):
+                neighbor_counts[right_indices[right_needed]] += sample_cell_trees[
+                    left_key
+                ].query_ball_point(
+                    right_points[right_needed],
+                    r=eps,
+                    p=np.inf,
+                    return_length=True,
+                    workers=1,
+                )
     core_mask = neighbor_counts >= int(min_samples)
     core_indices = np.flatnonzero(core_mask)
     labels = np.full(n_samples, -1, dtype=np.int64)
@@ -671,7 +719,6 @@ def _dbscan_chebyshev_memory_bounded(
     # Every pair of points in the same eps-wide Chebyshev grid cell is a
     # neighbor. Connected components can therefore be found at cell level,
     # avoiding a radius query for every point in a dense core cluster.
-    cell_coordinates = np.floor(features / eps).astype(np.int64)
     core_cells: dict[tuple[int, ...], list[int]] = {}
     for index in core_indices:
         key = tuple(int(value) for value in cell_coordinates[index])
@@ -708,22 +755,18 @@ def _dbscan_chebyshev_memory_bounded(
         key: spatial.cKDTree(features[np.asarray(indices, dtype=int)])
         for key, indices in core_cells.items()
     }
-    cell_coordinate_tree = spatial.cKDTree(
-        np.asarray(cell_keys, dtype=np.float64)
-    )
+    cell_positions = {key: position for position, key in enumerate(cell_keys)}
     for left_position, left_key in enumerate(cell_keys):
         left_points = features[np.asarray(core_cells[left_key], dtype=int)]
-        neighbor_positions = cell_coordinate_tree.query_ball_point(
-            np.asarray(left_key, dtype=np.float64),
-            r=1.0,
-            p=np.inf,
-            workers=1,
-        )
-        for right_position in neighbor_positions:
-            right_position = int(right_position)
+        for offset in neighbor_offsets:
+            right_key = tuple(
+                coordinate + delta for coordinate, delta in zip(left_key, offset)
+            )
+            right_position = cell_positions.get(right_key)
+            if right_position is None:
+                continue
             if right_position <= left_position:
                 continue
-            right_key = cell_keys[right_position]
             right_points = features[np.asarray(core_cells[right_key], dtype=int)]
             if left_points.shape[0] <= right_points.shape[0]:
                 distances, _ = cell_trees[right_key].query(
@@ -752,16 +795,40 @@ def _dbscan_chebyshev_memory_bounded(
         labels[np.asarray(core_cells[key], dtype=int)] = label
 
     # A non-core point is a DBSCAN border point when it neighbors a core
-    # sample. When it touches more than one component, assigning the earliest
-    # component matches the deterministic input-order convention.
+    # sample. Grouping border points by grid cell avoids one tree query per
+    # point. All core points within one cell share a component label, and only
+    # the 3**n_features adjacent cells can contain Chebyshev neighbors.
+    border_cells: dict[tuple[int, ...], list[int]] = {}
     for index in np.flatnonzero(~core_mask):
-        neighbors = np.asarray(
-            tree.query_ball_point(features[index], r=eps, p=np.inf, workers=1),
-            dtype=int,
-        )
-        core_labels = labels[neighbors[core_mask[neighbors]]]
-        if core_labels.size:
-            labels[index] = int(np.min(core_labels))
+        key = tuple(int(value) for value in cell_coordinates[index])
+        border_cells.setdefault(key, []).append(int(index))
+    for border_key, indices in border_cells.items():
+        border_indices = np.asarray(indices, dtype=int)
+        border_points = features[border_indices]
+        for offset in neighbor_offsets:
+            core_key = tuple(
+                coordinate + delta for coordinate, delta in zip(border_key, offset)
+            )
+            core_indices_in_cell = core_cells.get(core_key)
+            if core_indices_in_cell is None:
+                continue
+            core_label = int(labels[core_indices_in_cell[0]])
+            if core_key == border_key:
+                matched = np.ones(border_indices.size, dtype=bool)
+            else:
+                distances, _ = cell_trees[core_key].query(
+                    border_points,
+                    k=1,
+                    p=np.inf,
+                    distance_upper_bound=eps,
+                    workers=1,
+                )
+                matched = np.isfinite(distances)
+            matched_indices = border_indices[matched]
+            current = labels[matched_indices]
+            labels[matched_indices] = np.where(
+                current < 0, core_label, np.minimum(current, core_label)
+            )
 
     return labels, {
         "juggler_dbscan_backend": "ckdtree_grid_memory_bounded",
