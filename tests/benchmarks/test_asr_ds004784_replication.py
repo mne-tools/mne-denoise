@@ -51,6 +51,19 @@ def test_band_power_supports_numpy_one_compatible_stack():
     assert MODULE._band_power(data, 512.0) > 0.0
 
 
+def test_synchronized_data_scores_interval_without_cropping_fit_input():
+    data = np.arange(20.0).reshape(2, 10)
+    synchronized = MODULE._synchronized_data(data, (2, 7))
+    np.testing.assert_array_equal(synchronized, data[:, 2:7])
+    assert data.shape == (2, 10)
+
+
+@pytest.mark.parametrize("sync_samples", [(-1, 3), (3, 3), (3, 11)])
+def test_synchronized_data_rejects_invalid_interval(sync_samples):
+    with pytest.raises(ValueError, match="invalid synchronization interval"):
+        MODULE._synchronized_data(np.zeros((2, 10)), sync_samples)
+
+
 def test_published_reference_cells_cover_raw_external_and_target_selection():
     cells = MODULE.published_reference_cells(_config())
     assert len(cells) == 18

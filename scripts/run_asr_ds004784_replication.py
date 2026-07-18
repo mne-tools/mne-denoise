@@ -230,8 +230,26 @@ def _load_scalp_recording(path: pathlib.Path) -> dict[str, Any]:
         )
     start = int(round(sync[0] * sfreq))
     stop = int(round(sync[1] * sfreq)) + 1
-    data = np.asarray(raw.get_data(picks=_scalp_indices(raw.ch_names))[:, start:stop])
-    return {"data": data, "sfreq": sfreq, "sync_onsets_s": sync}
+    data = np.asarray(raw.get_data(picks=_scalp_indices(raw.ch_names)))
+    if start < 0 or stop > data.shape[1]:
+        raise RuntimeError(
+            f"synchronization interval [{start}, {stop}) lies outside {path}"
+        )
+    return {
+        "data": data,
+        "sfreq": sfreq,
+        "sync_onsets_s": sync,
+        "sync_samples": (start, stop),
+    }
+
+
+def _synchronized_data(data: np.ndarray, sync_samples: tuple[int, int]) -> np.ndarray:
+    start, stop = sync_samples
+    if start < 0 or stop <= start or stop > data.shape[1]:
+        raise ValueError(
+            f"invalid synchronization interval [{start}, {stop}) for {data.shape[1]} samples"
+        )
+    return data[:, start:stop]
 
 
 def _align(data: np.ndarray, ground_truth: np.ndarray) -> np.ndarray:
@@ -454,8 +472,13 @@ def run_cell(args) -> dict:
     ground_truth = _load_ground_truth(root / config["dataset"]["ground_truth_path"])
     target = target_recording["data"]
     clean_calibration = clean_recording["data"]
-    raw_aligned = _align(target, ground_truth)
-    clean_aligned = _align(clean_calibration, ground_truth)
+    raw_aligned = _align(
+        _synchronized_data(target, target_recording["sync_samples"]), ground_truth
+    )
+    clean_aligned = _align(
+        _synchronized_data(clean_calibration, clean_recording["sync_samples"]),
+        ground_truth,
+    )
     fit_split = int(round(0.4 * ground_truth.shape[1]))
     clean_target = _fit_clean_forward(clean_aligned, ground_truth, fit_split)
     brain = ground_truth[:10]
@@ -484,7 +507,10 @@ def run_cell(args) -> dict:
         cleaned, model, diagnostics = _clean(
             config, cell, target, clean_calibration, sfreq
         )
-        aligned = _align(cleaned, ground_truth)
+        aligned = _align(
+            _synchronized_data(cleaned, target_recording["sync_samples"]),
+            ground_truth,
+        )
         dqs, dqs_uncorrected, correction = _corrected_data_quality_score(
             aligned, raw_aligned, brain
         )
