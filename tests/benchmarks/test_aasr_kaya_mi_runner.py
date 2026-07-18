@@ -79,6 +79,30 @@ def test_paired_contrasts_preserve_subject_pairing() -> None:
     assert psw["worse_count"] == 1
 
 
+def test_record_provenance_rejects_mixed_feature_protocols() -> None:
+    """A merger must reject records generated under another feature layout."""
+    module = _load_module()
+    record = {
+        "config_sha256": "config-v2",
+        "prepared_manifest_hash": "manifest-v2",
+        "repository_commit": "execution-commit",
+        "dirty_worktree": False,
+        "feature_layout": "unique_upper_triangle",
+        "feature_count": 171,
+    }
+    errors = module._record_provenance_errors(
+        record,
+        config_sha256="config-v2",
+        prepared_manifest_hash="manifest-v2",
+        execution_commit="execution-commit",
+        feature_layout="full_matrix_row_major",
+        feature_count=361,
+    )
+    assert len(errors) == 2
+    assert errors[0].startswith("feature_layout:")
+    assert errors[1].startswith("feature_count:")
+
+
 def test_config_is_submission_ready() -> None:
     """The paper arm must pass the generic frozen-config gate."""
     module = _load_module()

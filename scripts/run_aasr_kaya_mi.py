@@ -509,6 +509,35 @@ def _paired_contrasts(
     return contrasts
 
 
+def _record_provenance_errors(
+    record: dict[str, Any],
+    *,
+    config_sha256: str,
+    prepared_manifest_hash: str,
+    execution_commit: str,
+    feature_layout: str,
+    feature_count: int,
+) -> list[str]:
+    """Return frozen-protocol violations for one terminal cell record."""
+    expected = {
+        "config_sha256": config_sha256,
+        "prepared_manifest_hash": prepared_manifest_hash,
+        "repository_commit": execution_commit,
+        "feature_layout": feature_layout,
+        "feature_count": feature_count,
+    }
+    errors = [
+        f"{key}: observed={record.get(key)!r}, expected={value!r}"
+        for key, value in expected.items()
+        if record.get(key) != value
+    ]
+    if record.get("dirty_worktree") is not False:
+        errors.append(
+            f"dirty_worktree: observed={record.get('dirty_worktree')!r}, expected=False"
+        )
+    return errors
+
+
 def merge_results(
     config_path: Path,
     prepared_manifest_path: Path,
@@ -519,6 +548,17 @@ def merge_results(
     config = _load_config(config_path)
     manifest = json.loads(prepared_manifest_path.read_text(encoding="utf-8"))
     records = [json.loads(path.read_text(encoding="utf-8")) for path in results_dir.glob("*.json")]
+    config_sha256 = _sha256(config_path)
+    prepared_manifest_hash = str(manifest["manifest_hash"])
+    execution_commit = str(manifest["repository_commit"])
+    classification = config["classification"]
+    feature_layout = str(
+        classification.get("feature_layout", "unique_upper_triangle")
+    )
+    n_channels = len(config["preprocessing"]["channels"])
+    feature_count = int(
+        classification.get("feature_count", n_channels * (n_channels - 1) // 2)
+    )
     expected = {
         (subject["subject"], variant, float(cutoff))
         for subject in manifest["subjects"]
@@ -531,6 +571,25 @@ def merge_results(
     duplicates = len(records) - len(observed)
     passed = [row for row in records if row["status"] == "passed"]
     failed = [row for row in records if row["status"] != "passed"]
+    invalid_provenance = [
+        {
+            "subject": row.get("subject"),
+            "variant": row.get("variant"),
+            "cutoff": row.get("cutoff"),
+            "errors": errors,
+        }
+        for row in passed
+        if (
+            errors := _record_provenance_errors(
+                row,
+                config_sha256=config_sha256,
+                prepared_manifest_hash=prepared_manifest_hash,
+                execution_commit=execution_commit,
+                feature_layout=feature_layout,
+                feature_count=feature_count,
+            )
+        )
+    ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
     csv_path = output_dir / "per_subject_metrics.csv"
@@ -578,11 +637,17 @@ def merge_results(
                         "bootstrap_95_ci": [low, high],
                     }
                 )
+    analysis_commit, analysis_dirty = _git_state()
     report = {
         "schema_version": 1,
         "generated_utc": _utc_now(),
-        "config_sha256": _sha256(config_path),
-        "prepared_manifest_hash": manifest["manifest_hash"],
+        "analysis_repository_commit": analysis_commit,
+        "analysis_dirty_worktree": analysis_dirty,
+        "execution_repository_commit": execution_commit,
+        "config_sha256": config_sha256,
+        "prepared_manifest_hash": prepared_manifest_hash,
+        "feature_layout": feature_layout,
+        "feature_count": feature_count,
         "expected_cell_count": len(expected),
         "terminal_record_count": len(records),
         "passed_count": len(passed),
@@ -590,13 +655,15 @@ def merge_results(
         "missing_cells": missing,
         "extra_cells": extras,
         "duplicate_count": duplicates,
+        "invalid_provenance_count": len(invalid_provenance),
+        "invalid_provenance": invalid_provenance,
         "aggregate": aggregate,
         "paired_vs_init": _paired_contrasts(passed, config),
     }
     (output_dir / "aggregate.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )
-    return int(bool(missing or extras or duplicates or failed))
+    return int(bool(missing or extras or duplicates or failed or invalid_provenance))
 
 
 def _parse_args() -> argparse.Namespace:
