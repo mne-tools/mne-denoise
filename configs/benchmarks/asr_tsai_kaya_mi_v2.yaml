@@ -1,0 +1,88 @@
+arm: asr_tsai_kaya_mi_v2
+runner: run_aasr_kaya_mi
+status: protocol_frozen_v2
+citation:
+  doi: 10.1109/TNNLS.2022.3174528
+  title: Development of an Adaptive Artifact Subspace Reconstruction Based on Hebbian/Anti-Hebbian Learning Networks for Enhancing BCI Performance
+dataset:
+  title: A large electroencephalographic motor imagery dataset for electroencephalographic brain computer interfaces
+  article_doi: 10.1038/sdata.2018.211
+  collection_doi: 10.6084/m9.figshare.c.3917698
+  collection_id: 3917698
+  figshare_file_count: 77
+  matlab_recording_count: 75
+  included_paradigm: HaLT
+  included_marker_codes: [1, 2]
+  class_labels: {1: left_hand, 2: right_hand}
+  public_subject_ids: [A, B, C, E, F, G, H, I, J, K, L, M]
+  public_subject_count: 12
+  paper_reported_subject_count: 13
+  public_trial_count: 9224
+  paper_reported_trial_count: 9224
+  subject_discrepancy: Subject_D_has_no_HaLT_recording_in_the_public_collection
+preprocessing:
+  source_sampling_frequency_hz: 200
+  channels:
+    [Fp1, F3, F7, C3, P3, T3, T5, Fz, Cz, Pz, Fp2, F4, F8, C4, P4, T4, T6, O1, O2]
+  trial_duration_s: 1.0
+  trial_start: marker_onset
+  bandpass_hz: [8.0, 50.0]
+  filter_implementation: public_AASR_datafiltering2_FFT_convention
+  filter_scope: continuous_recording_before_epoch_extraction
+  concatenation: chronological_sessions_then_trials_within_subject
+methods:
+  init:
+    class: mne_denoise.asr.AdaptiveASR
+    variant: psw
+    calibration: first_20_seconds
+    adaptation: none
+  mw:
+    class: mne_denoise.asr.AdaptiveASR
+    variant: mw
+    mode: final_state
+    adaptation: successive_inclusive_20_second_windows
+  psp:
+    class: mne_denoise.asr.AdaptiveASR
+    variant: psp
+    adaptation: successive_inclusive_20_second_windows
+  psw:
+    class: mne_denoise.asr.AdaptiveASR
+    variant: psw
+    adaptation: successive_inclusive_20_second_windows
+processing:
+  cutoffs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  update_window_s: 20.0
+  blocksize: 10
+  random_seed: 20220719
+classification:
+  features: flattened_full_channel_by_channel_Pearson_correlation
+  feature_layout: full_matrix_row_major
+  feature_count: 361
+  classifier: linear_support_vector_machine
+  svm_c: 1.0
+  cross_validation: participantwise_stratified_10_fold
+  shuffle: true
+  random_seed: 20220719
+  underspecified_by_source: [svm_implementation, fold_assignment, random_seed]
+  published_comparison:
+    cutoff: 10
+    text_init_accuracy_pct: 67.73
+    table_init_accuracy_pct: 67.63
+    psw_accuracy_pct: 71.05
+    table_reported_improvement_pct: 1.73
+    arithmetic_difference_of_table_means_pct: 3.42
+metrics:
+  primary: participant_classification_accuracy
+  secondary:
+    - fold_accuracy
+    - paired_accuracy_difference_from_init
+    - relative_rms_change
+    - fraction_reconstructed_windows
+    - effective_rank
+    - runtime
+    - failure
+unit_of_inference: participant
+storage:
+  cache: filtered_concatenated_subject_stream_labels_and_session_ids
+  always_save: [terminal_status, fold_scores, metrics, provenance]
+  cleaned_signal: false

@@ -34,16 +34,49 @@ def test_extract_trials_uses_marker_onsets_and_chronology() -> None:
 
 
 def test_connectivity_features_are_upper_triangle_per_trial() -> None:
-    """Nineteen channels must produce the paper's 171 correlations."""
+    """Nineteen channels have 171 unique off-diagonal correlations."""
     module = _load_module()
     rng = np.random.default_rng(42)
     trials = rng.normal(size=(4, 19, 20))
     stream = trials.transpose(1, 0, 2).reshape(19, -1)
-    features = module._connectivity_features(stream, 4, 20)
+    features = module._connectivity_features(
+        stream, 4, 20, layout="unique_upper_triangle"
+    )
     assert features.shape == (4, 171)
     assert np.isfinite(features).all()
     expected = np.corrcoef(trials[0])[np.triu_indices(19, k=1)]
     np.testing.assert_allclose(features[0], expected, atol=1e-12)
+
+
+def test_connectivity_features_can_follow_published_c_by_c_layout() -> None:
+    """The paper declares C x C Pearson-correlation features."""
+    module = _load_module()
+    rng = np.random.default_rng(7)
+    trials = rng.normal(size=(3, 19, 20))
+    stream = trials.transpose(1, 0, 2).reshape(19, -1)
+    features = module._connectivity_features(
+        stream, 3, 20, layout="full_matrix_row_major"
+    )
+    assert features.shape == (3, 361)
+    np.testing.assert_allclose(features[0].reshape(19, 19), np.corrcoef(trials[0]))
+
+
+def test_paired_contrasts_preserve_subject_pairing() -> None:
+    """Contrasts must be calculated within subjects, not from marginal means."""
+    module = _load_module()
+    rows = [
+        {"subject": "A", "variant": "init", "cutoff": 10, "accuracy": 0.5},
+        {"subject": "B", "variant": "init", "cutoff": 10, "accuracy": 0.8},
+        {"subject": "A", "variant": "psw", "cutoff": 10, "accuracy": 0.7},
+        {"subject": "B", "variant": "psw", "cutoff": 10, "accuracy": 0.7},
+    ]
+    config = {"processing": {"cutoffs": [10], "random_seed": 11}}
+    contrasts = module._paired_contrasts(rows, config)
+    psw = next(row for row in contrasts if row["variant"] == "psw")
+    assert psw["n_pairs"] == 2
+    assert np.isclose(psw["mean_accuracy_difference"], 0.05)
+    assert psw["better_count"] == 1
+    assert psw["worse_count"] == 1
 
 
 def test_config_is_submission_ready() -> None:
@@ -58,3 +91,17 @@ def test_config_is_submission_ready() -> None:
     loaded = module._load_config(config)
     assert loaded["dataset"]["public_trial_count"] == 9224
     assert loaded["dataset"]["public_subject_count"] == 12
+
+
+def test_v2_config_matches_published_feature_layout() -> None:
+    """The corrected protocol must freeze the paper's declared C x C layout."""
+    module = _load_module()
+    config = (
+        Path(__file__).resolve().parents[2]
+        / "configs"
+        / "benchmarks"
+        / "asr_tsai_kaya_mi_v2.yaml"
+    )
+    loaded = module._load_config(config)
+    assert loaded["classification"]["feature_layout"] == "full_matrix_row_major"
+    assert loaded["classification"]["feature_count"] == 361

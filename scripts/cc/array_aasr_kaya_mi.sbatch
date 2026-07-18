@@ -13,6 +13,7 @@ source scripts/cc/fir_env.sh
 
 : "${PREPARED_MANIFEST:?export the prepared Kaya manifest JSON}"
 RESULTS_ROOT="${RESULTS_ROOT:-${SCRATCH}/mne-denoise-neuroimage-v1/asr_tsai_kaya_mi/results}"
+CONFIG="${CONFIG:-configs/benchmarks/asr_tsai_kaya_mi_v2.yaml}"
 TASK_ID="${SLURM_ARRAY_TASK_ID:?submit as a zero-based array}"
 SUBJECTS=(A B C E F G H I J K L M)
 VARIANTS=(init mw psp psw)
@@ -33,7 +34,7 @@ OUTPUT="${RESULTS_ROOT}/subject-${SUBJECT}_${VARIANT}_cutoff-$(printf '%02d' "${
 mkdir -p "${RESULTS_ROOT}" logs
 
 python scripts/run_aasr_kaya_mi.py run \
-    --config configs/benchmarks/asr_tsai_kaya_mi.yaml \
+    --config "${CONFIG}" \
     --prepared-manifest "${PREPARED_MANIFEST}" \
     --subject "${SUBJECT}" \
     --variant "${VARIANT}" \

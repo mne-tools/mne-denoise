@@ -296,8 +296,13 @@ def _run_variant(
 
 
 def _connectivity_features(
-    stream: np.ndarray, n_trials: int, samples_per_trial: int
+    stream: np.ndarray,
+    n_trials: int,
+    samples_per_trial: int,
+    *,
+    layout: str,
 ) -> np.ndarray:
+    """Return the frozen trial-wise Pearson-correlation feature layout."""
     n_channels = stream.shape[0]
     trials = stream.reshape(n_channels, n_trials, samples_per_trial).transpose(1, 0, 2)
     centered = trials - trials.mean(axis=2, keepdims=True)
@@ -310,8 +315,12 @@ def _connectivity_features(
         out=np.zeros_like(numerators),
         where=denominators > np.finfo(float).eps,
     )
-    upper = np.triu_indices(n_channels, k=1)
-    return correlations[:, upper[0], upper[1]]
+    if layout == "full_matrix_row_major":
+        return correlations.reshape(n_trials, n_channels * n_channels)
+    if layout == "unique_upper_triangle":
+        upper = np.triu_indices(n_channels, k=1)
+        return correlations[:, upper[0], upper[1]]
+    raise ValueError(f"unknown connectivity feature layout: {layout}")
 
 
 def _diagnostic_summary(model: AdaptiveASR) -> dict[str, Any]:
@@ -386,9 +395,17 @@ def run_cell(
             update_window_s=float(config["processing"]["update_window_s"]),
         )
         feature_start = time.perf_counter()
-        features = _connectivity_features(cleaned, len(labels), samples_per_trial)
-        feature_time = time.perf_counter() - feature_start
         classification = config["classification"]
+        feature_layout = str(
+            classification.get("feature_layout", "unique_upper_triangle")
+        )
+        features = _connectivity_features(
+            cleaned,
+            len(labels),
+            samples_per_trial,
+            layout=feature_layout,
+        )
+        feature_time = time.perf_counter() - feature_start
         cv = StratifiedKFold(
             n_splits=10,
             shuffle=bool(classification["shuffle"]),
@@ -411,6 +428,7 @@ def run_cell(
                 str(code): int(np.sum(labels == code)) for code in np.unique(labels)
             },
             "feature_count": int(features.shape[1]),
+            "feature_layout": feature_layout,
             "accuracy": float(np.mean(fold_scores)),
             "fold_accuracies": [float(value) for value in fold_scores],
             "relative_rms_change": float(
@@ -443,6 +461,52 @@ def _bootstrap_mean_ci(values: np.ndarray, seed: int) -> tuple[float, float]:
     draws = rng.choice(values, size=(10000, len(values)), replace=True).mean(axis=1)
     low, high = np.quantile(draws, [0.025, 0.975])
     return float(low), float(high)
+
+
+def _paired_contrasts(
+    passed: list[dict[str, Any]], config: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Summarize subject-paired accuracy differences from Init-ASR."""
+    seed = int(config["processing"]["random_seed"])
+    contrasts: list[dict[str, Any]] = []
+    for cutoff in map(float, config["processing"]["cutoffs"]):
+        init = {
+            row["subject"]: float(row["accuracy"])
+            for row in passed
+            if row["variant"] == "init" and float(row["cutoff"]) == cutoff
+        }
+        for variant in (name for name in VARIANTS if name != "init"):
+            candidate = {
+                row["subject"]: float(row["accuracy"])
+                for row in passed
+                if row["variant"] == variant and float(row["cutoff"]) == cutoff
+            }
+            subjects = sorted(init.keys() & candidate.keys())
+            differences = np.asarray(
+                [candidate[subject] - init[subject] for subject in subjects],
+                dtype=float,
+            )
+            if not differences.size:
+                continue
+            low, high = _bootstrap_mean_ci(
+                differences,
+                seed + 10000 + int(cutoff) * 10 + VARIANTS.index(variant),
+            )
+            contrasts.append(
+                {
+                    "variant": variant,
+                    "reference": "init",
+                    "cutoff": cutoff,
+                    "n_pairs": int(differences.size),
+                    "mean_accuracy_difference": float(differences.mean()),
+                    "median_accuracy_difference": float(np.median(differences)),
+                    "bootstrap_95_ci": [low, high],
+                    "better_count": int(np.sum(differences > 0)),
+                    "equal_count": int(np.sum(differences == 0)),
+                    "worse_count": int(np.sum(differences < 0)),
+                }
+            )
+    return contrasts
 
 
 def merge_results(
@@ -527,6 +591,7 @@ def merge_results(
         "extra_cells": extras,
         "duplicate_count": duplicates,
         "aggregate": aggregate,
+        "paired_vs_init": _paired_contrasts(passed, config),
     }
     (output_dir / "aggregate.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"

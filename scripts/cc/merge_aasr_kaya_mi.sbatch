@@ -14,10 +14,11 @@ source scripts/cc/fir_env.sh
 : "${PREPARED_MANIFEST:?export the prepared Kaya manifest JSON}"
 : "${RESULTS_ROOT:?export the directory containing terminal cell JSON files}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-${RESULTS_ROOT}/../merged}"
+CONFIG="${CONFIG:-configs/benchmarks/asr_tsai_kaya_mi_v2.yaml}"
 mkdir -p "${OUTPUT_ROOT}" logs
 
 python scripts/run_aasr_kaya_mi.py merge \
-    --config configs/benchmarks/asr_tsai_kaya_mi.yaml \
+    --config "${CONFIG}" \
     --prepared-manifest "${PREPARED_MANIFEST}" \
     --results-dir "${RESULTS_ROOT}" \
     --output-dir "${OUTPUT_ROOT}"
