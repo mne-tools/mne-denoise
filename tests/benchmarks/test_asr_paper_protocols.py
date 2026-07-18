@@ -128,6 +128,7 @@ def test_ds004784_is_attributed_to_the_published_2023_protocol():
     assert richer["original_data"]["status"] == "blocked_external"
     assert downey["original_data"]["doi"].endswith("ds004784.v1.0.4")
     assert downey["published_protocol"]["expected_cutoff_count"] == 436
+    assert (REPO_ROOT / downey["published_protocol"]["freeze_manifest"]).is_file()
     assert downey["split"]["locked_family_replication"] == "technical_repeat_2"
 
 
