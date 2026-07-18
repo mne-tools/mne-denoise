@@ -19,7 +19,7 @@ like calibration, spatial filtering, and reconstruction to focused internal subm
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -112,9 +112,11 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration window.
     ref_tolerances : tuple of float, default=(-3.5, 5.0)
         Lower and upper robust z-score bounds for clean-window selection.
-    blocksize : int, default=10
+    blocksize : int | 'clean_rawdata', default=10
         Number of successive samples averaged into each covariance block for
-        robust calibration covariance estimation.
+        robust calibration covariance estimation. ``'clean_rawdata'``
+        reproduces the MATLAB reference implementation's memory-dependent
+        block-size rule.
     max_dims : float | int, default=0.66
         Maximum number of dimensions reconstructed per processing window.
     reject_by_annotation : bool, default=True
@@ -250,7 +252,7 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration_window_overlap: float = 0.66,
         ref_max_bad_channels: float = 0.075,
         ref_tolerances: tuple[float, float] = (-np.inf, 5.5),
-        blocksize: int = 10,
+        blocksize: int | Literal["clean_rawdata"] = 10,
         max_dims: float | int = 0.66,
         reject_by_annotation: bool = True,
         skip_by_annotation: tuple[str, ...] = ("bad", "bad_acq_skip"),
