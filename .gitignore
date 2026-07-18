@@ -48,6 +48,7 @@ htmlcov/
 /figures/
 /outputs/
 /scratch/
+/logs/
 
 # Downloaded datasets (large EEG files)
 examples/tutorials/data/runabout/
