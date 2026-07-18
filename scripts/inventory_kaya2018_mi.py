@@ -4,8 +4,10 @@
 The Tsai et al. adaptive-ASR paper reports 9,224 left/right-hand trials from
 13 participants but does not list the included Kaya recording files.  This
 script records event counts for every public MATLAB file and evaluates the
-natural paper-cohort rule: marker codes 1 and 2 in all CLA and HaLT sessions.
-No denoising or outcome analysis is performed here.
+paper-cohort rule recovered from that total: marker codes 1 and 2 in all HaLT
+sessions.  The public collection contains exactly 9,224 such events but only
+12 HaLT subject identifiers.  No denoising or outcome analysis is performed
+here.
 """
 
 from __future__ import annotations
@@ -26,7 +28,8 @@ from scipy.io import loadmat
 ROOT = Path(__file__).resolve().parents[1]
 COLLECTION_DOI = "10.6084/m9.figshare.c.3917698"
 PAPER_REPORTED_TRIALS = 9224
-PAPER_PARADIGMS = frozenset({"CLA", "HaLT"})
+PAPER_REPORTED_SUBJECTS = 13
+PAPER_PARADIGMS = frozenset({"HaLT"})
 HAND_CODES = (1, 2)
 NAME_PATTERN = re.compile(
     r"^(?P<paradigm>5F|CLA|FREEFORM|HaLT|NoMT)-Subject"
@@ -156,6 +159,8 @@ def build_inventory(dataset_root: Path, *, locked: bool = False) -> dict[str, An
             "marker_codes": list(HAND_CODES),
             "subjects": subjects,
             "subject_count": len(subjects),
+            "reported_subject_count": PAPER_REPORTED_SUBJECTS,
+            "matches_reported_subject_count": len(subjects) == PAPER_REPORTED_SUBJECTS,
             "recording_count": len(paper_rows),
             "trial_count": candidate_count,
             "reported_trial_count": PAPER_REPORTED_TRIALS,
