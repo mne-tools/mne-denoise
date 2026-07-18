@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 from scipy.io import loadmat
 
 from scripts.asr_paper_protocols import (
@@ -14,6 +15,7 @@ from scripts.asr_paper_protocols import (
 )
 
 MATLAB_REFERENCE_DIR = Path(__file__).parents[1] / "parity" / "matlab_reference"
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_tsai_fft_bandpass_matches_public_matlab_reference():
@@ -99,6 +101,22 @@ def test_paper_rmse_and_snr_are_channelwise_energy_metrics():
     np.testing.assert_allclose(snr[0], 0.0)
     np.testing.assert_allclose(rmse[1], 0.0)
     assert np.isfinite(snr[1])
+
+
+def test_tsai_public_motor_imagery_execution_is_audited():
+    registry = yaml.safe_load(
+        (REPO_ROOT / "configs/protocols/asr_paper_replications_v1.yaml").read_text()
+    )
+    replication = registry["studies"]["tsai_2023"][
+        "motor_imagery_public_replication"
+    ]
+    execution = replication["execution"]
+    assert replication["public_halt_subject_count"] == 12
+    assert replication["paper_reported_subject_count"] == 13
+    assert replication["public_halt_trial_count"] == 9224
+    assert execution["attempted_cells"] == execution["successful_cells"] == 960
+    assert len(execution["aggregate_sha256"]) == 64
+    assert len(execution["per_subject_csv_sha256"]) == 64
 
 
 @pytest.mark.parametrize(

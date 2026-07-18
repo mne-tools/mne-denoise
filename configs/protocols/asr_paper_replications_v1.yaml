@@ -213,10 +213,38 @@ studies:
       - {name: ssvep, participants: 15, filter_hz: [1.0, 50.0], endpoint: classification_accuracy}
       - {name: rsvp, participants: 14, filter_hz: [1.0, 50.0], endpoint: leave_one_session_out_accuracy}
       - {name: motor_imagery, participants: 13, filter_hz: [8.0, 50.0], endpoint: tenfold_svm_accuracy}
+    motor_imagery_public_replication:
+      protocol: configs/benchmarks/asr_tsai_kaya_mi_v2.yaml
+      freeze_manifest: configs/protocols/asr_tsai_kaya_mi_v2.freeze.json
+      dataset_article_doi: 10.1038/sdata.2018.211
+      dataset_collection_doi: 10.6084/m9.figshare.c.3917698
+      public_halt_subject_count: 12
+      paper_reported_subject_count: 13
+      public_halt_trial_count: 9224
+      paper_reported_trial_count: 9224
+      public_subjects: [A, B, C, E, F, G, H, I, J, K, L, M]
+      absent_halt_subject: D
+      feature_layout: full_19_by_19_Pearson_correlation_matrix
+      paper_analysis_code_public: false
+      source_underspecified:
+        - svm_implementation
+        - fold_assignment
+        - random_seed
+      execution:
+        package_commit: 8844f1fed0c3d669858fdc6c2a4b31ebe1f5a4c6
+        merge_commit: 704ca5fa791d50696a220cd28c56b1f591ded5bf
+        fir_array_job: 49453720
+        fir_merge_job: 49454625
+        attempted_cells: 960
+        successful_cells: 960
+        aggregate_sha256: 65059439c326e52c7ad1a7d770448baa1000bd245b7bfdba08a8f7420b4fb2bf
+        per_subject_csv_sha256: 0269f6c7de6d0255afee656937a026f4c9ac38167afebd5b5ad8938fe1ec4de2
+      outcome: published_cutoff_10_psw_gain_not_reproduced_on_public_halt_cohort
     evidence:
       algorithm: exact_numerical
       public_demo_protocol: procedural
       published_benchmark_result: blocked_external
+      public_motor_imagery_result: procedural
 
   kim_2025:
     citation:
