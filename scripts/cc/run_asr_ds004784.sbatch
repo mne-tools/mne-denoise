@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=asr_phantom
 #SBATCH --account=def-kjerbi_cpu
-#SBATCH --time=08:00:00
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16G
 #SBATCH --output=logs/%x-%A_%a.out
 #SBATCH --error=logs/%x-%A_%a.err
 set -euo pipefail
@@ -37,4 +37,3 @@ if [[ -n "${REFERENCE_MANIFEST}" ]]; then
     args+=(--reference-manifest "${REFERENCE_MANIFEST}")
 fi
 python scripts/run_asr_ds004784_replication.py "${args[@]}"
-

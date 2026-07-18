@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=mnedn_bench
-#SBATCH --account=rrg-kjerbi             # CPU allocation (no GPU used)
+#SBATCH --account=def-kjerbi_cpu         # CPU allocation (no GPU used)
 #SBATCH --array=1-44%20                  # one task per subject (sub-01 … sub-44), ≤20 at once
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
@@ -13,8 +13,8 @@
 #  mne-denoise CPU benchmark array job — Fir (Compute Canada)
 #
 #  Build the env ONCE inside an allocation (see scripts/cc/README.md):
-#      salloc --account=rrg-kjerbi --time=0:45:00 --cpus-per-task=4 --mem=16G
-#      source scripts/cc/fir_env.sh        # builds venv_fir on first run
+#      salloc --account=def-kjerbi_cpu --time=0:45:00 --cpus-per-task=4 --mem=16G
+#      source scripts/cc/fir_env.sh        # builds the revision-specific env
 #      exit
 #
 #  Then submit the array from a login node:

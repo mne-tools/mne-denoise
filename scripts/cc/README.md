@@ -17,15 +17,15 @@ atomic `terminal_status.json` before computation and updates it on success or fa
 The wrapper requires a dataset manifest, a clean Git commit, and a frozen config.
 
 Scaffolding to run the mne-denoise denoisers (ASR, ZapLine, DSS, ICanClean) on the
-**Fir** cluster, **CPU-only**, charged to **`rrg-kjerbi`**. The actual benchmark
+**Fir** cluster, **CPU-only**, charged to **`def-kjerbi_cpu`**. The actual benchmark
 metrics/datasets are wired in a follow-up step; what's here makes the branch
 *runnable* and proves the merged code (notably the native ASR) works on a CPU node.
 
 | File | Purpose |
 |------|---------|
-| `fir_env.sh` | Source to load modules + build (first time) and activate `venv_fir`. |
+| `fir_env.sh` | Source to load modules + build or activate a revision-specific environment under `$SCRATCH/mne-denoise-venvs`. |
 | `requirements_fir.txt` | Extra PyPI deps (openneuro-py, pandas, seaborn). Core stack comes from `scipy-stack` + editable install. |
-| `submit_benchmark.sh` | `sbatch` array (1–44 subjects), `rrg-kjerbi`, 4 CPU / 16G / 3h. |
+| `submit_benchmark.sh` | `sbatch` array (1–44 subjects), `def-kjerbi_cpu`, 4 CPU / 16G / 3h. |
 | `run_benchmark.py` | Thin runner: `--smoke`, `--subject`, `--slurm-array`, `--all`. Reuses `scripts/config.py`. |
 
 > Paths/dataset (`ds003620`, 44 subjects) come from `scripts/config.py`, which already
@@ -37,7 +37,7 @@ metrics/datasets are wired in a follow-up step; what's here makes the branch
   + imports + the smoke test all run inside an `salloc` allocation. `fir_env.sh`
   refuses to build the venv on a `*login*` host.
 - Long runs go through `sbatch`, not `salloc`. Poll with `sacct`/`seff`, **≤ once a minute**.
-- CPU work uses **`rrg-kjerbi`** (no `_gpu`/`_cpu` suffix, no `--gres`).
+- CPU work uses **`def-kjerbi_cpu`** (no `--gres`).
 
 ## One-time setup (inside an allocation)
 ```bash
@@ -45,10 +45,10 @@ ssh fir
 cd /scratch/$USER && git clone git@github.com:mne-tools/mne-denoise.git 2>/dev/null || true
 cd mne-denoise && git fetch origin && git checkout benchmark/compute-canada && git pull --ff-only
 
-salloc --account=rrg-kjerbi --time=0:45:00 --cpus-per-task=4 --mem=16G
+salloc --account=def-kjerbi_cpu --time=0:45:00 --cpus-per-task=4 --mem=16G
 srun --pty bash -l
 hostname                                   # must be a compute node (fc#####), NOT loginN
-source scripts/cc/fir_env.sh               # builds venv_fir on first source (~few min)
+source scripts/cc/fir_env.sh               # builds the revision-specific env once
 python scripts/cc/run_benchmark.py --smoke # synthetic Raw → all denoisers; ASR must pass
 exit                                        # release the allocation
 ```
