@@ -371,6 +371,7 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
         )
         return GuidedASR(
             method="riemannian_windowed",
+            experimental=True,
             calibration=calibration,
             filter_kind="asr",
             ref_tolerances=reference_tolerances,

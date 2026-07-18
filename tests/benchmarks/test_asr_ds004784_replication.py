@@ -141,6 +141,18 @@ def test_locked_family_campaign_has_one_control_and_all_intended_cells():
     }
 
 
+def test_guided_family_estimator_explicitly_opts_into_soft_reconstruction():
+    config = _config()
+    cell = next(
+        cell
+        for cell in MODULE.family_cells(config)
+        if cell.method == "guided_asr" and cell.condition == "All"
+    )
+    estimator = MODULE._estimator(config, cell, sfreq=512.0)
+    assert estimator.experimental is True
+    assert estimator.reconstruction == "soft"
+
+
 def _write_cell(root: pathlib.Path, cell, *, commit: str, dirty: bool = False):
     cell_dir = root / "family_replication" / cell.unit_id
     cell_dir.mkdir(parents=True)
