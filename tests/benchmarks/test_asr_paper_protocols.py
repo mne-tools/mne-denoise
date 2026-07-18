@@ -132,6 +132,20 @@ def test_ds004784_is_attributed_to_the_published_2023_protocol():
     assert downey["split"]["locked_family_replication"] == "technical_repeat_2"
 
 
+def test_asr_variant_sensitivity_execution_is_complete_and_audited():
+    registry = yaml.safe_load(
+        (REPO_ROOT / "configs/protocols/asr_paper_replications_v1.yaml").read_text()
+    )
+    execution = registry["validation_campaigns"]["asr_variant_sensitivity"][
+        "execution"
+    ]
+    assert execution["attempted_cells"] == execution["successful_cells"] == 36000
+    assert execution["failed_cells"] == 0
+    assert execution["unique_unit_method_attempts"] == 36000
+    assert len(execution["merged_raw_metrics_sha256"]) == 10
+    assert all(len(value) == 64 for value in execution["merged_raw_metrics_sha256"])
+
+
 @pytest.mark.parametrize(
     "data,sfreq,low,high",
     [

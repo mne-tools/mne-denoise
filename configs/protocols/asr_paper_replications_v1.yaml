@@ -41,6 +41,32 @@ implementations:
   guided:
     symbol: mne_denoise.asr.GuidedASR
 
+validation_campaigns:
+  asr_variant_sensitivity:
+    protocol: configs/benchmarks/asr_variant_ground_truth.yaml
+    freeze_manifest: configs/protocols/asr_variant_ground_truth_v1.freeze.json
+    execution:
+      package_commit: 4f26763f70a5b551af6a77a48350d7b106958a90
+      completion_repair_array_jobs: [49455878, 49455883]
+      merge_job: 49455917
+      sensitivity_cells: 10
+      attempted_cells: 36000
+      successful_cells: 36000
+      failed_cells: 0
+      unique_unit_method_attempts: 36000
+      merged_raw_metrics_sha256:
+        - 69aec7b828e07e6d450a26b4f10d0b828b311143a51102ddd1c557b5a83a67b5
+        - aaec5805c49a5c72bed07f1359b78d7bf323c616a9284027c649c68ca75ca8f9
+        - 2af86cdd90e49e001e82a6845d09f821c37aa3aa2fd68c4621437b932d719655
+        - 6a78c99e397d23a3213c43b4105c70dac347dab956286e4805f8848a044be570
+        - ab25908c2ab6db4b70290db596516cd8d1baea125d2dbdde3f04c39ff2dad4e0
+        - 331c93d9fcd29b7a06f499a991e25ef9ba89a5a60f7c21dddf13a74bf8ae0b2c
+        - 455996f50f71156f055634c7da5318b768fca1193c0674afce59d8e9b7645c17
+        - 6f301307dddddf1a7e9e8fedbf0151669b298d21f031d77f0d9628e32d783b4b
+        - 2029dfe91680f017636ddf0588c42cd7fd3d75286ab2881a411b189faa6a0922
+        - 5135508072b7eee31f4afb48a397286c1c49dcf65ba5c838b6f60f32d218f270
+    outcome: complete_failure_preserving_sensitivity_dataset
+
 studies:
   chang_2020:
     citation:
