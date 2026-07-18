@@ -119,6 +119,18 @@ def test_tsai_public_motor_imagery_execution_is_audited():
     assert len(execution["per_subject_csv_sha256"]) == 64
 
 
+def test_ds004784_is_attributed_to_the_published_2023_protocol():
+    registry = yaml.safe_load(
+        (REPO_ROOT / "configs/protocols/asr_paper_replications_v1.yaml").read_text()
+    )
+    richer = registry["studies"]["richer_2020"]
+    downey = registry["studies"]["downey_ferris_2023"]
+    assert richer["original_data"]["status"] == "blocked_external"
+    assert downey["original_data"]["doi"].endswith("ds004784.v1.0.4")
+    assert downey["published_protocol"]["expected_cutoff_count"] == 436
+    assert downey["split"]["locked_family_replication"] == "technical_repeat_2"
+
+
 @pytest.mark.parametrize(
     "data,sfreq,low,high",
     [

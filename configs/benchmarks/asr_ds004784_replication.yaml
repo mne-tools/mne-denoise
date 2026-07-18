@@ -1,0 +1,142 @@
+arm: asr_ds004784_replication
+runner: asr_ds004784_replication
+status: protocol_ready_v1
+
+dataset:
+  id: ds004784
+  version: openneuro_ds004784_v1.0.4
+  doi: 10.18112/openneuro.ds004784.v1.0.4
+  license: CC0
+  conditions: [Clean, Eyes, Jaw, Motion, Neck, All]
+  published_repeat: 1
+  locked_repeat: 2
+  filename_template: derivatives/Data/Imported/NMM10_{condition}_{repeat}.set
+  ground_truth_path: stimuli/GTdata_croppedToRisingEdge.mat
+  published_manifest: configs/manifests/ds004784_repeat1_development.json
+  locked_manifest: configs/manifests/ds004784_repeat2.json
+  distributed_asr_template: derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_{condition}_1.set
+  distributed_reference_manifest: configs/manifests/ds004784_asr_published_references.json
+
+published_protocol:
+  citation:
+    doi: 10.3390/s23198214
+    title: iCanClean Removes Motion, Muscle, Eye, and Line-Noise Artifacts from Phantom EEG
+  source_files:
+    - derivatives/Scripts/Preprocessing/ASR_burst_clean.m
+    - derivatives/Scripts/Param_Sweep/createUpdateParamTable.m
+    - derivatives/Scripts/Param_Sweep/runParamTable_func.m
+    - derivatives/Data/Excel_Results/paramSweep_ASR.xlsx
+    - derivatives/Data/Excel_Results/paramSweep_Raw.xlsx
+  preprocessing:
+    imported_highpass_hz: 1.0
+    imported_highpass_minus_6db_hz: 0.5
+    channel_rejection: false
+    rereference: false
+    resample: false
+    sfreq_hz: 512
+    scalp_channels: 128
+  method:
+    implementation: EEGLAB_clean_rawdata_pop_clean_rawdata
+    distance: Euclidian
+    flatline_criterion: disabled
+    channel_criterion: disabled
+    line_noise_criterion: disabled
+    highpass_in_clean_rawdata: disabled
+    window_criterion: disabled
+    burst_rejection: false
+    calibration_sources: [external_clean_recording, target_clean_window_selection]
+  exact_cutoff_grid:
+    segments:
+      - {start: 1.0, stop: 10.0, step: 0.05}
+      - {start: 10.5, stop: 25.0, step: 0.5}
+      - {start: 26.0, stop: 250.0, step: 1.0}
+    expected_count: 436
+  expected_raw_dqs:
+    Clean: 57.1917529760555
+    Eyes: 46.94970351622098
+    Jaw: 27.041908622613338
+    Motion: 34.10767226402792
+    Neck: 41.83931646337317
+    All: 15.67870668238203
+  expected_best_cells:
+    Clean:
+      external_clean: {cutoff: 11.0, corrected_dqs: 57.19175297605549}
+      target_selection: {cutoff: 11.0, corrected_dqs: 57.19175297605549}
+    Eyes:
+      external_clean: {cutoff: 8.05, corrected_dqs: 48.92761828231899}
+      target_selection: {cutoff: 13.0, corrected_dqs: 48.70360954863442}
+    Jaw:
+      external_clean: {cutoff: 5.2, corrected_dqs: 54.35819179575388}
+      target_selection: {cutoff: 2.35, corrected_dqs: 52.339237573736476}
+    Motion:
+      external_clean: {cutoff: 10.0, corrected_dqs: 36.068772967505204}
+      target_selection: {cutoff: 13.0, corrected_dqs: 34.67205895774485}
+    Neck:
+      external_clean: {cutoff: 5.35, corrected_dqs: 49.947270587457105}
+      target_selection: {cutoff: 5.15, corrected_dqs: 43.44563741236834}
+    All:
+      external_clean: {cutoff: 6.8, corrected_dqs: 27.57306879404443}
+      target_selection: {cutoff: 3.95, corrected_dqs: 23.384678743585877}
+
+family_replication:
+  repeat: 2
+  cutoff_sweep: [3.0, 5.0, 10.0, 20.0, 50.0, 100.0, 250.0]
+  adaptive_initial_window_s: 20.0
+  adaptive_update_chunk_s: 20.0
+  mw_window_length_s: 20.0
+  methods:
+    none: [not_applicable]
+    asr_standard: [external_clean, target_selection]
+    rasr_windowed: [external_clean, target_selection]
+    rasr_legacy: [external_clean, target_selection]
+    adaptive_psp: [external_clean_adaptive, target_initial_adaptive]
+    adaptive_psw: [external_clean_adaptive, target_initial_adaptive]
+    adaptive_mw_final_state: [recording_local]
+    adaptive_mw_sliding: [recording_local]
+    juggler_dbscan: [recording_local]
+    juggler_gev: [recording_local]
+    guided_asr: [external_clean, target_selection]
+  guided_artifact_bands_hz:
+    Clean: [[58.0, 62.0]]
+    Eyes: [[0.7, 4.0]]
+    Jaw: [[30.0, 100.0]]
+    Motion: [[0.7, 8.0]]
+    Neck: [[20.0, 100.0]]
+    All: [[0.7, 4.0], [20.0, 100.0]]
+  guided_preserve_bands_hz: [[8.0, 12.0]]
+
+methods_under_test:
+  - asr_standard
+  - rasr_windowed
+  - rasr_legacy
+  - adaptive_psp
+  - adaptive_psw
+  - adaptive_mw_final_state
+  - adaptive_mw_sliding
+  - juggler_dbscan
+  - juggler_gev
+  - guided_asr
+
+metrics:
+  primary_target: ground_truth_data_quality_score
+  primary_preservation: ground_truth_preservation_correction
+  secondary:
+    - known_clean_waveform_relative_rmse
+    - known_clean_waveform_correlation
+    - neural_band_retention
+    - distributed_reference_waveform_error
+    - effective_rank
+    - fraction_samples_flagged
+    - runtime
+    - failure
+
+preservation_reference:
+  source: distributed_ground_truth_brain_sources_and_clean_phantom_recording
+  independent_from_method_fit: true
+
+unit_of_inference: phantom_technical_repeat
+
+storage:
+  always_save: [metrics, model_json, terminal_status, provenance]
+  save_cleaned: {mode: published_reference_cells_only}
+

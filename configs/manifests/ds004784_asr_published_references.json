@@ -1,0 +1,107 @@
+{
+  "content_sha256": "6a25ff9cdbf8456dc30cc7c7cef6affd7e48aa39869a1c0bb13f3c02d560262c",
+  "dataset_id": "ds004784-asr-published-references",
+  "doi": "10.18112/openneuro.ds004784.v1.0.4",
+  "file_count": 16,
+  "files": [
+    {
+      "path": "derivatives/Data/Excel_Results/paramSweep_ASR.xlsx",
+      "sha256": "6224a955dc3c66839ecbacae3044c5247907e1bc4bd81904c73b960492711a8a",
+      "size_bytes": 253469
+    },
+    {
+      "path": "derivatives/Data/Excel_Results/paramSweep_Raw.xlsx",
+      "sha256": "9fb6e4030f25a27162e8169bd125fa757c5e6e5481874634a1fec3b879e8f0c1",
+      "size_bytes": 2854
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_All_1.fdt",
+      "sha256": "aff828868eda45e5549c41e86186d8d5d7456c693bea5b48e7eb01e7e8692881",
+      "size_bytes": 168148992
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_All_1.set",
+      "sha256": "5084fbfc605b09b9d3aef67a94c191d92df44b436d8ad2c90bc2a508593ef377",
+      "size_bytes": 1775185
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Clean_1.set",
+      "sha256": "fef4a213eb6b7e89b368eb8a604e342c697d1e7895d34b1cd423115601c4fae0",
+      "size_bytes": 387711448
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Eyes_1.fdt",
+      "sha256": "3ff1c1d915f24466e259481514d378316d1e51ab843b492a863a272eab3197db",
+      "size_bytes": 171393024
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Eyes_1.set",
+      "sha256": "87830798679fee556628669fde47ac2bfc6750685eaab1ebfcbcd09ed89717e8",
+      "size_bytes": 1782843
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Jaw_1.fdt",
+      "sha256": "2a1a2dbafb29dc8f61e4485d70c9d6ba9ca35a6cf385d02fca6ddbe481008b55",
+      "size_bytes": 169230336
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Jaw_1.set",
+      "sha256": "760bbc34fdd5407fca665b182f764c57471599b1042de2829cc5c172cb769e5a",
+      "size_bytes": 1777608
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Motion_1.fdt",
+      "sha256": "a1301411826a8609a15875b196e1672b5bf914641ddf2180c4f8db54d6958022",
+      "size_bytes": 177881088
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Motion_1.set",
+      "sha256": "c843a032d06035eea34a42817a42696a95a6459bb30e8e065a26832fa66dc053",
+      "size_bytes": 1797733
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Neck_1.fdt",
+      "sha256": "f90d4166617a391f6b774a5fd3a682622dbaf4810e038224ad684cc8c23ccbd6",
+      "size_bytes": 173015040
+    },
+    {
+      "path": "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_Neck_1.set",
+      "sha256": "f14baafe02af19e5831d9e2fe50ed8fb7cec4c6ddd79f5346695421f7c3309d9",
+      "size_bytes": 1784464
+    },
+    {
+      "path": "derivatives/Scripts/Param_Sweep/createUpdateParamTable.m",
+      "sha256": "83d7a2847073f01b70f7d02d2cbb1190551322e379fb33f3bf81b45307bdf4c6",
+      "size_bytes": 13618
+    },
+    {
+      "path": "derivatives/Scripts/Param_Sweep/runParamTable_func.m",
+      "sha256": "db10f79081fd297c32a149921fc3a51558c02d1f96706a63cd2962aefc7fff21",
+      "size_bytes": 15105
+    },
+    {
+      "path": "derivatives/Scripts/Preprocessing/ASR_burst_clean.m",
+      "sha256": "9a87c3f7d44d776d46d346f4c53e126decad932b60b695f241858ab246875bdd",
+      "size_bytes": 2304
+    }
+  ],
+  "generated_at_utc": "2026-07-18T09:48:44.575197Z",
+  "hash_mode": "all",
+  "include_patterns": [
+    "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_*_1.set",
+    "derivatives/Data/Preprocessed/ASR/prep_ASR_NMM10_*_1.fdt",
+    "derivatives/Data/Excel_Results/paramSweep_ASR.xlsx",
+    "derivatives/Data/Excel_Results/paramSweep_Raw.xlsx",
+    "derivatives/Scripts/Preprocessing/ASR_burst_clean.m",
+    "derivatives/Scripts/Param_Sweep/createUpdateParamTable.m",
+    "derivatives/Scripts/Param_Sweep/runParamTable_func.m"
+  ],
+  "license": "CC0",
+  "root_at_manifest_creation": "/project/6114380/datasets/openneuro/ds004784",
+  "schema_version": 1,
+  "subjects": [
+    "sub-001"
+  ],
+  "total_bytes": 1256585111,
+  "version": "1.0.4"
+}

@@ -1,0 +1,124 @@
+"""Tests for the published and locked ds004784 ASR campaigns."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import pathlib
+import sys
+from types import SimpleNamespace
+
+import pytest
+import yaml
+
+from mne_denoise.benchmarks.config import assert_submission_ready
+
+REPO = pathlib.Path(__file__).resolve().parents[2]
+CONFIG = REPO / "configs" / "benchmarks" / "asr_ds004784_replication.yaml"
+SCRIPT = REPO / "scripts" / "run_asr_ds004784_replication.py"
+SPEC = importlib.util.spec_from_file_location("run_asr_ds004784_replication", SCRIPT)
+MODULE = importlib.util.module_from_spec(SPEC)
+assert SPEC.loader is not None
+sys.modules[SPEC.name] = MODULE
+SPEC.loader.exec_module(MODULE)
+
+
+def _config():
+    return yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+
+
+def test_protocol_is_submission_ready():
+    assert_submission_ready(_config(), source=str(CONFIG))
+
+
+def test_exact_published_cutoff_grid_matches_released_matlab():
+    values = MODULE.exact_cutoffs(_config())
+    assert len(values) == 436
+    assert values[:3] == [1.0, 1.05, 1.1]
+    assert values[180:184] == [10.0, 10.5, 11.0, 11.5]
+    assert values[-3:] == [248.0, 249.0, 250.0]
+
+
+def test_published_reference_cells_cover_raw_external_and_target_selection():
+    cells = MODULE.published_reference_cells(_config())
+    assert len(cells) == 18
+    all_external = next(
+        cell
+        for cell in cells
+        if cell.condition == "All" and cell.calibration_source == "external_clean"
+    )
+    assert all_external.cutoff == 6.8
+    assert all_external.expected_dqs == pytest.approx(27.57306879404443)
+
+
+def test_locked_family_campaign_has_one_control_and_all_intended_cells():
+    cells = MODULE.family_cells(_config())
+    assert len(cells) == 678
+    assert sum(cell.method == "none" for cell in cells) == 6
+    assert {cell.repeat for cell in cells} == {2}
+    methods = {cell.method for cell in cells}
+    assert methods == {
+        "none",
+        "asr_standard",
+        "rasr_windowed",
+        "rasr_legacy",
+        "adaptive_psp",
+        "adaptive_psw",
+        "adaptive_mw_final_state",
+        "adaptive_mw_sliding",
+        "juggler_dbscan",
+        "juggler_gev",
+        "guided_asr",
+    }
+
+
+def _write_cell(root: pathlib.Path, cell, *, commit: str, dirty: bool = False):
+    cell_dir = root / "family_replication" / cell.unit_id
+    cell_dir.mkdir(parents=True)
+    terminal = {
+        "status": "completed",
+        "git_commit": commit,
+        "git_dirty": dirty,
+        "config_hash": "config",
+        "dataset_manifest_hash": "dataset",
+        "environment_hash": "environment",
+        "runtime_seconds": 1.0,
+        "peak_memory_mb": 2.0,
+        "slurm_job_id": "1",
+        "slurm_array_task_id": "0",
+    }
+    metrics = {
+        "campaign": cell.campaign,
+        "unit_id": cell.unit_id,
+        "technical_repeat": cell.repeat,
+        "condition": cell.condition,
+        "method": cell.method,
+        "calibration_source": cell.calibration_source,
+        "cutoff": cell.cutoff,
+        "status": "success",
+    }
+    (cell_dir / "terminal_status.json").write_text(
+        json.dumps(terminal), encoding="utf-8"
+    )
+    (cell_dir / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
+
+
+def test_merge_rejects_mixed_execution_provenance(tmp_path, monkeypatch):
+    cells = MODULE.family_cells(_config())[:2]
+    monkeypatch.setattr(MODULE, "campaign_cells", lambda config, campaign: cells)
+    _write_cell(tmp_path, cells[0], commit="one")
+    _write_cell(tmp_path, cells[1], commit="two")
+    args = SimpleNamespace(
+        config=str(CONFIG),
+        campaign="family_replication",
+        output_root=str(tmp_path),
+        allow_incomplete=False,
+    )
+    with pytest.raises(RuntimeError, match="provenance-invalid"):
+        MODULE.merge_campaign(args)
+    summary = json.loads(
+        (tmp_path / "family_replication" / "merge_summary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert summary["invalid_provenance_signatures"]["git_commit"] == ["one", "two"]

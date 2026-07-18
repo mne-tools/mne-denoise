@@ -154,21 +154,51 @@ studies:
       title: Motion and Muscle Artifact Removal Validation Using an Electrical Head Phantom, Robotic Motion Platform, and Dual Layer Mobile EEG
     implementation: standard
     original_data:
-      doi: 10.18112/openneuro.ds004784.v1.0.1
+      public: false
+      status: blocked_external
+      note: ds004784 is the later Downey and Ferris 2023 phantom, not the Richer 2020 cohort
+      walking_speeds_m_per_s: [0.5, 1.0, 1.5, 2.0]
+      muscle_amplitudes_uv: [0, 100, 300, 500]
+    preprocessing:
+      asr_cutoffs: [3, 10, 20, 50]
+      post_asr_decomposition: independent_component_analysis
+    endpoints:
+      - gait_cycle_time_frequency_relative_error_8_to_30_hz
+      - ground_truth_source_recovery_after_ica
+    evidence:
+      published_dataset_result: result_pattern
+      exact_data_replication: blocked_external
+
+  downey_ferris_2023:
+    citation:
+      doi: 10.3390/s23198214
+      title: iCanClean Removes Motion, Muscle, Eye, and Line-Noise Artifacts from Phantom EEG
+    implementation: standard
+    original_data:
+      doi: 10.18112/openneuro.ds004784.v1.0.4
       public: true
       status: available
       conditions: [clean, eyes, jaw, motion, neck, all_artifacts]
       technical_repeats: [1, 2]
+    published_protocol:
+      preprocessing: released_1Hz_highpass_no_rereference_no_channel_rejection_512Hz
+      calibration: [external_clean_recording, target_clean_window_selection]
+      cutoff_grid: [1_to_10_by_0.05, 10.5_to_25_by_0.5, 26_to_250_by_1]
+      expected_cutoff_count: 436
+      protocol: configs/benchmarks/asr_ds004784_replication.yaml
+      distributed_reference_manifest: configs/manifests/ds004784_asr_published_references.json
     split:
-      development: technical_repeat_1
-      locked_replication: technical_repeat_2
+      published_procedural_replication: technical_repeat_1
+      locked_family_replication: technical_repeat_2
     endpoints:
-      - ground_truth_data_quality
+      - corrected_ground_truth_data_quality_score
+      - ground_truth_preservation_correction
       - clean_waveform_error
       - clean_waveform_correlation
       - signal_power_retention
     evidence:
-      published_dataset_result: procedural
+      published_dataset_result: exact_reference_cells_and_distributed_waveforms
+      locked_family_result: configured_not_executed
 
   tsai_2023:
     citation:
