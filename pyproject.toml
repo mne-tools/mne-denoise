@@ -69,6 +69,7 @@ test = [
 benchmarks = [
   "PyWavelets>=1.4",   # wavelet_threshold + wICA comparators (ocular/muscle)
   "EMD-signal>=1.5",   # emd / eemd comparators (muscle/movement)
+  "pymatreader>=0.0.32",  # MNE reader for distributed EEGLAB benchmark files
 ]
 dev = [
   "mne-denoise[test]",

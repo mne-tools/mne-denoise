@@ -65,7 +65,8 @@ if [ ! -d "${MNE_DENOISE_VENV}" ]; then
     # Extra deps — all confirmed in the Alliance wheelhouse (2026-06-21), so the
     # whole env builds offline (compute nodes have no internet). openneuro-py is
     # only used on login nodes (downloads); pooch for OSF/Zenodo fetchers.
-    python -m pip install --no-index pandas seaborn pytest pyyaml openneuro-py pooch
+    python -m pip install --no-index pandas seaborn pytest pyyaml openneuro-py pooch \
+        pymatreader==0.0.32
     # Frozen BSS comparators. If either wheel is absent, the preflight must fail
     # visibly; array jobs refuse an unavailable_dependency result.
     python -m pip install --no-index python-picard==0.8.2 amica==0.0.1 \
@@ -94,10 +95,10 @@ mkdir -p "${XDG_CACHE_HOME}" "${DATA_DIR}" 2>/dev/null
 #  NFS metadata cache races. Retrying until one import succeeds warms the node's
 #  cache so the subsequent runner import is reliable.
 for _try in 1 2 3 4 5 6; do
-    python -c "import mne_denoise, mne_denoise.asr, yaml, mne, numpy, scipy" 2>/dev/null && break
+    python -c "import mne_denoise, mne_denoise.asr, yaml, mne, numpy, scipy, pymatreader" 2>/dev/null && break
     echo "  import warmup attempt ${_try} failed; backing off..."
     sleep $(( (RANDOM % 8) + 2 ))
 done
-python -c "import mne_denoise, mne; print(f'  mne-denoise {mne_denoise.__version__} | mne {mne.__version__} | python {__import__(\"platform\").python_version()}')" \
+python -c "import mne_denoise, mne, pymatreader; print(f'  mne-denoise {mne_denoise.__version__} | mne {mne.__version__} | pymatreader {__import__(\"importlib.metadata\").metadata.version(\"pymatreader\")} | python {__import__(\"platform\").python_version()}')" \
     || echo "WARNING: 'import mne_denoise' failed after warmup — check the build above."
 echo "=== environment ready ==="

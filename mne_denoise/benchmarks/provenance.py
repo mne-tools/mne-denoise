@@ -85,6 +85,7 @@ def environment_record() -> dict[str, Any]:
         "scikit-learn",
         "pandas",
         "matplotlib",
+        "pymatreader",
         "PyWavelets",
         "EMD-signal",
     ):

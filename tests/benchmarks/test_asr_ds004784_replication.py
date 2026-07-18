@@ -12,6 +12,7 @@ import pytest
 import yaml
 
 from mne_denoise.benchmarks.config import assert_submission_ready
+from mne_denoise.benchmarks.provenance import environment_record
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 CONFIG = REPO / "configs" / "benchmarks" / "asr_ds004784_replication.yaml"
@@ -29,6 +30,10 @@ def _config():
 
 def test_protocol_is_submission_ready():
     assert_submission_ready(_config(), source=str(CONFIG))
+
+
+def test_provenance_records_eeglab_reader_version():
+    assert "pymatreader" in environment_record()["packages"]
 
 
 def test_exact_published_cutoff_grid_matches_released_matlab():
