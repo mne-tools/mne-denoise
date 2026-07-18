@@ -522,6 +522,30 @@ def _calibration_metrics(model: Any) -> dict[str, int | float | str | None]:
     }
 
 
+def _processing_metrics(model: Any, diagnostics: dict) -> dict[str, Any]:
+    if model is None:
+        return {
+            "processing_mode": None,
+            "processing_clean_rawdata_splits": None,
+            "processing_stepsize_samples": None,
+            "processing_window_length_samples": None,
+            "processing_memory_mode": None,
+            "processing_used_memory_bound": None,
+        }
+    return {
+        "processing_mode": getattr(model, "processing_mode", None),
+        "processing_clean_rawdata_splits": diagnostics.get(
+            "clean_rawdata_splits"
+        ),
+        "processing_stepsize_samples": diagnostics.get("stepsize_samples"),
+        "processing_window_length_samples": diagnostics.get(
+            "window_length_samples"
+        ),
+        "processing_memory_mode": diagnostics.get("memory_mode"),
+        "processing_used_memory_bound": diagnostics.get("used_memory_bound"),
+    }
+
+
 def _write_json(path: pathlib.Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -657,6 +681,7 @@ def run_cell(args) -> dict:
             "score_definition": "Downey_Ferris_corrected_DQS_full_synchronized_recording",
         }
         metrics.update(_calibration_metrics(model))
+        metrics.update(_processing_metrics(model, diagnostics))
         if (
             cell.campaign == "published_reference"
             and cell.method == "asr_standard"

@@ -109,6 +109,28 @@ def test_calibration_metrics_prefer_juggler_reference_mask():
     assert metrics["calibration_reference_fraction"] == pytest.approx(0.5)
 
 
+def test_processing_metrics_preserve_compatibility_provenance():
+    model = SimpleNamespace(processing_mode="clean_rawdata")
+    metrics = MODULE._processing_metrics(
+        model,
+        {
+            "clean_rawdata_splits": 9990,
+            "stepsize_samples": 128,
+            "window_length_samples": 256,
+            "memory_mode": "rolling",
+            "used_memory_bound": True,
+        },
+    )
+    assert metrics == {
+        "processing_mode": "clean_rawdata",
+        "processing_clean_rawdata_splits": 9990,
+        "processing_stepsize_samples": 128,
+        "processing_window_length_samples": 256,
+        "processing_memory_mode": "rolling",
+        "processing_used_memory_bound": True,
+    }
+
+
 def test_published_reference_cells_cover_raw_external_and_target_selection():
     cells = MODULE.published_reference_cells(_config())
     assert len(cells) == 18
