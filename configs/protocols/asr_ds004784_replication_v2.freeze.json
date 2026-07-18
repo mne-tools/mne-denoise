@@ -1,0 +1,39 @@
+{
+  "configs": [
+    {
+      "arm": "asr_ds004784_replication",
+      "path": "configs/benchmarks/asr_ds004784_replication.yaml",
+      "sha256": "5c2dc69ae65972bacc107e6f7e1fb973d831de5c8f155e3be788c0617d822e36"
+    }
+  ],
+  "environment": {
+    "implementation": "CPython",
+    "machine": "AMD64",
+    "packages": {
+      "EMD-signal": "not-installed",
+      "PyWavelets": "1.9.0",
+      "matplotlib": "3.10.8",
+      "mne": "1.11.0",
+      "mne-denoise": "0.0.1",
+      "numpy": "2.4.2",
+      "pandas": "3.0.1",
+      "pymatreader": "not-installed",
+      "scikit-learn": "1.8.0",
+      "scipy": "1.17.1"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.9 (tags/v3.12.9:fdb8142, Feb  4 2025, 15:27:58) [MSC v.1942 64 bit (AMD64)]"
+  },
+  "environment_hash": "4a66e66c2a9b30fb865c5dd0fa438f49e74d13df49e75fc6870d9779abf5780e",
+  "frozen_at_utc": "2026-07-18T10:46:06.396504Z",
+  "git": {
+    "branch": "codex/asr-replication-hardening",
+    "commit": "f86eb6d53fbcf0004de3547f1902ab729232a4d5",
+    "dirty": false,
+    "dirty_paths": [],
+    "root": "."
+  },
+  "manifest_hash": "db705ce6335f02944c14e0d746ac53252b7fd06b4c1e0ba9aa710862e9d35143",
+  "protocol_id": "asr_ds004784_replication_v2",
+  "schema_version": 1
+}

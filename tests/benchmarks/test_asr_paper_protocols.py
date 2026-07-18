@@ -1,5 +1,8 @@
 """Tests for exact ASR paper-protocol primitives."""
 
+import hashlib
+import json
+
 from pathlib import Path
 
 import numpy as np
@@ -128,7 +131,14 @@ def test_ds004784_is_attributed_to_the_published_2023_protocol():
     assert richer["original_data"]["status"] == "blocked_external"
     assert downey["original_data"]["doi"].endswith("ds004784.v1.0.4")
     assert downey["published_protocol"]["expected_cutoff_count"] == 436
-    assert (REPO_ROOT / downey["published_protocol"]["freeze_manifest"]).is_file()
+    freeze_path = REPO_ROOT / downey["published_protocol"]["freeze_manifest"]
+    assert freeze_path.is_file()
+    freeze = json.loads(freeze_path.read_text(encoding="utf-8"))
+    config_path = REPO_ROOT / downey["published_protocol"]["protocol"]
+    assert freeze["protocol_id"] == "asr_ds004784_replication_v2"
+    assert freeze["configs"][0]["sha256"] == hashlib.sha256(
+        config_path.read_bytes()
+    ).hexdigest()
     assert downey["split"]["locked_family_replication"] == "technical_repeat_2"
 
 

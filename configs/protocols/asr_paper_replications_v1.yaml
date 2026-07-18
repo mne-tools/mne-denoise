@@ -212,7 +212,9 @@ studies:
       cutoff_grid: [1_to_10_by_0.05, 10.5_to_25_by_0.5, 26_to_250_by_1]
       expected_cutoff_count: 436
       protocol: configs/benchmarks/asr_ds004784_replication.yaml
-      freeze_manifest: configs/protocols/asr_ds004784_replication_v1.freeze.json
+      freeze_manifest: configs/protocols/asr_ds004784_replication_v2.freeze.json
+      prior_freeze_manifest: configs/protocols/asr_ds004784_replication_v1.freeze.json
+      revision_reason: restore_published_clean_rawdata_reference_window_tolerances
       distributed_reference_manifest: configs/manifests/ds004784_asr_published_references.json
     split:
       published_procedural_replication: technical_repeat_1
