@@ -59,6 +59,13 @@ def test_init_uses_psw_state_from_only_the_initial_window(monkeypatch):
     np.testing.assert_array_equal(cleaned, data)
 
 
+def test_paired_trial_discovery_uses_intersection_and_numeric_order():
+    pure = {"sim10_resampled", "sim2_resampled", "sim3_resampled", "metadata"}
+    contaminated = {"sim2_con", "sim10_con", "sim11_con"}
+
+    assert klados_runner._paired_trial_indices(pure, contaminated) == [2, 10]
+
+
 @pytest.mark.parametrize("variant", ["psp", "psw"])
 def test_adaptive_update_failure_is_recorded_by_outer_runner(monkeypatch, variant):
     monkeypatch.setattr(klados_runner, "AdaptiveASR", _RecordingAdaptiveASR)

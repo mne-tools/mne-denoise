@@ -34,7 +34,10 @@ from __future__ import annotations
 import argparse
 import csv
 import gc
+import hashlib
 import json
+import re
+import subprocess
 import sys
 import time
 import traceback
@@ -58,6 +61,50 @@ if str(ROOT) not in sys.path:
 from mne_denoise.asr import AdaptiveASR  # noqa: E402
 
 VARIANTS = ("init", "mw", "psp", "psw")
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _git_state() -> tuple[str, bool]:
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    dirty = bool(
+        subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    )
+    return commit, dirty
+
+
+def _paired_trial_indices(
+    pure_variables: set[str], contaminated_variables: set[str]
+) -> list[int]:
+    pure = {
+        int(match.group(1))
+        for name in pure_variables
+        if (match := re.fullmatch(r"sim(\d+)_resampled", name))
+    }
+    contaminated = {
+        int(match.group(1))
+        for name in contaminated_variables
+        if (match := re.fullmatch(r"sim(\d+)_con", name))
+    }
+    return sorted(pure & contaminated)
 
 
 @dataclass
@@ -509,14 +556,19 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--max-trials",
         type=int,
-        default=41,
-        help="Cap on the number of loadable paired recordings.",
+        default=None,
+        help="Optional cap after discovering every paired recording.",
     )
     p.add_argument(
         "--demo-trial",
         type=int,
         default=2,
         help="Trial index used for the demo-style waveform overlay (default 2 matches AASR_demo.ipynb).",
+    )
+    p.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="Allow a development run from a dirty worktree.",
     )
     return p.parse_args()
 
@@ -533,18 +585,24 @@ def main() -> int:
             "See refs/asr/datasets/mendeley_klados_eog/README.md for the download instructions."
         )
 
+    commit, dirty = _git_state()
+    if dirty and not args.allow_dirty:
+        raise RuntimeError("refusing locked Klados validation from a dirty worktree")
+
     # Build the list of paired trial indices that exist in both files
     pure_vars = {n for n, _, _ in whosmat(pure_path)}
-    n_paired = sum(
-        1 for i in range(1, args.max_trials + 1) if f"sim{i}_resampled" in pure_vars
-    )
-    print(
-        f"[klados] paired trials available: {n_paired} of {args.max_trials} requested"
-    )
+    contam_vars = {n for n, _, _ in whosmat(contam_path)}
+    available_trials = _paired_trial_indices(pure_vars, contam_vars)
+    trial_indices = available_trials
+    if args.max_trials is not None:
+        if args.max_trials < 1:
+            raise ValueError("max_trials must be positive")
+        trial_indices = trial_indices[: args.max_trials]
+    print(f"[klados] paired trials selected: {len(trial_indices)} of {len(available_trials)} available")
 
     rows: list[dict[str, Any]] = []
     saved_demo = False
-    for trial_idx in range(1, args.max_trials + 1):
+    for trial_idx in trial_indices:
         pair = _load_pair(pure_path, contam_path, trial_idx)
         if pair is None:
             continue
@@ -691,8 +749,19 @@ def main() -> int:
                 "highpass": args.highpass,
                 "lowpass": args.lowpass,
                 "variants": list(args.variants),
-                "n_trials_attempted": args.max_trials,
+                "n_trials_available": len(available_trials),
+                "n_trials_attempted": len(trial_indices),
+                "trial_indices": trial_indices,
                 "n_rows": len(rows),
+                "provenance": {
+                    "repository_commit": commit,
+                    "dirty_worktree": dirty,
+                    "dataset_doi": "10.17632/wb6yvr725d.4",
+                    "pure_data_path": str(pure_path.resolve()),
+                    "pure_data_sha256": _sha256(pure_path),
+                    "contaminated_data_path": str(contam_path.resolve()),
+                    "contaminated_data_sha256": _sha256(contam_path),
+                },
                 "aggregate": aggregate,
             },
             indent=2,
