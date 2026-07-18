@@ -61,6 +61,29 @@ if str(ROOT) not in sys.path:
 from mne_denoise.asr import AdaptiveASR  # noqa: E402
 
 VARIANTS = ("init", "mw", "psp", "psw")
+CHANNEL_NAMES = (
+    "Fp1",
+    "Fp2",
+    "F7",
+    "F3",
+    "Fz",
+    "F4",
+    "F8",
+    "T3",
+    "C3",
+    "Cz",
+    "C4",
+    "T4",
+    "T5",
+    "P3",
+    "Pz",
+    "P4",
+    "T6",
+    "O1",
+    "O2",
+)
+EOG_SCORING_CHANNELS = ("Fp1", "Fp2", "F3", "F4")
+EOG_SCORING_INDICES = tuple(CHANNEL_NAMES.index(name) for name in EOG_SCORING_CHANNELS)
 
 
 def _sha256(path: Path) -> str:
@@ -278,6 +301,26 @@ def _paired_metrics(
     snr_clean = 10.0 * np.log10(var_pure / max(var_residual_clean, 1e-30))
     snr_contam = 10.0 * np.log10(var_pure / max(var_residual_contam, 1e-30))
 
+    # Tsai et al. score channel-wise reconstruction SNR and average the four
+    # frontal channels onto which the EOG field was projected.
+    clean_energy_per_ch = np.sum(pure_a**2, axis=1)
+    residual_energy_per_ch = np.sum((clean_a - pure_a) ** 2, axis=1)
+    contam_energy_per_ch = np.sum((cont_a - pure_a) ** 2, axis=1)
+    energy_floor = np.finfo(float).eps * np.maximum(clean_energy_per_ch, 1.0)
+    paper_snr_per_ch = 10.0 * np.log10(
+        np.maximum(clean_energy_per_ch, np.finfo(float).tiny)
+        / np.maximum(residual_energy_per_ch, energy_floor)
+    )
+    paper_snr_per_ch_contam = 10.0 * np.log10(
+        np.maximum(clean_energy_per_ch, np.finfo(float).tiny)
+        / np.maximum(contam_energy_per_ch, energy_floor)
+    )
+    target = np.asarray(EOG_SCORING_INDICES, dtype=int)
+    target_rmse = float(np.mean(rmse_per_ch[target]))
+    target_rmse_contam = float(np.mean(rmse_per_ch_contam[target]))
+    target_snr = float(np.mean(paper_snr_per_ch[target]))
+    target_snr_contam = float(np.mean(paper_snr_per_ch_contam[target]))
+
     return {
         "rmse_per_ch": rmse_per_ch.tolist(),
         "mean_rmse": float(rmse_per_ch.mean()),
@@ -295,6 +338,18 @@ def _paired_metrics(
         "snr_after_db": float(snr_clean),
         "snr_before_db": float(snr_contam),
         "snr_improvement_db": float(snr_clean - snr_contam),
+        "paper_snr_per_ch": paper_snr_per_ch.tolist(),
+        "paper_snr_per_ch_contam": paper_snr_per_ch_contam.tolist(),
+        "eog_target_mean_rmse": target_rmse,
+        "eog_target_mean_rmse_contam": target_rmse_contam,
+        "eog_target_rmse_reduction_pct": float(
+            (target_rmse_contam - target_rmse)
+            / max(target_rmse_contam, 1e-30)
+            * 100.0
+        ),
+        "eog_target_mean_snr_db": target_snr,
+        "eog_target_mean_snr_contam_db": target_snr_contam,
+        "eog_target_snr_improvement_db": target_snr - target_snr_contam,
         "n_samples_compared": int(n_samples),
     }
 
@@ -703,6 +758,12 @@ def main() -> int:
         "snr_before_db",
         "snr_after_db",
         "snr_improvement_db",
+        "eog_target_mean_rmse",
+        "eog_target_mean_rmse_contam",
+        "eog_target_rmse_reduction_pct",
+        "eog_target_mean_snr_db",
+        "eog_target_mean_snr_contam_db",
+        "eog_target_snr_improvement_db",
         "n_samples_compared",
     ]
     with csv_path.open("w", newline="", encoding="utf-8") as fh:
@@ -737,6 +798,14 @@ def main() -> int:
             "rmse_reduction_pct": _stats("rmse_reduction_pct"),
             "mean_correlation": _stats("mean_correlation"),
             "snr_improvement_db": _stats("snr_improvement_db"),
+            "eog_target_mean_rmse": _stats("eog_target_mean_rmse"),
+            "eog_target_rmse_reduction_pct": _stats(
+                "eog_target_rmse_reduction_pct"
+            ),
+            "eog_target_mean_snr_db": _stats("eog_target_mean_snr_db"),
+            "eog_target_snr_improvement_db": _stats(
+                "eog_target_snr_improvement_db"
+            ),
         }
 
     json_path = args.output_dir / "tier_A_klados_aggregate.json"
@@ -749,6 +818,8 @@ def main() -> int:
                 "highpass": args.highpass,
                 "lowpass": args.lowpass,
                 "variants": list(args.variants),
+                "channel_names": list(CHANNEL_NAMES),
+                "eog_scoring_channels": list(EOG_SCORING_CHANNELS),
                 "n_trials_available": len(available_trials),
                 "n_trials_attempted": len(trial_indices),
                 "trial_indices": trial_indices,

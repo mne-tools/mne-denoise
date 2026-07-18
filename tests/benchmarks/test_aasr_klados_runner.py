@@ -66,6 +66,23 @@ def test_paired_trial_discovery_uses_intersection_and_numeric_order():
     assert klados_runner._paired_trial_indices(pure, contaminated) == [2, 10]
 
 
+def test_paired_metrics_include_paper_frontal_endpoints():
+    pure = np.tile(np.linspace(-1.0, 1.0, 20), (19, 1))
+    contaminated = pure.copy()
+    contaminated[list(klados_runner.EOG_SCORING_INDICES)] += 2.0
+    cleaned = pure.copy()
+    cleaned[list(klados_runner.EOG_SCORING_INDICES)] += 1.0
+
+    metrics = klados_runner._paired_metrics(pure, contaminated, cleaned)
+
+    assert metrics["eog_target_mean_rmse"] == pytest.approx(1.0)
+    assert metrics["eog_target_mean_rmse_contam"] == pytest.approx(2.0)
+    assert metrics["eog_target_rmse_reduction_pct"] == pytest.approx(50.0)
+    assert metrics["eog_target_snr_improvement_db"] == pytest.approx(
+        20.0 * np.log10(2.0)
+    )
+
+
 @pytest.mark.parametrize("variant", ["psp", "psw"])
 def test_adaptive_update_failure_is_recorded_by_outer_runner(monkeypatch, variant):
     monkeypatch.setattr(klados_runner, "AdaptiveASR", _RecordingAdaptiveASR)
