@@ -8,7 +8,7 @@ Riemannian variants implement the experimental SPD-geometry backends.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -37,6 +37,53 @@ from ._validation import (
 )
 
 
+def _clean_rawdata_update_positions(
+    n_stream_input: int,
+    n_channels: int,
+    lookahead_samples: int,
+    stepsize: int,
+    max_mem_mb: int | float | None,
+) -> tuple[np.ndarray, int]:
+    """Return the memory-dependent update grid used by clean_rawdata."""
+    if max_mem_mb is None or max_mem_mb <= 0:
+        raise ValueError(
+            "processing_mode='clean_rawdata' requires a positive max_mem_mb"
+        )
+    available = (
+        float(max_mem_mb) * 1024 * 1024
+        - n_channels * n_channels * lookahead_samples * 8 * 3
+    )
+    if available <= 0:
+        raise ValueError(
+            "max_mem_mb is too small for clean_rawdata-compatible processing"
+        )
+    required = (
+        n_channels * n_channels * n_stream_input * 8 * 8
+        + n_channels * n_channels * 8 * n_stream_input / stepsize
+        + n_channels * n_stream_input * 8 * 2
+        + n_stream_input * 8 * 5
+    )
+    splits = min(10_000, max(1, int(np.ceil(required / available))))
+    update_positions: list[np.ndarray] = []
+    for split_idx in range(splits):
+        start = int(np.floor(split_idx * n_stream_input / splits))
+        stop = min(
+            n_stream_input,
+            int(np.floor((split_idx + 1) * n_stream_input / splits)),
+        )
+        length = stop - start
+        if length <= 0:
+            continue
+        local = np.minimum(
+            np.arange(stepsize, length + stepsize, stepsize, dtype=int),
+            length,
+        )
+        update_positions.append(start + np.unique(local))
+    if not update_positions:
+        raise RuntimeError("clean_rawdata-compatible processing produced no updates")
+    return np.concatenate(update_positions), splits
+
+
 def process_asr(
     X: np.ndarray,
     sfreq: float,
@@ -51,6 +98,7 @@ def process_asr(
     lookahead: float | None = None,
     stepsize: int | None = None,
     method: str | None = None,
+    processing_mode: Literal["invariant", "clean_rawdata"] = "invariant",
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Apply a calibrated ASR model to continuous data.
 
@@ -85,6 +133,11 @@ def process_asr(
         ``floor(sfreq * window_length / 2)``, matching the standard algorithm defaults.
     method : {'standard', 'riemannian'} | None
         Covariance geometry for processing. If ``None``, use ``state.method``.
+    processing_mode : {'invariant', 'clean_rawdata'}
+        ``'invariant'`` keeps numerical results independent of the memory
+        budget. ``'clean_rawdata'`` reproduces the MATLAB implementation's
+        memory-dependent split boundaries and requires positive
+        ``max_mem_mb``.
 
     Returns
     -------
@@ -127,6 +180,14 @@ def process_asr(
     if method not in ("standard", "riemannian", "riemannian_windowed"):
         raise ValueError(
             "method must be 'standard', 'riemannian', or 'riemannian_windowed'"
+        )
+    if processing_mode not in ("invariant", "clean_rawdata"):
+        raise ValueError(
+            "processing_mode must be 'invariant' or 'clean_rawdata'"
+        )
+    if processing_mode == "clean_rawdata" and method != "standard":
+        raise ValueError(
+            "processing_mode='clean_rawdata' is available only for standard ASR"
         )
 
     win_len = max(
@@ -187,13 +248,23 @@ def process_asr(
             state.filter_a,
             zi=state.filter_zi,
         )
-    update_at = np.minimum(
-        np.arange(stepsize, n_stream_input + stepsize, stepsize, dtype=int),
-        n_stream_input,
-    )
-    if update_at.size == 0 or update_at[-1] != n_stream_input:
-        update_at = np.append(update_at, n_stream_input)
-    update_at = np.unique(update_at)
+    clean_rawdata_splits = 1
+    if processing_mode == "clean_rawdata":
+        update_at, clean_rawdata_splits = _clean_rawdata_update_positions(
+            n_stream_input,
+            n_channels,
+            lookahead_samples,
+            stepsize,
+            max_mem_mb,
+        )
+    else:
+        update_at = np.minimum(
+            np.arange(stepsize, n_stream_input + stepsize, stepsize, dtype=int),
+            n_stream_input,
+        )
+        if update_at.size == 0 or update_at[-1] != n_stream_input:
+            update_at = np.append(update_at, n_stream_input)
+        update_at = np.unique(update_at)
     update_at = np.concatenate(([1], update_at))
     estimated_cov_bytes = _covariance_stack_bytes(n_stream_input, n_channels)
     max_mem_bytes = _max_mem_bytes(max_mem_mb)
@@ -354,6 +425,8 @@ def process_asr(
         "stepsize_samples": int(stepsize),
         "window_length_samples": int(win_len),
         "covariance_geometry": method,
+        "processing_mode": processing_mode,
+        "clean_rawdata_splits": int(clean_rawdata_splits),
     }
     if use_rolling_covariance:
         diagnostics.update(

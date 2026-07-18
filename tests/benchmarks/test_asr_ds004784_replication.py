@@ -51,6 +51,7 @@ def test_phantom_protocol_uses_clean_rawdata_reference_tolerances():
     assert method["reference_window_tolerances"] == ["-inf", 5.5]
     assert method["calibration_blocksize"] == "clean_rawdata"
     assert method["max_mem_mb"] == 64
+    assert method["processing_mode"] == "clean_rawdata"
 
 
 def test_band_power_supports_numpy_one_compatible_stack():

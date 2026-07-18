@@ -47,6 +47,7 @@ published_protocol:
     reference_window_tolerances: ["-inf", 5.5]
     calibration_blocksize: clean_rawdata
     max_mem_mb: 64
+    processing_mode: clean_rawdata
     calibration_sources: [external_clean_recording, target_clean_window_selection]
   exact_cutoff_grid:
     segments:

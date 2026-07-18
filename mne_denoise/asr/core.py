@@ -145,8 +145,12 @@ class ASR(BaseEstimator, TransformerMixin):
     stepsize : int | None, default=None
         Number of samples between reconstruction-matrix updates. If ``None``,
         use the default ``floor(sfreq * window_length / 2)``.
-    max_mem_mb : int | None, default=200
-        Reserved memory limit for future chunking.
+    max_mem_mb : int | None, default=512
+        Memory budget for covariance buffers and explicit compatibility modes.
+    processing_mode : {'invariant', 'clean_rawdata'}, default='invariant'
+        Processing update-grid semantics. The default is memory invariant;
+        ``'clean_rawdata'`` reproduces the MATLAB implementation's
+        memory-dependent split boundaries.
     copy : bool, default=True
         Reserved API flag. Transform returns a new object/array.
     store_reconstruction_matrices : bool, default=False
@@ -264,6 +268,7 @@ class ASR(BaseEstimator, TransformerMixin):
         lookahead: float | None = None,
         stepsize: int | None = None,
         max_mem_mb: int | None = 512,
+        processing_mode: Literal["invariant", "clean_rawdata"] = "invariant",
         copy: bool = True,
         store_reconstruction_matrices: bool = False,
         random_state: int | None = None,
@@ -296,6 +301,7 @@ class ASR(BaseEstimator, TransformerMixin):
         self.lookahead = lookahead
         self.stepsize = stepsize
         self.max_mem_mb = max_mem_mb
+        self.processing_mode = processing_mode
         self.copy = copy
         self.store_reconstruction_matrices = store_reconstruction_matrices
         self.random_state = random_state
@@ -518,6 +524,7 @@ class ASR(BaseEstimator, TransformerMixin):
                 lookahead=self.lookahead,
                 stepsize=self.stepsize,
                 method=self.method,
+                processing_mode=self.processing_mode,
             )
             if mne_type == "raw" and self.reject_by_annotation:
                 good_mask = _create_good_sample_mask_from_mne(
@@ -818,6 +825,7 @@ class ASR(BaseEstimator, TransformerMixin):
                 lookahead=self.lookahead,
                 stepsize=self.stepsize,
                 method=self.method,
+                processing_mode=self.processing_mode,
             )
             cleaned[epoch_idx, :, :] = selected_clean
             if self.window_criterion is not None:

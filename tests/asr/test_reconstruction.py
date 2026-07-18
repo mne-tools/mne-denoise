@@ -2,6 +2,51 @@ import numpy as np
 import pytest
 
 from mne_denoise.asr import calibrate_asr, process_asr
+from mne_denoise.asr._reconstruction import _clean_rawdata_update_positions
+
+
+def test_clean_rawdata_update_positions_match_memory_split_rule():
+    updates, splits = _clean_rawdata_update_positions(
+        n_stream_input=159_360,
+        n_channels=128,
+        lookahead_samples=128,
+        stepsize=128,
+        max_mem_mb=64,
+    )
+    assert splits == 9_990
+    assert updates.size == 9_990
+    assert updates[0] == 15
+    assert updates[-1] == 159_360
+    assert set(np.diff(updates)).issubset({15, 16})
+
+
+def test_clean_rawdata_processing_matches_invariant_path_without_splitting(
+    synthetic_burst_data,
+):
+    data, _, _, sfreq = synthetic_burst_data
+    state, _ = calibrate_asr(
+        data,
+        sfreq,
+        cutoff=3.0,
+        calibration="auto",
+        ref_tolerances=(-np.inf, 3.0),
+        filter_kind="none",
+    )
+    invariant, _ = process_asr(
+        data,
+        sfreq,
+        state,
+        max_mem_mb=512,
+    )
+    compatible, diagnostics = process_asr(
+        data,
+        sfreq,
+        state,
+        max_mem_mb=512,
+        processing_mode="clean_rawdata",
+    )
+    assert diagnostics["clean_rawdata_splits"] == 1
+    np.testing.assert_allclose(compatible, invariant, rtol=1e-12, atol=1e-12)
 
 
 @pytest.mark.parametrize("method", ["standard", "riemannian", "riemannian_windowed"])

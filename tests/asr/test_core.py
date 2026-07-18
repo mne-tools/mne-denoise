@@ -16,6 +16,7 @@ def test_asr_default_uses_original_spectral_shaping_filter():
     """The estimator default follows the clean_rawdata paper implementation."""
     assert ASR().filter_kind == "asr"
     assert ASR().ref_tolerances == (-np.inf, 5.5)
+    assert ASR().processing_mode == "invariant"
 
 
 def _epochs(n_epochs=3, n_per=2000):

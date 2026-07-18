@@ -313,6 +313,11 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
                 if cell.campaign == "published_reference"
                 else 10
             ),
+            processing_mode=(
+                str(published_method["processing_mode"])
+                if cell.campaign == "published_reference"
+                else "invariant"
+            ),
             **common,
         )
     if cell.method == "rasr_windowed":
