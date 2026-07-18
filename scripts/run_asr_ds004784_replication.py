@@ -425,6 +425,60 @@ def _sample_mask(diagnostics: dict, n_times: int) -> np.ndarray | None:
     return value.astype(bool)
 
 
+def _calibration_metrics(model: Any) -> dict[str, int | float | None]:
+    if model is None:
+        return {
+            "calibration_reference_samples": None,
+            "calibration_candidate_samples": None,
+            "calibration_reference_fraction": None,
+            "calibration_clean_windows": None,
+            "calibration_candidate_windows": None,
+            "calibration_clean_window_fraction": None,
+        }
+    info = getattr(model, "calibration_info_", {})
+    if not isinstance(info, dict):
+        info = {}
+
+    sample_mask = info.get("reference_sample_mask")
+    if not isinstance(sample_mask, np.ndarray):
+        sample_mask = info.get("clean_sample_mask")
+    selected_samples = info.get("reference_selected_samples")
+    candidate_samples = info.get("reference_candidate_samples")
+    if isinstance(sample_mask, np.ndarray):
+        selected_samples = int(np.sum(sample_mask))
+        candidate_samples = int(sample_mask.size)
+    elif selected_samples is None:
+        selected_samples = info.get("calibration_samples")
+
+    window_mask = info.get("clean_window_mask")
+    selected_windows = info.get("n_clean_windows")
+    candidate_windows = info.get("n_calibration_windows")
+    if isinstance(window_mask, np.ndarray):
+        selected_windows = int(np.sum(window_mask))
+        candidate_windows = int(window_mask.size)
+
+    selected_samples = None if selected_samples is None else int(selected_samples)
+    candidate_samples = None if candidate_samples is None else int(candidate_samples)
+    selected_windows = None if selected_windows is None else int(selected_windows)
+    candidate_windows = None if candidate_windows is None else int(candidate_windows)
+    return {
+        "calibration_reference_samples": selected_samples,
+        "calibration_candidate_samples": candidate_samples,
+        "calibration_reference_fraction": (
+            None
+            if selected_samples is None or not candidate_samples
+            else float(selected_samples / candidate_samples)
+        ),
+        "calibration_clean_windows": selected_windows,
+        "calibration_candidate_windows": candidate_windows,
+        "calibration_clean_window_fraction": (
+            None
+            if selected_windows is None or not candidate_windows
+            else float(selected_windows / candidate_windows)
+        ),
+    }
+
+
 def _write_json(path: pathlib.Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -559,6 +613,7 @@ def run_cell(args) -> dict:
             "preprocessing": "released_1Hz_highpass_no_rereference_no_channel_rejection_512Hz",
             "score_definition": "Downey_Ferris_corrected_DQS_full_synchronized_recording",
         }
+        metrics.update(_calibration_metrics(model))
         if (
             cell.campaign == "published_reference"
             and cell.method == "asr_standard"

@@ -64,6 +64,35 @@ def test_synchronized_data_rejects_invalid_interval(sync_samples):
         MODULE._synchronized_data(np.zeros((2, 10)), sync_samples)
 
 
+def test_calibration_metrics_preserve_sample_and_window_denominators():
+    model = SimpleNamespace(
+        calibration_info_={
+            "clean_sample_mask": np.array([True, False, True, True]),
+            "clean_window_mask": np.array([True, False, True]),
+        }
+    )
+    metrics = MODULE._calibration_metrics(model)
+    assert metrics["calibration_reference_samples"] == 3
+    assert metrics["calibration_candidate_samples"] == 4
+    assert metrics["calibration_reference_fraction"] == pytest.approx(0.75)
+    assert metrics["calibration_clean_windows"] == 2
+    assert metrics["calibration_candidate_windows"] == 3
+    assert metrics["calibration_clean_window_fraction"] == pytest.approx(2 / 3)
+
+
+def test_calibration_metrics_prefer_juggler_reference_mask():
+    model = SimpleNamespace(
+        calibration_info_={
+            "reference_sample_mask": np.array([True, False, False, True]),
+            "clean_sample_mask": np.ones(2, dtype=bool),
+        }
+    )
+    metrics = MODULE._calibration_metrics(model)
+    assert metrics["calibration_reference_samples"] == 2
+    assert metrics["calibration_candidate_samples"] == 4
+    assert metrics["calibration_reference_fraction"] == pytest.approx(0.5)
+
+
 def test_published_reference_cells_cover_raw_external_and_target_selection():
     cells = MODULE.published_reference_cells(_config())
     assert len(cells) == 18
