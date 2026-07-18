@@ -23,19 +23,19 @@ addpath(fullfile(comparison_root, "helper"));
 
 input_root = fullfile(dataset_root, "derivatives", "Data", "Imported");
 target_name = "NMM10_" + condition + "_1.set";
-EEG_pre = pop_loadset("filename", target_name, "filepath", input_root);
+EEG_pre = pop_loadset('filename', char(target_name), 'filepath', char(input_root));
 RESULTS_pre = compareToGT(EEG_pre, 0);
 
 params = struct("burstCrit", cutoff);
 if use_external
     params.calibData = pop_loadset( ...
-        "filename", "NMM10_Clean_1.set", "filepath", input_root);
+        'filename', 'NMM10_Clean_1.set', 'filepath', char(input_root));
 end
 
-EEG_channels = find(strcmpi("EEG", {EEG_pre.chanlocs.type}));
-EEG_only = pop_select(EEG_pre, "channel", EEG_channels);
+EEG_channels = find(strcmpi('EEG', {EEG_pre.chanlocs.type}));
+EEG_only = pop_select(EEG_pre, 'channel', EEG_channels);
 if use_external
-    calibration = pop_select(params.calibData, "channel", {EEG_only.chanlocs.labels});
+    calibration = pop_select(params.calibData, 'channel', {EEG_only.chanlocs.labels});
     reference_sample_mask = true(1, calibration.pnts);
 else
     [~, reference_sample_mask] = clean_windows( ...
