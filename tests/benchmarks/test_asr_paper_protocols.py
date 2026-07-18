@@ -134,7 +134,7 @@ def test_ds004784_is_attributed_to_the_published_2023_protocol():
     assert freeze_path.is_file()
     freeze = json.loads(freeze_path.read_text(encoding="utf-8"))
     config_path = REPO_ROOT / downey["published_protocol"]["protocol"]
-    assert freeze["protocol_id"] == "asr_ds004784_replication_v3"
+    assert freeze["protocol_id"] == "asr_ds004784_replication_v4"
     assert freeze["configs"][0]["sha256"] == hashlib.sha256(
         config_path.read_bytes()
     ).hexdigest()
