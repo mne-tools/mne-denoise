@@ -1,0 +1,4 @@
+Fixed ``AdaptiveASR`` PSP/PSW updates on recordings with an incomplete final
+segment. Paper-replication runners now use only complete, inclusive AASR update
+intervals, and failed ``partial_fit()`` calls leave the previous fitted state
+unchanged with a clear minimum-segment error.

@@ -42,6 +42,7 @@ from ._reconstruction import _process_adaptive_chunk
 from ._types import ASRState, _copy_asr_state, _copy_process_state
 from ._validation import (
     _check_transform_channels,
+    _round_half_up,
     _validate_adaptive_params,
     _validate_array_2d,
     _validate_backend_params,
@@ -88,7 +89,8 @@ class AdaptiveASR(ASR):
     window_length : float, default=0.5
         Processing/statistics window length in seconds.
     update_window_length : float, default=0.1
-        The window length in seconds for adaptive tracking.
+        RMS-statistics window length within each adaptive update segment. This is
+        not the duration of the segment passed to ``partial_fit``.
     calibration_window_length : float, default=1.0
         Window length in seconds for automatic clean-window selection.
     calibration_window_overlap : float, default=0.66
@@ -376,6 +378,9 @@ class AdaptiveASR(ASR):
         X : mne.io.Raw | mne.Epochs | np.ndarray
             The incoming data chunk to update the state with. For ``np.ndarray``,
             shape must be (n_channels, n_times) or (n_epochs, n_channels, n_times).
+            The chunk must contain more samples than ``calibration_window_length``
+            so clean-window statistics can be estimated. The published AASR demo
+            uses complete 20-second update segments and omits its incomplete tail.
         y : None
             Ignored. Present for scikit-learn compatibility.
         calibration_mask : np.ndarray | None, default=None
@@ -955,6 +960,7 @@ class AdaptiveASR(ASR):
         sfreq: float,
     ) -> tuple[ASRState, dict[str, Any], _AdaptiveSimilarityMatcher, dict[str, Any]]:
         X = _validate_array_2d(X)
+        self._check_adaptive_segment_length(X, sfreq, operation="fit")
         X_clean, clean_sample_mask, clean_diag = _extract_clean_calibration_samples(
             X,
             sfreq,
@@ -1044,6 +1050,7 @@ class AdaptiveASR(ASR):
             covariance memory usage info.
         """
         X = _validate_array_2d(X)
+        self._check_adaptive_segment_length(X, sfreq, operation="partial_fit")
         X_clean, clean_sample_mask, clean_diag = _extract_clean_calibration_samples(
             X,
             sfreq,
@@ -1058,8 +1065,11 @@ class AdaptiveASR(ASR):
         X_filtered, _ = _lfilter_channels(
             X_clean, self.state_.filter_b, self.state_.filter_a
         )
-        self.adaptive_learner_.fit_next(X_filtered)
-        V = self.adaptive_learner_.get_components()
+        # Work on a private learner copy. If covariance or threshold estimation
+        # fails, the fitted estimator remains at its last valid state.
+        updated_learner = self.adaptive_learner_.copy()
+        updated_learner.fit_next(X_filtered)
+        V = updated_learner.get_components()
         M, C, eigvals, _, covariance_memory_info = _adaptive_covariance_sqrt(
             X_filtered,
             blocksize=self.blocksize,
@@ -1083,6 +1093,7 @@ class AdaptiveASR(ASR):
         self.state_.calibration_patterns = V
         self.state_.cov = C
         self.state_.rank = int(np.sum(eigvals > self.regularization * np.max(eigvals)))
+        self.adaptive_learner_ = updated_learner
 
         diagnostics = self._adaptive_calibration_info(
             clean_diag,
@@ -1093,6 +1104,21 @@ class AdaptiveASR(ASR):
         )
         diagnostics.update(covariance_memory_info)
         return diagnostics
+
+    def _check_adaptive_segment_length(
+        self, X: np.ndarray, sfreq: float, *, operation: str
+    ) -> None:
+        """Reject segments that cannot form a clean-selection window."""
+        minimum_samples = _round_half_up(self.calibration_window_length * sfreq) + 1
+        if X.shape[1] >= minimum_samples:
+            return
+        minimum_seconds = minimum_samples / float(sfreq)
+        raise ValueError(
+            f"AdaptiveASR.{operation}() requires at least {minimum_samples} samples "
+            f"({minimum_seconds:.6g} s at {sfreq:g} Hz) for clean-window "
+            f"estimation; received {X.shape[1]} samples. Accumulate a longer "
+            "update segment or omit the incomplete trailing segment."
+        )
 
     def _adaptive_calibration_info(
         self,

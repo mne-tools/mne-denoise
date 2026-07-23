@@ -146,6 +146,13 @@ rules from the AASR repository.
    aasr.partial_fit(chunk_2)
    clean = aasr.transform(full_data)
 
+``chunk_1`` and ``chunk_2`` should be complete update segments. The published
+AASR demonstration uses 20-second segments and does not update on the final
+incomplete remainder. ``partial_fit()`` rejects a segment that is too short to
+form the one-second clean-selection window before changing any fitted state.
+Streaming applications should therefore accumulate short acquisition blocks
+into an update segment before calling ``partial_fit()``.
+
 The public API follows the package (sklearn-style) conventions:
 
 - ``fit()`` for initial calibration; ``partial_fit()`` for adaptive updates
