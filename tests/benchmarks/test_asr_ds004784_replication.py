@@ -176,6 +176,34 @@ def test_guided_family_estimator_explicitly_opts_into_soft_reconstruction():
     assert estimator.reconstruction == "soft"
 
 
+def test_adaptive_updates_match_published_complete_interval_semantics():
+    class Recorder:
+        blocksize = 10
+
+        def __init__(self):
+            self.chunks = []
+            self.reset_count = 0
+
+        def partial_fit(self, chunk):
+            self.chunks.append(chunk.copy())
+
+        def reset_process_state(self):
+            self.reset_count += 1
+
+    model = Recorder()
+    data = np.arange(2 * 41_472, dtype=float).reshape(2, 41_472)
+    updates, omitted = MODULE._adaptive_updates(
+        model, data, sfreq=512.0, chunk_s=20.0
+    )
+
+    assert updates == 4
+    assert [chunk.shape[1] for chunk in model.chunks] == [10_241] * 4
+    np.testing.assert_array_equal(model.chunks[0], data[:, :10_241])
+    np.testing.assert_array_equal(model.chunks[1], data[:, 10_240:20_481])
+    assert omitted == 511
+    assert model.reset_count == 1
+
+
 def _write_cell(root: pathlib.Path, cell, *, commit: str, dirty: bool = False):
     cell_dir = root / "family_replication" / cell.unit_id
     cell_dir.mkdir(parents=True)

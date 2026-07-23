@@ -37,6 +37,17 @@ class _AdaptiveSimilarityMatcher:
     W: np.ndarray
     Minv: np.ndarray
 
+    def copy(self) -> _AdaptiveSimilarityMatcher:
+        """Return an independent copy for transactional state updates."""
+        return _AdaptiveSimilarityMatcher(
+            variant=self.variant,
+            tau=float(self.tau),
+            learning_rate=float(self.learning_rate),
+            M=self.M.copy(),
+            W=self.W.copy(),
+            Minv=self.Minv.copy(),
+        )
+
     def fit_next(self, X: np.ndarray) -> np.ndarray:
         """Update the subspace learner on one calibration chunk.
 

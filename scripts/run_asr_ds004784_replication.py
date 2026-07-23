@@ -22,6 +22,7 @@ _SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(_REPO))
 sys.path.insert(0, str(_SCRIPT_DIR))
 
+from asr_paper_protocols import tsai_demo_update_slices
 from run_ds004784_phantom import (
     _corrected_data_quality_score,
     _effective_rank,
@@ -390,17 +391,17 @@ def _estimator(config: dict, cell: Cell, sfreq: float):
 
 def _adaptive_updates(
     model: AdaptiveASR, data: np.ndarray, sfreq: float, chunk_s: float
-) -> int:
-    chunk_samples = max(int(model.blocksize), int(round(chunk_s * sfreq)))
+) -> tuple[int, int]:
+    """Apply the complete, inclusive update intervals used by the AASR demo."""
+    slices = tsai_demo_update_slices(data.shape[1], sfreq, chunk_s)
     updates = 0
-    for start in range(0, data.shape[1], chunk_samples):
-        chunk = data[:, start : start + chunk_samples]
-        if chunk.shape[1] < int(model.blocksize):
-            continue
-        model.partial_fit(chunk)
+    for update_slice in slices:
+        model.partial_fit(data[:, update_slice])
         updates += 1
+    processed_samples = slices[-1].stop if slices else 0
+    omitted_tail_samples = int(data.shape[1] - processed_samples)
     model.reset_process_state()
-    return updates
+    return updates, omitted_tail_samples
 
 
 def _clean(
@@ -421,11 +422,15 @@ def _clean(
         chunk_s = float(config["family_replication"]["adaptive_update_chunk_s"])
         if cell.calibration_source == "external_clean_adaptive":
             model.fit(clean_calibration)
-            updates = _adaptive_updates(model, target, sfreq, chunk_s)
+            updates, omitted_tail = _adaptive_updates(model, target, sfreq, chunk_s)
         elif cell.calibration_source == "target_initial_adaptive":
             initial = max(int(model.blocksize), int(round(initial_s * sfreq)))
-            model.fit(target[:, :initial])
-            updates = _adaptive_updates(model, target[:, initial:], sfreq, chunk_s)
+            # MATLAB's ``seg(i):seg(i+1)`` includes the boundary sample, which
+            # is shared with the next adaptive segment.
+            model.fit(target[:, : min(target.shape[1], initial + 1)])
+            updates, omitted_tail = _adaptive_updates(
+                model, target[:, initial:], sfreq, chunk_s
+            )
         else:
             raise ValueError(
                 f"invalid adaptive calibration source {cell.calibration_source!r}"
@@ -433,6 +438,7 @@ def _clean(
         cleaned, diagnostics = model.transform(target, return_diagnostics=True)
         diagnostics = dict(diagnostics)
         diagnostics["benchmark_adaptive_update_count"] = updates
+        diagnostics["benchmark_adaptive_omitted_tail_samples"] = omitted_tail
         return np.asarray(cleaned), model, diagnostics
     if cell.calibration_source == "external_clean":
         model.fit(clean_calibration)
