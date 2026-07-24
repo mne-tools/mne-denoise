@@ -161,25 +161,59 @@ def _trca_decode(seg, sf):
 
 
 def _load_tsinghua(root, subject):
-    """Tsinghua/BETA .mat -> (data[ch, samp, target, block], freqs[target], sfreq)."""
+    """Load Tsinghua or BETA data as ``(channel, sample, target, block)``."""
     import scipy.io as sio
 
     cand = glob.glob(f"{root}/**/{subject}.mat", recursive=True)
     if not cand:
         raise FileNotFoundError(f"SSVEP .mat not found for {subject} under {root}")
     m = sio.loadmat(cand[0])
-    if "data" in m:                                   # Tsinghua: (64, 1500, 40, 6)
-        data = np.asarray(m["data"], float)
+    payload = m.get("data")
+    if payload is None:
+        raise KeyError(f"{cand[0]} does not contain a 'data' variable")
+
+    # Tsinghua stores a direct numeric array: (64, 1500, 40, 6).
+    if payload.dtype.names is None:
+        data = np.asarray(payload, float)
         fp = glob.glob(f"{root}/**/Freq_Phase.mat", recursive=True)
-        freqs = np.asarray(sio.loadmat(fp[0])["freqs"]).ravel() if fp else None
-        return data, freqs, 250.0
-    # BETA: nested struct EEG with .data (64, samp, block, target) + .suppl_info.freqs
-    eeg = m["data"][0, 0]
-    data = np.asarray(eeg["EEG"][0, 0]["data"] if "EEG" in eeg.dtype.names else eeg["data"], float)
-    if data.ndim == 4 and data.shape[2] <= 8:         # (ch, samp, block, target) -> (ch, samp, target, block)
+        if not fp:
+            raise FileNotFoundError(f"Freq_Phase.mat not found under {root}")
+        freqs = np.asarray(sio.loadmat(fp[0])["freqs"], float).ravel()
+        sfreq = 250.0
+    else:
+        # BETA stores a MATLAB struct. The released files use
+        # data.EEG.Epoch=(channel, sample, target, block) and
+        # data.Suppl_info.{Frequency,Srate}.
+        record = payload[0, 0]
+        names = set(record.dtype.names or ())
+        if not {"EEG", "Suppl_info"}.issubset(names):
+            raise ValueError(f"Unsupported BETA structure fields: {sorted(names)}")
+        eeg = record["EEG"][0, 0]
+        eeg_names = set(eeg.dtype.names or ())
+        data_field = "Epoch" if "Epoch" in eeg_names else "data" if "data" in eeg_names else None
+        if data_field is None:
+            raise ValueError(f"Unsupported BETA EEG fields: {sorted(eeg_names)}")
+        data = np.asarray(eeg[data_field], float)
+
+        suppl = record["Suppl_info"][0, 0]
+        suppl_names = set(suppl.dtype.names or ())
+        freq_field = "Frequency" if "Frequency" in suppl_names else "freqs" if "freqs" in suppl_names else None
+        if freq_field is None:
+            raise ValueError(f"Unsupported BETA Suppl_info fields: {sorted(suppl_names)}")
+        freqs = np.asarray(suppl[freq_field], float).ravel()
+        sfreq = float(np.asarray(suppl["Srate"], float).squeeze()) if "Srate" in suppl_names else 250.0
+
+    if data.ndim != 4:
+        raise ValueError(f"Expected four-dimensional SSVEP data, got shape {data.shape}")
+    if data.shape[2] == len(freqs):
+        pass
+    elif data.shape[3] == len(freqs):
         data = data.transpose(0, 1, 3, 2)
-    freqs = np.asarray(eeg["suppl_info"][0, 0]["freqs"]).ravel()
-    return data, freqs, 250.0
+    else:
+        raise ValueError(
+            f"Cannot identify target axis in data shape {data.shape} for {len(freqs)} frequencies"
+        )
+    return data, freqs, sfreq
 
 
 def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
