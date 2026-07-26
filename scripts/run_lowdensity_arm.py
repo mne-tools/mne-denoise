@@ -83,21 +83,99 @@ def _print_curve(arm, base, methods, rows, metric="rrmse"):
         print(f"  {mth:16} " + "  ".join(cells))
 
 
-def _gate_heavy(cfg, n_ch, heavy_max=16, heavy=("eemd_cca", "emd", "eemd", "memd")):
+HEAVY = ("eemd_cca", "emd", "eemd", "memd")
+
+
+def _drop_methods(cfg, drop):
+    """Return a copy of ``cfg`` with ``drop`` removed from every method list."""
+    import copy
+    drop = set(drop)
+    c = copy.deepcopy(cfg)
+    c["tiers"] = {k: [m for m in (v or []) if m not in drop]
+                  for k, v in (cfg.get("tiers", {}) or {}).items()}
+    c["methods_under_test"] = [m for m in (cfg.get("methods_under_test", []) or []) if m not in drop]
+    comp = c.get("comparators") or {}
+    if comp.get("required"):
+        comp["required"] = [m for m in comp["required"] if m not in drop]
+    return c
+
+
+def _cfg_methods(cfg):
+    """Every method name the config would run, in configuration order."""
+    seen = []
+    for group in (list(cfg.get("methods_under_test", []) or []),
+                  list((cfg.get("comparators", {}) or {}).get("required", []) or []),
+                  [m for tier in (cfg.get("tiers", {}) or {}).values() for m in (tier or [])]):
+        for m in group:
+            if m not in seen:
+                seen.append(m)
+    return seen
+
+
+def _gate_heavy(cfg, n_ch, heavy_max=16, heavy=HEAVY):
     """Drop compute-prohibitive per-channel methods (EEMD-CCA, EMD) above ``heavy_max`` channels.
     EEMD-per-channel on full recordings does not scale to high density (the 64-ch case did not
     finish in 45 min), and these single-channel-origin methods are relevant at the low-density
     (wearable) end anyway."""
     if int(n_ch) <= heavy_max:
         return cfg
-    import copy
-    c = copy.deepcopy(cfg)
-    c["tiers"] = {k: [m for m in (v or []) if m not in heavy]
-                  for k, v in (cfg.get("tiers", {}) or {}).items()}
-    c["methods_under_test"] = [m for m in (cfg.get("methods_under_test", []) or []) if m not in heavy]
-    comp = c.get("comparators") or {}
-    if comp.get("required"):
-        comp["required"] = [m for m in comp["required"] if m not in heavy]
+    return _drop_methods(cfg, heavy)
+
+
+def shard_grid(cfg, env=None):
+    """Execution-only channel-density sharding via ``LD_CHANNEL_GRID``.
+
+    The frozen configuration still declares the whole grid; the environment may select a
+    subset so that one scheduler task covers one density. Any value outside the frozen grid
+    fails closed, so the union of shards can never silently shrink the protocol.
+    """
+    env = os.environ if env is None else env
+    grid = [int(n) for n in (cfg.get("channel_grid") or [64, 32, 16, 8, 4])]
+    raw = (env.get("LD_CHANNEL_GRID") or "").strip()
+    if not raw:
+        return grid
+    want = {int(tok) for tok in raw.replace(",", " ").split()}
+    unknown = sorted(want - set(grid))
+    if unknown:
+        raise ValueError(
+            f"LD_CHANNEL_GRID={raw!r} is not a subset of the frozen channel_grid {grid}: {unknown}")
+    return [n for n in grid if n in want]
+
+
+def shard_class(cfg, env=None):
+    """Execution-only method-class sharding via ``LD_METHOD_CLASS`` (``heavy``/``light``).
+
+    ``heavy`` keeps only the per-channel decomposition methods that dominate runtime;
+    ``light`` keeps exactly their complement. The two classes partition the frozen method
+    set by construction, so isolating the slow methods into their own scheduler tasks cannot
+    add or drop a method. Method order within a class is unchanged, and every comparator is
+    constructed and seeded per call, so a sharded run reproduces the unsharded numbers.
+    """
+    env = os.environ if env is None else env
+    cls = (env.get("LD_METHOD_CLASS") or "").strip().lower()
+    if not cls:
+        return cfg, None
+    if cls not in ("heavy", "light"):
+        raise ValueError(f"LD_METHOD_CLASS={cls!r} must be 'heavy' or 'light'")
+    heavy = [m for m in _cfg_methods(cfg) if m in HEAVY]
+    keep_heavy = cls == "heavy"
+    return _drop_methods(cfg, [m for m in _cfg_methods(cfg) if (m in HEAVY) != keep_heavy]), (
+        cls, heavy)
+
+
+def _density_cfg(cfg, n_ch, shard):
+    """Config for one density, failing closed on a shard that would run nothing.
+
+    An empty method set means the scheduler asked for a class/density combination the
+    frozen protocol does not contain (for example ``heavy`` above the gate). That is a
+    control-layer error, and it must not be recorded as an empty success.
+    """
+    c = _gate_heavy(cfg, n_ch)
+    if shard is not None and not _cfg_methods(c):
+        cls, heavy = shard
+        raise ValueError(
+            f"LD_METHOD_CLASS={cls!r} selects no method at n_ch={n_ch}: "
+            f"{heavy or 'no heavy methods'} are gated at this density; do not schedule this shard")
     return c
 
 
@@ -112,7 +190,8 @@ def run_real_data(cfg, deriv_root, *, synthetic=False):
     from mne_denoise.benchmarks.preprocessing import apply_baseline
 
     base = cfg.get("base_arm")
-    grid = cfg.get("channel_grid") or [64, 32, 16, 8, 4]
+    grid = shard_grid(cfg)
+    cfg, shard = shard_class(cfg)
     ds = cfg.get("dataset", {}) or {}
     root = str(pathlib.Path(os.environ.get("DATASETS_ROOT", "/project/rrg-kjerbi/datasets"))
                / ds.get("project_relative_path", ""))
@@ -138,7 +217,7 @@ def run_real_data(cfg, deriv_root, *, synthetic=False):
                     continue
                 keep = ss.farthest_point_channels(raw.info, eeg_idx, int(n_ch))
                 sub = raw.copy().pick([raw.ch_names[i] for i in keep] + list(fit_refs) + list(eval_refs))
-                for r in mod.run_subject(_gate_heavy(cfg, n_ch), f"{subject}_nch{n_ch}", root, deriv_root,
+                for r in mod.run_subject(_density_cfg(cfg, n_ch, shard), f"{subject}_nch{n_ch}", root, deriv_root,
                                          preloaded=(sub, fit_refs, eval_refs)):
                     r["n_ch"] = int(n_ch); r["base_subject"] = subject; rows.append(r)
         else:  # ocular
@@ -155,7 +234,7 @@ def run_real_data(cfg, deriv_root, *, synthetic=False):
                 keep = ss.farthest_point_channels(epo.info, eeg_idx, int(n_ch), must_include=must)
                 sub = epo.copy().pick([epo.ch_names[i] for i in keep] + list(eog))
                 sub_picks = [sub.ch_names.index(c) for c in roi if c in sub.ch_names] or None
-                for r in mod.run_subject(_gate_heavy(cfg, n_ch), f"{subject}_nch{n_ch}", root, deriv_root,
+                for r in mod.run_subject(_density_cfg(cfg, n_ch, shard), f"{subject}_nch{n_ch}", root, deriv_root,
                                          preloaded=(sub, eog, win, sub_picks)):
                     r["n_ch"] = int(n_ch); r["base_subject"] = subject; rows.append(r)
     return rows, methods
@@ -172,6 +251,9 @@ def main(argv=None):
     deriv = pathlib.Path(a.deriv_root or (_REPO / "results" / arm))
     base = cfg.get("base_arm", "ground_truth")
     if base == "ground_truth":
+        set_vars = [v for v in ("LD_SUBJECT", "LD_CHANNEL_GRID", "LD_METHOD_CLASS") if os.environ.get(v)]
+        if set_vars:  # sharding is only wired through the real-data path; never ignore it silently
+            raise ValueError(f"{set_vars} are not supported for base_arm=ground_truth")
         rows, methods = run_ground_truth(cfg, deriv, synthetic=a.synthetic)
     elif base in ("muscle", "ocular"):
         rows, methods = run_real_data(cfg, deriv, synthetic=a.synthetic)
