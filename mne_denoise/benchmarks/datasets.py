@@ -155,9 +155,19 @@ REGISTRY: dict[str, DatasetSpec] = {
     "beta_ssvep": DatasetSpec(
         dataset_id="beta_ssvep", repository="http_portal", project_relative_path="ssvep/beta",
         download_source="thu:liubingchuan_eld_BETA_database", access="portal_unversioned",
-        expected_subjects=70, license="not_stated",
-        notes="BETA SSVEP (external replication). THU portal upload/liubingchuan_eld_BETA_database "
-              "(S1-S10..S61-S70.tar.gz + Description); no DOI/version -> SHA256SUMS manifest"),
+        expected_subjects=100, license="not_stated", doi="10.1038/s41597-022-01372-9",
+        citation="Liu B, Wang Y, Gao X, Chen X (2022). eldBETA: A large eldercare-oriented benchmark "
+                 "database of SSVEP-BCI for the aging population. Scientific Data 9:252.",
+        notes="eldBETA, NOT BETA. The THU portal upload behind this entry is "
+              "upload/liubingchuan_eld_BETA_database = the eldercare-oriented eldBETA database "
+              "(Liu, Wang, Gao & Chen 2022, Sci Data 9:252): 100 older-adult participants, 9 targets, "
+              "7 blocks, 64ch Neuroscan at 1 kHz (S1-S10..S91-S100.tar.gz + Description). It is not the "
+              "40-target, 70-participant BETA database (Liu et al. 2020, 10.3389/fnins.2020.00627). "
+              "The entry was originally labelled BETA and carried expected_subjects=70, which no check "
+              "could reject because the frozen arm enumerates S1-S70, a valid subset of eldBETA. The "
+              "'beta_ssvep' key is kept because completed attempts are hashed against it; see "
+              "documents/dataset_identity_correction_20260726.json in mne-denoise-reports. "
+              "No DOI/version on the portal copy -> SHA256SUMS manifest"),
     "eegeyenet": DatasetSpec(
         dataset_id="eegeyenet", repository="openneuro", project_relative_path="openneuro/ds007338",
         download_source="openneuro-py:ds007338", access="confirm", expected_subjects=356, license="CC0",
