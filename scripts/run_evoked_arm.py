@@ -321,24 +321,41 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         (cfg.get("comparators", {}) or {}).get("required", []) or []
     )
     methods = list(dict.fromkeys(m for m in methods if m != "event_destroyed_null"))
+    def record_outcome(mid, tag, suffix, status, error=None):
+        """Persist a non-success outcome, not just append it in memory.
+
+        Only the success path used to write to disk, so a method that failed on every
+        subject left no file, no row in the merged table, and no entry in the failure
+        taxonomy -- it simply disappeared. That is how xdawn and ica_rank_matched came
+        to be absent from the locked evoked table with no record of having been tried.
+        A method that cannot fit is a result about the method.
+        """
+        payload = {"status": status, "error": error,
+                   "sweep_value": (suffix.split("-", 1)[1] if suffix else None)}
+        rows.append({"method": mid, "tag": tag, **payload})
+        bio.save_subject_benchmark_results(
+            pathlib.Path(deriv_root) / subject / BENCH / tag,
+            subject=subject, method=tag, metrics=payload,
+            model_info={"window_ms": win, "outcome": status},
+        )
+
     for mid in methods:
         for suffix, mparams in _sweep.method_runs(cfg, mid):
             tag = f"{mid}__{suffix}" if suffix else mid
             try:
                 cmp = comparators.get(mid, **mparams)
             except KeyError:
-                rows.append({"method": mid, "tag": tag, "status": "unavailable_dependency"}); continue
+                record_outcome(mid, tag, suffix, "unavailable_dependency"); continue
             try:
                 state = cmp.fit(train, ctx)
                 ra = cmp.transform(ev_a, state, ctx)
                 rb = cmp.transform(ev_b, state, ctx)
             except Exception as exc:  # noqa: BLE001
-                rows.append({"method": mid, "tag": tag, "status": "failed_numerical",
-                             "error": f"{type(exc).__name__}: {exc}"})
+                record_outcome(mid, tag, suffix, "failed_numerical", f"{type(exc).__name__}: {exc}")
                 continue
             if ra.status != "success" or rb.status != "success":
                 bad = ra if ra.status != "success" else rb
-                rows.append({"method": mid, "tag": tag, "status": bad.status, "error": bad.error})
+                record_outcome(mid, tag, suffix, bad.status, bad.error)
                 continue
             if is_meg:
                 amps_a = _m170_amps(ra.cleaned, m170_tpl, tmin, tmax)
