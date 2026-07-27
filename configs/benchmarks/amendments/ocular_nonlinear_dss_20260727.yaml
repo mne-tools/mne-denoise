@@ -1,0 +1,93 @@
+# Amendment arm: ocular_nonlinear_dss — exploratory eleven-contrast screen on ERP CORE.
+#
+# WHY THIS IS EXPLORATORY AND NOT CONFIRMATORY
+#
+# Sarela & Valpola prescribe no contrast for ocular artifacts. Across the paper and the
+# thesis -- roughly 150 pages -- ocular artifacts appear once, as a citation to Vigario
+# 1997 on ICA rather than DSS, and the biomedical worked examples are rhythmic MEG and
+# cardiac MEG only. There is therefore nothing to nominate in advance, and this arm
+# nominates nothing.
+#
+# Blinks are sparse and super-Gaussian, which would suggest kurtosis or tanh by analogy
+# with the cardiac prescription. That analogy is ours, not the literature's. It is recorded
+# in the pre-registration as a hypothesis this screen GENERATES, not one it tests.
+#
+# THE REPORTING RULE, WHICH IS THE POINT OF THE PRE-REGISTRATION
+#
+# The output is the full eleven-way profile with dispersion, never a winner. Reporting the
+# best of eleven contrasts on 40 participants would select an operating point on the same
+# units used to estimate its effect -- the circularity ocular_erp_core.yaml's own design
+# guards against elsewhere. No contrast from this arm may be called best, recommended or
+# selected, and none may enter a confirmatory claim in this manuscript. A winner here is a
+# hypothesis for a later arm on different data.
+# Pre-registration: documents/nonlinear_dss_screen_preregistration_20260727.json
+
+arm: ocular_nonlinear_dss
+runner: ocular
+status: amendment
+amends: ocular_erp_core
+amends_config_sha256: aa61ea53af87e50afff56e1de381ce96885503ab00276dcbaa21a7a624218e64
+confirmatory: false
+
+dataset:
+  id: erp_core_n170
+  project_relative_path: osf/erp-core/n170
+  version: osf_thsqg_snapshot_manifest
+  subjects: manifest_subjects
+  excluded_subjects: []
+  channel_types: [eeg]
+  eog_channels: [HEOG_left, HEOG_right, VEOG_lower]
+
+methods_under_test: [iterative_dss]
+comparators:
+  required: [none]
+
+sweep:
+  iterative_dss:
+    param: contrast
+    grid: [tanh, robust_tanh, gauss, skew, smooth_tanh, kurtosis, wiener_mask,
+           variance_mask, dct, quasi_periodic, spectrogram]
+
+# Identical to the cardiac and muscle screens. Uniform parameters are what make the three
+# arms comparable to each other as well as internally.
+iterative_dss:
+  n_components: 3
+  polarity: subtract
+  method: symmetric
+  max_iter: 100
+  min_converged_fraction: 0.5
+  random_state: 0
+
+# Note that iterative_dss is blind: it never reads the EOG channels. That is the
+# scientifically useful contrast against the arm's reference-aware operators, which is why
+# the eog_channels are still declared -- the metrics need them to score blink coupling even
+# though the method under test cannot see them.
+information_access: blind
+
+metrics:
+  primary_target: held_out_blink_locked_residual_amplitude
+  primary_preservation: N170_mean_amplitude_equivalence
+  roi_channels: [PO7, PO8]            # ERP-CORE N170 canonical electrodes (Kappenman 2021)
+  secondary: [SME, split_half_reliability, effective_rank_change, converged_component_fraction]
+
+equivalence_margin: {value: 0.5, scale: within_subject_raw_split_sd, direction: two_sided_equivalence, justification: inherited_unchanged_from_parent_arm_so_the_screen_is_judged_on_the_same_scale}
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
+
+# Inherited unchanged from ocular_erp_core.
+baseline_preprocessing:
+  source: "Kappenman et al. 2021 (10.1016/j.neuroimage.2020.117465)"
+  mains_hz: 60
+  online_reference: CMS_DRL
+  steps:
+    resample_hz: 256
+    offline_reference: average_all_33
+    n170_window_ms: [110, 150]
+    highpass_hz: 0.1
+    bipolar_eog: true
+    epoch_ms: [-200, 800]
+    baseline_ms: [-200, 0]
+  branch_point: common_epoched_erp
+  excluded_from_baseline: [ica_ocular]

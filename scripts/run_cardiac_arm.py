@@ -28,6 +28,7 @@ sys.path.insert(0, str(_REPO))
 import yaml  # noqa: E402
 
 import mne_denoise.benchmarks.io as bio  # noqa: E402
+from mne_denoise.benchmarks import sweep as _sweep  # noqa: E402
 from mne_denoise.benchmarks.preprocessing import apply_baseline  # noqa: E402
 from mne_denoise.qa.coupling import event_locked_residual, regress_out  # noqa: E402
 
@@ -124,13 +125,43 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
         seg = np.stack([data[:, p + a:p + b] for p in rp])
         return float(np.sqrt((seg.mean(0) ** 2).mean()))
 
+    def _record(mid, tag, suffix, status, error=None):
+        """Persist a non-success outcome, not just append it in memory.
+
+        The success path wrote to disk and every failure branch did not, so a method that
+        failed on all recordings left no file and no row -- it vanished instead of being
+        reported as unavailable. The same defect was found and fixed in the evoked runner
+        (documents/comparator_amendment_20260727.json in mne-denoise-reports). A method
+        that cannot fit is a result about the method.
+        """
+        payload = {"status": status, "error": error,
+                   "sweep_value": (suffix.split("-", 1)[1] if suffix else None)}
+        rows.append({"method": mid, "tag": tag, **payload})
+        bio.save_subject_benchmark_results(
+            pathlib.Path(deriv_root) / subject / BENCH / tag,
+            subject=subject, method=tag, metrics=payload)
+
     # config-driven: bespoke cardiac methods first, then any registered comparators named
     # in the config (e.g. wavelet_threshold) dispatched through the comparator registry
     cfg_methods = (list(cfg.get("methods_under_test", []) or [])
                    + list((cfg.get("comparators", {}) or {}).get("required", []) or []))
     methods = list(dict.fromkeys(["none", "ecg_regression", "cardiac_dss", "ssp_ecg", "ica_ecg"] + cfg_methods))
+    # The five bespoke cardiac methods above are prepended unconditionally, so an
+    # amendment arm that declares only one method would still re-run all of them --
+    # including cardiac_dss, which was withdrawn for producing identically zero output.
+    # ARM_ONLY_METHODS narrows execution to a subset of what is already configured and
+    # rejects any name that is not, so it can subset but never add.
+    _only = (os.environ.get("ARM_ONLY_METHODS") or "").strip()
+    if _only:
+        want = [t for t in _only.replace(",", " ").split() if t]
+        unknown = [t for t in want if t not in methods]
+        if unknown:
+            raise ValueError(f"ARM_ONLY_METHODS={_only!r} is not a subset of {methods}: {unknown}")
+        methods = [m for m in methods if m in want]
     ctx = {"sfreq": sf}
-    for mid in methods:
+    for mid, suffix, mparams in [(m, s, p) for m in methods
+                                 for s, p in _sweep.method_runs(cfg, m)]:
+        tag = f"{mid}__{suffix}" if suffix else mid
         try:
             if mid == "none":
                 cleaned = X
@@ -165,23 +196,24 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False):
                 import mne_denoise.benchmarks.adapters  # noqa: F401  (populate registry)
                 from mne_denoise.benchmarks import comparators
 
-                cmp = comparators.get(mid)
+                cmp = comparators.get(mid, **mparams)
                 res = cmp.transform(eeg, cmp.fit(eeg, ctx), ctx)
                 if res.status != "success":
-                    rows.append({"method": mid, "status": res.status, "error": getattr(res, "error", None)})
+                    _record(mid, tag, suffix, res.status, getattr(res, "error", None))
                     continue
                 cleaned = (res.cleaned.get_data() if hasattr(res.cleaned, "get_data")
                            else np.asarray(res.cleaned))
         except Exception as exc:  # noqa: BLE001
-            rows.append({"method": mid, "status": "failed_numerical", "error": f"{type(exc).__name__}: {exc}"})
+            _record(mid, tag, suffix, "failed_numerical", f"{type(exc).__name__}: {exc}")
             continue
         row = {"status": "success",
+               "sweep_value": (suffix.split("-", 1)[1] if suffix else None),
                "qrs_residual": float(_resid(cleaned)),
                "neural_band_power": _bandpow(cleaned, sf, 4, 30),     # preservation (theta-beta)
                "n_rpeaks": int(len(rp))}
-        rows.append({"method": mid, **row})
-        out = pathlib.Path(deriv_root) / subject / BENCH / mid
-        bio.save_subject_benchmark_results(out, subject=subject, method=mid, metrics=row)
+        rows.append({"method": mid, "tag": tag, **row})
+        out = pathlib.Path(deriv_root) / subject / BENCH / tag
+        bio.save_subject_benchmark_results(out, subject=subject, method=tag, metrics=row)
     return rows
 
 

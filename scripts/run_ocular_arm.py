@@ -24,6 +24,7 @@ sys.path.insert(0, str(_REPO))
 
 import mne_denoise.benchmarks.adapters  # noqa: F401
 from mne_denoise.benchmarks import comparators
+from mne_denoise.benchmarks import sweep as _sweep
 from mne_denoise.benchmarks import datasets as D
 from mne_denoise.benchmarks import io as bio
 from mne_denoise.qa import preservation as qp
@@ -159,19 +160,40 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False, preloaded=No
     ctx = {"sfreq": sfreq, "eog_channels": eog, "ref_channels": eog}
     eog_eval = ev.copy().pick(eog).get_data().transpose(1, 0, 2).reshape(len(eog), -1)
     rows = []
-    for mid in _methods(cfg):
+
+    def _record(mid, tag, suffix, status, error=None):
+        """Persist a non-success outcome rather than only appending it in memory.
+
+        Only the success path wrote to disk, so a method that failed on every subject left
+        no file and no row in the merged table. Same defect as the evoked and cardiac
+        runners; see documents/comparator_amendment_20260727.json in mne-denoise-reports.
+        """
+        payload = {"status": status, "error": error,
+                   "sweep_value": (suffix.split("-", 1)[1] if suffix else None)}
+        rows.append({"method": mid, "tag": tag, **payload})
+        bio.save_subject_benchmark_results(
+            pathlib.Path(deriv_root) / subject / BENCH / tag,
+            subject=subject, method=tag, metrics=payload)
+
+    # method_runs yields the declared sweep grid, or one run at the config's pinned
+    # parameters. This runner previously ignored both: it called comparators.get with no
+    # arguments, so ocular_erp_core's declared eog_dss n_components sweep never ran and its
+    # pinned value was honoured only because it matched the adapter default.
+    for mid, suffix, mparams in [(m, s, p) for m in _methods(cfg)
+                                 for s, p in _sweep.method_runs(cfg, ALIAS.get(m, m))]:
         rid = ALIAS.get(mid, mid)
+        tag = f"{mid}__{suffix}" if suffix else mid
         try:
-            cmp = comparators.get(rid)
+            cmp = comparators.get(rid, **mparams)
         except KeyError:
-            rows.append({"method": mid, "status": "unavailable_dependency"}); continue
+            _record(mid, tag, suffix, "unavailable_dependency"); continue
         try:
             state = cmp.fit(tr, ctx)
             res = cmp.transform(ev, state, ctx)
         except Exception as exc:  # noqa: BLE001
-            rows.append({"method": mid, "status": "failed_numerical", "error": f"{type(exc).__name__}: {exc}"}); continue
+            _record(mid, tag, suffix, "failed_numerical", f"{type(exc).__name__}: {exc}"); continue
         if res.status != "success":
-            rows.append({"method": mid, "status": res.status}); continue
+            _record(mid, tag, suffix, res.status, getattr(res, "error", None)); continue
         eeg = res.cleaned.copy().pick("eeg")
         x = eeg.get_data()
         coup = reference_coupling(x.transpose(1, 0, 2).reshape(x.shape[1], -1), eog_eval)
@@ -184,11 +206,12 @@ def run_subject(cfg, subject, root, deriv_root, *, synthetic=False, preloaded=No
                               - qp.erp_mean_amplitude(ac, epo.times, wlo, whi, picks=picks))
         except Exception:  # noqa: BLE001
             n170_diff = float("nan")
-        row = {"status": "success", "blink_coupling": float(coup), "n170_amp": float(n170),
+        row = {"status": "success", "sweep_value": (suffix.split("-", 1)[1] if suffix else None),
+               "blink_coupling": float(coup), "n170_amp": float(n170),
                "n170_diff": n170_diff, "runtime_s": res.runtime_seconds}
-        rows.append({"method": mid, **row})
-        out_dir = pathlib.Path(deriv_root) / subject / BENCH / mid
-        bio.save_subject_benchmark_results(out_dir, subject=subject, method=mid, metrics=row)
+        rows.append({"method": mid, "tag": tag, **row})
+        out_dir = pathlib.Path(deriv_root) / subject / BENCH / tag
+        bio.save_subject_benchmark_results(out_dir, subject=subject, method=tag, metrics=row)
     return rows
 
 
