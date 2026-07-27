@@ -271,9 +271,16 @@ class _ICARankMatched(Comparator):
 
     def _transform(self, evaluation, payload, ctx):
         ica = payload
-        cleaned = ica.apply(evaluation.copy(), verbose=False)
+        # n_pca_components must be passed explicitly. MNE defaults it to None, which
+        # restores every PCA component; with exclude=[] that makes apply() the identity
+        # to within float round-off, so this comparator returned its input unchanged
+        # while reporting rank_after=k. It is the dimensionality control for DSS and
+        # PCA, and a control that silently does nothing cannot discriminate anything --
+        # measured max deviation was 2e-20 on signals of order 1e-6.
+        cleaned = ica.apply(evaluation.copy(), n_pca_components=self.k, verbose=False)
         return ComparatorResult(cleaned=cleaned, status="success", rank_after=self.k,
-                                parameters={"n_components": self.k})
+                                parameters={"n_components": self.k,
+                                            "n_pca_components": self.k})
 
 
 class _ICAICLabel(Comparator):
