@@ -45,6 +45,7 @@ def build_manifest(
     license_: str | None,
     hash_mode: str,
     include: tuple[str, ...] = (),
+    subjects: tuple[str, ...] = (),
 ) -> dict:
     root = root.resolve()
     if not root.is_dir():
@@ -73,7 +74,21 @@ def build_manifest(
         if should_hash:
             record["sha256"] = _sha256(path)
         files.append(record)
-    subjects = sorted(p.name for p in root.glob("sub-*") if p.is_dir())
+    if subjects:
+        # Datasets that do not use BIDS sub-* directories (PhysioNet case folders,
+        # per-subject archives, recording-level units) carry their unit list here, so
+        # the denominator is fixed in the manifest and hashed with it rather than
+        # being re-derived by whatever happens to be on disk at run time.
+        declared = list(subjects)
+        missing = [s for s in declared
+                   if not any(f["path"].split("/")[0] == s or s in f["path"] for f in files)]
+        if missing:
+            raise FileNotFoundError(
+                f"declared subjects absent from {root}: {missing}"
+            )
+    else:
+        declared = sorted(p.name for p in root.glob("sub-*") if p.is_dir())
+    subjects = declared
     payload = {
         "schema_version": 1,
         "dataset_id": dataset_id,
@@ -119,6 +134,14 @@ def main(argv: list[str] | None = None) -> int:
         metavar="GLOB",
         help="Only inventory relative paths matching this glob; repeat as needed.",
     )
+    parser.add_argument(
+        "--subjects",
+        nargs="+",
+        default=[],
+        metavar="UNIT",
+        help="Declare the unit list explicitly for datasets without BIDS sub-* directories. "
+             "Each must be present under the root or the build fails.",
+    )
     parser.add_argument("--output", type=pathlib.Path, required=True)
     args = parser.parse_args(argv)
     payload = build_manifest(
@@ -129,6 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         license_=args.license_,
         hash_mode=args.hash_mode,
         include=tuple(args.include),
+        subjects=tuple(args.subjects),
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
