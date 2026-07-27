@@ -12,6 +12,7 @@ EOG-coupled EOG-DSS/regression are all held to the same data.
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import sys
 
@@ -71,7 +72,32 @@ def _synth_ocular(sfreq=256.0, nch=20, ntr=200, seed=0):
 def _methods(cfg):
     out = list(cfg.get("methods_under_test", []) or [])
     out += list((cfg.get("comparators", {}) or {}).get("required", []) or [])
-    return list(dict.fromkeys(out))
+    out = list(dict.fromkeys(out))
+    return _restrict(out)
+
+
+def _restrict(configured):
+    """Narrow execution to a subset of the already-configured methods.
+
+    ``mara`` is declared required in ocular_erp_core.yaml but has never run, because
+    it lives in a GPL-isolated module behind MNE_DENOISE_ENABLE_GPL_MARA. Running it
+    alone must not require editing the frozen config, which would change its
+    config_hash and orphan the 360 attempts already hashed against it. This is
+    execution-only scoping, so the subset is validated against the config rather
+    than trusted: a name that is not already configured is an error, never a
+    silently added method.
+    """
+    raw = (os.environ.get("ARM_ONLY_METHODS") or "").strip()
+    if not raw:
+        return configured
+    want = [tok for tok in raw.replace(",", " ").split() if tok]
+    unknown = [tok for tok in want if tok not in configured]
+    if unknown:
+        raise ValueError(
+            f"ARM_ONLY_METHODS={raw!r} is not a subset of the configured methods "
+            f"{configured}: {unknown}"
+        )
+    return [m for m in configured if m in want]
 
 
 def _load_erp_core_ocular(root, subject, cfg):
