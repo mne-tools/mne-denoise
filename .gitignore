@@ -84,3 +84,8 @@ scripts/fir_run_asr_paper_validation.sbatch
 # Tutorial WIPs being staged on other branches
 examples/tutorials/Paper10_*.ipynb
 results/lowdensity_*/
+
+# Local runner output. scripts/run_*_arm.py default --deriv-root to <repo>/results when
+# none is given (e.g. the --synthetic smoke path), and an untracked directory there makes
+# the method-inventory generator refuse to run on a dirty worktree.
+results/
