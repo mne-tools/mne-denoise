@@ -98,8 +98,11 @@ def _download(spec: D.DatasetSpec, root: pathlib.Path, subjects: list[str] | Non
                         "--dest", str(root), "--scope", scope], check=True)
     elif src.startswith("physionet:"):
         db = src.split(":", 1)[1]
+        argv = ["--dest", str(root), "--db", db]
+        if subjects:
+            argv += ["--subjects", *subjects]
         subprocess.run([sys.executable, str(_REPO / "scripts" / "download_physionet.py"),
-                        "--dest", str(root), "--db", db], check=True)
+                        *argv], check=True)
     elif src.startswith("manual:"):
         raise RuntimeError(
             f"{spec.dataset_id}: no headless download ({src}). Stage MANUALLY: place the data at "
