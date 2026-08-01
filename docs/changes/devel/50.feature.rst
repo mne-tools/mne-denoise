@@ -1,0 +1,4 @@
+Add :class:`mne_denoise.ssa.SingularSpectrumAnalysis` and its concise
+``SSA`` alias for per-channel temporal decomposition, with explicit operating
+point validation, NumPy/MNE container parity, and complete per-epoch
+diagnostics.

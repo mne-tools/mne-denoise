@@ -69,6 +69,7 @@ SSA
    :toctree: generated/
    :nosignatures:
 
+   mne_denoise.ssa.SingularSpectrumAnalysis
    mne_denoise.ssa.SSA
    mne_denoise.ssa.compute_ssa
    mne_denoise.ssa.ssa_clean_channel

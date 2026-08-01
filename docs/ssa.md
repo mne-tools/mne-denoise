@@ -21,12 +21,12 @@ split.
 
 ```python
 import numpy as np
-from mne_denoise.ssa import SSA
+from mne_denoise.ssa import SingularSpectrumAnalysis
 
 data = np.random.randn(32, 10000)  # 32 channels, 10000 samples
 
 # Drop slow drift / ocular structure (dominant frequency <= 3 Hz).
-est = SSA(sfreq=250.0, drop_freq_max=3.0)
+est = SingularSpectrumAnalysis(sfreq=250.0, drop_freq_max=3.0)
 cleaned = est.fit_transform(data)
 print(f"dropped per channel: {est.dropped_counts_}")
 ```
@@ -34,13 +34,15 @@ print(f"dropped per channel: {est.dropped_counts_}")
 Targeting a specific band (e.g. a ~1 Hz cardiac component):
 
 ```python
-cleaned = SSA(sfreq=250.0, drop_band=(0.8, 1.6)).fit_transform(data)
+cleaned = SingularSpectrumAnalysis(sfreq=250.0, drop_band=(0.8, 1.6)).fit_transform(
+    data
+)
 ```
 
 With MNE-Python objects the sampling frequency is read from `info`:
 
 ```python
-raw_clean = SSA(drop_freq_max=3.0).fit_transform(raw)
+raw_clean = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(raw)
 ```
 
 ## One-shot functional API

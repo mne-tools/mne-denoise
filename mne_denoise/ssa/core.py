@@ -15,8 +15,8 @@ This module contains:
 - ``ssa_clean_channel``: SSA cleaning of a single 1-D channel.
 - ``compute_ssa``: SSA cleaning of a multichannel ``(n_channels, n_samples)``
   array, plus a diagnostics dict.
-- ``SSA``: the scikit-learn estimator, compatible with MNE-Python objects or
-  NumPy arrays.
+- ``SingularSpectrumAnalysis``: the scikit-learn estimator, compatible with
+  MNE-Python objects or NumPy arrays. ``SSA`` is a convenience alias.
 
 SSA is per-recording and unsupervised: there is no learned operator transferred
 from ``fit`` to ``transform`` (``fit`` is a no-op), so it does not require a
@@ -34,14 +34,80 @@ References
 from __future__ import annotations
 
 import logging
+import math
+from numbers import Integral, Real
 from typing import Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ..utils import extract_data_from_mne, reconstruct_mne_object
+from ..utils import extract_data_from_mne
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_parameters(
+    *,
+    sfreq: float,
+    window_length: int | None,
+    drop_freq_max: float,
+    drop_band: tuple[float, float] | None,
+    n_check: int,
+    max_window: int,
+    n_times: int,
+) -> int:
+    """Validate SSA operating-point parameters and resolve the embedding size."""
+    if isinstance(sfreq, bool) or not isinstance(sfreq, Real):
+        raise TypeError("sfreq must be a finite number")
+    sfreq = float(sfreq)
+    if not math.isfinite(sfreq):
+        raise ValueError("sfreq must be finite")
+    if sfreq <= 0:
+        raise ValueError("sfreq must be positive")
+    if n_times < 8:
+        raise ValueError("SSA requires at least 8 time samples")
+    if isinstance(n_check, bool) or not isinstance(n_check, Integral) or n_check < 1:
+        raise ValueError("n_check must be a positive integer")
+    if (
+        isinstance(max_window, bool)
+        or not isinstance(max_window, Integral)
+        or max_window < 2
+    ):
+        raise ValueError("max_window must be an integer of at least 2")
+    if window_length is not None and (
+        isinstance(window_length, bool)
+        or not isinstance(window_length, Integral)
+        or window_length < 2
+    ):
+        raise ValueError("window_length must be an integer of at least 2 or None")
+    if isinstance(drop_freq_max, bool) or not isinstance(drop_freq_max, Real):
+        raise TypeError("drop_freq_max must be a finite number")
+    if not math.isfinite(float(drop_freq_max)):
+        raise ValueError("drop_freq_max must be finite")
+    nyquist = float(sfreq) / 2.0
+    if not 0.0 <= float(drop_freq_max) <= nyquist:
+        raise ValueError("drop_freq_max must be between 0 and Nyquist")
+    if drop_band is not None:
+        if not isinstance(drop_band, tuple) or len(drop_band) != 2:
+            raise TypeError("drop_band must be a (low, high) tuple or None")
+        low, high = drop_band
+        if any(
+            isinstance(value, bool)
+            or not isinstance(value, Real)
+            or not math.isfinite(float(value))
+            for value in (low, high)
+        ):
+            raise TypeError("drop_band bounds must be finite numbers")
+        if not 0.0 <= float(low) < float(high) <= nyquist:
+            raise ValueError("drop_band must satisfy 0 <= low < high <= Nyquist")
+    resolved = (
+        min(max(int(sfreq * 0.5), 20), int(max_window), n_times // 2)
+        if window_length is None
+        else int(window_length)
+    )
+    if resolved > n_times // 2:
+        raise ValueError("window_length must not exceed half the time-series length")
+    return resolved
 
 
 def _hankelize(M: np.ndarray) -> np.ndarray:
@@ -66,11 +132,20 @@ def _clean_channel(
 ) -> tuple[np.ndarray, list[float]]:
     """SSA-clean a 1-D series; return ``(cleaned, dropped_dominant_freqs)``."""
     x = np.asarray(x, dtype=np.float64)
+    if x.ndim != 1:
+        raise ValueError("x must be one-dimensional")
+    if not np.isfinite(x).all():
+        raise ValueError("x must contain only finite values")
     N = x.size
-    if N < 8:
-        return x.copy(), []
-    L = int(window_length or min(max(int(sfreq * 0.5), 20), max_window, N // 2))
-    L = max(2, min(L, N - 1))
+    L = _validate_parameters(
+        sfreq=sfreq,
+        window_length=window_length,
+        drop_freq_max=drop_freq_max,
+        drop_band=drop_band,
+        n_check=n_check,
+        max_window=max_window,
+        n_times=N,
+    )
     K = N - L + 1
     X = np.lib.stride_tricks.sliding_window_view(x, K)  # (L, K) trajectory matrix
     U, S, Vt = np.linalg.svd(X, full_matrices=False)
@@ -82,7 +157,7 @@ def _clean_channel(
             continue
         comp = _hankelize(S[i] * np.outer(U[:, i], Vt[i]))
         sp = np.abs(np.fft.rfft(comp))
-        fdom = float(freqs[1:][np.argmax(sp[1:])]) if sp.size > 1 else 0.0
+        fdom = float(freqs[np.argmax(sp)])
         is_art = (
             (fdom <= drop_freq_max)
             if drop_band is None
@@ -174,6 +249,19 @@ def compute_ssa(
         raise ValueError(
             f"Expected a 2-D (n_channels, n_samples) array, got shape {X.shape}."
         )
+    if X.shape[0] < 1:
+        raise ValueError("X must contain at least one channel")
+    if not np.isfinite(X).all():
+        raise ValueError("X must contain only finite values")
+    _validate_parameters(
+        sfreq=sfreq,
+        window_length=window_length,
+        drop_freq_max=drop_freq_max,
+        drop_band=drop_band,
+        n_check=n_check,
+        max_window=max_window,
+        n_times=X.shape[1],
+    )
     out = np.empty_like(X)
     dropped_counts = np.zeros(X.shape[0], dtype=int)
     dropped_freqs: list[list[float]] = []
@@ -187,7 +275,7 @@ def compute_ssa(
     return out, info
 
 
-class SSA(BaseEstimator, TransformerMixin):
+class SingularSpectrumAnalysis(BaseEstimator, TransformerMixin):
     """Per-channel SSA artifact remover (Golyandina & Zhigljavsky 2013).
 
     Decomposes each channel with Singular Spectrum Analysis, drops eigentriples
@@ -195,7 +283,8 @@ class SSA(BaseEstimator, TransformerMixin):
     default, or a caller-supplied ``drop_band`` for e.g. cardiac), and
     reconstructs. Per-recording and unsupervised: ``fit`` is a no-op and does not
     learn a transferable operator. Accepts MNE ``Raw``/``Epochs`` objects or
-    NumPy ``(n_channels, n_samples)`` arrays; for MNE objects the sampling
+    NumPy ``(n_channels, n_samples)`` or
+    ``(n_epochs, n_channels, n_samples)`` arrays; for MNE objects the sampling
     frequency is read from ``info`` when ``sfreq`` is not given.
 
     Parameters
@@ -219,19 +308,24 @@ class SSA(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
-    dropped_counts_ : ndarray, shape (n_channels,)
+    dropped_counts_ : ndarray, shape (n_channels,) | (n_epochs, n_channels)
         Number of eigentriples dropped per channel (populated after
-        ``transform``; for Epochs, from the last epoch processed).
+        ``transform``). Epoched inputs retain diagnostics for every epoch.
+    dropped_frequencies_ : list
+        Dominant frequencies of the eigentriples dropped from each channel,
+        nested by epoch for epoched inputs.
     n_channels_ : int
         Number of channels processed.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from mne_denoise.ssa import SSA
+    >>> from mne_denoise.ssa import SingularSpectrumAnalysis
     >>> rng = np.random.default_rng(0)
     >>> X = rng.standard_normal((8, 2000))
-    >>> cleaned = SSA(sfreq=250.0, drop_freq_max=3.0).fit_transform(X)
+    >>> cleaned = SingularSpectrumAnalysis(
+    ...     sfreq=250.0, drop_freq_max=3.0
+    ... ).fit_transform(X)
     >>> cleaned.shape
     (8, 2000)
     """
@@ -254,25 +348,58 @@ class SSA(BaseEstimator, TransformerMixin):
         self.max_window = max_window
         self.verbose = verbose
 
-    def fit(self, X: Any = None, y=None) -> "SSA":
+    def fit(self, X: Any = None, y=None) -> SingularSpectrumAnalysis:
         """No-op; SSA is per-recording and learns no transferable operator.
 
         Included for scikit-learn compatibility. The decomposition happens in
         :meth:`transform`.
         """
+        if X is not None:
+            data, sfreq_data, *_ = extract_data_from_mne(X, auto_pick=True)
+            sfreq = self._resolve_sfreq(sfreq_data)
+            data = np.asarray(data)
+            n_channels = data.shape[-2]
+            n_times = data.shape[-1]
+            if n_channels < 1:
+                raise ValueError("X must contain at least one channel")
+            if not np.isfinite(data).all():
+                raise ValueError("X must contain only finite values")
+            _validate_parameters(
+                sfreq=sfreq,
+                window_length=self.window_length,
+                drop_freq_max=self.drop_freq_max,
+                drop_band=self.drop_band,
+                n_check=self.n_check,
+                max_window=self.max_window,
+                n_times=n_times,
+            )
         return self
 
     def _resolve_sfreq(self, sfreq_data: float | None) -> float:
+        if (
+            self.sfreq is not None
+            and sfreq_data is not None
+            and not np.isclose(float(self.sfreq), float(sfreq_data))
+        ):
+            raise ValueError(
+                f"sfreq={self.sfreq} disagrees with MNE info sfreq={sfreq_data}"
+            )
         sfreq = sfreq_data if sfreq_data is not None else self.sfreq
         if sfreq is None:
             raise ValueError(
-                "sfreq is required for array input (pass SSA(sfreq=...)) or "
+                "sfreq is required for array input (pass "
+                "SingularSpectrumAnalysis(sfreq=...)) or "
                 "transform an MNE object carrying a sampling frequency."
             )
-        return float(sfreq)
+        resolved = float(sfreq)
+        if not math.isfinite(resolved) or resolved <= 0:
+            raise ValueError("sfreq must be positive and finite")
+        return resolved
 
-    def _clean_2d(self, data2d: np.ndarray, sfreq: float) -> np.ndarray:
-        cleaned, info = compute_ssa(
+    def _clean_2d(
+        self, data2d: np.ndarray, sfreq: float
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        return compute_ssa(
             data2d,
             sfreq,
             self.window_length,
@@ -281,9 +408,35 @@ class SSA(BaseEstimator, TransformerMixin):
             self.n_check,
             self.max_window,
         )
-        self.dropped_counts_ = info["dropped_counts"]
-        self.n_channels_ = data2d.shape[0]
-        return cleaned
+
+    @staticmethod
+    def _restore_container(
+        cleaned: np.ndarray,
+        *,
+        original: Any,
+        mne_type: str,
+        picks: np.ndarray | None,
+    ) -> Any:
+        """Restore cleaned channels in a copy of the original MNE container."""
+        if mne_type == "array" or original is None:
+            return cleaned
+        output = original.copy()
+        if mne_type in ("raw", "epochs"):
+            output.load_data()
+            if picks is None:
+                output._data[...] = cleaned
+            elif mne_type == "epochs":
+                output._data[:, picks, :] = cleaned
+            else:
+                output._data[picks, :] = cleaned
+        elif mne_type == "evoked":
+            if picks is None:
+                output.data[...] = cleaned
+            else:
+                output.data[picks, :] = cleaned
+        else:  # pragma: no cover - guarded by extract_data_from_mne
+            raise TypeError(f"unsupported container type {mne_type!r}")
+        return output
 
     def transform(self, X: Any, y=None) -> Any:
         """Apply SSA artifact removal.
@@ -304,19 +457,29 @@ class SSA(BaseEstimator, TransformerMixin):
             X, auto_pick=True
         )
         sfreq = self._resolve_sfreq(sfreq_data)
-        if mne_type == "epochs":
+        data = np.asarray(data, dtype=np.float64)
+        if data.ndim == 3:
             cleaned = np.empty_like(data, dtype=np.float64)
+            counts = np.empty(data.shape[:2], dtype=int)
+            frequencies: list[list[list[float]]] = []
             for e in range(data.shape[0]):
-                cleaned[e] = self._clean_2d(data[e], sfreq)
+                cleaned[e], info = self._clean_2d(data[e], sfreq)
+                counts[e] = info["dropped_counts"]
+                frequencies.append(info["dropped_freqs"])
+            self.dropped_counts_ = counts
+            self.dropped_frequencies_ = frequencies
         else:
-            cleaned = self._clean_2d(np.asarray(data, dtype=np.float64), sfreq)
+            cleaned, info = self._clean_2d(data, sfreq)
+            self.dropped_counts_ = info["dropped_counts"]
+            self.dropped_frequencies_ = info["dropped_freqs"]
+        self.n_channels_ = data.shape[-2]
         if self.verbose:
             logger.info(
                 "SSA: dropped a mean of %.1f components/channel.",
                 float(np.mean(self.dropped_counts_)),
             )
-        return reconstruct_mne_object(
-            cleaned, orig_inst, mne_type, picks=picks, verbose=False
+        return self._restore_container(
+            cleaned, original=orig_inst, mne_type=mne_type, picks=picks
         )
 
     def fit_transform(self, X: Any, y=None, **fit_params) -> Any:

@@ -4,8 +4,14 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from sklearn.base import clone
 
-from mne_denoise.ssa import SSA, compute_ssa, ssa_clean_channel
+from mne_denoise.ssa import (
+    SSA,
+    SingularSpectrumAnalysis,
+    compute_ssa,
+    ssa_clean_channel,
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -100,14 +106,14 @@ def test_compute_ssa_drop_band(rng):
 
 
 # ---------------------------------------------------------------------------
-# SSA estimator
+# SingularSpectrumAnalysis estimator
 # ---------------------------------------------------------------------------
 
 
 def test_ssa_fit_transform_numpy(drift_data):
     """fit_transform on a NumPy array returns an array of the same shape."""
     X, sfreq = drift_data
-    cleaned = SSA(sfreq=sfreq, drop_freq_max=3.0).fit_transform(X)
+    cleaned = SingularSpectrumAnalysis(sfreq=sfreq, drop_freq_max=3.0).fit_transform(X)
     assert isinstance(cleaned, np.ndarray)
     assert cleaned.shape == X.shape
 
@@ -115,7 +121,7 @@ def test_ssa_fit_transform_numpy(drift_data):
 def test_ssa_attributes_after_transform(drift_data):
     """Diagnostics attributes are populated after transform."""
     X, sfreq = drift_data
-    est = SSA(sfreq=sfreq).fit(X)
+    est = SingularSpectrumAnalysis(sfreq=sfreq).fit(X)
     est.transform(X)
     assert est.n_channels_ == X.shape[0]
     assert est.dropped_counts_.shape == (X.shape[0],)
@@ -125,14 +131,75 @@ def test_ssa_requires_sfreq_for_array(drift_data):
     """Array input without sfreq raises a clear error."""
     X, _sfreq = drift_data
     with pytest.raises(ValueError, match="sfreq is required"):
-        SSA().fit_transform(X)
+        SingularSpectrumAnalysis().fit_transform(X)
 
 
-def test_ssa_positional_sfreq_backward_compat(drift_data):
-    """SSA(sfreq) positional call still works (backward compatible)."""
+def test_ssa_alias_and_positional_sfreq(drift_data):
+    """The concise SSA alias exposes the canonical estimator unchanged."""
     X, sfreq = drift_data
+    assert SSA is SingularSpectrumAnalysis
     cleaned = SSA(sfreq).fit_transform(X)
     assert cleaned.shape == X.shape
+
+
+def test_ssa_fit_transform_composes_and_clones(drift_data):
+    """fit_transform is exactly fit followed by transform and clones cleanly."""
+    X, sfreq = drift_data
+    estimator = SingularSpectrumAnalysis(sfreq=sfreq, n_check=5)
+    direct = estimator.fit_transform(X)
+    separate = clone(estimator).fit(X).transform(X)
+    np.testing.assert_allclose(direct, separate)
+    assert clone(estimator).get_params() == estimator.get_params()
+
+
+def test_ssa_numpy_epochs_retain_all_diagnostics(drift_data):
+    """Three-dimensional arrays are cleaned without overwriting epoch diagnostics."""
+    X, sfreq = drift_data
+    epochs = np.stack((X, 0.5 * X))
+    estimator = SingularSpectrumAnalysis(sfreq=sfreq, n_check=5)
+    cleaned = estimator.fit_transform(epochs)
+    assert cleaned.shape == epochs.shape
+    assert estimator.dropped_counts_.shape == epochs.shape[:2]
+    assert len(estimator.dropped_frequencies_) == epochs.shape[0]
+    assert all(
+        len(freqs) == epochs.shape[1] for freqs in estimator.dropped_frequencies_
+    )
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "error", "match"),
+    [
+        ({"sfreq": 0}, ValueError, "positive"),
+        ({"sfreq": np.inf}, ValueError, "finite"),
+        ({"sfreq": 250, "window_length": 1}, ValueError, "window_length"),
+        ({"sfreq": 250, "window_length": 101}, ValueError, "half"),
+        ({"sfreq": 250, "n_check": 0}, ValueError, "n_check"),
+        ({"sfreq": 250, "max_window": 1}, ValueError, "max_window"),
+        ({"sfreq": 250, "drop_freq_max": 126}, ValueError, "Nyquist"),
+        ({"sfreq": 250, "drop_band": (2.0, 1.0)}, ValueError, "drop_band"),
+    ],
+)
+def test_ssa_rejects_invalid_operating_points(kwargs, error, match):
+    """Mathematically invalid operating points fail before decomposition."""
+    with pytest.raises(error, match=match):
+        SingularSpectrumAnalysis(**kwargs).fit_transform(np.ones((2, 200)))
+
+
+def test_ssa_rejects_short_and_nonfinite_inputs():
+    """Inputs incapable of a finite trajectory decomposition fail explicitly."""
+    with pytest.raises(ValueError, match="at least 8"):
+        compute_ssa(np.ones((2, 7)), 250.0)
+    nonfinite = np.ones((2, 100))
+    nonfinite[0, 0] = np.nan
+    with pytest.raises(ValueError, match="finite"):
+        compute_ssa(nonfinite, 250.0)
+
+
+def test_ssa_zero_hz_component_is_not_hidden():
+    """DC is a valid dominant frequency and can be targeted explicitly."""
+    x = np.full(200, 3.0)
+    cleaned = ssa_clean_channel(x, 100.0, drop_freq_max=0.0, n_check=1)
+    assert np.linalg.norm(cleaned) < 1e-10
 
 
 # ---------------------------------------------------------------------------
@@ -148,9 +215,74 @@ def test_ssa_mne_raw_roundtrip_infers_sfreq(drift_data):
     raw = mne.io.RawArray(X, info, verbose=False)
 
     # No sfreq passed -> read from info.
-    cleaned = SSA(drop_freq_max=3.0).fit_transform(raw)
+    cleaned = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(raw)
     assert isinstance(cleaned, mne.io.BaseRaw)
     assert cleaned.get_data().shape == X.shape
     low_before = _band_power(X, sfreq, 0.0, 3.0)
     low_after = _band_power(cleaned.get_data(), sfreq, 0.0, 3.0)
     assert low_after < low_before
+
+
+def test_ssa_mne_raw_preserves_container_and_unpicked_channel(drift_data):
+    """Cleaning copies Raw metadata and leaves auto-excluded channels untouched."""
+    mne = pytest.importorskip("mne")
+    X, sfreq = drift_data
+    stim = np.arange(X.shape[1], dtype=float) % 2
+    data = np.vstack((X, stim))
+    info = mne.create_info(
+        [*[f"EEG{i:02d}" for i in range(X.shape[0])], "STI 014"],
+        sfreq,
+        [*["eeg"] * X.shape[0], "stim"],
+    )
+    raw = mne.io.RawArray(data, info, first_samp=37, verbose=False)
+    raw.set_annotations(mne.Annotations([0.5], [0.1], ["marker"]))
+
+    cleaned = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(raw)
+
+    assert cleaned is not raw
+    assert cleaned.first_samp == raw.first_samp
+    assert cleaned.annotations == raw.annotations
+    np.testing.assert_array_equal(cleaned.get_data(picks=["STI 014"])[0], stim)
+    np.testing.assert_array_equal(raw.get_data(), data)
+
+
+def test_ssa_mne_epochs_preserves_events_metadata_and_diagnostics(drift_data):
+    """Epoch cleaning preserves identities and records every epoch/channel."""
+    pd = pytest.importorskip("pandas")
+    mne = pytest.importorskip("mne")
+    X, sfreq = drift_data
+    epoch_data = np.stack((X[:, :500], X[:, 500:1000]))
+    info = mne.create_info([f"EEG{i:02d}" for i in range(X.shape[0])], sfreq, "eeg")
+    events = np.array([[100, 0, 1], [800, 0, 2]])
+    metadata = pd.DataFrame({"trial": ["a", "b"]})
+    epochs = mne.EpochsArray(
+        epoch_data,
+        info,
+        events=events,
+        event_id={"a": 1, "b": 2},
+        tmin=-0.2,
+        metadata=metadata,
+        verbose=False,
+    )
+    estimator = SingularSpectrumAnalysis(drop_freq_max=3.0, n_check=5)
+
+    cleaned = estimator.fit_transform(epochs)
+
+    np.testing.assert_array_equal(cleaned.events, epochs.events)
+    assert cleaned.event_id == epochs.event_id
+    assert cleaned.metadata.equals(metadata)
+    assert cleaned.tmin == epochs.tmin
+    assert estimator.dropped_counts_.shape == epoch_data.shape[:2]
+
+
+def test_ssa_rejects_conflicting_mne_sfreq(drift_data):
+    """An explicit sampling frequency cannot silently override MNE metadata."""
+    mne = pytest.importorskip("mne")
+    X, sfreq = drift_data
+    raw = mne.io.RawArray(
+        X,
+        mne.create_info([f"EEG{i:02d}" for i in range(X.shape[0])], sfreq, "eeg"),
+        verbose=False,
+    )
+    with pytest.raises(ValueError, match="disagrees"):
+        SingularSpectrumAnalysis(sfreq=sfreq / 2).fit(raw)
