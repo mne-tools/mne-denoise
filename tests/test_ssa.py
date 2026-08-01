@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 import pytest
 from sklearn.base import clone
@@ -286,3 +288,80 @@ def test_ssa_rejects_conflicting_mne_sfreq(drift_data):
     )
     with pytest.raises(ValueError, match="disagrees"):
         SingularSpectrumAnalysis(sfreq=sfreq / 2).fit(raw)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "error", "match"),
+    [
+        ({"sfreq": True}, TypeError, "sfreq"),
+        ({"sfreq": 250.0, "drop_freq_max": True}, TypeError, "drop_freq_max"),
+        ({"sfreq": 250.0, "drop_freq_max": np.nan}, ValueError, "finite"),
+        ({"sfreq": 250.0, "drop_band": [1.0, 2.0]}, TypeError, "drop_band"),
+        ({"sfreq": 250.0, "drop_band": (True, 2.0)}, TypeError, "bounds"),
+        ({"sfreq": 250.0, "drop_band": (1.0, np.nan)}, TypeError, "bounds"),
+    ],
+)
+def test_ssa_scalar_contracts_reject_ambiguous_values(kwargs, error, match):
+    """Boolean, non-finite, and structurally ambiguous parameters fail clearly."""
+    with pytest.raises(error, match=match):
+        SingularSpectrumAnalysis(**kwargs).fit_transform(np.ones((2, 200)))
+
+
+def test_single_channel_primitive_validates_shape_and_finiteness():
+    """The single-channel API rejects multidimensional and non-finite series."""
+    with pytest.raises(TypeError, match="sfreq"):
+        compute_ssa(np.ones((2, 20)), True)
+    with pytest.raises(ValueError, match="one-dimensional"):
+        ssa_clean_channel(np.ones((2, 20)), 100.0)
+    nonfinite = np.ones(20)
+    nonfinite[0] = np.nan
+    with pytest.raises(ValueError, match="finite"):
+        ssa_clean_channel(nonfinite, 100.0)
+
+
+def test_zero_singular_values_are_skipped_without_inventing_energy():
+    """Zero-energy eigentriples remain zero and are not reported as artifacts."""
+    cleaned = ssa_clean_channel(np.zeros(100), 100.0, drop_freq_max=3.0, n_check=5)
+    np.testing.assert_array_equal(cleaned, np.zeros(100))
+
+
+def test_empty_channels_and_fit_input_validation():
+    """Functional and estimator entry points reject empty or non-finite channels."""
+    with pytest.raises(ValueError, match="at least one channel"):
+        compute_ssa(np.empty((0, 100)), 100.0)
+    with pytest.raises(ValueError, match="at least one channel"):
+        SingularSpectrumAnalysis(sfreq=100.0).fit(np.empty((0, 100)))
+    nonfinite = np.ones((2, 100))
+    nonfinite[0, 0] = np.inf
+    with pytest.raises(ValueError, match="finite"):
+        SingularSpectrumAnalysis(sfreq=100.0).fit(nonfinite)
+
+
+def test_ssa_mne_evoked_preserves_metadata_and_stim_channel(drift_data):
+    """Evoked cleaning copies metadata and leaves auto-excluded channels untouched."""
+    mne = pytest.importorskip("mne")
+    X, sfreq = drift_data
+    stim = np.arange(X.shape[1], dtype=float) % 2
+    data = np.vstack((X[:3], stim))
+    info = mne.create_info(
+        ["EEG0", "EEG1", "EEG2", "STI 014"],
+        sfreq,
+        ["eeg", "eeg", "eeg", "stim"],
+    )
+    evoked = mne.EvokedArray(
+        data, info, tmin=-0.2, nave=14, comment="condition", verbose=False
+    )
+    cleaned = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(evoked)
+    assert isinstance(cleaned, mne.Evoked)
+    assert cleaned.comment == evoked.comment
+    assert cleaned.nave == evoked.nave
+    assert cleaned.first == evoked.first
+    np.testing.assert_array_equal(cleaned.data[-1], stim)
+
+
+def test_ssa_verbose_reports_dropped_component_summary(drift_data, caplog):
+    """Opt-in logging emits the descriptive fitted-run summary."""
+    X, sfreq = drift_data
+    with caplog.at_level(logging.INFO, logger="mne_denoise.ssa.core"):
+        SingularSpectrumAnalysis(sfreq=sfreq, verbose=True).fit_transform(X[:2])
+    assert "SSA: dropped a mean" in caplog.text

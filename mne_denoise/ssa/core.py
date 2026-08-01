@@ -391,6 +391,8 @@ class SingularSpectrumAnalysis(BaseEstimator, TransformerMixin):
                 "SingularSpectrumAnalysis(sfreq=...)) or "
                 "transform an MNE object carrying a sampling frequency."
             )
+        if isinstance(sfreq, bool) or not isinstance(sfreq, Real):
+            raise TypeError("sfreq must be a finite number")
         resolved = float(sfreq)
         if not math.isfinite(resolved) or resolved <= 0:
             raise ValueError("sfreq must be positive and finite")
