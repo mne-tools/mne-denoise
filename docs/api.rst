@@ -35,6 +35,7 @@ DSS
    mne_denoise.dss.DSS
    mne_denoise.dss.iterative_dss
    mne_denoise.dss.IterativeDSS
+   mne_denoise.dss.IterativeDSSDiagnostics
 
 ZapLine
 -------

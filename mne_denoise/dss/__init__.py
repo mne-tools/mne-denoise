@@ -36,7 +36,12 @@ from .denoisers import (
     beta_tanh,
 )
 from .linear import DSS, compute_dss
-from .nonlinear import IterativeDSS, iterative_dss, iterative_dss_one
+from .nonlinear import (
+    IterativeDSS,
+    IterativeDSSDiagnostics,
+    iterative_dss,
+    iterative_dss_one,
+)
 
 # Utils (exposed for convenience if needed)
 from .utils import convergence, whitening
@@ -63,6 +68,7 @@ __all__ = [
     "iterative_dss",
     "iterative_dss_one",
     "IterativeDSS",
+    "IterativeDSSDiagnostics",
     # Variants modules
     "tsr",
     "ssvep",

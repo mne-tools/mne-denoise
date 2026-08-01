@@ -15,12 +15,211 @@ References
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne
 from .utils.whitening import whiten_from_data_covariance
+
+
+@dataclass(frozen=True, slots=True)
+class IterativeDSSDiagnostics:
+    """Scale-free convergence and reconstruction diagnostics from one fit.
+
+    The diagnostics are descriptive only. They never turn a fitted estimator into
+    a scientifically validated method and intentionally contain no universal
+    convergence or preservation threshold.
+    """
+
+    method: str
+    input_channel_count: int
+    input_sample_count: int
+    whitening_rank: int
+    n_components_requested: int
+    n_components_extracted: int
+    iteration_counts: tuple[int, ...]
+    converged: tuple[bool, ...]
+    convergence_fraction: float
+    non_converged_components: tuple[int, ...]
+    source_rms: tuple[float, ...]
+    near_zero_components: tuple[int, ...]
+    max_abs_source_correlation: float | None
+    reconstruction_energy_fraction: float | None
+    notes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Validate that the summary is internally consistent."""
+        positive_integer_fields = {
+            "input_channel_count": self.input_channel_count,
+            "input_sample_count": self.input_sample_count,
+            "whitening_rank": self.whitening_rank,
+            "n_components_requested": self.n_components_requested,
+            "n_components_extracted": self.n_components_extracted,
+        }
+        for name, value in positive_integer_fields.items():
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive integer")
+
+        if self.method not in {"deflation", "symmetric"}:
+            raise ValueError("method must be 'deflation' or 'symmetric'")
+        if self.whitening_rank > self.input_channel_count:
+            raise ValueError("whitening_rank cannot exceed input_channel_count")
+        if self.n_components_extracted > min(
+            self.n_components_requested, self.whitening_rank
+        ):
+            raise ValueError(
+                "n_components_extracted cannot exceed the requested count or "
+                "whitening rank"
+            )
+
+        expected_length = self.n_components_extracted
+        component_fields = {
+            "iteration_counts": self.iteration_counts,
+            "converged": self.converged,
+            "source_rms": self.source_rms,
+        }
+        for name, values in component_fields.items():
+            if not isinstance(values, tuple) or len(values) != expected_length:
+                raise ValueError(
+                    f"{name} must be a tuple with one entry per extracted component"
+                )
+        if any(type(value) is not int or value <= 0 for value in self.iteration_counts):
+            raise ValueError("iteration_counts must contain positive integers")
+        if any(type(value) is not bool for value in self.converged):
+            raise ValueError("converged must contain bool values")
+        if any(not np.isfinite(value) or value < 0.0 for value in self.source_rms):
+            raise ValueError("source_rms must contain finite, non-negative values")
+
+        expected_non_converged = tuple(
+            index for index, converged in enumerate(self.converged) if not converged
+        )
+        if self.non_converged_components != expected_non_converged:
+            raise ValueError("non_converged_components is inconsistent with converged")
+        expected_fraction = sum(self.converged) / expected_length
+        if not np.isclose(self.convergence_fraction, expected_fraction):
+            raise ValueError("convergence_fraction is inconsistent with converged")
+
+        valid_indices = set(range(expected_length))
+        if (
+            not isinstance(self.near_zero_components, tuple)
+            or tuple(sorted(set(self.near_zero_components)))
+            != self.near_zero_components
+            or not set(self.near_zero_components).issubset(valid_indices)
+        ):
+            raise ValueError(
+                "near_zero_components must contain unique, ordered component indices"
+            )
+        if any(type(index) is not int for index in self.near_zero_components):
+            raise ValueError("near_zero_components must contain integer indices")
+
+        if self.max_abs_source_correlation is not None and (
+            not np.isfinite(self.max_abs_source_correlation)
+            or not 0.0 <= self.max_abs_source_correlation <= 1.0
+        ):
+            raise ValueError(
+                "max_abs_source_correlation must be None or a finite value in [0, 1]"
+            )
+        if self.reconstruction_energy_fraction is not None and (
+            not np.isfinite(self.reconstruction_energy_fraction)
+            or self.reconstruction_energy_fraction < 0.0
+        ):
+            raise ValueError(
+                "reconstruction_energy_fraction must be None or finite and non-negative"
+            )
+        if (
+            not isinstance(self.notes, tuple)
+            or any(not isinstance(note, str) or not note for note in self.notes)
+            or len(set(self.notes)) != len(self.notes)
+        ):
+            raise ValueError("notes must contain unique, non-empty strings")
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-safe copy without fitted arrays or live callables."""
+        return {
+            "method": self.method,
+            "input_channel_count": self.input_channel_count,
+            "input_sample_count": self.input_sample_count,
+            "whitening_rank": self.whitening_rank,
+            "n_components_requested": self.n_components_requested,
+            "n_components_extracted": self.n_components_extracted,
+            "iteration_counts": list(self.iteration_counts),
+            "converged": list(self.converged),
+            "convergence_fraction": self.convergence_fraction,
+            "non_converged_components": list(self.non_converged_components),
+            "source_rms": list(self.source_rms),
+            "near_zero_components": list(self.near_zero_components),
+            "max_abs_source_correlation": self.max_abs_source_correlation,
+            "reconstruction_energy_fraction": self.reconstruction_energy_fraction,
+            "notes": list(self.notes),
+        }
+
+
+def _iterative_dss_diagnostics(
+    *,
+    method: str,
+    data_centered: np.ndarray,
+    whitening_rank: int,
+    n_components_requested: int,
+    sources: np.ndarray,
+    patterns: np.ndarray,
+    convergence_info: np.ndarray,
+) -> IterativeDSSDiagnostics:
+    """Summarize fitted arrays using scale-relative, policy-free quantities."""
+    iteration_counts = tuple(int(value) for value in convergence_info[:, 0])
+    converged = tuple(bool(value) for value in convergence_info[:, 1])
+    non_converged = tuple(
+        index for index, did_converge in enumerate(converged) if not did_converge
+    )
+    source_rms_array = np.sqrt(np.mean(np.square(sources), axis=1))
+    source_rms = tuple(float(value) for value in source_rms_array)
+    largest_rms = float(np.max(source_rms_array, initial=0.0))
+    machine_tolerance = np.finfo(float).eps * largest_rms * max(1, sources.shape[-1])
+    near_zero = tuple(
+        index for index, value in enumerate(source_rms) if value <= machine_tolerance
+    )
+
+    max_abs_correlation: float | None = None
+    if sources.shape[0] > 1 and not near_zero:
+        correlation = np.corrcoef(sources)
+        off_diagonal = correlation - np.diag(np.diag(correlation))
+        if np.all(np.isfinite(off_diagonal)):
+            max_abs_correlation = float(np.clip(np.max(np.abs(off_diagonal)), 0.0, 1.0))
+
+    input_energy = float(np.sum(np.square(data_centered)))
+    reconstruction_energy_fraction: float | None = None
+    if input_energy > 0.0:
+        reconstruction = patterns @ sources
+        reconstruction_energy_fraction = float(
+            np.sum(np.square(reconstruction)) / input_energy
+        )
+
+    notes: list[str] = []
+    if n_components_requested > sources.shape[0]:
+        notes.append("requested components were limited by the whitening rank")
+    if non_converged:
+        notes.append("one or more components reached max_iter without convergence")
+    if near_zero:
+        notes.append("one or more extracted sources are at machine-precision energy")
+
+    return IterativeDSSDiagnostics(
+        method=method,
+        input_channel_count=int(data_centered.shape[0]),
+        input_sample_count=int(data_centered.shape[1]),
+        whitening_rank=int(whitening_rank),
+        n_components_requested=int(n_components_requested),
+        n_components_extracted=int(sources.shape[0]),
+        iteration_counts=iteration_counts,
+        converged=converged,
+        convergence_fraction=float(np.mean(converged)),
+        non_converged_components=non_converged,
+        source_rms=source_rms,
+        near_zero_components=near_zero,
+        max_abs_source_correlation=max_abs_correlation,
+        reconstruction_energy_fraction=reconstruction_energy_fraction,
+        notes=tuple(notes),
+    )
 
 
 def _resolve_callable(param, x, default=None):
@@ -214,7 +413,17 @@ def iterative_dss(
     beta: float | Callable | None = None,
     gamma: float | Callable | None = None,
     random_state: int | np.random.Generator | None = None,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    return_diagnostics: bool = False,
+) -> (
+    tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    | tuple[
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        IterativeDSSDiagnostics,
+    ]
+):
     """Extract multiple DSS components using iterative (nonlinear) algorithm.
 
     This implements the Iterative DSS algorithm from Särelä & Valpola (2005) [1]_.
@@ -277,6 +486,10 @@ def iterative_dss(
         Newton step parameter (see ``iterative_dss_one``).
     gamma : float or callable, optional
         Learning rate / relaxation (see ``iterative_dss_one``).
+    return_diagnostics : bool
+        If True, append an immutable :class:`IterativeDSSDiagnostics` value to
+        the returned tuple. Default False preserves the historical four-value
+        functional API.
 
     Returns
     -------
@@ -291,6 +504,9 @@ def iterative_dss(
         satisfying the identity :math:`X_{recon} = patterns @ sources`.
     convergence_info : ndarray, shape (n_components, 2)
         ``[n_iterations, converged]`` for each component.
+    diagnostics : IterativeDSSDiagnostics
+        Returned only when ``return_diagnostics=True``. Descriptive execution
+        diagnostics do not encode scientific acceptance thresholds.
 
 
     Examples
@@ -314,6 +530,16 @@ def iterative_dss(
     ----------
     .. [1] Särelä & Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.
     """
+    if (
+        isinstance(n_components, (bool, np.bool_))
+        or not isinstance(n_components, (int, np.integer))
+        or n_components <= 0
+    ):
+        raise ValueError("n_components must be a positive integer")
+    n_components = int(n_components)
+    if type(return_diagnostics) is not bool:
+        raise TypeError("return_diagnostics must be a bool")
+
     data_2d, _, _, _, _, _ = extract_data_from_mne(
         data,
         concatenate_epochs=True,
@@ -323,6 +549,7 @@ def iterative_dss(
         raise ValueError(f"Data must be 2D or 3D, got {data_2d.ndim}D")
 
     n_channels, n_samples = data_2d.shape
+    n_components_requested = n_components
 
     # Center data
     data_centered = data_2d - data_2d.mean(axis=1, keepdims=True)
@@ -377,6 +604,17 @@ def iterative_dss(
     C = data_centered @ data_centered.T / n_samples
     patterns = C @ filters.T
 
+    if return_diagnostics:
+        diagnostics = _iterative_dss_diagnostics(
+            method=method,
+            data_centered=data_centered,
+            whitening_rank=n_whitened,
+            n_components_requested=n_components_requested,
+            sources=sources,
+            patterns=patterns,
+            convergence_info=convergence_info,
+        )
+        return filters, sources, patterns, convergence_info, diagnostics
     return filters, sources, patterns, convergence_info
 
 
@@ -697,6 +935,18 @@ class IterativeDSS:
         Extracted sources from fit data.
     convergence_info_ : ndarray, shape (n_components, 2)
         [n_iterations, converged] for each component.
+    diagnostics_ : IterativeDSSDiagnostics
+        Immutable, descriptive diagnostics for the fitted decomposition.
+    n_components_ : int
+        Number of components actually extracted after rank limiting.
+    n_iter_ : tuple of int
+        Iteration count for each extracted component.
+    converged_ : tuple of bool
+        Whether each component met the numerical convergence tolerance.
+    convergence_fraction_ : float
+        Fraction of extracted components that converged.
+    non_converged_components_ : tuple of int
+        Zero-based indices of components that reached ``max_iter``.
 
     Examples
     --------
@@ -755,6 +1005,13 @@ class IterativeDSS:
         self.patterns_: np.ndarray | None = None
         self.sources_: np.ndarray | None = None
         self.convergence_info_: np.ndarray | None = None
+        self.diagnostics_: IterativeDSSDiagnostics | None = None
+        self.n_components_: int | None = None
+        self.n_iter_: tuple[int, ...] | None = None
+        self.converged_: tuple[bool, ...] | None = None
+        self.convergence_fraction_: float | None = None
+        self.non_converged_components_: tuple[int, ...] | None = None
+        self.channel_norms_: np.ndarray | None = None
         self._mne_info = None
 
     def fit(self, X) -> IterativeDSS:
@@ -797,7 +1054,7 @@ class IterativeDSS:
             )
             data = data / self.channel_norms_[:, np.newaxis]
 
-        filters, sources, patterns, conv_info = iterative_dss(
+        filters, sources, patterns, conv_info, diagnostics = iterative_dss(
             data,
             self.denoiser,
             self.n_components,
@@ -811,12 +1068,19 @@ class IterativeDSS:
             beta=self.beta,
             gamma=self.gamma,
             random_state=self.random_state,
+            return_diagnostics=True,
         )
 
         self.filters_ = filters
         self.patterns_ = patterns
         self.sources_ = sources
         self.convergence_info_ = conv_info
+        self.diagnostics_ = diagnostics
+        self.n_components_ = diagnostics.n_components_extracted
+        self.n_iter_ = diagnostics.iteration_counts
+        self.converged_ = diagnostics.converged
+        self.convergence_fraction_ = diagnostics.convergence_fraction
+        self.non_converged_components_ = diagnostics.non_converged_components
 
         return self
 
@@ -869,11 +1133,24 @@ class IterativeDSS:
             # sources now: (n_components, n_epochs * n_times)
             # reshape to: (n_components, n_epochs, n_times)
             n_epochs, n_channels, n_times = original_shape
-            sources = sources.reshape(self.n_components, n_epochs, n_times)
+            sources = sources.reshape(self.filters_.shape[0], n_epochs, n_times)
             # transpose to standard MNE: (n_epochs, n_components, n_times)
             sources = sources.transpose(1, 0, 2)
 
         return sources
+
+    def get_diagnostics(self) -> IterativeDSSDiagnostics:
+        """Return the immutable diagnostics from the fitted decomposition.
+
+        Returns
+        -------
+        diagnostics : IterativeDSSDiagnostics
+            Descriptive numerical diagnostics. These values do not constitute
+            scientific validation for a dataset or operating regime.
+        """
+        if self.diagnostics_ is None:
+            raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
+        return self.diagnostics_
 
     def inverse_transform(self, sources: np.ndarray) -> np.ndarray:
         """Reconstruct data from sources.

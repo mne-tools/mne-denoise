@@ -58,7 +58,18 @@ denoiser = KurtosisDenoiser(nonlinearity="tanh")
 it_dss = IterativeDSS(denoiser, n_components=5, max_iter=100)
 it_dss.fit(data)
 sources = it_dss.transform(data)
+
+# Numerical execution diagnostics are immutable and JSON-safe.
+diagnostics = it_dss.get_diagnostics()
+record = diagnostics.to_dict()
 ```
+
+The diagnostics record the effective whitening rank, requested and extracted
+component counts, per-component iterations and convergence, scale-relative
+source energy, source correlation, and reconstruction energy. They are
+descriptive execution facts—not evidence that an operating point is validated
+for a scientific dataset or regime. Apply project-specific acceptance policies
+outside the estimator.
 
 ### DSS-ZapLine (Line Noise Removal)
 
