@@ -33,10 +33,13 @@ class CycleAverageBias(LinearDenoiser):
     ----------
     event_samples : array-like of int
         Sample indices of artifact events (e.g., R-peak locations). Their
-        coordinate system is declared by ``event_origin``.
+        coordinate system is declared by ``event_origin``. Values must fit in
+        the signed 64-bit sample range; out-of-range coordinates are rejected
+        instead of wrapped.
     window : tuple of int or float
         Half-open interval ``(start, stop)`` around each event. Its unit is
-        declared by ``window_unit``. The default is ``(-100, 200)``.
+        declared by ``window_unit``. Resolved sample boundaries must fit in the
+        signed 64-bit sample range. The default is ``(-100, 200)``.
     window_unit : {"samples", "seconds"} | None
         Unit of ``window``. Canonical calls must specify this explicitly. If
         ``None``, the 0.x compatibility behavior infers seconds when ``sfreq``
@@ -44,7 +47,7 @@ class CycleAverageBias(LinearDenoiser):
     sfreq : float, optional
         Sampling frequency in Hz. Required when ``window_unit="seconds"``.
         Second-valued boundaries are converted exactly once at construction by
-        rounding to the nearest sample with :func:`numpy.rint`.
+        rounding to the nearest sample (ties to even).
     event_origin : {"data", "raw"} | None
         ``"data"`` means event zero is the first sample of the array passed to
         :meth:`apply`. ``"raw"`` means MNE acquisition sample numbering (for
@@ -115,34 +118,77 @@ class CycleAverageBias(LinearDenoiser):
         self.first_samp = self._validate_first_samp(first_samp, self.event_origin)
         event_offset = 0 if self.first_samp is None else self.first_samp
         self.event_offset_samples_ = int(event_offset)
-        self.event_samples_data_ = self.event_samples - self.event_offset_samples_
+        data_events = [
+            int(event) - self.event_offset_samples_ for event in self.event_samples
+        ]
+        self.event_samples_data_ = self._as_int64(
+            data_events,
+            "event_samples after applying first_samp",
+        )
         self._window_length = self.window[1] - self.window[0]
 
     @staticmethod
-    def _validate_event_samples(event_samples: Sequence[int]) -> np.ndarray:
-        """Return event positions without silently truncating values."""
+    def _as_int64(values: Sequence[int | float], name: str) -> np.ndarray:
+        """Return exact integral values represented safely as signed int64."""
+        array = np.asarray(values)
+        if array.ndim != 1:
+            raise ValueError(f"{name} must be a one-dimensional sequence.")
+
+        minimum = int(np.iinfo(np.int64).min)
+        maximum = int(np.iinfo(np.int64).max)
+        converted: list[int] = []
+        for value in array.tolist():
+            if isinstance(value, (bool, np.bool_)):
+                raise ValueError(f"{name} must contain only finite integers.")
+            if isinstance(value, (int, np.integer)):
+                integer = int(value)
+            elif isinstance(value, (float, np.floating)):
+                scalar = float(value)
+                if not np.isfinite(scalar) or not scalar.is_integer():
+                    raise ValueError(f"{name} must contain only finite integers.")
+                integer = int(scalar)
+            else:
+                raise ValueError(f"{name} must contain only finite integers.")
+            if integer < minimum or integer > maximum:
+                raise ValueError(f"{name} values must fit in signed 64-bit samples.")
+            converted.append(integer)
+        return np.asarray(converted, dtype=np.int64)
+
+    @classmethod
+    def _validate_event_samples(cls, event_samples: Sequence[int]) -> np.ndarray:
+        """Return event positions without truncation or integer wraparound."""
         events = np.asarray(event_samples)
         if events.ndim != 1:
             raise ValueError("event_samples must be a one-dimensional sequence.")
-        if not np.issubdtype(events.dtype, np.number) or not np.all(
-            np.isfinite(events)
-        ):
-            raise ValueError("event_samples must contain only finite integers.")
-        if not np.all(events == np.rint(events)):
-            raise ValueError("event_samples must contain integer sample indices.")
-        return events.astype(np.int64, copy=True)
+        try:
+            return cls._as_int64(events, "event_samples")
+        except ValueError as error:
+            if "one-dimensional" in str(error) or "signed 64-bit" in str(error):
+                raise
+            raise ValueError(
+                "event_samples must contain integer sample indices."
+            ) from error
 
     @staticmethod
     def _validate_window(
         window: tuple[int | float, int | float],
-    ) -> tuple[float, float]:
+    ) -> tuple[int | float, int | float]:
         """Validate a two-boundary finite window."""
-        values = np.asarray(window)
-        if values.shape != (2,) or not np.issubdtype(values.dtype, np.number):
+        values = np.asarray(window, dtype=object)
+        if values.shape != (2,):
             raise ValueError("window must contain exactly two numeric boundaries.")
-        if not np.all(np.isfinite(values)):
-            raise ValueError("window boundaries must be finite.")
-        start, stop = (float(values[0]), float(values[1]))
+        normalized: list[int | float] = []
+        for value in values.tolist():
+            if isinstance(value, (bool, np.bool_)) or not isinstance(
+                value, (int, float, np.integer, np.floating)
+            ):
+                raise ValueError("window must contain exactly two numeric boundaries.")
+            if isinstance(value, (float, np.floating)) and not np.isfinite(value):
+                raise ValueError("window boundaries must be finite.")
+            normalized.append(
+                int(value) if isinstance(value, (int, np.integer)) else float(value)
+            )
+        start, stop = normalized
         if start >= stop:
             raise ValueError("window start must be strictly less than window stop.")
         return start, stop
@@ -185,23 +231,34 @@ class CycleAverageBias(LinearDenoiser):
 
     @staticmethod
     def _window_to_samples(
-        window: tuple[float, float],
+        window: tuple[int | float, int | float],
         *,
         window_unit: Literal["samples", "seconds"],
         sfreq: float | None,
     ) -> tuple[int, int]:
         """Convert a validated interval to integer sample boundaries once."""
-        values = np.asarray(window)
         if window_unit == "samples":
-            if not np.all(values == np.rint(values)):
+            try:
+                samples = CycleAverageBias._as_int64(window, "window boundaries")
+            except ValueError as error:
+                if "signed 64-bit" in str(error):
+                    raise
                 raise ValueError(
                     "window boundaries must be integers when window_unit='samples'."
-                )
-            samples = np.rint(values).astype(int)
+                ) from error
         else:
             # _validate_sfreq guarantees this for the seconds pathway.
             assert sfreq is not None
-            samples = np.rint(values * sfreq).astype(int)
+            rounded: list[int] = []
+            for boundary in window:
+                scaled = float(boundary) * sfreq
+                if not np.isfinite(scaled):
+                    raise ValueError(
+                        "window boundaries in seconds resolve outside the finite "
+                        "sample range."
+                    )
+                rounded.append(round(scaled))
+            samples = CycleAverageBias._as_int64(rounded, "window boundaries")
         if samples[0] >= samples[1]:
             raise ValueError(
                 "window resolves to an empty or reversed sample interval; "
@@ -246,7 +303,11 @@ class CycleAverageBias(LinearDenoiser):
             return None
         if not isinstance(first_samp, int | np.integer) or isinstance(first_samp, bool):
             raise TypeError("first_samp must be an integer.")
-        return int(first_samp)
+        value = int(first_samp)
+        bounds = np.iinfo(np.int64)
+        if value < int(bounds.min) or value > int(bounds.max):
+            raise ValueError("first_samp must fit in signed 64-bit samples.")
+        return value
 
     def apply(self, data: np.ndarray) -> np.ndarray:
         """Apply cycle averaging bias.
@@ -278,10 +339,18 @@ class CycleAverageBias(LinearDenoiser):
 
         # Filter valid events (within data bounds)
         pre, post = self.window
-        valid_mask = (self.event_samples_data_ + pre >= 0) & (
-            self.event_samples_data_ + post <= total_samples
+        # Compare before adding the window offsets so extreme, invalid event
+        # coordinates cannot wrap around signed int64 and appear valid.
+        minimum_event = -pre
+        maximum_event = total_samples - post
+        valid_events = np.asarray(
+            [
+                int(event)
+                for event in self.event_samples_data_
+                if minimum_event <= int(event) <= maximum_event
+            ],
+            dtype=np.int64,
         )
-        valid_events = self.event_samples_data_[valid_mask]
 
         if len(valid_events) == 0:
             # No valid events, return zeros (no artifact signal)

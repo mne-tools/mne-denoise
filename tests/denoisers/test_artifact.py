@@ -293,6 +293,72 @@ def test_cycle_average_rejects_noninteger_or_nonvector_events(events):
         )
 
 
+@pytest.mark.parametrize(
+    "events",
+    [
+        np.array([2**63], dtype=np.uint64),
+        [2**63],
+        [-(2**63) - 1],
+    ],
+)
+def test_cycle_average_rejects_event_coordinates_outside_int64(events):
+    """Event conversion rejects values that would wrap signed sample indices."""
+    with pytest.raises(ValueError, match="signed 64-bit"):
+        CycleAverageBias(
+            event_samples=events,
+            window=(-1, 2),
+            window_unit="samples",
+            event_origin="data",
+        )
+
+
+def test_cycle_average_extreme_int64_events_remain_invalid_without_wraparound():
+    """Extreme signed events cannot overflow into the valid data interval."""
+    bounds = np.iinfo(np.int64)
+    bias = CycleAverageBias(
+        event_samples=np.array([bounds.min, bounds.max], dtype=np.int64),
+        window=(-1, 2),
+        window_unit="samples",
+        event_origin="data",
+    )
+
+    observed = bias.apply(np.ones((2, 16)))
+
+    assert_allclose(observed, 0)
+
+
+@pytest.mark.parametrize(
+    "window, unit, sfreq",
+    [
+        ((-(2**63) - 1, 1), "samples", None),
+        ((-1, 2**63), "samples", None),
+        ((-1e308, 1e308), "seconds", 1e308),
+    ],
+)
+def test_cycle_average_rejects_window_sample_overflow(window, unit, sfreq):
+    """Window conversion fails explicitly instead of wrapping through int64."""
+    with pytest.raises(ValueError, match="sample range|signed 64-bit"):
+        CycleAverageBias(
+            event_samples=[4],
+            window=window,
+            window_unit=unit,
+            sfreq=sfreq,
+            event_origin="data",
+        )
+
+
+def test_cycle_average_rejects_raw_origin_subtraction_overflow():
+    """Mapping acquisition events to data coordinates is exact and range-safe."""
+    with pytest.raises(ValueError, match="signed 64-bit"):
+        CycleAverageBias(
+            event_samples=[np.iinfo(np.int64).min],
+            window=(-1, 2),
+            window_unit="samples",
+            event_origin="raw",
+            first_samp=1,
+        )
+
+
 def test_cycle_average_3d_concatenation_is_epoch_major():
     """Concatenated event coordinates traverse complete epochs in order."""
     data = np.zeros((1, 6, 2))
