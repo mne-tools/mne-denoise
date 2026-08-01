@@ -141,3 +141,45 @@ def test_numpy_integer_component_count_is_supported():
         _data(), KurtosisDenoiser(), np.int64(2), max_iter=1, random_state=42
     )
     assert result[0].shape[0] == 2
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"input_channel_count": 0}, "positive integer"),
+        ({"method": "parallel"}, "method must"),
+        ({"whitening_rank": 3}, "cannot exceed"),
+        ({"n_components_requested": 1}, "requested count"),
+        ({"iteration_counts": [1, 2]}, "one entry per"),
+        ({"iteration_counts": (0, 2)}, "positive integers"),
+        ({"converged": (1, False)}, "bool values"),
+        ({"source_rms": (-1.0, 0.5)}, "non-negative"),
+        ({"non_converged_components": ()}, "inconsistent with converged"),
+        ({"convergence_fraction": 0.75}, "convergence_fraction"),
+        ({"near_zero_components": (2,)}, "unique, ordered"),
+        ({"near_zero_components": (0.0,)}, "integer indices"),
+        ({"max_abs_source_correlation": 1.1}, "correlation"),
+        ({"reconstruction_energy_fraction": -1.0}, "non-negative"),
+        ({"notes": ["not immutable"]}, "notes must"),
+    ],
+)
+def test_public_diagnostics_reject_inconsistent_values(changes, message):
+    """Every serialized diagnostic invariant is enforced at construction."""
+    diagnostics = IterativeDSSDiagnostics(
+        method="deflation",
+        input_channel_count=2,
+        input_sample_count=100,
+        whitening_rank=2,
+        n_components_requested=2,
+        n_components_extracted=2,
+        iteration_counts=(1, 2),
+        converged=(True, False),
+        convergence_fraction=0.5,
+        non_converged_components=(1,),
+        source_rms=(1.0, 0.5),
+        near_zero_components=(),
+        max_abs_source_correlation=0.1,
+        reconstruction_energy_fraction=0.5,
+    )
+    with pytest.raises(ValueError, match=message):
+        replace(diagnostics, **changes)
