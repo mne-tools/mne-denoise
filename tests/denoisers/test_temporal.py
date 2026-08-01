@@ -158,11 +158,11 @@ def test_time_shift_bias_compatibility_warning_and_parity():
     np.testing.assert_allclose(legacy.apply(data), canonical.apply(data))
 
 
-def test_time_shift_dss_name_is_reserved_not_exported():
-    """This rename does not claim a true lag-augmented estimator exists."""
+def test_time_shift_dss_name_is_reserved_for_true_estimator():
+    """The canonical class is distinct from the deprecated bias name."""
     import mne_denoise.dss as dss_module
 
-    assert not hasattr(dss_module, "TimeShiftDSS")
+    assert dss_module.TimeShiftDSS is not TimeShiftBias
 
 
 def test_smoothing_basic_2d():

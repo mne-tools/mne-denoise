@@ -35,6 +35,9 @@ DSS
    mne_denoise.dss.DSS
    mne_denoise.dss.iterative_dss
    mne_denoise.dss.IterativeDSS
+   mne_denoise.dss.compute_time_shift_dss
+   mne_denoise.dss.TimeShiftDSS
+   mne_denoise.dss.TimeShiftDSSDiagnostics
 
 ZapLine
 -------

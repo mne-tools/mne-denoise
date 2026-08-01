@@ -34,7 +34,7 @@ class LagAveragingBias(LinearDenoiser):
     emphasizing signals that are predictable across time lags. This is a
     bias-side temporal averaging operator that still yields an ordinary
     spatial DSS filter. It is not the data-side lag augmentation used by true
-    time-shift DSS (``TimeShiftDSS``), which is not yet implemented.
+    time-shift DSS (``TimeShiftDSS``), which learns a spatiotemporal filter.
 
     Parameters
     ----------
@@ -202,9 +202,9 @@ class TimeShiftBias(LagAveragingBias):
     ) -> None:
         warnings.warn(
             "'TimeShiftBias' is deprecated and will be removed in "
-            "mne-denoise 1.0; use 'LagAveragingBias' instead. True "
-            "TimeShiftDSS is reserved for a future data-side lag-augmented "
-            "implementation.",
+            "mne-denoise 1.0; use 'LagAveragingBias' instead. For true "
+            "data-side lag augmentation, use the separate experimental "
+            "'TimeShiftDSS' estimator.",
             FutureWarning,
             stacklevel=2,
         )

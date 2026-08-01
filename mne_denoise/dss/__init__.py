@@ -38,6 +38,11 @@ from .denoisers import (
 )
 from .linear import DSS, compute_dss
 from .nonlinear import IterativeDSS, iterative_dss, iterative_dss_one
+from .time_shift import (
+    TimeShiftDSS,
+    TimeShiftDSSDiagnostics,
+    compute_time_shift_dss,
+)
 
 # Utils (exposed for convenience if needed)
 from .utils import convergence, whitening
@@ -64,6 +69,9 @@ __all__ = [
     "iterative_dss",
     "iterative_dss_one",
     "IterativeDSS",
+    "compute_time_shift_dss",
+    "TimeShiftDSS",
+    "TimeShiftDSSDiagnostics",
     # Variants modules
     "tsr",
     "ssvep",

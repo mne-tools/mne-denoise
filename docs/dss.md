@@ -146,8 +146,39 @@ lag_dss = DSS(bias=lag_bias, n_components=5, component_action="extract")
 `LagAveragingBias` and `lag_averaging_dss` are the canonical names for the
 released bias-side operation. `TimeShiftBias` and `time_shift_dss` remain as
 0.x compatibility names and emit `FutureWarning`. They are not true
-time-shift DSS: the `TimeShiftDSS` name is reserved for a future estimator that
-augments the data with lagged copies and learns spatiotemporal filters.
+time-shift DSS.
+
+### Experimental time-shift DSS
+
+`TimeShiftDSS` is the distinct data-side method: it stacks explicitly delayed
+copies of every sensor and learns a multichannel FIR filter in the enlarged
+feature space. For a positive lag `ell`, the block is `X(t - ell)`. Zero must
+be listed explicitly because it defines the sensor-space reference time.
+
+```python
+from mne_denoise.dss import AverageBias, TimeShiftDSS
+
+tsdss = TimeShiftDSS(
+    bias=AverageBias(axis="epochs"),
+    lag_times=[-0.008, 0.0, 0.008],
+    # For NumPy input, also pass sfreq. MNE input supplies info["sfreq"].
+    n_components=8,
+    component_action="extract",
+)
+sources = tsdss.fit_transform(epochs)
+print(tsdss.get_diagnostics().to_dict())
+```
+
+No lag is inferred. Pass exactly one of `lag_samples` or `lag_times`; physical
+lags must fall exactly on the sampling grid. No circular wrapping is used and
+epochs are never concatenated before shifting. Consequently, extracted sources
+cover only `tsdss.valid_slice(n_times)`. `get_valid_times(mne_object)` provides
+their MNE-relative time coordinates. `retain` and `subtract` preserve the input
+container and timeline, alter only this valid interval, and copy the edge
+samples unchanged.
+
+`TimeShiftDSS` is experimental. Its invariant tests do not establish artifact
+attenuation or neural-signal preservation in a scientific regime.
 
 ### Nonlinear Biases
 

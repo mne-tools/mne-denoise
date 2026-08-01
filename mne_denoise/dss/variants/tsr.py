@@ -2,8 +2,8 @@
 
 These bias-side temporal operators extract autocorrelated signals, slow waves,
 and DC shifts. They do not implement the data-side lag augmentation of true
-time-shift DSS [1]_; the ``TimeShiftDSS`` name is reserved for that future
-estimator.
+time-shift DSS [1]_; use the separate experimental ``TimeShiftDSS`` estimator
+for that data-side operation.
 
 Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
          Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
@@ -87,8 +87,9 @@ def time_shift_dss(
     """
     warnings.warn(
         "'time_shift_dss' is deprecated and will be removed in mne-denoise "
-        "1.0; use 'lag_averaging_dss' instead. The 'TimeShiftDSS' name is "
-        "reserved for a future data-side lag-augmented implementation.",
+        "1.0; use 'lag_averaging_dss' instead. For true data-side lag "
+        "augmentation, use the separate experimental 'TimeShiftDSS' "
+        "estimator.",
         FutureWarning,
         stacklevel=2,
     )
