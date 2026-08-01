@@ -50,6 +50,71 @@ def _estimator(events, **kwargs):
     return CardiacDSS(**params)
 
 
+def _diagnostic_record(**overrides):
+    """Construct one valid public diagnostic record with selected overrides."""
+    values = {
+        "status": CardiacDSSStatus.APPLIED,
+        "reason": None,
+        "input_layout": "array-2d",
+        "component_action": "subtract",
+        "component_selection": 1,
+        "input_event_count": 3,
+        "valid_event_count": 2,
+        "excluded_event_count": 1,
+        "n_channels": 4,
+        "n_times": 100,
+        "n_epochs": None,
+        "sfreq": 100.0,
+        "window_samples": (-10, 20),
+        "event_origin": "data",
+        "first_samp": None,
+        "n_selected": 1,
+        "eigenvalues": (2.0, 1.0),
+    }
+    values.update(overrides)
+    return CardiacDSSDiagnostics(**values)
+
+
+@pytest.mark.parametrize(
+    ("overrides", "error", "match"),
+    [
+        ({"status": "applied"}, TypeError, "CardiacDSSStatus"),
+        ({"reason": "unexpected"}, ValueError, "cannot include a reason"),
+        (
+            {"status": CardiacDSSStatus.ABSTAINED},
+            ValueError,
+            "require a reason",
+        ),
+        ({"component_action": "remove"}, ValueError, "component_action"),
+        ({"component_selection": -1}, ValueError, "component_selection"),
+        ({"input_event_count": np.int64(3)}, ValueError, "Event counts"),
+        ({"valid_event_count": -1}, ValueError, "Event counts"),
+        ({"valid_event_count": 1}, ValueError, "must sum"),
+        ({"n_channels": 0}, ValueError, "channel and time"),
+        ({"n_times": 0}, ValueError, "channel and time"),
+        ({"n_epochs": 0}, ValueError, "n_epochs"),
+        ({"sfreq": np.nan}, ValueError, "sfreq"),
+        ({"sfreq": 0.0}, ValueError, "sfreq"),
+        ({"window_samples": (-1.0, 2)}, ValueError, "window_samples"),
+        ({"window_samples": (-1, 2.0)}, ValueError, "window_samples"),
+        ({"window_samples": (2, 2)}, ValueError, "window_samples"),
+        ({"event_origin": "epoch"}, ValueError, "event_origin"),
+        (
+            {"event_origin": "raw", "first_samp": None},
+            ValueError,
+            "require first_samp",
+        ),
+        ({"first_samp": 10}, ValueError, "cannot include first_samp"),
+        ({"n_selected": -1}, ValueError, "n_selected"),
+        ({"eigenvalues": (np.nan,)}, ValueError, "eigenvalues"),
+    ],
+)
+def test_diagnostics_reject_inconsistent_records(overrides, error, match):
+    """Every public diagnostic record enforces its cross-field invariants."""
+    with pytest.raises(error, match=match):
+        _diagnostic_record(**overrides)
+
+
 def test_cardiac_dss_matches_explicit_cycle_average_dss_recipe():
     """The wrapper is exactly the declared CycleAverageBias plus DSS recipe."""
     data, events = _cardiac_data()
@@ -255,6 +320,113 @@ def test_invalid_operating_points_raise(kwargs, match):
 
 
 @pytest.mark.parametrize(
+    ("data", "error", "match"),
+    [
+        (np.full((2, 10), "not-a-number"), TypeError, "must be numeric"),
+        (np.array([[0.0, np.nan], [1.0, 2.0]]), ValueError, "finite values"),
+        (np.empty((0, 10)), ValueError, "channels and at least two samples"),
+        (np.empty((2, 1)), ValueError, "channels and at least two samples"),
+        (np.empty((2, 10, 0)), ValueError, "channels and at least two samples"),
+    ],
+)
+def test_invalid_fit_data_raise_before_event_processing(data, error, match):
+    """Numeric, finite, non-empty sensor/time layouts are hard preconditions."""
+    with pytest.raises(error, match=match):
+        _estimator([], component_selection=0).fit(data)
+
+
+@pytest.mark.parametrize("sfreq", [True, 0.0, np.nan])
+def test_invalid_sampling_frequency_raises(sfreq):
+    """Boolean, non-positive, and non-finite sampling rates are inadmissible."""
+    data, _ = _cardiac_data(n_times=300)
+    with pytest.raises(ValueError, match="finite positive"):
+        _estimator([], component_selection=0, sfreq=sfreq).fit(data)
+
+
+def test_second_coordinates_require_sampling_frequency():
+    """An array cannot infer the scale of second-valued coordinates."""
+    data, _ = _cardiac_data(n_times=300)
+    est = _estimator(
+        [1.0],
+        event_unit="seconds",
+        window=(-5, 5),
+        window_unit="samples",
+    )
+    with pytest.raises(ValueError, match="sfreq is required"):
+        est.fit(data)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "error", "match"),
+    [
+        ({"event_origin": "raw"}, ValueError, "first_samp is required"),
+        (
+            {"event_origin": "raw", "first_samp": True},
+            TypeError,
+            "first_samp must be an integer",
+        ),
+        ({"first_samp": 10}, ValueError, "must be omitted"),
+    ],
+)
+def test_first_sample_contract_rejects_ambiguous_offsets(kwargs, error, match):
+    """Raw offsets are explicit integers and data-relative input forbids them."""
+    data, _ = _cardiac_data(n_times=300)
+    with pytest.raises(error, match=match):
+        _estimator([], component_selection=0, **kwargs).fit(data)
+
+
+def test_event_coordinate_overflow_is_rejected_before_integer_cast():
+    """Unrepresentable sample coordinates cannot wrap around int64."""
+    data, _ = _cardiac_data(n_times=300)
+    event = float(np.iinfo(np.int64).max) * 2.0
+    with pytest.raises(ValueError, match="64-bit sample indices"):
+        _estimator([event], window=(-5, 5)).fit(data)
+
+
+def test_empty_epoched_events_are_an_explicit_noop():
+    """An empty, well-shaped epoch-event table is preserved in diagnostics."""
+    data = np.ones((2, 10, 3))
+    est = _estimator(
+        np.empty((0, 2)),
+        component_selection=0,
+        window=(-2, 2),
+    )
+    out = est.fit_transform(data)
+
+    assert_array_equal(out, data)
+    assert est.diagnostics_.status is CardiacDSSStatus.NO_OP
+    assert est.diagnostics_.input_event_count == 0
+    assert est.diagnostics_.n_epochs == 3
+
+
+def test_epoched_event_indices_reject_non_numeric_values():
+    """Epoch identifiers cannot be parsed implicitly from strings."""
+    data = np.ones((2, 10, 3))
+    with pytest.raises(ValueError, match="epoch indices must be finite integers"):
+        _estimator([["first", "5"]], window=(-2, 2)).fit(data)
+
+
+def test_noop_tuple_input_uses_array_passthrough_copy():
+    """Array-compatible containers without copy() receive a detached ndarray."""
+    data = ((1.0, 2.0, 3.0), (3.0, 2.0, 1.0))
+    out = _estimator(
+        [],
+        component_selection=0,
+        window=(-1, 1),
+    ).fit_transform(data)
+
+    assert isinstance(out, np.ndarray)
+    assert_array_equal(out, data)
+
+
+def test_fit_transform_rejects_unimplemented_fit_parameters():
+    """Unknown metadata cannot be silently discarded by the recipe."""
+    data, events = _cardiac_data(n_times=300)
+    with pytest.raises(TypeError, match="Unexpected fit parameters: sample_weight"):
+        _estimator(events[:1]).fit_transform(data, sample_weight=np.ones(300))
+
+
+@pytest.mark.parametrize(
     ("events", "match"),
     [
         ([[0, 20]], "one-dimensional"),
@@ -312,6 +484,7 @@ def test_mne_raw_preserves_time_channel_type_unit_and_annotations():
         events + raw.first_samp,
         event_origin="raw",
         first_samp=raw.first_samp,
+        sfreq=raw.info["sfreq"],
     )
     out = est.fit_transform(raw)
 
