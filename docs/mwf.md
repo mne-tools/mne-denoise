@@ -1,83 +1,108 @@
-# Multi-channel Wiener Filter (MWF)
+# Multi-channel Wiener filtering
 
-## Overview
+`mne_denoise.mwf.MultichannelWienerFilter` implements the zero-delay GEVD
+multi-channel Wiener filter described by Somers, Francart, and Bertrand (2018).
+`MWF` is a short compatibility alias of the same class.
 
-The `mne_denoise.mwf` module implements the **multi-channel Wiener filter (MWF)**
-(Somers, Francart & Bertrand 2018), a generic, reference-free spatial artifact
-cleaner and the spatial-filter core of the **RELAX** pipeline (Bailey et al.
-2023).
+MWF is semi-supervised. It needs examples of both artifact-present and clean EEG
+to estimate their covariance matrices. The core algorithm does not discover
+artifacts automatically, and the origin of the mask is part of the scientific
+operating point.
 
-With the recording split into artifact-present and artifact-free segments, the
-clean signal is recovered by
+## Explicit-mask workflow
 
-```
-X_clean = R_clean · R_artifact⁻¹ · X
-```
+Mask values have precise meanings:
 
-where `R_artifact` is the covariance over artifact segments (signal + artifact)
-and `R_clean` the covariance over artifact-free segments (signal only). During
-clean segments the two covariances coincide, so the filter is ~identity (no
-over-cleaning); during artifact segments it projects out the artifact subspace.
-No reference channel is required — artifact segments are marked from broadband
-high-frequency power (or a caller-supplied mask).
-
-> **Note.** MWF is a *general* cleaner, not an artifact-specific method. Because
-> its clean/artifact split is driven by broadband HF power, it can attenuate
-> genuine neural high-frequency activity when the two covariances are poorly
-> separated. Validate preservation of the band of interest on your data. It is
-> provided here as the well-cited RELAX-core building block.
-
-## Quick Start
+- `1`: artifact-present training sample;
+- `0`: clean training sample;
+- `NaN`: ignored, or reassigned through `treat_nan`.
 
 ```python
-import numpy as np
-from mne_denoise.mwf import MWF
+from mne_denoise.mwf import MultichannelWienerFilter
 
-data = np.random.randn(32, 20000)  # 32 channels, 20000 samples
-
-# Leakage-safe estimator API: learn the operator on train, apply to eval.
-est = MWF(sfreq=250.0)
-est.fit(data)
-cleaned = est.transform(data)
-print(f"fit on {est.artifact_fraction_:.0%} artifact samples")
+mwf = MultichannelWienerFilter(rank="positive")
+mwf.fit(train_raw, artifact_mask=train_mask)
+cleaned = mwf.transform(eval_raw)
 ```
 
-Supplying an explicit artifact mask (no HF detector, no `sfreq` needed):
+`transform()` uses only the frozen spatial operator. It does not inspect the
+evaluation recording or create a new mask.
+
+For epoched input, a mask can have shape `(n_epochs, n_times)` or be a flat
+epoch-major vector. MNE channel names are aligned at transform time, and channels
+not selected for fitting are preserved unchanged.
+
+## Independent clean reference
+
+A separate clean recording can supply the clean covariance. If no mask is
+provided, all samples in `X` train the artifact-present covariance:
 
 ```python
-cleaned = MWF().fit_transform(data, mask=my_artifact_mask)
+mwf.fit(artifact_training_raw, clean_reference=clean_reference_raw)
 ```
 
-With MNE-Python objects the sampling frequency is read from `info`:
+The training and reference data must have the same channels, channel scaling,
+physical units, and—when both are MNE objects—the same sampling frequency.
+
+## Optional high-frequency mask authoring
+
+`hf_power_mask()` is a convenience heuristic, not part of the reference MWF
+algorithm. It can be used explicitly:
 
 ```python
-raw_clean = MWF().fit_transform(raw)
+from mne_denoise.mwf import hf_power_mask
+
+mask = hf_power_mask(train_data, sfreq=250.0, hf_hz=20.0, quantile=0.7)
+mwf.fit(train_data, artifact_mask=mask)
 ```
 
-## One-shot functional API
+Or requested as an explicit estimator strategy:
 
 ```python
-from mne_denoise.mwf import compute_mwf, hf_power_mask, mwf_filter
-
-cleaned, info = compute_mwf(data, sfreq=250.0)   # (cleaned, {mask, artifact_fraction})
-mask = hf_power_mask(data, sfreq=250.0)           # broadband HF artifact detector
-cleaned = mwf_filter(data, mask)                  # raw Wiener filter given a mask
+mwf = MultichannelWienerFilter(
+    mask_strategy="hf_power",
+    sfreq=250.0,
+    hf_hz=20.0,
+    quantile=0.7,
+)
+mwf.fit(train_data)
 ```
 
-## Parameters
+This detector can label genuine high-frequency neural activity as artifact. Its
+cutoff, quantile, and smoothing duration must therefore be validated for the
+acquisition regime.
 
-| Parameter  | Description                                                            |
-| ---------- | --------------------------------------------------------------------- |
-| `sfreq`    | Sampling frequency (Hz). Optional for MNE input / when a mask is given. |
-| `hf_hz`    | High-pass cutoff (Hz) for the HF artifact detector.                    |
-| `quantile` | HF-power quantile above which samples are flagged as artifact.         |
-| `reg`      | Diagonal-loading factor for covariance invertibility.                 |
+## GEVD rank and diagnostics
+
+The default `rank="positive"` matches the reference MATLAB toolbox's `poseig`
+setting: only positive artifact eigenvalues are retained. `rank="full"` applies
+the full-rank covariance-ratio filter, and an integer retains that many leading
+GEVD directions.
+
+After fitting, the estimator exposes:
+
+- `generalized_eigenvalues_` and `artifact_eigenvalues_`;
+- `selected_components_`;
+- `artifact_mask_` and `artifact_fraction_`;
+- `fit_diagnostics_`, including sample counts, covariance ranks, and the actual
+  diagonal loading.
+
+Relative diagonal loading makes the operator invariant to a shared global unit
+rescaling. It cannot correct channel-specific unit mismatches.
+
+## Evidence boundary
+
+This implementation is derived from the authors' public MATLAB equations and
+locks internal invariants such as full-rank covariance-ratio equivalence. It does
+not yet claim external numerical parity with the MATLAB toolbox or validated
+performance for a particular acquisition regime. The reference toolbox also
+supports temporal delay embedding; this implementation currently covers the
+zero-delay method only.
 
 ## References
 
 1. Somers, B., Francart, T., & Bertrand, A. (2018). A generic EEG artifact
-   removal algorithm based on the multi-channel Wiener filter. _Journal of Neural
-   Engineering_, 15(3), 036007. https://doi.org/10.1088/1741-2552/aaac92
-2. Bailey, N. W., et al. (2023). RELAX: An automated pre-processing pipeline for
-   cleaning EEG data — Part 1. _Clinical Neurophysiology_, 149, 178-201.
-   https://doi.org/10.1016/j.clinph.2023.01.007
+   removal algorithm based on the multi-channel Wiener filter. *Journal of
+   Neural Engineering*, 15(3), 036007. https://doi.org/10.1088/1741-2552/aaac92
+2. Authors' MATLAB implementation:
+   https://github.com/exporl/mwf-artifact-removal

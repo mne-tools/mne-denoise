@@ -1,0 +1,3 @@
+Added the zero-delay GEVD :class:`mne_denoise.mwf.MultichannelWienerFilter`
+with explicit artifact-mask and clean-reference contracts, diagnostics, and MNE
+metadata preservation. ``MWF`` remains available as a documented short alias.
