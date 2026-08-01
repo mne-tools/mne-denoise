@@ -50,7 +50,8 @@ from .utils.selection import (
 )
 
 # Variants (Modules)
-from .variants import narrowband, ssvep, tsr
+from .variants import cardiac, narrowband, ssvep, tsr
+from .variants.cardiac import CardiacDSS, CardiacDSSDiagnostics, CardiacDSSStatus
 from .variants.narrowband import narrowband_dss, narrowband_scan
 from .variants.ssvep import ssvep_dss
 
@@ -64,8 +65,12 @@ __all__ = [
     "iterative_dss",
     "iterative_dss_one",
     "IterativeDSS",
+    "CardiacDSS",
+    "CardiacDSSDiagnostics",
+    "CardiacDSSStatus",
     # Variants modules
     "tsr",
+    "cardiac",
     "ssvep",
     "narrowband",
     # Variants functions

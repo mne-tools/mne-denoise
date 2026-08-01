@@ -149,6 +149,49 @@ released bias-side operation. `TimeShiftBias` and `time_shift_dss` remain as
 time-shift DSS: the `TimeShiftDSS` name is reserved for a future estimator that
 augments the data with lagged copies and learns spatiotemporal filters.
 
+### Experimental cardiac DSS recipe
+
+`CardiacDSS` is a narrowly scoped recipe for fitting linear DSS with a
+QRS-synchronized `CycleAverageBias`. It requires explicit event coordinates,
+coordinate units, event origin, component action, and component count:
+
+```python
+from mne.preprocessing import find_ecg_events
+from mne_denoise.dss import CardiacDSS
+
+events, _, _ = find_ecg_events(raw)
+cardiac = CardiacDSS(
+    qrs_events=events[:, 0],
+    event_unit="samples",
+    event_origin="raw",
+    first_samp=raw.first_samp,
+    window=(-0.2, 0.4),
+    window_unit="seconds",
+    component_action="subtract",
+    component_selection=1,
+)
+cleaned = cardiac.fit_transform(raw)
+print(cardiac.get_diagnostics().to_dict())
+```
+
+For MNE Epochs or channel-first 3-D NumPy data, events are
+`(epoch_index, coordinate_within_epoch)` pairs. The epoch index is zero-based;
+the coordinate uses `event_unit` and zero means the first sample stored in that
+epoch. Windows crossing an epoch boundary are excluded instead of being allowed
+to borrow samples from a neighboring epoch. Events are consumed by `fit` only;
+`transform` applies the fitted spatial filters without reusing event positions.
+
+If too few complete windows remain, subtraction safely abstains and returns an
+exact copy. Retention and extraction are marked inadmissible because their output
+cannot be defined without a fit. `min_valid_events` is a user policy, not a
+validated scientific threshold. Automatic component selection is intentionally
+not exposed by this recipe; `component_selection` is an explicit integer.
+
+> **Experimental and unvalidated:** these contracts and synthetic unit tests do
+> not demonstrate artifact attenuation or neural-signal preservation on real
+> M/EEG data. Do not treat availability of this estimator as evidence of support
+> for a recording regime.
+
 ### Nonlinear Biases
 
 | Class                        | Use Case               | Description                     |

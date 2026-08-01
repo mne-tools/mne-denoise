@@ -35,6 +35,14 @@ DSS
    mne_denoise.dss.DSS
    mne_denoise.dss.iterative_dss
    mne_denoise.dss.IterativeDSS
+   mne_denoise.dss.CardiacDSS
+   mne_denoise.dss.CardiacDSSDiagnostics
+
+.. warning::
+
+   ``CardiacDSS`` is an unvalidated experimental recipe. Unit tests establish
+   software contracts only; they do not establish cardiac-artifact attenuation
+   or preservation of neural signals for any recording regime.
 
 ZapLine
 -------
