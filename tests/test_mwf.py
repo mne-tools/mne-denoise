@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import mne
 import numpy as np
 import pytest
@@ -15,6 +17,7 @@ from mne_denoise.mwf import (
     hf_power_mask,
     mwf_filter,
 )
+from mne_denoise.mwf.core import _apply_spatial_filter, _compute_operator
 
 
 @pytest.fixture(scope="module")
@@ -348,3 +351,86 @@ def test_mne_clean_reference_alignment_and_sfreq(contaminated_data):
     mismatch = reference.copy().resample(125.0, verbose=False)
     with pytest.raises(ValueError, match="sampling frequency must match"):
         MultichannelWienerFilter().fit(raw, clean_reference=mismatch)
+
+
+def test_input_and_operating_point_validation_branches(contaminated_data):
+    """Invalid arrays, masks, ranks, and explicit strategies fail at the boundary."""
+    data, _, mask, _, sfreq = contaminated_data
+
+    with pytest.raises(TypeError, match="numeric array"):
+        compute_mwf("not numeric")
+    with pytest.raises(ValueError, match="shape"):
+        compute_mwf(np.ones(10), np.ones(10))
+    with pytest.raises(ValueError, match="at least 2 samples"):
+        compute_mwf(np.ones((2, 1)), np.ones(1))
+    with pytest.raises(ValueError, match="finite real"):
+        hf_power_mask(data, True)
+    with pytest.raises(ValueError, match="treat_nan"):
+        compute_mwf(data, mask, treat_nan="invalid")
+
+    infinite_mask = mask.astype(float)
+    infinite_mask[0] = np.inf
+    with pytest.raises(ValueError, match="0, 1, or NaN"):
+        compute_mwf(data, infinite_mask)
+
+    for bad_rank, error in (
+        ("invalid", ValueError),
+        (True, TypeError),
+        (100, ValueError),
+    ):
+        with pytest.raises(error, match="rank"):
+            compute_mwf(data, mask, rank=bad_rank)
+    with pytest.raises(ValueError, match="reg must be >="):
+        compute_mwf(data, mask, reg=-1.0)
+    with pytest.raises(ValueError, match="Pass artifact_mask or mask_strategy"):
+        compute_mwf(data, mask, mask_strategy="hf_power", sfreq=sfreq)
+    with pytest.raises(ValueError, match="mask_strategy"):
+        compute_mwf(data, mask_strategy="invalid")
+
+
+def test_mask_policy_and_training_preconditions(contaminated_data):
+    """Mask conversion and covariance preconditions remain explicit."""
+    data, _, mask, _, _ = contaminated_data
+    ternary = mask.astype(float)
+    ternary[-200:] = np.nan
+    _, diagnostics = compute_mwf(data, ternary, treat_nan="artifact")
+    assert diagnostics["artifact_samples"] == int(mask.sum()) + 200
+    assert diagnostics["ignored_samples"] == 0
+
+    with pytest.raises(ValueError, match="same number of channels"):
+        compute_mwf(data, mask, clean_reference=data[:-1])
+    almost_all_artifact = np.ones(data.shape[1], dtype=bool)
+    almost_all_artifact[0] = False
+    with pytest.raises(ValueError, match="two clean samples"):
+        compute_mwf(data, almost_all_artifact)
+
+    zero_data = np.zeros((2, 6))
+    zero_mask = np.array([1, 1, 1, 0, 0, 0], dtype=bool)
+    with pytest.raises(ValueError, match="zero numerical energy"):
+        compute_mwf(zero_data, zero_mask)
+
+
+def test_internal_operator_shape_preconditions():
+    """The mathematical core rejects mismatched or undersampled training arrays."""
+    kwargs = {"rank": "positive", "artifact_weight": 1.0, "reg": 1e-6}
+    with pytest.raises(ValueError, match="same channel count"):
+        _compute_operator(np.ones((2, 4)), np.ones((3, 4)), **kwargs)
+    with pytest.raises(ValueError, match="at least two"):
+        _compute_operator(np.ones((2, 1)), np.ones((2, 4)), **kwargs)
+    with pytest.raises(ValueError, match="2D or 3D"):
+        _apply_spatial_filter(np.ones(4), np.eye(2))
+
+
+def test_estimator_diagnostic_and_error_paths(contaminated_data, caplog):
+    """Logging, frozen evaluation checks, and unknown fit assets are covered."""
+    data, _, mask, _, _ = contaminated_data
+    with caplog.at_level(logging.INFO, logger="mne_denoise.mwf.core"):
+        estimator = MultichannelWienerFilter(verbose=True).fit(data, artifact_mask=mask)
+    assert "MWF fit:" in caplog.text
+
+    nonfinite = data[:, :20].copy()
+    nonfinite[0, 0] = np.nan
+    with pytest.raises(ValueError, match="finite"):
+        estimator.transform(nonfinite)
+    with pytest.raises(TypeError, match="Unexpected fit parameters: unknown"):
+        estimator.fit_transform(data, artifact_mask=mask, unknown=True)
