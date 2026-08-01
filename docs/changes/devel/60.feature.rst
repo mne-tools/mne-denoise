@@ -1,5 +1,8 @@
 - Added the experimental ``CardiacDSS`` recipe with explicit QRS coordinate,
   unit, origin, and DSS component-operation contracts; epoch-boundary-safe event
   handling; immutable execution diagnostics; and safe abstention for
-  insufficient subtraction inputs. This API is unvalidated and makes no
-  scientific performance claim.
+  insufficient subtraction inputs. Cardiac inputs and event arithmetic are now
+  real/finite and integer-range safe; MNE diagnostics use the same good-channel
+  set as DSS while bad/non-selected channels pass through unchanged; and
+  passthrough transforms enforce the frozen fit contract. This API is
+  unvalidated and makes no scientific performance claim.

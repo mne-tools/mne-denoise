@@ -180,12 +180,24 @@ the coordinate uses `event_unit` and zero means the first sample stored in that
 epoch. Windows crossing an epoch boundary are excluded instead of being allowed
 to borrow samples from a neighboring epoch. Events are consumed by `fit` only;
 `transform` applies the fitted spatial filters without reusing event positions.
+Integer and second-valued coordinates are range-checked before conversion, and
+all event/window bounds are evaluated without signed-integer overflow.
+
+For ordinary MNE inputs, cardiac prechecks and DSS fitting use the same
+homogeneous data-channel selection after excluding `info["bads"]`. Bad and
+non-selected channels are copied through unchanged in sensor-space output, and
+`diagnostics_.fitted_channel_names` records the exact fitted MNE channel set.
+Joint pre-whitening follows the underlying DSS all-data-channel pathway.
 
 If too few complete windows remain, subtraction safely abstains and returns an
-exact copy. Retention and extraction are marked inadmissible because their output
-cannot be defined without a fit. `min_valid_events` is a user policy, not a
-validated scientific threshold. Automatic component selection is intentionally
-not exposed by this recipe; `component_selection` is an explicit integer.
+exact copy only for an input matching the frozen fitted container, shape,
+channel, time, and structural metadata contract. Applied fits remain inductive
+over compatible time lengths. Every fit/transform input must be a real, finite
+NumPy array or supported MNE container. Retention and extraction are marked
+inadmissible when their output cannot be defined without a fit.
+`min_valid_events` is a user policy, not a validated scientific threshold.
+Automatic component selection is intentionally not exposed by this recipe;
+`component_selection` is an explicit integer.
 
 > **Experimental and unvalidated:** these contracts and synthetic unit tests do
 > not demonstrate artifact attenuation or neural-signal preservation on real

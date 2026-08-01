@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from numbers import Integral, Real
 from typing import Any, Literal
 
 import numpy as np
@@ -22,6 +23,9 @@ from ..linear import DSS
 ComponentAction = Literal["extract", "retain", "subtract"]
 CoordinateUnit = Literal["samples", "seconds"]
 EventOrigin = Literal["data", "raw"]
+
+_INT64_MIN = int(np.iinfo(np.int64).min)
+_INT64_MAX = int(np.iinfo(np.int64).max)
 
 
 class CardiacDSSStatus(str, Enum):
@@ -50,6 +54,7 @@ class CardiacDSSDiagnostics:
     valid_event_count: int
     excluded_event_count: int
     n_channels: int
+    fitted_channel_names: tuple[str, ...] | None
     n_times: int
     n_epochs: int | None
     sfreq: float | None
@@ -84,6 +89,24 @@ class CardiacDSSDiagnostics:
             )
         if self.n_channels <= 0 or self.n_times <= 0:
             raise ValueError("Input channel and time counts must be positive.")
+        if self.fitted_channel_names is not None and (
+            not isinstance(self.fitted_channel_names, tuple)
+            or len(self.fitted_channel_names) != self.n_channels
+            or not all(
+                isinstance(name, str) and name for name in self.fitted_channel_names
+            )
+            or len(set(self.fitted_channel_names)) != self.n_channels
+        ):
+            raise ValueError(
+                "fitted_channel_names must be unique non-empty names matching "
+                "n_channels."
+            )
+        if self.input_layout.startswith("array-") and self.fitted_channel_names:
+            raise ValueError("Array diagnostics cannot include fitted channel names.")
+        if not self.input_layout.startswith("array-") and (
+            self.fitted_channel_names is None
+        ):
+            raise ValueError("MNE diagnostics require fitted channel names.")
         if self.n_epochs is not None and self.n_epochs <= 0:
             raise ValueError("n_epochs must be positive when present.")
         if self.sfreq is not None and (not np.isfinite(self.sfreq) or self.sfreq <= 0):
@@ -114,6 +137,11 @@ class CardiacDSSDiagnostics:
             "valid_event_count": self.valid_event_count,
             "excluded_event_count": self.excluded_event_count,
             "n_channels": self.n_channels,
+            "fitted_channel_names": (
+                None
+                if self.fitted_channel_names is None
+                else list(self.fitted_channel_names)
+            ),
             "n_times": self.n_times,
             "n_epochs": self.n_epochs,
             "sfreq": self.sfreq,
@@ -134,8 +162,27 @@ class _FitInput:
     mne_type: str
     sfreq: float | None
     n_channels: int
+    fitted_channel_names: tuple[str, ...] | None
     n_times: int
     n_epochs: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class _InputContract:
+    """Frozen structural contract used to validate inductive transforms."""
+
+    layout: str
+    mne_type: str
+    shape: tuple[int, ...]
+    sfreq: float | None
+    channel_names: tuple[str, ...] | None
+    channel_types: tuple[str, ...] | None
+    channel_units: tuple[tuple[int, int], ...] | None
+    bads: tuple[str, ...]
+    time_origin: int | float | None
+    epoch_events: tuple[tuple[int, int, int], ...] | None
+    event_id: tuple[tuple[str, int], ...] | None
+    baseline: tuple[float | None, float | None] | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,6 +260,8 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
     ----------
     diagnostics_ : CardiacDSSDiagnostics | None
         Immutable execution diagnostics after fitting.
+        ``fitted_channel_names`` identifies the exact MNE channel set used by
+        the decomposition; NumPy inputs use ``None``.
     estimator_ : DSS | None
         Fitted DSS estimator for an applied run, otherwise ``None``.
     bias_ : CycleAverageBias | None
@@ -223,10 +272,19 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
 
     Notes
     -----
+    For ordinary MNE fitting, the homogeneous selected data-channel type is
+    reduced by ``info['bads']`` before cardiac prechecks and DSS fitting. Bad
+    and non-selected channels remain untouched in sensor-space outputs. Joint
+    pre-whitening follows :class:`DSS` and fits all supported data channels.
+
     Epoched QRS windows are accepted only when fully contained in their declared
     epoch. They are mapped into the epoch-major concatenation used by
     ``CycleAverageBias`` only after this check, so a window cannot borrow samples
     from an adjacent epoch. QRS events are not used by :meth:`transform`.
+    Applied fits remain inductive over compatible time lengths. Exact no-op and
+    abstained passthroughs require the fitted container, shape, channel, time,
+    and structural metadata contract, and all transform inputs must be real and
+    finite.
     """
 
     def __init__(
@@ -277,6 +335,8 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
         self.eigenvalues_: np.ndarray | None = None
         self.n_selected_: int | None = None
         self.valid_event_samples_: tuple[int, ...] = ()
+        self.fitted_channel_names_: tuple[str, ...] | None = None
+        self._transform_contract_: _InputContract | None = None
 
     def _validate_parameters(self) -> None:
         """Validate the explicit recipe operating point."""
@@ -314,19 +374,109 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
         ):
             raise ValueError("n_components must be a positive integer or None.")
 
-    def _inspect_input(self, X) -> _FitInput:
-        """Extract the fit layout and resolve its sampling frequency."""
+    @staticmethod
+    def _snapshot_input_contract(X) -> _InputContract:
+        """Validate real finite input and freeze its structural identity."""
+        data, sfreq, mne_type, orig_inst, _, _ = extract_data_from_mne(
+            X,
+            auto_pick=False,
+        )
+        if mne_type == "array" and not isinstance(X, np.ndarray):
+            raise TypeError(
+                "CardiacDSS array input must be a NumPy ndarray, not an "
+                "array-compatible container."
+            )
+        data = np.asarray(data)
+        if not np.issubdtype(data.dtype, np.number):
+            raise TypeError("CardiacDSS input data must be numeric.")
+        if np.iscomplexobj(data):
+            raise TypeError("CardiacDSS input data must be real-valued, not complex.")
+        if not np.all(np.isfinite(data)):
+            raise ValueError("CardiacDSS input data must contain only finite values.")
+
+        if mne_type == "array":
+            layout = "array-3d" if data.ndim == 3 else "array-2d"
+            channel_names = None
+            channel_types = None
+            channel_units = None
+            bads: tuple[str, ...] = ()
+            time_origin: int | float | None = None
+            epoch_events = None
+            event_id = None
+            baseline = None
+        else:
+            layout = mne_type
+            channel_names = tuple(orig_inst.ch_names)
+            channel_types = tuple(orig_inst.get_channel_types())
+            channel_units = tuple(
+                (int(channel["unit"]), int(channel["unit_mul"]))
+                for channel in orig_inst.info["chs"]
+            )
+            bad_set = set(orig_inst.info["bads"])
+            bads = tuple(name for name in channel_names if name in bad_set)
+            if mne_type == "raw":
+                time_origin = int(orig_inst.first_samp)
+            else:
+                time_origin = float(orig_inst.times[0])
+            if mne_type == "epochs":
+                epoch_events = tuple(
+                    tuple(int(value) for value in row) for row in orig_inst.events
+                )
+                event_id = tuple(
+                    sorted(
+                        (str(key), int(value))
+                        for key, value in orig_inst.event_id.items()
+                    )
+                )
+                baseline_value = orig_inst.baseline
+                baseline = (
+                    None
+                    if baseline_value is None
+                    else tuple(
+                        None if value is None else float(value)
+                        for value in baseline_value
+                    )
+                )
+            else:
+                epoch_events = None
+                event_id = None
+                baseline = None
+
+        return _InputContract(
+            layout=layout,
+            mne_type=mne_type,
+            shape=tuple(int(value) for value in data.shape),
+            sfreq=None if sfreq is None else float(sfreq),
+            channel_names=channel_names,
+            channel_types=channel_types,
+            channel_units=channel_units,
+            bads=bads,
+            time_origin=time_origin,
+            epoch_events=epoch_events,
+            event_id=event_id,
+            baseline=baseline,
+        )
+
+    def _inspect_input(self, X, contract: _InputContract) -> _FitInput:
+        """Extract the exact DSS fit channel space and resolve its frequency."""
         auto_pick: bool | str = "data" if self.whiten else True
-        data, inferred_sfreq, mne_type, orig_inst, _, _ = extract_data_from_mne(
+        data, inferred_sfreq, mne_type, orig_inst, _, ch_names = extract_data_from_mne(
             X,
             auto_pick=auto_pick,
             channel_first_epochs=True,
         )
         data = np.asarray(data)
-        if not np.issubdtype(data.dtype, np.number):
-            raise TypeError("CardiacDSS input data must be numeric.")
-        if not np.all(np.isfinite(data)):
-            raise ValueError("CardiacDSS input data must contain only finite values.")
+        fitted_channel_names = None
+        if mne_type != "array":
+            assert ch_names is not None
+            if not self.whiten:
+                bads = set(orig_inst.info["bads"])
+                good = [idx for idx, name in enumerate(ch_names) if name not in bads]
+                if not good:
+                    raise ValueError("No good channels remain after excluding bads.")
+                data = data[np.asarray(good)]
+                ch_names = [ch_names[idx] for idx in good]
+            fitted_channel_names = tuple(ch_names)
 
         supplied_sfreq = self.sfreq
         if supplied_sfreq is not None and (
@@ -361,10 +511,7 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
         if n_channels < 1 or n_times < 2 or (n_epochs is not None and n_epochs < 1):
             raise ValueError("CardiacDSS requires channels and at least two samples.")
 
-        if mne_type == "array":
-            layout = "array-3d" if data.ndim == 3 else "array-2d"
-        else:
-            layout = mne_type
+        layout = contract.layout
 
         if self.event_origin == "raw":
             if self.first_samp is None:
@@ -389,6 +536,7 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
             mne_type=mne_type,
             sfreq=sfreq,
             n_channels=int(n_channels),
+            fitted_channel_names=fitted_channel_names,
             n_times=int(n_times),
             n_epochs=None if n_epochs is None else int(n_epochs),
         )
@@ -399,25 +547,78 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
         *,
         sfreq: float | None,
         name: str,
+        unit: CoordinateUnit | None = None,
     ) -> np.ndarray:
-        """Validate coordinates and convert them to samples exactly once."""
-        if not np.issubdtype(values.dtype, np.number) or not np.all(
-            np.isfinite(values)
-        ):
-            raise ValueError(f"{name} must contain only finite numeric coordinates.")
-        if self.event_unit == "samples":
-            rounded = np.rint(values)
-            if not np.all(values == rounded):
+        """Convert real coordinates with exact integer and range checks."""
+        unit = self.event_unit if unit is None else unit
+        values = np.asarray(values)
+        samples: list[int] = []
+        for value in values.flat:
+            if isinstance(value, (bool, np.bool_)) or not isinstance(
+                value, (Integral, Real, np.integer, np.floating)
+            ):
                 raise ValueError(
-                    f"{name} must contain integers when event_unit='samples'."
+                    f"{name} must contain only finite numeric coordinates."
                 )
-        else:
-            assert sfreq is not None
-            rounded = np.rint(values * sfreq)
-        limit = np.iinfo(np.int64).max
-        if np.any(np.abs(rounded) > limit):
-            raise ValueError(f"{name} cannot be represented as 64-bit sample indices.")
-        return rounded.astype(np.int64)
+            if isinstance(value, (Integral, np.integer)):
+                if unit == "samples":
+                    sample = int(value)
+                else:
+                    assert sfreq is not None
+                    try:
+                        scaled = float(value) * sfreq
+                    except OverflowError:
+                        scaled = np.inf
+                    if not np.isfinite(scaled):
+                        raise ValueError(
+                            f"{name} cannot be represented as 64-bit sample indices."
+                        )
+                    sample = round(scaled)
+            else:
+                numeric = float(value)
+                if not np.isfinite(numeric):
+                    raise ValueError(
+                        f"{name} must contain only finite numeric coordinates."
+                    )
+                if unit == "samples":
+                    if not numeric.is_integer():
+                        raise ValueError(
+                            f"{name} must contain integers when its unit is 'samples'."
+                        )
+                    sample = int(numeric)
+                else:
+                    assert sfreq is not None
+                    scaled = numeric * sfreq
+                    if not np.isfinite(scaled):
+                        raise ValueError(
+                            f"{name} cannot be represented as 64-bit sample indices."
+                        )
+                    sample = round(scaled)
+            if sample < _INT64_MIN or sample > _INT64_MAX:
+                raise ValueError(
+                    f"{name} cannot be represented as 64-bit sample indices."
+                )
+            samples.append(sample)
+        return np.asarray(samples, dtype=np.int64).reshape(values.shape)
+
+    def _window_to_samples(self, sfreq: float | None) -> tuple[int, int]:
+        """Resolve the half-open cardiac window without unsafe NumPy casts."""
+        values = np.asarray(self.window)
+        if values.shape != (2,):
+            raise ValueError("window must contain exactly two numeric boundaries.")
+        samples = self._coordinates_to_samples(
+            values,
+            sfreq=sfreq,
+            name="window boundaries",
+            unit=self.window_unit,
+        )
+        pre, post = (int(samples[0]), int(samples[1]))
+        if pre >= post:
+            raise ValueError(
+                "window resolves to an empty or reversed sample interval; "
+                "increase its duration or sfreq."
+            )
+        return pre, post
 
     @staticmethod
     def _reject_duplicate_events(events: np.ndarray) -> None:
@@ -427,16 +628,7 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
 
     def _prepare_events(self, fit_input: _FitInput) -> _PreparedEvents:
         """Resolve units/origin and exclude incomplete event windows."""
-        # A zero-event bias is used only to apply CycleAverageBias's public
-        # window conversion contract before event-boundary checks.
-        window_contract = CycleAverageBias(
-            event_samples=[],
-            window=self.window,
-            window_unit=self.window_unit,
-            sfreq=fit_input.sfreq,
-            event_origin="data",
-        )
-        pre, post = window_contract.window
+        pre, post = self._window_to_samples(fit_input.sfreq)
         events = np.asarray(self.qrs_events)
 
         if fit_input.n_epochs is None:
@@ -453,19 +645,32 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
             )
             self._reject_duplicate_events(event_samples.reshape(-1, 1))
             offset = 0 if self.first_samp is None else int(self.first_samp)
-            event_samples_data = event_samples - offset
-            valid = (event_samples_data + pre >= 0) & (
-                event_samples_data + post <= fit_input.n_times
+            event_samples_data_python = tuple(
+                int(event_sample) - offset for event_sample in event_samples
             )
-            valid_input_samples = event_samples[valid]
-            valid_data_samples = event_samples_data[valid]
+            lower = -pre
+            upper = fit_input.n_times - post
+            valid = np.fromiter(
+                (
+                    lower <= event_sample_data <= upper
+                    for event_sample_data in event_samples_data_python
+                ),
+                dtype=bool,
+                count=event_samples.size,
+            )
+            valid_data_samples = np.asarray(
+                [
+                    event_samples_data_python[idx]
+                    for idx, is_valid in enumerate(valid)
+                    if is_valid
+                ],
+                dtype=np.int64,
+            )
             bias = CycleAverageBias(
-                event_samples=valid_input_samples,
-                window=self.window,
-                window_unit=self.window_unit,
-                sfreq=fit_input.sfreq,
-                event_origin=self.event_origin,
-                first_samp=self.first_samp,
+                event_samples=valid_data_samples,
+                window=(pre, post),
+                window_unit="samples",
+                event_origin="data",
             )
             input_count = int(event_samples.size)
         else:
@@ -477,14 +682,19 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
                     "(epoch_index, within_epoch_coordinate) rows."
                 )
             epoch_values = events[:, 0]
-            if not np.issubdtype(epoch_values.dtype, np.number) or not np.all(
-                np.isfinite(epoch_values)
-            ):
-                raise ValueError("qrs_events epoch indices must be finite integers.")
-            epoch_indices = np.rint(epoch_values)
-            if not np.all(epoch_values == epoch_indices):
-                raise ValueError("qrs_events epoch indices must be integers.")
-            epoch_indices = epoch_indices.astype(np.int64)
+            try:
+                epoch_indices = self._coordinates_to_samples(
+                    epoch_values,
+                    sfreq=None,
+                    name="qrs_events epoch indices",
+                    unit="samples",
+                )
+            except ValueError as error:
+                if "64-bit" in str(error):
+                    raise
+                raise ValueError(
+                    "qrs_events epoch indices must be finite integers."
+                ) from error
             local_samples = self._coordinates_to_samples(
                 events[:, 1],
                 sfreq=fit_input.sfreq,
@@ -492,20 +702,32 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
             )
             pairs = np.column_stack([epoch_indices, local_samples])
             self._reject_duplicate_events(pairs)
-            valid = (
-                (epoch_indices >= 0)
-                & (epoch_indices < fit_input.n_epochs)
-                & (local_samples + pre >= 0)
-                & (local_samples + post <= fit_input.n_times)
+            lower = -pre
+            upper = fit_input.n_times - post
+            valid = np.fromiter(
+                (
+                    0 <= int(epoch_index) < fit_input.n_epochs
+                    and lower <= int(local_sample) <= upper
+                    for epoch_index, local_sample in zip(
+                        epoch_indices, local_samples, strict=True
+                    )
+                ),
+                dtype=bool,
+                count=epoch_indices.size,
             )
-            valid_data_samples = (
-                epoch_indices[valid] * fit_input.n_times + local_samples[valid]
+            valid_data_samples = np.asarray(
+                [
+                    int(epoch_indices[idx]) * fit_input.n_times
+                    + int(local_samples[idx])
+                    for idx, is_valid in enumerate(valid)
+                    if is_valid
+                ],
+                dtype=np.int64,
             )
             bias = CycleAverageBias(
                 event_samples=valid_data_samples,
-                window=self.window,
-                window_unit=self.window_unit,
-                sfreq=fit_input.sfreq,
+                window=(pre, post),
+                window_unit="samples",
                 event_origin="data",
             )
             input_count = int(events.shape[0])
@@ -539,6 +761,7 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
             valid_event_count=prepared.valid_count,
             excluded_event_count=prepared.input_count - prepared.valid_count,
             n_channels=fit_input.n_channels,
+            fitted_channel_names=fit_input.fitted_channel_names,
             n_times=fit_input.n_times,
             n_epochs=fit_input.n_epochs,
             sfreq=fit_input.sfreq,
@@ -584,8 +807,15 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
         self.mixing_ = None
         self.eigenvalues_ = None
         self.n_selected_ = None
+        self.bias_ = None
+        self.valid_event_samples_ = ()
+        self.fitted_channel_names_ = None
+        self._transform_contract_ = None
 
-        fit_input = self._inspect_input(X)
+        contract = self._snapshot_input_contract(X)
+        fit_input = self._inspect_input(X, contract)
+        self._transform_contract_ = contract
+        self.fitted_channel_names_ = fit_input.fitted_channel_names
         prepared = self._prepare_events(fit_input)
         self.bias_ = prepared.bias
         self.valid_event_samples_ = prepared.valid_data_samples
@@ -651,12 +881,56 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
         )
         return self
 
+    def _validate_transform_input(self, X, *, exact: bool) -> None:
+        """Enforce the frozen fit contract without consulting QRS events."""
+        fitted = self._transform_contract_
+        if fitted is None:
+            raise RuntimeError("CardiacDSS has no fitted input contract.")
+        current = self._snapshot_input_contract(X)
+        if current.layout != fitted.layout or current.mne_type != fitted.mne_type:
+            raise TypeError(
+                "CardiacDSS transform input container/layout does not match fit."
+            )
+
+        structural_fields = (
+            "sfreq",
+            "channel_names",
+            "channel_types",
+            "channel_units",
+            "bads",
+        )
+        for field in structural_fields:
+            if getattr(current, field) != getattr(fitted, field):
+                raise ValueError(
+                    f"CardiacDSS transform input metadata does not match fit: {field}."
+                )
+
+        if exact:
+            exact_fields = (
+                "shape",
+                "time_origin",
+                "epoch_events",
+                "event_id",
+                "baseline",
+            )
+            for field in exact_fields:
+                if getattr(current, field) != getattr(fitted, field):
+                    raise ValueError(
+                        "CardiacDSS passthrough input does not exactly match fit: "
+                        f"{field}."
+                    )
+        elif (
+            current.shape[0 if current.mne_type != "epochs" else 1]
+            != fitted.shape[0 if fitted.mne_type != "epochs" else 1]
+        ):
+            raise ValueError(
+                "CardiacDSS transform input channel count does not match fit."
+            )
+
     @staticmethod
     def _copy_input(X):
         """Return an exact container-preserving copy for safe passthrough."""
-        if hasattr(X, "copy"):
-            return X.copy()
-        return np.array(X, copy=True)
+        return X.copy()
 
     def transform(self, X):
         """Apply the fitted spatial transform without consulting QRS events."""
@@ -665,6 +939,7 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
             CardiacDSSStatus.ABSTAINED,
             CardiacDSSStatus.NO_OP,
         }:
+            self._validate_transform_input(X, exact=True)
             return self._copy_input(X)
         if diagnostics.status is CardiacDSSStatus.INADMISSIBLE:
             raise RuntimeError(
@@ -672,6 +947,7 @@ class CardiacDSS(BaseEstimator, TransformerMixin):
                 f"{diagnostics.reason}"
             )
         assert self.estimator_ is not None
+        self._validate_transform_input(X, exact=False)
         return self.estimator_.transform(X)
 
     def fit_transform(self, X, y=None, **fit_params):
