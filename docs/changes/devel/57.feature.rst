@@ -1,0 +1,5 @@
+**DSS**:
+- Added the canonical ``LagAveragingBias`` and ``lag_averaging_dss`` names for
+  the existing bias-side lag average. ``CycleAverageBias`` now has explicit
+  sample/second window units and data-relative/MNE Raw event origins, including
+  a single documented ``first_samp`` conversion.
