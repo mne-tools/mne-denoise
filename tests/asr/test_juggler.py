@@ -24,9 +24,7 @@ def test_memory_bounded_dbscan_matches_sklearn(seed):
             rng.uniform(-3.0, 3.0, size=(20, 5)),
         ]
     )
-    expected = DBSCAN(eps=0.32, min_samples=6, metric="chebyshev").fit_predict(
-        features
-    )
+    expected = DBSCAN(eps=0.32, min_samples=6, metric="chebyshev").fit_predict(features)
     observed, diagnostics = _dbscan_chebyshev_memory_bounded(
         features,
         eps=0.32,
@@ -42,9 +40,7 @@ def test_memory_bounded_dbscan_matches_sklearn(seed):
         observed_same_cluster[non_noise_pairs],
         expected_same_cluster[non_noise_pairs],
     )
-    assert diagnostics["juggler_dbscan_backend"] == (
-        "ckdtree_grid_memory_bounded"
-    )
+    assert diagnostics["juggler_dbscan_backend"] == ("ckdtree_grid_memory_bounded")
 
 
 def test_memory_bounded_dbscan_handles_one_dense_cell():

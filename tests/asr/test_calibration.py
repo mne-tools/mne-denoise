@@ -138,8 +138,10 @@ def test_min_clean_fraction_does_not_impose_a_retained_window_quota():
             calibration="auto",
             filter_kind="none",
         )
-    assert 0 < diagnostics["n_clean_windows"] < (
-        0.25 * diagnostics["n_calibration_windows"]
+    assert (
+        0
+        < diagnostics["n_clean_windows"]
+        < (0.25 * diagnostics["n_calibration_windows"])
     )
 
 

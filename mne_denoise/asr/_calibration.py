@@ -51,9 +51,7 @@ def _resolve_calibration_blocksize(
         if blocksize != "clean_rawdata":
             raise ValueError("blocksize must be an integer or 'clean_rawdata'")
         if max_mem_mb is None or max_mem_mb <= 0:
-            raise ValueError(
-                "blocksize='clean_rawdata' requires a positive max_mem_mb"
-            )
+            raise ValueError("blocksize='clean_rawdata' requires a positive max_mem_mb")
         memory_blocksize = int(
             np.ceil(
                 n_channels

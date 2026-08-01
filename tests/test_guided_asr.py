@@ -27,9 +27,10 @@ SFREQ = 250.0
 
 def test_asr_family_exposes_sklearn_constructor_state():
     assert ASR(sfreq=SFREQ, picks=None).get_params()["picks"] is None
-    assert GuidedASR(sfreq=SFREQ).get_params()["filter_kind"] == ASR(
-        sfreq=SFREQ
-    ).get_params()["filter_kind"]
+    assert (
+        GuidedASR(sfreq=SFREQ).get_params()["filter_kind"]
+        == ASR(sfreq=SFREQ).get_params()["filter_kind"]
+    )
 
 
 def _eeg(n_channels=8, n_times=6000, seed=0, bursts=4):

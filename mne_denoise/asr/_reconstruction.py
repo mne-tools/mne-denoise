@@ -132,11 +132,22 @@ def _prepare_asr_stream(
     data_stream = _prepend_streaming_carry(X_proc, lookahead_samples)
     data_stream[~np.isfinite(data_stream)] = 0.0
     n_stream_input = X_proc.shape[1]
-    statistics = _apply_statistics_filter_streaming(
-        data_stream[:, lookahead_samples : lookahead_samples + n_stream_input],
-        state.filter_b,
-        state.filter_a,
-    )
+    statistics_input = data_stream[
+        :, lookahead_samples : lookahead_samples + n_stream_input
+    ]
+    if state.filter_zi is None:
+        statistics = _apply_statistics_filter_streaming(
+            statistics_input,
+            state.filter_b,
+            state.filter_a,
+        )
+    else:
+        statistics, _ = _lfilter_channels(
+            statistics_input,
+            state.filter_b,
+            state.filter_a,
+            zi=state.filter_zi,
+        )
     update_at = np.minimum(
         np.arange(stepsize, n_stream_input + stepsize, stepsize, dtype=int),
         n_stream_input,

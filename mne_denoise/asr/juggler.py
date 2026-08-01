@@ -660,9 +660,7 @@ def _dbscan_chebyshev_memory_bounded(
         key: spatial.cKDTree(features[np.asarray(indices, dtype=int)])
         for key, indices in sample_cells.items()
     }
-    neighbor_offsets = tuple(
-        itertools.product((-1, 0, 1), repeat=features.shape[1])
-    )
+    neighbor_offsets = tuple(itertools.product((-1, 0, 1), repeat=features.shape[1]))
 
     # Points in the same eps-wide Chebyshev cell are all mutual neighbors.
     # Accumulate exact counts only across occupied adjacent cells. This avoids
