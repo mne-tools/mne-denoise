@@ -314,7 +314,10 @@ def compute_mne_sensor_whitener(
     if mne is not None and info is not None and ch_names is not None:
         indices = [info["ch_names"].index(name) for name in ch_names]
         picked_info = mne.pick_info(info, indices)
-        for picks in mne.channel_indices_by_type(picked_info, exclude=()).values():
+        # Omitting ``exclude`` keeps this compatible with MNE 1.9, where
+        # channel_indices_by_type did not yet expose that keyword. Its default
+        # behavior in newer MNE releases is the same empty exclusion set.
+        for picks in mne.channel_indices_by_type(picked_info).values():
             if len(picks):
                 scales[picks] = np.std(flat[picks])
     else:

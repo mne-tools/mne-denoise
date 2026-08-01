@@ -116,6 +116,33 @@ def test_compute_mne_sensor_whitener_numpy_scaling():
     np.testing.assert_allclose(colorer @ whitener, np.eye(3))
 
 
+def test_compute_mne_sensor_whitener_groups_mne_channel_types():
+    """MNE type grouping works with the supported MNE 1.9 API."""
+    import mne
+
+    rng = np.random.default_rng(1)
+    data = rng.standard_normal((3, 1000)) * np.array([1.0, 10.0, 100.0])[:, None]
+    info = mne.create_info(
+        ["EEG 001", "EEG 002", "EOG 001"],
+        sfreq=250.0,
+        ch_types=["eeg", "eeg", "eog"],
+    )
+
+    whitener, colorer = compute_mne_sensor_whitener(
+        data,
+        info=info,
+        ch_names=info["ch_names"],
+    )
+
+    eeg_scale = np.std(data[:2])
+    eog_scale = np.std(data[2:])
+    np.testing.assert_allclose(
+        np.diag(whitener),
+        1.0 / np.array([eeg_scale, eeg_scale, eog_scale]),
+    )
+    np.testing.assert_allclose(colorer @ whitener, np.eye(3))
+
+
 def test_compute_mne_sensor_whitener_rejects_nonfinite_data():
     """Non-finite samples should fail before covariance processing."""
     data = np.ones((2, 10))
