@@ -16,6 +16,7 @@ References
 from __future__ import annotations
 
 import logging
+import warnings
 from collections.abc import Callable
 
 import numpy as np
@@ -47,6 +48,9 @@ from .utils.whitening import (
 )
 
 logger = logging.getLogger(__name__)
+
+_COMPONENT_ACTIONS = frozenset({"extract", "retain", "subtract"})
+_LEGACY_SENSOR_RETURN_TYPES = frozenset({"raw", "epochs", "evoked"})
 
 # -----------------------------------------------------------------------------
 # 1. Core Algorithm
@@ -259,20 +263,33 @@ class DSS(BaseEstimator, TransformerMixin):
     Parameters
     ----------
     n_components : int, optional
-        Number of DSS components to keep. If None, keep all.
+        Number of DSS components to fit and expose. If None, expose every
+        component available at the fitted whitening rank.
     bias : LinearDenoiser
         Bias function to define the signal of interest. Must be an instance of
         `mne_denoise.dss.LinearDenoiser` (e.g. `BandpassBias`, `TrialAverageBias`)
         or a callable that takes data and returns biased data.
+    component_action : {'extract', 'retain', 'subtract'} | None, default=None
+        Explicit operation performed by :meth:`transform`. ``'extract'``
+        returns all fitted DSS source time series. ``'retain'`` reconstructs
+        sensor data from the selected leading components (or all fitted
+        components when no selection is configured). ``'subtract'`` removes
+        the selected leading components and preserves the input container.
+        ``None`` defaults to ``'extract'`` unless the deprecated
+        ``return_type`` compatibility parameter is used.
+    component_selection : int | 'auto' | None, default=None
+        Leading component count used by ``'retain'`` and ``'subtract'``.
+        ``'auto'`` derives the count from the fitted eigenvalues, an integer
+        selects exactly that many leading components, and ``None`` selects no
+        components for subtraction while retaining all fitted components for
+        retention. Extraction always exposes all fitted components and stores
+        the resolved count in :attr:`n_selected_` for inspection.
+    whitening_rank : int | dict | None, default=None
+        Rank used for whitening. Integer ranks apply to NumPy and MNE inputs;
+        MNE-style dictionaries apply to MNE inputs.
     n_select : int | 'auto' | None, default=None
-        Number of significant components to auto-select after fitting.
-        If ``'auto'``, :meth:`auto_select` determines the count via
-        :func:`~mne_denoise.dss.utils.selection.auto_select_components_robust`
-        and stores it in :attr:`n_selected_`.
-        If ``int``, uses that exact number.
-        If ``None`` (default), no automatic selection is performed — except
-        when ``adaptive=True``, where it defaults to ``'auto'`` because
-        per-segment adaptation is the whole point of that mode.
+        Deprecated compatibility name for ``component_selection``. It emits a
+        :class:`FutureWarning` and will be removed in 1.0.
     selection_threshold : float, default=3.0
         Sigma threshold for the outlier arm of automatic selection:
         components with ``eigenvalue > mean + sigma * std`` are significant.
@@ -286,7 +303,8 @@ class DSS(BaseEstimator, TransformerMixin):
         decaying (artifact-free) spectra select nothing. Same meaning as
         ``ZapLine(knee_min_ratio=...)``.
     rank : int or dict, optional
-        Rank of the data for whitening. If None, rank is estimated automatically.
+        Deprecated compatibility name for ``whitening_rank``. It emits a
+        :class:`FutureWarning` and will be removed in 1.0.
     reg : float
         Regularization for covariance estimation. Default 1e-9.
     normalize_input : bool
@@ -350,9 +368,12 @@ class DSS(BaseEstimator, TransformerMixin):
         strength.  Only effective when ``adaptive=True``.  Mirrors
         ZapLine-plus's fixed-removal floor (``fixedNremove``; Klug &
         Kloosterman, 2022).
-    return_type : {'sources', 'epochs', 'raw'}
-        Type of object to return from `transform`. 'sources' returns a numpy array
-        of DSS components. 'epochs'/'raw' returns the denoised input object.
+    return_type : {'sources', 'epochs', 'raw', 'evoked'} | None
+        Deprecated compatibility name that previously mixed the operation with
+        the output container. ``'sources'`` maps to extraction. Sensor-valued
+        names preserve the historical 0.x behavior: :meth:`transform` retains
+        fitted components while :meth:`fit_transform` subtracts selected
+        components. Use ``component_action`` for deterministic behavior.
     whiten : bool, default=False
         If True, decompose all data channel types jointly (e.g. mag + grad + eeg)
         instead of isolating a single homogeneous type. The data is whitened
@@ -395,9 +416,9 @@ class DSS(BaseEstimator, TransformerMixin):
     >>> dss.fit(raw_data)
     >>> # Extract sources
     >>> sources = dss.transform(raw_data)
-    >>> # Or return denoised data
-    >>> dss.return_type = "raw"
-    >>> denoised_raw = dss.transform(raw_data)
+    >>> # Or explicitly subtract the leading selected component
+    >>> dss.set_params(component_action="subtract", component_selection=1)
+    >>> denoised_raw = dss.fit_transform(raw_data)
 
     See Also
     --------
@@ -423,18 +444,23 @@ class DSS(BaseEstimator, TransformerMixin):
         crossfade: float = 0.0,
         max_prop_remove: float | None = None,
         min_select: int = 0,
-        return_type: str = "sources",
+        return_type: str | None = None,
         whiten: bool = False,
         noise_cov=None,
         verbose: bool | str | int | None = None,
+        component_action: str | None = None,
+        component_selection: int | str | None = None,
+        whitening_rank: int | dict | None = None,
     ) -> None:
         self.n_components = n_components
         self.bias = bias
         self.n_select = n_select
+        self.component_selection = component_selection
         self.selection_threshold = selection_threshold
         self.knee_rel_floor = knee_rel_floor
         self.knee_min_ratio = knee_min_ratio
         self.rank = rank
+        self.whitening_rank = whitening_rank
         self.reg = reg
         self.normalize_input = normalize_input
         self.cov_method = cov_method
@@ -446,6 +472,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.max_prop_remove = max_prop_remove
         self.min_select = min_select
         self.return_type = return_type
+        self.component_action = component_action
         self.whiten = whiten
         self.noise_cov = noise_cov
         self.verbose = verbose
@@ -458,12 +485,117 @@ class DSS(BaseEstimator, TransformerMixin):
         self.eigenvalues_: np.ndarray | None = None
         self.explained_variance_: np.ndarray | None = None
         self.channel_norms_: np.ndarray | None = None
-        self.n_selected_: np.ndarray | None = None
+        self.n_selected_: int | None = None
         self.segment_results_: list | None = None
         self._whitener_: np.ndarray | None = None
         self._dewhitener_: np.ndarray | None = None
         self._smoother = None  # Resolved SmoothingBias instance
         self._mne_info = None
+        self._warned_legacy_parameters: set[str] = set()
+
+        self._validate_parameter_aliases()
+        self._warn_legacy_parameters()
+
+    def _warn_legacy_parameter(self, name: str, replacement: str) -> None:
+        """Emit a deprecation warning once for a legacy constructor name."""
+        if name in self._warned_legacy_parameters:
+            return
+        warnings.warn(
+            f"{name!r} is deprecated and will be removed in mne-denoise 1.0; "
+            f"use {replacement!r} instead.",
+            FutureWarning,
+            stacklevel=3,
+        )
+        self._warned_legacy_parameters.add(name)
+
+    def _warn_legacy_parameters(self) -> None:
+        """Warn for compatibility parameters, including values set post-init."""
+        if self.n_select is not None:
+            self._warn_legacy_parameter("n_select", "component_selection")
+        if self.rank is not None:
+            self._warn_legacy_parameter("rank", "whitening_rank")
+        if self.return_type is not None:
+            self._warn_legacy_parameter("return_type", "component_action")
+
+    def _validate_parameter_aliases(self) -> None:
+        """Reject ambiguous combinations of canonical and compatibility names."""
+        conflicts = (
+            (
+                "component_selection",
+                self.component_selection,
+                "n_select",
+                self.n_select,
+            ),
+            ("whitening_rank", self.whitening_rank, "rank", self.rank),
+            (
+                "component_action",
+                self.component_action,
+                "return_type",
+                self.return_type,
+            ),
+        )
+        for canonical_name, canonical, legacy_name, legacy in conflicts:
+            if canonical is not None and legacy is not None:
+                raise ValueError(
+                    f"Pass only {canonical_name!r}; it cannot be combined with "
+                    f"deprecated {legacy_name!r}."
+                )
+
+    def _effective_component_action(self) -> str:
+        """Resolve and validate the operation used by :meth:`transform`."""
+        self._validate_parameter_aliases()
+        self._warn_legacy_parameters()
+        if self.component_action is not None:
+            action = self.component_action
+        elif self.return_type is None or self.return_type == "sources":
+            action = "extract"
+        elif self.return_type in _LEGACY_SENSOR_RETURN_TYPES:
+            action = "retain"
+        else:
+            raise ValueError(
+                "return_type must be one of 'sources', 'raw', 'epochs', or "
+                f"'evoked', got {self.return_type!r}."
+            )
+        if action not in _COMPONENT_ACTIONS:
+            choices = ", ".join(sorted(_COMPONENT_ACTIONS))
+            raise ValueError(
+                f"component_action must be one of {choices}, got {action!r}."
+            )
+        return action
+
+    def _effective_component_selection(self) -> int | str | None:
+        """Resolve and validate the leading component selection count."""
+        self._validate_parameter_aliases()
+        self._warn_legacy_parameters()
+        selection = (
+            self.component_selection
+            if self.component_selection is not None
+            else self.n_select
+        )
+        if selection is None and self.adaptive and self.component_action is None:
+            # Preserve the 0.x adaptive default only on the compatibility
+            # pathway. Canonical operations give ``None`` its documented,
+            # deterministic meaning: retain all or subtract none.
+            return "auto"
+        if selection == "auto" or selection is None:
+            return selection
+        if isinstance(selection, int | np.integer):
+            if int(selection) < 0:
+                raise ValueError("component_selection must be non-negative.")
+            return int(selection)
+        raise ValueError(
+            "component_selection (deprecated name: n_select) must be an int, "
+            "'auto', or None, "
+            f"got {selection!r}."
+        )
+
+    def _effective_whitening_rank(self) -> int | dict | None:
+        """Resolve the canonical whitening rank and its compatibility alias."""
+        self._validate_parameter_aliases()
+        self._warn_legacy_parameters()
+        if self.whitening_rank is not None:
+            return self.whitening_rank
+        return self.rank
 
     def fit(
         self,
@@ -494,6 +626,9 @@ class DSS(BaseEstimator, TransformerMixin):
             The fitted transformer.
         """
         set_log_level_from_verbose(self.verbose)
+        self._effective_component_action()
+        self._effective_component_selection()
+        self._effective_whitening_rank()
         if self.adaptive:
             logger.info(
                 "DSS(adaptive=True).fit() computes a single global fit. "
@@ -504,67 +639,56 @@ class DSS(BaseEstimator, TransformerMixin):
             # Joint multi-sensor decomposition: the whitener replaces the
             # channel-wise normalization and the homogeneous-type isolation.
             self._fit_whitened(X, weights=weights)
-            self.mixing_ = self.patterns_
-            return self
-
-        if self.normalize_input:
-            X_norm = self._normalize(X, fit=True)
         else:
-            X_norm = X
+            if self.normalize_input:
+                X_norm = self._normalize(X, fit=True)
+            else:
+                X_norm = X
 
-        # Resolve smoothing (if configured)
-        self._smoother = _as_smoother(self.smooth)
+            # Resolve smoothing (if configured)
+            self._smoother = _as_smoother(self.smooth)
 
-        # If smoothing is enabled, decompose and fit on the residual only
-        if self._smoother is not None:
-            data, _, _, _, _, _ = extract_data_from_mne(
-                X_norm, channel_first_epochs=True
-            )
-            data_residual = data - self._smoother.apply(data)
-            # Fit DSS on residual (always numpy path)
-            self._fit_numpy(data_residual, weights=weights)
-        elif mne is not None and isinstance(X_norm, BaseRaw | BaseEpochs | Evoked):
-            self._fit_mne(X_norm, weights=weights)
-        elif isinstance(X_norm, np.ndarray):
-            self._fit_numpy(X_norm, weights=weights)
-        else:
-            raise TypeError(f"Unsupported input type: {type(X_norm)}")
+            # If smoothing is enabled, decompose and fit on the residual only
+            if self._smoother is not None:
+                data, _, _, _, _, _ = extract_data_from_mne(
+                    X_norm, channel_first_epochs=True
+                )
+                data_residual = data - self._smoother.apply(data)
+                # Fit DSS on residual (always numpy path)
+                self._fit_numpy(data_residual, weights=weights)
+            elif mne is not None and isinstance(X_norm, BaseRaw | BaseEpochs | Evoked):
+                self._fit_mne(X_norm, weights=weights)
+            elif isinstance(X_norm, np.ndarray):
+                self._fit_numpy(X_norm, weights=weights)
+            else:
+                raise TypeError(f"Unsupported input type: {type(X_norm)}")
 
         # Compute mixing matrix
         # self.patterns_ from compute_dss already satisfy X = P @ S
         self.mixing_ = self.patterns_
 
         # Automatic component selection
-        if self._effective_n_select() is not None and self.eigenvalues_ is not None:
+        self.n_selected_ = None
+        if (
+            self._effective_component_selection() is not None
+            and self.eigenvalues_ is not None
+        ):
             self.n_selected_ = self.auto_select()
 
         return self
 
     def _effective_n_select(self) -> int | str | None:
-        """Resolve ``n_select``, defaulting to ``'auto'`` in adaptive mode.
+        """Resolve the deprecated ``n_select`` compatibility contract.
 
-        Adaptive mode exists to adapt the number of removed components to
-        each segment, so ``n_select=None`` there would silently clean nothing
-        and return the input unchanged. ZapLine's adaptive path makes the same
-        choice by hardcoding ``n_select='auto'``.
+        This private compatibility method remains for subclasses written
+        against the 0.x internals. New code should call
+        :meth:`_effective_component_selection`.
 
         Returns
         -------
-        n_select : int | 'auto' | None
+        component_selection : int | 'auto' | None
         """
-        if self.n_select is None and self.adaptive:
-            return "auto"
-        if not (
-            self.n_select is None
-            or self.n_select == "auto"
-            or isinstance(self.n_select, int | np.integer)
-        ):
-            raise ValueError(
-                f"n_select must be an int, 'auto', or None, got {self.n_select!r}. "
-                "Selection behaviour is tuned via selection_threshold, "
-                "knee_rel_floor, and knee_min_ratio."
-            )
-        return self.n_select
+        return self._effective_component_selection()
 
     def auto_select(self, threshold: float | None = None) -> int:
         """Automatically determine how many DSS components are significant.
@@ -583,9 +707,9 @@ class DSS(BaseEstimator, TransformerMixin):
 
         On a smoothly-decaying spectrum both return 0, so clean data is left
         untouched. This is the same selector :class:`~mne_denoise.zapline.ZapLine`
-        uses for ``n_select='auto'``.
+        uses for ``component_selection='auto'``.
 
-        Called automatically during :meth:`fit` when ``n_select`` is set; can
+        Called automatically during :meth:`fit` when component selection is set; can
         also be called manually after fitting to explore a different threshold.
 
         Parameters
@@ -597,9 +721,9 @@ class DSS(BaseEstimator, TransformerMixin):
         Returns
         -------
         n_selected : int
-            Number of significant components detected. When ``n_select`` is an
-            ``int``, that value is returned instead (clipped to the number of
-            available components).
+            Number of significant components detected. When
+            ``component_selection`` is an ``int``, that value is returned
+            instead (clipped to the number of available components).
 
         Raises
         ------
@@ -608,7 +732,7 @@ class DSS(BaseEstimator, TransformerMixin):
 
         Examples
         --------
-        >>> dss = DSS(bias=my_bias, n_components=30, n_select="auto")
+        >>> dss = DSS(bias=my_bias, n_components=30, component_selection="auto")
         >>> dss.fit(raw)
         >>> print(f"{dss.n_selected_} significant components")
         >>> dss.auto_select(threshold=2.5)  # explore a looser threshold
@@ -616,9 +740,9 @@ class DSS(BaseEstimator, TransformerMixin):
         if self.eigenvalues_ is None:
             raise RuntimeError("DSS not fitted. Call fit() first.")
 
-        n_select = self._effective_n_select()
-        if isinstance(n_select, int):
-            return min(n_select, len(self.eigenvalues_))
+        component_selection = self._effective_component_selection()
+        if isinstance(component_selection, int):
+            return min(component_selection, len(self.eigenvalues_))
 
         threshold = threshold if threshold is not None else self.selection_threshold
 
@@ -739,12 +863,26 @@ class DSS(BaseEstimator, TransformerMixin):
         method = self.cov_method
         kws = self.cov_kws.copy() if self.cov_kws else {}
         # Set defaults if not in kws
-        kws.setdefault("rank", self.rank)
+        kws.setdefault("rank", self._effective_whitening_rank())
         kws.setdefault("verbose", False)
 
         data, _, _, _, picks, ch_names = extract_data_from_mne(
             inst, channel_first_epochs=True
         )
+
+        # MNE covariance estimators exclude ``info["bads"]`` internally.  Keep
+        # the data passed to the bias operator in the same channel space so the
+        # fitted spatial matrices and later transforms cannot become
+        # dimensionally inconsistent.  Sensor-valued actions reconstruct into
+        # the original object, leaving these excluded channels untouched.
+        bads = set(inst.info["bads"])
+        if bads:
+            good = [idx for idx, name in enumerate(ch_names) if name not in bads]
+            if not good:
+                raise ValueError("No good channels remain after excluding bads.")
+            data = data[np.asarray(good)]
+            ch_names = [ch_names[idx] for idx in good]
+            picks = np.asarray([inst.ch_names.index(name) for name in ch_names])
         self._mne_ch_names_ = ch_names
 
         # MNE covariance computation requires the inst object to match the array
@@ -799,8 +937,9 @@ class DSS(BaseEstimator, TransformerMixin):
 
         # Use rank if provided (compute from covariance if not)
         rank = None
-        if self.rank is not None and isinstance(self.rank, int):
-            rank = self.rank
+        whitening_rank = self._effective_whitening_rank()
+        if whitening_rank is not None and isinstance(whitening_rank, int):
+            rank = whitening_rank
             # If rank is a dict (MNE style), ignore for numpy
 
         self.filters_, self.patterns_, self.eigenvalues_ = compute_dss(
@@ -851,7 +990,8 @@ class DSS(BaseEstimator, TransformerMixin):
         baseline_cov = compute_covariance(data_w, method=method, weights=weights, **kws)
         biased_cov = compute_covariance(biased_w, method=method, weights=weights, **kws)
 
-        rank = self.rank if isinstance(self.rank, int) else None
+        whitening_rank = self._effective_whitening_rank()
+        rank = whitening_rank if isinstance(whitening_rank, int) else None
         filters_w, patterns_w, self.eigenvalues_ = compute_dss(
             baseline_cov,
             biased_cov,
@@ -882,7 +1022,7 @@ class DSS(BaseEstimator, TransformerMixin):
             info=info,
             ch_names=ch_names,
             noise_cov=self.noise_cov,
-            rank=self.rank,
+            rank=self._effective_whitening_rank(),
         )
         self._whitener_ = whitener
         self._dewhitener_ = dewhitener
@@ -891,40 +1031,96 @@ class DSS(BaseEstimator, TransformerMixin):
     def transform(
         self, X: BaseRaw | BaseEpochs | Evoked | np.ndarray
     ) -> np.ndarray | BaseRaw | BaseEpochs | Evoked:
-        """Apply DSS spatial filters.
+        """Apply the configured DSS component operation.
+
+        ``component_action='extract'`` returns all fitted source time series.
+        ``'retain'`` and ``'subtract'`` return sensor-space data with the same
+        container, shape, channels, and metadata as ``X``.
 
         Parameters
         ----------
         X : Raw | Epochs | Evoked | array
-            Data to transform.
-            - If array, must match the shape convention used in fit (see fit docstring).
+            Data to transform. NumPy input must follow the shape convention
+            used by :meth:`fit`.
 
         Returns
         -------
         out : array | Raw | Epochs | Evoked
-            If return_type='sources', returns the source time series.
-            If return_type='raw'/'epochs'/'evoked', returns the reconstructed data (denoised)
-            projected back to sensor space (keeping n_components).
+            Source time series for extraction, otherwise transformed
+            sensor-space data in the input container.
         """
+        return self._transform_with_action(X, self._effective_component_action())
+
+    def _operation_component_count(self, action: str, n_available: int) -> int:
+        """Return the leading component count acted on in sensor space."""
+        if (
+            action == "retain"
+            and self.component_action is None
+            and self.return_type in _LEGACY_SENSOR_RETURN_TYPES
+        ):
+            # Historical transform() retained every fitted component and did
+            # not consult n_select. Keep that behavior on the legacy path.
+            return n_available
+        if action == "retain" and self.n_selected_ is None:
+            return n_available
+        if self.n_selected_ is None:
+            return 0
+        return min(max(int(self.n_selected_), 0), n_available)
+
+    @staticmethod
+    def _copy_with_sensor_data(
+        X: BaseRaw | BaseEpochs | Evoked | np.ndarray,
+        data: np.ndarray,
+        mne_type: str,
+        picks: np.ndarray | None,
+    ) -> BaseRaw | BaseEpochs | Evoked | np.ndarray:
+        """Replace data in a copy while retaining all container metadata."""
+        if mne_type == "array":
+            return data
+
+        out = X.copy()
+        if isinstance(out, BaseRaw | BaseEpochs):
+            out.load_data()
+
+        # MNE has no public cross-container setter for an entire data block.
+        # Updating the data buffer of a copy preserves metadata that rebuilding
+        # an object would lose (for example Raw.first_samp, Epochs.drop_log,
+        # projections, and acquisition fields).
+        target = out._data
+        if picks is None:
+            target[...] = data
+        elif mne_type == "epochs":
+            target[:, picks, :] = data
+        else:
+            target[picks, :] = data
+        return out
+
+    def _transform_with_action(
+        self,
+        X: BaseRaw | BaseEpochs | Evoked | np.ndarray,
+        action: str,
+    ) -> np.ndarray | BaseRaw | BaseEpochs | Evoked:
+        """Apply a validated action without mutating estimator parameters."""
         set_log_level_from_verbose(self.verbose)
-        if self.filters_ is None:
+        if action not in _COMPONENT_ACTIONS:
+            raise ValueError(f"Unknown component action {action!r}.")
+        if self.filters_ is None or self.mixing_ is None:
             raise RuntimeError("DSS not fitted. Call fit() first.")
 
         if self.normalize_input and not self.whiten:
-            # Apply normalization using fitted norms
             X_in = self._normalize(X, fit=False)
         else:
             X_in = X
 
-        # Helper to extract data
-        # DSS internal convention for Epochs: (n_channels, n_times, n_epochs)
-        data, _, mne_type, orig_inst, picks, _ = extract_data_from_mne(
+        # DSS uses channel-first epochs internally. Reconstruction uses the
+        # original input as its template so non-selected channels and metadata
+        # are copied verbatim rather than inherited from the normalized helper.
+        data, _, mne_type, _, picks, _ = extract_data_from_mne(
             X_in,
             ch_names=getattr(self, "_mne_ch_names_", None),
             channel_first_epochs=True,
         )
 
-        # If smoothing is enabled, project the residual (not full data)
         if self._smoother is not None:
             data_smooth = self._smoother.apply(data)
             data_for_dss = data - data_smooth
@@ -936,60 +1132,55 @@ class DSS(BaseEstimator, TransformerMixin):
         if data_for_dss.ndim == 3:
             n_ch, n_times, n_epochs = data_for_dss.shape
             data_2d = data_for_dss.reshape(n_ch, -1)
+            full_data_2d = data.reshape(n_ch, -1)
         else:
             n_ch, n_times = data_for_dss.shape
+            n_epochs = None
             data_2d = data_for_dss
+            full_data_2d = data
 
-        # Center using mean on data_2d
-        # DSS implies zero-mean assumption for correct projection
+        # Center the residual being projected. The offset is restored for
+        # retention and remains untouched for subtraction.
         mean_ = data_2d.mean(axis=1, keepdims=True)
-        data_centered = data_2d - mean_
+        sources = self.filters_ @ (data_2d - mean_)
 
-        sources = self.filters_ @ data_centered
-
-        if self.return_type == "sources":
+        if action == "extract":
             if len(orig_shape) == 3:
-                sources = sources.reshape(
-                    self.n_components or sources.shape[0], n_times, n_epochs
-                )
+                sources = sources.reshape(sources.shape[0], n_times, n_epochs)
                 if mne_type == "epochs":
-                    # Return as (n_epochs, n_components, n_times)
                     return sources.transpose(2, 0, 1)
             return sources
 
-        # Use only kept components
-        n_keep = self.n_components if self.n_components else self.filters_.shape[0]
-        # mixing shape: (n_channels, n_components)
-        rec = self.mixing_[:, :n_keep] @ sources[:n_keep]
-        rec += mean_
+        n_action = self._operation_component_count(action, sources.shape[0])
+        if action == "subtract" and n_action == 0:
+            if hasattr(X, "copy"):
+                return X.copy()
+            return np.array(X, copy=True)
 
-        # Add back smooth component if it was separated
-        if data_smooth is not None:
-            smooth_2d = (
-                data_smooth.reshape(data_smooth.shape[0], -1)
-                if data_smooth.ndim == 3
-                else data_smooth
-            )
-            rec = rec + smooth_2d
+        selected = self.mixing_[:, :n_action] @ sources[:n_action]
+        if action == "subtract":
+            rec = full_data_2d - selected
+        else:
+            rec = selected + mean_
+            if data_smooth is not None:
+                rec += data_smooth.reshape(data_smooth.shape[0], -1)
 
-        # Reshape to original
         if len(orig_shape) == 3:
-            rec = rec.reshape(orig_shape)  # (n_ch, n_times, n_epochs)
+            rec = rec.reshape(orig_shape)
 
-        # De-normalization
         if self.normalize_input and not self.whiten:
-            if len(orig_shape) == 3:  # (n_ch, n_times, n_epochs)
-                rec = rec * self.channel_norms_[:, np.newaxis, np.newaxis]
-            else:  # (n_ch, n_times)
-                rec = rec * self.channel_norms_[:, np.newaxis]
+            norms = self.channel_norms_
+            if picks is not None and len(norms) != rec.shape[0]:
+                norms = norms[picks]
+            if len(orig_shape) == 3:
+                rec = rec * norms[:, np.newaxis, np.newaxis]
+            else:
+                rec = rec * norms[:, np.newaxis]
 
-        # Prepare for reconstruction (transpose back if needed)
         if mne_type == "epochs":
             rec = np.transpose(rec, (2, 0, 1))
 
-        return reconstruct_mne_object(
-            rec, orig_inst, mne_type, picks=picks, verbose=False
-        )
+        return self._copy_with_sensor_data(X, rec, mne_type, picks)
 
     def inverse_transform(
         self, sources: np.ndarray, component_indices: np.ndarray | None = None
@@ -1100,8 +1291,10 @@ class DSS(BaseEstimator, TransformerMixin):
         processing because ``fit()`` alone is not meaningful when
         filters differ per segment.
 
-        In standard mode, this is equivalent to
-        ``self.fit(X).transform(X)``.
+        With the canonical ``component_action`` API this is exactly equivalent
+        to ``self.fit(X).transform(X)``. The only 0.x exception is deprecated
+        sensor-valued ``return_type`` usage, whose historical subtraction
+        behavior is preserved until 1.0.
 
         Parameters
         ----------
@@ -1115,39 +1308,26 @@ class DSS(BaseEstimator, TransformerMixin):
         Returns
         -------
         X_out : ndarray | Raw | Epochs | Evoked
-            In adaptive mode, returns cleaned data (same type as input).
-            In standard mode with ``return_type='sources'``, returns DSS
-            source time-series.  With any other ``return_type``, returns
-            cleaned (denoised) data produced by subtracting the artifact
-            captured by the first ``n_selected_`` components.
+            Result of the configured component operation. Adaptive legacy mode
+            returns cleaned data in the same container as the input.
         """
         if not self.adaptive:
             self.fit(X, **fit_params)
 
-            if self.return_type == "sources":
-                return self.transform(X)
+            # Keep the historical transform/fit_transform inconsistency only
+            # for an explicitly requested legacy sensor-valued return_type.
+            if (
+                self.component_action is None
+                and self.return_type in _LEGACY_SENSOR_RETURN_TYPES
+            ):
+                return self._transform_with_action(X, "subtract")
+            return self.transform(X)
 
-            # ── Denoise via artifact subtraction ──
-            data, _, mne_type, orig_inst, _, _ = extract_data_from_mne(X)
-
-            n_remove = self.n_selected_ if self.n_selected_ is not None else 0
-            if n_remove > 0:
-                # Temporarily switch to get source time-series
-                saved_rt = self.return_type
-                self.return_type = "sources"
-                try:
-                    sources = self.transform(X)
-                finally:
-                    self.return_type = saved_rt
-
-                artifact = self.inverse_transform(
-                    sources, component_indices=np.arange(n_remove)
-                )
-                cleaned = data - artifact
-            else:
-                cleaned = data
-
-            return reconstruct_mne_object(cleaned, orig_inst, mne_type, verbose=False)
+        if self.component_action is not None:
+            # Canonical operations are inductive and deterministic. The
+            # transductive segmented 0.x pathway below remains available only
+            # when component_action is omitted.
+            return self.fit(X, **fit_params).transform(X)
 
         # --- adaptive (per-segment) mode ---
         data, extracted_sfreq, mne_type, orig_inst, _, _ = extract_data_from_mne(X)
@@ -1354,19 +1534,25 @@ class DSS(BaseEstimator, TransformerMixin):
             An unfitted clone configured for one segment.
         """
         est = clone(self)
+        whitening_rank = self._effective_whitening_rank()
         est.set_params(
             adaptive=False,  # do NOT recurse
             # Resolve 'auto' here: the clone is no longer adaptive, so it
-            # would otherwise fall back to n_select=None and select nothing.
-            n_select=self._effective_n_select(),
+            # would otherwise fall back to no selection and select nothing.
+            component_selection=self._effective_component_selection(),
+            n_select=None,
             segmenter=None,
             crossfade=0.0,
-            return_type="sources",
+            component_action="extract",
+            return_type=None,
             # Per-segment caps are applied by the caller, not the clone.
             max_prop_remove=None,
             min_select=0,
             # A dict rank is an MNE-object concept; segments are plain arrays.
-            rank=self.rank if isinstance(self.rank, int | type(None)) else None,
+            whitening_rank=(
+                whitening_rank if isinstance(whitening_rank, int | type(None)) else None
+            ),
+            rank=None,
         )
         return est
 

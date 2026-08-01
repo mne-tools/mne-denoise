@@ -108,9 +108,20 @@ def _get_components(estimator, data=None):
             "Data must be provided if sources are not cached in the estimator."
         )
 
-    # 2. Compute sources for the provided data
-    # Check if we need to force 'return_type' for LinearDSS
-    if hasattr(estimator, "return_type"):
+    # 2. Compute sources for the provided data. Prefer the explicit DSS
+    # operation contract and clear its compatibility alias temporarily so the
+    # estimator is never placed in an ambiguous parameter state.
+    if hasattr(estimator, "component_action"):
+        old_action = estimator.component_action
+        old_return_type = estimator.return_type
+        try:
+            estimator.component_action = "extract"
+            estimator.return_type = None
+            sources = estimator.transform(data)
+        finally:
+            estimator.component_action = old_action
+            estimator.return_type = old_return_type
+    elif hasattr(estimator, "return_type"):
         old_return_type = estimator.return_type
         try:
             estimator.return_type = "sources"

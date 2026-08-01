@@ -407,23 +407,13 @@ def test_dss_error_mask_length_mismatch():
 
 
 def test_dss_supports_rank_numpy():
-    """DSS should support rank parameter with numpy arrays (no warning)."""
-    import warnings
-
+    """The legacy rank parameter still works and points to its replacement."""
     rng = np.random.default_rng(42)
     data = rng.standard_normal((8, 500))
 
-    # Should not warn
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
+    with pytest.warns(FutureWarning, match="whitening_rank"):
         dss = DSS(bias=lambda x: x, n_components=3, rank=5)
-        dss.fit(data)
-
-        # Filter out unrelated warnings if any (e.g. from MNE)
-        rank_warnings = [
-            warning for warning in w if "rank" in str(warning.message).lower()
-        ]
-        assert len(rank_warnings) == 0
+    dss.fit(data)
 
 
 # =============================================================================
@@ -1417,8 +1407,9 @@ class TestSegmentedDSS:
         assert est.normalize_input is False
         assert est.selection_threshold == 2.5
         assert est.knee_min_ratio == 4.0
-        # adaptive mode with n_select unset must not silently select nothing
-        assert est.n_select == "auto"
+        # Adaptive mode with no selection must not silently select nothing.
+        assert est.component_selection == "auto"
+        assert est.n_select is None
 
     def test_fit_transform_runs(self):
         """fit_transform should run to completion in adaptive mode."""

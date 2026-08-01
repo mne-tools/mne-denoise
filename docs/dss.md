@@ -15,11 +15,17 @@ from mne_denoise.zapline import ZapLine
 data = np.random.randn(64, 10000)  # 64 channels, 10000 samples
 bias = BandpassBias(freq_band=(8, 12), sfreq=500)
 
-dss = DSS(bias=bias, n_components=5)
-dss.fit(data)
-alpha_sources = dss.transform(data)
+dss = DSS(bias=bias, n_components=5, component_action="extract")
+alpha_sources = dss.fit_transform(data)
 
-# Example: Remove line noise
+# Retain the leading alpha component in sensor space
+alpha_only = DSS(
+    bias=bias,
+    n_components=5,
+    component_action="retain",
+    component_selection=1,
+).fit_transform(data)
+
 # Example: Remove line noise
 est = ZapLine(line_freq=50, sfreq=500)
 est.fit(data)
@@ -40,11 +46,24 @@ filters, patterns, eigenvalues, explained_var = compute_dss(
     data, biased_data, n_components=5
 )
 
-# High-level API (sklearn-style)
-dss = DSS(bias=my_bias_function, n_components=5)
+# High-level API (sklearn-style source extraction)
+dss = DSS(
+    bias=my_bias_function,
+    n_components=5,
+    component_action="extract",
+)
 dss.fit(data)
 sources = dss.transform(data)
 reconstructed = dss.inverse_transform(sources[:3])  # Keep top 3
+
+# Explicit artifact subtraction; fit_transform is exactly fit().transform()
+cleaner = DSS(
+    bias=artifact_bias,
+    n_components=5,
+    component_action="subtract",
+    component_selection="auto",
+)
+cleaned = cleaner.fit_transform(data)
 ```
 
 ### Iterative (Nonlinear) DSS
