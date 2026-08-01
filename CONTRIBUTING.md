@@ -276,6 +276,10 @@ Documentation is built with Sphinx and hosted on GitHub Pages.
 # Build HTML documentation
 make -C docs html
 
+# Reproduce the network-isolated CI build. External-data pages are still
+# rendered, but their scripts are not executed.
+MNE_DENOISE_DOCS_EXECUTE_EXTERNAL_DATA=false make -C docs html
+
 # View in browser
 open docs/_build/html/index.html  # macOS
 xdg-open docs/_build/html/index.html  # Linux
@@ -288,6 +292,12 @@ start docs/_build/html/index.html  # Windows
 - `docs/getting-started.rst` - Installation and quick start
 - `docs/dss.md` - DSS module guide
 - `examples/` - Gallery examples (rendered by sphinx-gallery)
+
+Normal local builds execute the complete example gallery. Set
+`MNE_DENOISE_DOCS_EXECUTE_EXTERNAL_DATA=false` only for a network-isolated
+build; this leaves external-data example pages available as source code without
+depending on dataset hosts. The audited list of non-executed CI examples lives
+in `docs/_gallery_execution.py`.
 
 ### Adding Examples
 

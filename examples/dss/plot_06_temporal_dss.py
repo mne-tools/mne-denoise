@@ -323,11 +323,12 @@ runs = [1]  # Baseline, eyes open
 try:
     eegbci.load_data(subject, runs, update_path=True)
     raw_path = eegbci.load_data(subject, runs)[0]
-except Exception as e:
-    import sys
-
-    print(f"Skipping EEGBCI example due to network error: {e}")
-    sys.exit(0)
+except Exception as error:
+    raise RuntimeError(
+        "The EEGBCI dataset is required for this external-data gallery example. "
+        "Check network access or pre-download the dataset before building the full "
+        "gallery."
+    ) from error
 
 raw_eeg = mne.io.read_raw_edf(raw_path, preload=True, verbose=False)
 

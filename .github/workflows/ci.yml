@@ -77,6 +77,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[docs]
       - name: Build documentation
+        env:
+          # Render, but do not execute, examples that download external data.
+          # Local builds keep executing the complete gallery by default.
+          MNE_DENOISE_DOCS_EXECUTE_EXTERNAL_DATA: "false"
         run: make -C docs html SPHINXOPTS="-W --keep-going"
       - name: Add .nojekyll to the build
         run: touch docs/_build/html/.nojekyll

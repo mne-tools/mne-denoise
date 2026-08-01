@@ -4,16 +4,21 @@ import os
 import sys
 import tempfile
 from datetime import datetime
+from pathlib import Path
 
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
-sys.path.insert(0, os.path.abspath(".."))
+_DOCS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_DOCS_DIR))
+sys.path.insert(0, str(_DOCS_DIR.parent))
 os.environ.setdefault(
     "NUMBA_CACHE_DIR", os.path.join(tempfile.gettempdir(), "numba_cache")
 )
 os.environ.setdefault("MNE_HOME", os.path.join(tempfile.gettempdir(), "mne_home"))
 
-import mne_denoise
+from _gallery_execution import gallery_filename_pattern  # noqa: E402
+
+import mne_denoise  # noqa: E402
 
 # -- General configuration ------------------------------------------------
 
@@ -51,10 +56,21 @@ numpydoc_show_class_members = False
 # MyST configuration
 myst_heading_anchors = 3
 
+# Sphinx-Gallery still renders non-matching scripts as source-code pages; the
+# pattern only controls whether their code is executed. Keep the full gallery
+# locally by default, while allowing network-isolated builders to skip examples
+# whose datasets are downloaded at runtime.
+_execute_external_data_examples = os.environ.get(
+    "MNE_DENOISE_DOCS_EXECUTE_EXTERNAL_DATA", "true"
+).casefold() not in {"0", "false", "no"}
+_gallery_filename_pattern = gallery_filename_pattern(
+    execute_external_data_examples=_execute_external_data_examples
+)
+
 sphinx_gallery_conf = {
     "examples_dirs": "../examples",
     "gallery_dirs": "auto_examples",
-    "filename_pattern": r"plot_",
+    "filename_pattern": _gallery_filename_pattern,
     "ignore_pattern": r"tutorials|_legacy",
     "subsection_order": ExplicitOrder(
         [
