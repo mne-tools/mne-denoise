@@ -3,21 +3,21 @@
 Sensor Noise Suppression (de Cheveigne & Simon 2008) [1]_ suppresses noise that
 is *specific to individual sensors* by regenerating each channel from a
 projection onto the subspace spanned by its most-correlated neighbour channels.
-The rationale: genuine brain signal is spatially correlated across sensors and
-is therefore well predicted by the other channels, whereas sensor-specific noise
-(amplifier noise, a flaky electrode, SQUID noise) is uncorrelated across sensors
-and cannot be predicted — so it is removed by the projection.
+The method assumes that signals of interest are spatially correlated across
+sensors and that sensor-specific noise is not. Whether those assumptions hold
+must be validated for each acquisition regime.
 
 For each channel ``k``, SNS selects the ``n_neighbors`` channels most correlated
 with ``k`` (optionally skipping the ``skip`` closest, which may share the same
 local noise), and replaces ``x_k`` with its least-squares projection onto those
-neighbours. Applied as a single spatial operator ``W`` (``X_clean = W @ X``),
-with ``W[k, k] = 0`` so a channel is never regenerated from itself.
+neighbours. Applied to centered data as a single spatial operator ``W``
+(``X_clean = W @ X_centered``), with ``W[k, k] = 0`` so a channel is never
+regenerated from itself.
 
 This is the reference-free, purely spatial counterpart to the
-line/component-based denoisers in the package. It has no maintained standalone
-Python package; the canonical implementations are de Cheveigne's MATLAB
-NoiseTools (``nt_sns``) and its meegkit port.
+line/component-based denoisers in the package. The canonical reference
+implementations are de Cheveigne's MATLAB NoiseTools
+(``nt_sns``) and the maintained MEEGkit Python port.
 
 This module contains:
 
@@ -36,15 +36,81 @@ References
 from __future__ import annotations
 
 import logging
+import math
+from numbers import Integral, Real
 from typing import Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from ..utils import extract_data_from_mne, reconstruct_mne_object
+from ..utils import extract_data_from_mne
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_RCOND = 1e-12
+
+
+def _validate_count(value: int, *, name: str) -> int:
+    """Validate a non-negative integer operating-point parameter."""
+    if isinstance(value, bool) or not isinstance(value, Integral):
+        raise TypeError(f"{name} must be a non-negative integer")
+    if value < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return int(value)
+
+
+def _validate_rcond(rcond: float) -> float:
+    """Validate the relative pseudoinverse cutoff."""
+    if isinstance(rcond, bool) or not isinstance(rcond, Real):
+        raise TypeError("rcond must be a finite number")
+    rcond = float(rcond)
+    if not math.isfinite(rcond) or not 0.0 < rcond < 1.0:
+        raise ValueError("rcond must be finite and strictly between 0 and 1")
+    return rcond
+
+
+def _validate_covariance(cov: np.ndarray) -> np.ndarray:
+    """Return a finite, symmetric, positive-semidefinite covariance."""
+    cov = np.asarray(cov, dtype=np.float64)
+    if cov.ndim != 2 or cov.shape[0] != cov.shape[1]:
+        raise ValueError(
+            "cov must be a square (n_channels, n_channels) matrix, "
+            f"got shape {cov.shape}"
+        )
+    if cov.shape[0] < 2:
+        raise ValueError("SNS requires at least two channels")
+    if not np.isfinite(cov).all():
+        raise ValueError("cov must contain only finite values")
+    scale = max(float(np.max(np.abs(cov))), np.finfo(np.float64).tiny)
+    tolerance = 100 * np.finfo(np.float64).eps * scale * cov.shape[0]
+    if float(np.max(np.abs(cov - cov.T))) > tolerance:
+        raise ValueError("cov must be symmetric")
+    cov = (cov + cov.T) / 2.0
+    eigenvalues = np.linalg.eigvalsh(cov)
+    eigen_scale = max(float(np.max(np.abs(eigenvalues))), np.finfo(float).tiny)
+    eigen_tolerance = 100 * np.finfo(float).eps * eigen_scale * cov.shape[0]
+    if float(eigenvalues.min()) < -eigen_tolerance:
+        raise ValueError("cov must be positive semidefinite")
+    return cov
+
+
+def _validate_data(X: np.ndarray, *, allow_epochs: bool) -> np.ndarray:
+    """Validate channel-first continuous or epoched data."""
+    X = np.asarray(X, dtype=np.float64)
+    expected = (2, 3) if allow_epochs else (2,)
+    if X.ndim not in expected:
+        shape_text = "2-D or 3-D" if allow_epochs else "2-D"
+        raise ValueError(f"Expected a {shape_text} channel-first array, got {X.shape}")
+    if X.shape[-2] < 2:
+        raise ValueError("SNS requires at least two channels")
+    if X.shape[-1] < 2:
+        raise ValueError("SNS requires at least two time samples")
+    if X.ndim == 3 and X.shape[0] < 1:
+        raise ValueError("SNS requires at least one epoch")
+    if not np.isfinite(X).all():
+        raise ValueError("X must contain only finite values")
+    return X
 
 
 def _correlation(cov: np.ndarray) -> np.ndarray:
@@ -55,14 +121,56 @@ def _correlation(cov: np.ndarray) -> np.ndarray:
     return cov / denom
 
 
+def _compute_sns_weights(
+    cov: np.ndarray,
+    n_neighbors: int,
+    skip: int,
+    rcond: float,
+) -> tuple[np.ndarray, int, np.ndarray]:
+    """Build an SNS operator and retain the effective local ranks."""
+    cov = _validate_covariance(cov)
+    n_neighbors = _validate_count(n_neighbors, name="n_neighbors")
+    skip = _validate_count(skip, name="skip")
+    rcond = _validate_rcond(rcond)
+    n_channels = cov.shape[0]
+    if skip > n_channels - 2:
+        raise ValueError("skip must leave at least one candidate neighbor")
+    max_neighbors = n_channels - skip - 1
+    k_neighbors = max_neighbors if n_neighbors == 0 else min(n_neighbors, max_neighbors)
+    if k_neighbors < 1:  # pragma: no cover - guarded by validation above
+        raise ValueError("SNS requires at least one neighbor per channel")
+
+    corr = _correlation(cov)
+    weights = np.zeros((n_channels, n_channels), dtype=np.float64)
+    neighbor_ranks = np.zeros(n_channels, dtype=int)
+    for channel in range(n_channels):
+        order = np.argsort(corr[:, channel] ** 2, kind="stable")[::-1]
+        order = order[order != channel]
+        neighbors = order[skip : skip + k_neighbors]
+        neighbor_cov = cov[np.ix_(neighbors, neighbors)]
+        cross_cov = cov[neighbors, channel]
+        singular_values = np.linalg.eigvalsh(neighbor_cov)
+        cutoff = rcond * max(float(singular_values.max()), 0.0)
+        neighbor_ranks[channel] = int(np.count_nonzero(singular_values > cutoff))
+        coefficients = (
+            np.linalg.pinv(neighbor_cov, rcond=rcond, hermitian=True) @ cross_cov
+        )
+        weights[channel, neighbors] = coefficients
+    return weights, k_neighbors, neighbor_ranks
+
+
 def compute_sns_weights(
-    cov: np.ndarray, n_neighbors: int = 0, skip: int = 0
+    cov: np.ndarray,
+    n_neighbors: int = 0,
+    skip: int = 0,
+    *,
+    rcond: float = _DEFAULT_RCOND,
 ) -> tuple[np.ndarray, int]:
     """Build the SNS spatial operator ``W`` from a channel covariance matrix.
 
     Each channel is regenerated from a least-squares projection onto its
     ``n_neighbors`` most-correlated neighbours. Returns ``(W, n_neighbors_used)``
-    where ``X_clean = W @ X`` and ``W[k, k] == 0``.
+    where ``X_clean = W @ X_centered`` and ``W[k, k] == 0``.
 
     Parameters
     ----------
@@ -74,45 +182,28 @@ def compute_sns_weights(
     skip : int
         Number of closest (most-correlated) neighbours to skip, e.g. to avoid
         regenerating a channel from immediate neighbours that share local noise.
+    rcond : float
+        Relative cutoff used for the Hermitian pseudoinverse of each neighbor
+        covariance. It must be strictly between zero and one.
 
     Returns
     -------
     W : ndarray, shape (n_channels, n_channels)
-        The SNS denoising operator (apply as ``X_clean = W @ X``).
+        The SNS denoising operator (apply to centered data).
     n_neighbors_used : int
         The effective number of neighbours after capping.
     """
-    cov = np.asarray(cov, dtype=np.float64)
-    n = cov.shape[0]
-    if cov.shape != (n, n):
-        raise ValueError(f"cov must be square (n_channels, n_channels), got {cov.shape}.")
-    max_neighbors = max(0, n - skip - 1)
-    k_neighbors = max_neighbors if n_neighbors in (0, None) else int(n_neighbors)
-    k_neighbors = min(k_neighbors, max_neighbors)
-
-    corr = _correlation(cov)
-    W = np.zeros((n, n), dtype=np.float64)
-    for k in range(n):
-        if k_neighbors <= 0:
-            W[k, k] = 1.0  # nothing to regenerate from -> pass channel through
-            continue
-        order = np.argsort(corr[:, k] ** 2)[::-1]  # most correlated first
-        order = order[order != k]  # drop self explicitly (robust to correlation ties)
-        idx = order[skip : skip + k_neighbors]  # optionally skip nearest, take neighbours
-        if idx.size == 0:
-            W[k, k] = 1.0
-            continue
-        c_nn = cov[np.ix_(idx, idx)]
-        c_nk = cov[idx, k]
-        # least-squares projection weights (pinv -> robust to rank deficiency);
-        # basis-invariant to the PCA-whitening used by NoiseTools/meegkit.
-        b = np.linalg.pinv(c_nn) @ c_nk
-        W[k, idx] = b
-    return W, k_neighbors
+    weights, k_neighbors, _ = _compute_sns_weights(cov, n_neighbors, skip, rcond)
+    return weights, k_neighbors
 
 
 def compute_sns(
-    X: np.ndarray, n_neighbors: int = 0, skip: int = 0
+    X: np.ndarray,
+    n_neighbors: int = 0,
+    skip: int = 0,
+    *,
+    rcond: float = _DEFAULT_RCOND,
+    preserve_mean: bool = False,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Sensor-noise-suppress a data array (learn + apply in one call).
 
@@ -127,24 +218,43 @@ def compute_sns(
         Number of neighbour channels per regeneration (``0`` = all others).
     skip : int
         Number of closest neighbours to skip.
+    rcond : float
+        Relative pseudoinverse cutoff used for rank-deficient neighbor sets.
+    preserve_mean : bool
+        If ``False`` (default), reproduce the reference SNS convention and
+        return centered regenerations. If ``True``, restore each input-channel
+        mean after applying the operator to its centered fluctuations.
 
     Returns
     -------
     X_clean : ndarray, shape (n_channels, n_samples)
         Sensor-noise-suppressed signal.
     info : dict
-        Diagnostics: ``weights`` (the operator ``W``) and ``n_neighbors`` used.
+        Diagnostics include the operator, effective neighbor count, local
+        neighbor ranks, input rank, and the complete numerical operating point.
     """
-    X = np.asarray(X, dtype=np.float64)
-    if X.ndim != 2:
-        raise ValueError(
-            f"Expected a 2-D (n_channels, n_samples) array, got shape {X.shape}."
-        )
-    Xd = X - X.mean(axis=1, keepdims=True)
+    X = _validate_data(X, allow_epochs=False)
+    if not isinstance(preserve_mean, bool):
+        raise TypeError("preserve_mean must be a bool")
+    input_mean = X.mean(axis=1, keepdims=True)
+    Xd = X - input_mean
     cov = (Xd @ Xd.T) / max(Xd.shape[1], 1)
-    W, k = compute_sns_weights(cov, n_neighbors, skip)
-    X_clean = W @ X
-    return X_clean, {"weights": W, "n_neighbors": k}
+    weights, effective_neighbors, neighbor_ranks = _compute_sns_weights(
+        cov, n_neighbors, skip, rcond
+    )
+    X_clean = weights @ Xd
+    if preserve_mean:
+        X_clean += input_mean
+    return X_clean, {
+        "weights": weights,
+        "n_neighbors": effective_neighbors,
+        "requested_n_neighbors": int(n_neighbors),
+        "skip": int(skip),
+        "rcond": float(rcond),
+        "preserve_mean": preserve_mean,
+        "neighbor_ranks": neighbor_ranks,
+        "input_rank": int(np.linalg.matrix_rank(Xd)),
+    }
 
 
 class SNS(BaseEstimator, TransformerMixin):
@@ -153,7 +263,8 @@ class SNS(BaseEstimator, TransformerMixin):
     ``fit`` learns the spatial operator ``W`` on the training data (each channel
     regressed onto its most-correlated neighbours); ``transform`` applies that
     fixed operator to new data (leakage-safe). Accepts MNE ``Raw``/``Epochs``
-    objects or NumPy ``(n_channels, n_samples)`` arrays.
+    objects or NumPy ``(n_channels, n_samples)`` and
+    ``(n_epochs, n_channels, n_samples)`` arrays.
 
     Parameters
     ----------
@@ -164,15 +275,26 @@ class SNS(BaseEstimator, TransformerMixin):
     skip : int
         Number of closest (most-correlated) neighbours to skip when regenerating
         a channel, to avoid channels that share the same local noise.
+    rcond : float
+        Relative cutoff used for rank-deficient neighbor covariance matrices.
+    preserve_mean : bool
+        If ``False`` (default), match the reference SNS convention by returning
+        centered regenerations. If ``True``, restore the input-channel means.
     verbose : bool | str | int | None
         Control logging verbosity (MNE-style).
 
     Attributes
     ----------
     denoising_matrix_ : ndarray, shape (n_channels, n_channels)
-        The learned SNS operator (``X_clean = denoising_matrix_ @ X``).
+        The learned SNS operator, applied to centered data.
     n_neighbors_ : int
         Effective number of neighbours used per channel.
+    neighbor_ranks_ : ndarray, shape (n_channels,)
+        Numerical rank of each channel's selected neighbor covariance.
+    input_rank_ : int
+        Rank of the centered training data.
+    feature_names_in_ : tuple of str | None
+        Names and order of fitted MNE channels, when available.
 
     Notes
     -----
@@ -196,20 +318,102 @@ class SNS(BaseEstimator, TransformerMixin):
         self,
         n_neighbors: int = 0,
         skip: int = 0,
+        rcond: float = _DEFAULT_RCOND,
+        preserve_mean: bool = False,
         verbose: bool | str | int | None = None,
     ) -> None:
         self.n_neighbors = n_neighbors
         self.skip = skip
+        self.rcond = rcond
+        self.preserve_mean = preserve_mean
         self.verbose = verbose
 
     def _learn(self, data2d: np.ndarray) -> None:
+        data2d = _validate_data(data2d, allow_epochs=False)
+        if not isinstance(self.preserve_mean, bool):
+            raise TypeError("preserve_mean must be a bool")
         Xd = data2d - data2d.mean(axis=1, keepdims=True)
         cov = (Xd @ Xd.T) / max(Xd.shape[1], 1)
-        self.denoising_matrix_, self.n_neighbors_ = compute_sns_weights(
-            cov, self.n_neighbors, self.skip
-        )
+        (
+            self.denoising_matrix_,
+            self.n_neighbors_,
+            self.neighbor_ranks_,
+        ) = _compute_sns_weights(cov, self.n_neighbors, self.skip, self.rcond)
+        self.input_rank_ = int(np.linalg.matrix_rank(Xd))
+        self.n_channels_in_ = data2d.shape[0]
 
-    def fit(self, X: Any, y=None) -> "SNS":
+    @staticmethod
+    def _as_continuous(data: np.ndarray) -> np.ndarray:
+        """Concatenate epochs without allowing channel-axis ambiguity."""
+        data = _validate_data(data, allow_epochs=True)
+        if data.ndim == 2:
+            return data
+        n_epochs, n_channels, n_times = data.shape
+        return np.transpose(data, (1, 0, 2)).reshape(n_channels, n_epochs * n_times)
+
+    def _apply_operator(self, data: np.ndarray) -> np.ndarray:
+        """Apply the fixed operator using the reference centering convention."""
+        data = _validate_data(data, allow_epochs=True)
+        if not isinstance(self.preserve_mean, bool):
+            raise TypeError("preserve_mean must be a bool")
+        if data.shape[-2] != self.n_channels_in_:
+            raise ValueError(
+                "X has a different channel count from fit: "
+                f"expected {self.n_channels_in_}, got {data.shape[-2]}"
+            )
+        if data.ndim == 2:
+            input_mean = data.mean(axis=1, keepdims=True)
+            cleaned = self.denoising_matrix_ @ (data - input_mean)
+        else:
+            input_mean = data.mean(axis=(0, 2), keepdims=True)
+            cleaned = np.einsum(
+                "ij,ejt->eit", self.denoising_matrix_, data - input_mean
+            )
+        if self.preserve_mean:
+            cleaned += input_mean
+        self.last_input_means_ = np.asarray(input_mean).copy()
+        return cleaned
+
+    @staticmethod
+    def _restore_container(
+        cleaned: np.ndarray,
+        *,
+        original: Any,
+        mne_type: str,
+        picks: np.ndarray | None,
+    ) -> Any:
+        """Restore cleaned channels in a copy of the original MNE container."""
+        if mne_type == "array" or original is None:
+            return cleaned
+        output = original.copy()
+        if mne_type in ("raw", "epochs"):
+            output.load_data()
+            if picks is None:
+                output._data[...] = cleaned
+            elif mne_type == "epochs":
+                output._data[:, picks, :] = cleaned
+            else:
+                output._data[picks, :] = cleaned
+        elif mne_type == "evoked":
+            if picks is None:
+                output.data[...] = cleaned
+            else:
+                output.data[picks, :] = cleaned
+        else:  # pragma: no cover - guarded by extract_data_from_mne
+            raise TypeError(f"unsupported container type {mne_type!r}")
+        return output
+
+    def _check_channel_names(self, names: list[str] | None) -> None:
+        """Prevent applying a spatial operator to reordered named channels."""
+        fitted = self.feature_names_in_
+        current = None if names is None else tuple(names)
+        if fitted is not None and current != fitted:
+            raise ValueError(
+                "MNE channel names/order differ from fit; apply SNS to the exact "
+                "fitted channel layout"
+            )
+
+    def fit(self, X: Any, y=None) -> SNS:
         """Learn the SNS spatial operator.
 
         Parameters
@@ -223,15 +427,12 @@ class SNS(BaseEstimator, TransformerMixin):
         -------
         self : SNS
         """
-        data, _sfreq, mne_type, _orig, _picks, _names = extract_data_from_mne(
+        data, _sfreq, _mne_type, _orig, _picks, names = extract_data_from_mne(
             X, auto_pick=True
         )
-        if mne_type == "epochs":
-            n_ep, n_ch, n_t = data.shape
-            data2d = np.transpose(data, (1, 0, 2)).reshape(n_ch, n_ep * n_t)
-        else:
-            data2d = np.asarray(data, dtype=np.float64)
+        data2d = self._as_continuous(np.asarray(data, dtype=np.float64))
         self._learn(data2d)
+        self.feature_names_in_ = None if names is None else tuple(names)
         if self.verbose:
             logger.info(
                 "SNS: learned operator on %d channels (%d neighbours each).",
@@ -256,17 +457,13 @@ class SNS(BaseEstimator, TransformerMixin):
             Cleaned data in the same format as the input.
         """
         check_is_fitted(self, "denoising_matrix_")
-        data, _sfreq, mne_type, orig_inst, picks, _names = extract_data_from_mne(
+        data, _sfreq, mne_type, orig_inst, picks, names = extract_data_from_mne(
             X, auto_pick=True
         )
-        if mne_type == "epochs":
-            cleaned = np.empty_like(data, dtype=np.float64)
-            for e in range(data.shape[0]):
-                cleaned[e] = self.denoising_matrix_ @ np.asarray(data[e], dtype=np.float64)
-        else:
-            cleaned = self.denoising_matrix_ @ np.asarray(data, dtype=np.float64)
-        return reconstruct_mne_object(
-            cleaned, orig_inst, mne_type, picks=picks, verbose=False
+        self._check_channel_names(names)
+        cleaned = self._apply_operator(np.asarray(data, dtype=np.float64))
+        return self._restore_container(
+            cleaned, original=orig_inst, mne_type=mne_type, picks=picks
         )
 
     def fit_transform(self, X: Any, y=None, **fit_params) -> Any:

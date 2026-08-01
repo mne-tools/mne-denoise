@@ -7,10 +7,10 @@ This module contains:
 - ``SNS``: the scikit-learn estimator, compatible with MNE-Python objects or
   NumPy arrays.
 
-SNS (de Cheveigne & Simon 2008) suppresses sensor-specific noise by regenerating
-each channel from a projection onto its most-correlated neighbour channels:
-spatially correlated brain signal is retained, uncorrelated sensor noise is
-removed.
+SNS (de Cheveigne & Simon 2008) regenerates each channel from a projection onto
+its most-correlated neighbour channels. It assumes that signals of interest are
+spatially correlated and sensor-specific noise is not; those assumptions require
+regime-specific validation.
 
 References
 ----------
