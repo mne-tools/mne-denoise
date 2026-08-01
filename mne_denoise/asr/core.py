@@ -166,9 +166,12 @@ class ASR(BaseEstimator, TransformerMixin):
     -----
     **Key Tuning Parameters**
 
-    * **cutoff**: The primary dial for ASR aggressiveness. A value of 20 is standard and
-      conservative (modifies mostly extreme artifacts), while 10 is aggressive (modifies
-      more moderate activity).
+    * **cutoff**: The primary dial for ASR aggressiveness. Its numerical scale
+      depends on the calibration rule, statistics filter, reconstruction
+      implementation, and data regime. The default of 20 supports legacy and
+      reference-implementation comparisons; it is not a universally validated
+      conservative operating point. Freeze and validate the value for each
+      intended regime.
     * **method**: Use ``'standard'`` for standard ASR workflows, or
       ``'riemannian_windowed'`` for a more mathematically robust manifold-based
       calibration covariance estimation that still responds monotonically to ``cutoff``.

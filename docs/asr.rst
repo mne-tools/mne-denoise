@@ -210,8 +210,11 @@ Choosing a variant
 
 A quick decision guide:
 
-- **Most EEG** — ``ASR(method="standard")`` at ``cutoff=20`` (Chang 2020
-  recommends 20-30 for adult EEG). The default, and the right default.
+- **Reference-compatible starting point** — ``ASR(method="standard")`` retains
+  ``cutoff=20`` as its default for legacy and clean_rawdata comparisons. The
+  cutoff scale changes with calibration, filtering, reconstruction, and data
+  regime, so this value is not a universal recommendation. Freeze it only after
+  paired attenuation and neural-preservation validation.
 - **Need Riemannian-robust calibration with a working cutoff** —
   ``ASR(method="riemannian_windowed")``.
 - **Online / streaming BCI** — ``AdaptiveASR(variant="psw")`` (strongest SNR

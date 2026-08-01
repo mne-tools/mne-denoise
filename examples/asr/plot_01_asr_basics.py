@@ -49,8 +49,9 @@ for onset, stop in ((4.0, 4.8), (8.0, 8.6)):
 # %%
 # Fit and Apply ASR
 # -----------------
-# Conservative cutoffs around 20 are a typical starting point for adult EEG and
-# should still be validated with QC plots and downstream analyses.
+# The value 20 is retained for comparison with common clean_rawdata workflows.
+# It is not portable across calibration rules or implementations; tune and freeze
+# an operating point using artifact-attenuation and neural-preservation endpoints.
 asr = ASR(
     sfreq=sfreq,
     cutoff=20.0,
