@@ -7,13 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Match clean_rawdata's interpretation of `MinCleanFraction` during automatic
-  ASR calibration instead of imposing an additional retained-window quota.
-- Keep Juggler DBSCAN reference selection memory-bounded for long, dense
-  recordings while preserving exact Chebyshev DBSCAN cluster membership.
-
 ## [0.0.1] - 2026-01-23
 
 ### Added
