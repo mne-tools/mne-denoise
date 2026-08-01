@@ -206,7 +206,13 @@ print(f"Found {len(blink_samples)} blink events")
 # Create CycleAverageBias
 # Window: 100ms before to 100ms after each blink (in samples)
 window_samples = (-int(0.1 * raw.info["sfreq"]), int(0.1 * raw.info["sfreq"]))
-bias_cycle = CycleAverageBias(event_samples=blink_samples, window=window_samples)
+bias_cycle = CycleAverageBias(
+    event_samples=blink_samples,
+    window=window_samples,
+    window_unit="samples",
+    event_origin="raw",
+    first_samp=raw_meg.first_samp,
+)
 
 # Fit DSS on continuous MEG data
 dss_cycle = DSS(n_components=10, bias=bias_cycle, return_type="sources")

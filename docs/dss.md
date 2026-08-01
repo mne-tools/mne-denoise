@@ -104,24 +104,50 @@ print(f"Power reduction: {est.n_removed_} components")
 
 | Class              | Use Case             | Description                              |
 | ------------------ | -------------------- | ---------------------------------------- |
-| `TrialAverageBias` | Evoked responses     | Epoch averaging for phase-locked signals |
+| `AverageBias`      | Evoked responses     | Epoch averaging for phase-locked signals |
 | `BandpassBias`     | Rhythm extraction    | Narrow-band filter for oscillations      |
 | `NotchBias`        | Line noise isolation | Isolate specific frequency               |
 | `CycleAverageBias` | Artifact removal     | Cycle-locked averaging for ECG/blinks    |
+| `LagAveragingBias` | Predictable signals  | Average explicitly selected sample lags  |
 
 Example usage:
 
 ```python
-from mne_denoise.dss import TrialAverageBias, CycleAverageBias
+import mne
+
+from mne_denoise.dss import (
+    AverageBias,
+    CycleAverageBias,
+    DSS,
+    LagAveragingBias,
+)
 
 # Evoked response enhancement
 epochs_data = np.random.randn(64, 200, 100)  # channels x times x epochs
-bias = TrialAverageBias()
+bias = AverageBias()
 
-# ECG artifact removal
-r_peaks = find_r_peaks(ecg_signal)
-bias = CycleAverageBias(event_samples=r_peaks, window=(-0.1, 0.3), sfreq=500)
+# ECG artifact removal from MNE Raw events. MNE event positions use the
+# acquisition coordinate system, so declare the origin and offset explicitly.
+events, _, _ = mne.preprocessing.find_ecg_events(raw)
+bias = CycleAverageBias(
+    event_samples=events[:, 0],
+    window=(-0.1, 0.3),
+    window_unit="seconds",
+    sfreq=raw.info["sfreq"],
+    event_origin="raw",
+    first_samp=raw.first_samp,
+)
+
+# Extract components emphasized by a bias-side average of selected lags.
+lag_bias = LagAveragingBias(shifts=[1, 2, 5, 10])
+lag_dss = DSS(bias=lag_bias, n_components=5, component_action="extract")
 ```
+
+`LagAveragingBias` and `lag_averaging_dss` are the canonical names for the
+released bias-side operation. `TimeShiftBias` and `time_shift_dss` remain as
+0.x compatibility names and emit `FutureWarning`. They are not true
+time-shift DSS: the `TimeShiftDSS` name is reserved for a future estimator that
+augments the data with lagged copies and learns spatiotemporal filters.
 
 ### Nonlinear Biases
 

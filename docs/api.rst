@@ -76,6 +76,7 @@ Denoisers
    mne_denoise.dss.denoisers.LineNoiseBias
    mne_denoise.dss.denoisers.PeakFilterBias
    mne_denoise.dss.denoisers.CombFilterBias
+   mne_denoise.dss.denoisers.LagAveragingBias
    mne_denoise.dss.denoisers.TimeShiftBias
    mne_denoise.dss.denoisers.SmoothingBias
    mne_denoise.dss.denoisers.SpectrogramBias
@@ -96,6 +97,7 @@ Variants
    :toctree: generated/
    :nosignatures:
 
+   mne_denoise.dss.variants.lag_averaging_dss
    mne_denoise.dss.variants.time_shift_dss
    mne_denoise.dss.variants.smooth_dss
    mne_denoise.dss.variants.narrowband_dss
