@@ -63,14 +63,14 @@ iCanClean
    mne_denoise.icanclean.ICanClean
    mne_denoise.icanclean.compute_icanclean
 
-Auto-CCA
---------
+Lagged CCA
+----------
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
-   mne_denoise.cca.AutoCCA
-   mne_denoise.cca.compute_autocca
+   mne_denoise.cca.LaggedCCA
+   mne_denoise.cca.compute_lagged_cca
 
 Denoisers
 ---------

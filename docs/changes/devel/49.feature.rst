@@ -1,0 +1,4 @@
+Added :class:`mne_denoise.cca.LaggedCCA` and
+:func:`mne_denoise.cca.compute_lagged_cca` for reference-free BSS-CCA with an
+explicit lag in samples or physical time and leakage-safe ``fit``/``transform``
+semantics.

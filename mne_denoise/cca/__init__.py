@@ -1,9 +1,9 @@
-"""Reference-free BSS-CCA (auto-CCA) artifact removal.
+"""Reference-free lagged-CCA artifact attenuation.
 
 This module contains:
 
-- ``compute_autocca``: the one-shot array-based BSS-CCA algorithm.
-- ``AutoCCA``: the scikit-learn estimator (leakage-safe ``fit``/``transform``),
+- ``compute_lagged_cca``: the one-shot array-based BSS-CCA algorithm.
+- ``LaggedCCA``: the scikit-learn estimator (leakage-safe ``fit``/``transform``),
   compatible with MNE-Python objects or NumPy arrays.
 
 Canonical-Correlation-Analysis blind source separation (BSS-CCA) removes muscle
@@ -20,9 +20,9 @@ References
        https://doi.org/10.1109/TBME.2006.879459
 """
 
-from .core import AutoCCA, compute_autocca
+from .core import LaggedCCA, compute_lagged_cca
 
 __all__ = [
-    "AutoCCA",
-    "compute_autocca",
+    "LaggedCCA",
+    "compute_lagged_cca",
 ]

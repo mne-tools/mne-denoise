@@ -1,86 +1,62 @@
-# Auto-CCA (Reference-free BSS-CCA)
+# Lagged CCA (reference-free BSS-CCA)
 
-## Overview
+`mne_denoise.cca` implements reference-free canonical-correlation blind source
+separation for broadband muscle-artifact attenuation (De Clercq et al., 2006).
+It solves CCA between the multichannel signal and a delayed copy of that signal,
+then orders components by lagged correlation.
 
-The `mne_denoise.cca` module implements **reference-free canonical-correlation
-blind source separation (BSS-CCA)**, also called *auto-CCA*, for muscle / EMG
-artifact removal (De Clercq et al. 2006).
-
-BSS-CCA runs canonical correlation analysis between the multichannel signal and
-a **one-sample-lagged copy of itself**. This orders the recovered components by
-*temporal autocorrelation*: slow, highly autocorrelated components (neural
-rhythms) get high canonical correlations, while broadband, weakly autocorrelated
-components (EMG / muscle) get low ones. Dropping the low-autocorrelation
-components and reconstructing removes muscle activity while preserving neural
-structure.
-
-Auto-CCA is the **reference-free counterpart** to
-[`ICanClean`](../mne_denoise/icanclean): both are CCA-based spatial cleaners, but
-iCanClean cancels artifacts shared with dedicated reference channels, whereas
-auto-CCA needs no reference and separates on autocorrelation alone.
-
-## Quick Start
+The lag is part of the operating point. It must be stated explicitly in samples
+or seconds; the API never inserts an undocumented one-sample lag.
 
 ```python
-import numpy as np
-from mne_denoise.cca import AutoCCA
+from mne_denoise.cca import LaggedCCA
 
-data = np.random.randn(32, 10000)  # 32 channels, 10000 samples
+# Sample-domain declaration for an array.
+estimator = LaggedCCA(lag_samples=1, rho_threshold=0.9)
+estimator.fit(train_data)
+cleaned = estimator.transform(evaluation_data)
 
-# Leakage-safe estimator API: learn on train, apply to eval.
-est = AutoCCA(rho_threshold=0.9)
-est.fit(data)
-cleaned = est.transform(data)
-
-print(f"kept {est.n_kept_} / removed {est.n_removed_} components")
+# Equivalent physical-time declaration for MNE data at 250 Hz.
+cleaned_raw = LaggedCCA(lag_seconds=0.004).fit_transform(raw)
 ```
 
-With MNE-Python objects (a single homogeneous channel type is auto-picked):
+For one-shot array use, `compute_lagged_cca` returns both the cleaned data and
+diagnostics:
 
 ```python
-raw_clean = AutoCCA(rho_threshold=0.9).fit_transform(raw)
+from mne_denoise.cca import compute_lagged_cca
+
+cleaned, diagnostics = compute_lagged_cca(
+    data,
+    lag_seconds=0.004,
+    sfreq=250.0,
+    rho_threshold=0.9,
+)
 ```
 
-## One-shot functional API
-
-For a quick clean of a single array (learns and applies in one call — use the
-`AutoCCA` estimator instead when you need a train/evaluation split):
-
-```python
-from mne_denoise.cca import compute_autocca
-
-cleaned, info = compute_autocca(data, rho_threshold=0.9)
-print(info["correlations"])   # canonical autocorrelations, descending
-print(info["n_removed"])      # components dropped as muscle
-```
+For Epochs, lagged pairs are formed within each epoch. No synthetic pair is
+created across epoch boundaries. `fit` and `transform` remain separate so a
+fixed operator can be evaluated without train/evaluation leakage.
 
 ## Parameters
 
-| Parameter       | Description                                                                 |
-| --------------- | --------------------------------------------------------------------------- |
-| `rho_threshold` | Keep components whose autocorrelation is ≥ this value; drop the rest as EMG. |
-| `n_keep`        | If set, keep exactly the top-`n_keep` components by autocorrelation.         |
-| `verbose`       | MNE-style logging verbosity.                                                 |
+| Parameter | Meaning |
+| --- | --- |
+| `lag_samples` | Positive lag in samples; mutually exclusive with `lag_seconds`. |
+| `lag_seconds` | Positive physical lag; requires MNE sampling metadata or `sfreq`. |
+| `sfreq` | Sampling frequency for NumPy data when using `lag_seconds`. |
+| `rho_threshold` | Retain components whose lagged correlation meets this threshold. |
+| `n_keep` | Retain exactly this many leading components instead of thresholding. |
 
-## Algorithm Details
+The method assumes broadband artifacts have lower short-lag correlation than
+the neural activity to preserve. That assumption is regime-dependent: a high-
+frequency neural target or a temporally structured artifact can reverse the
+ordering. Report attenuation and neural-preservation endpoints together, and
+freeze the lag and selection rule before evaluation.
 
-Given data `X` (channels × samples):
+## Reference
 
-1. Form the one-sample-lagged copy `Y` of `X` (no wrap-around).
-2. Solve CCA between `X` and `Y`, giving canonical filters `A` and canonical
-   correlations `R` (the per-component autocorrelations), sorted descending.
-3. Build a keep-mask (`R ≥ rho_threshold`, or the top-`n_keep`).
-4. Form the channel-space cleaning operator
-   `C = (A · diag(keep) · pinv(A))ᵀ` and reconstruct
-   `X_clean = C · (X − mean) + mean`.
-
-## References
-
-1. De Clercq, W., Vergult, A., Vanrumste, B., Van Paesschen, W., & Van Huffel,
-   S. (2006). Canonical correlation analysis applied to remove muscle artifacts
-   from the electroencephalogram. _IEEE Transactions on Biomedical Engineering_,
-   53(12), 2583-2587. https://doi.org/10.1109/TBME.2006.879459
-2. Safieddine, D., et al. (2012). Removal of muscle artifact from EEG data:
-   comparison between stochastic (ICA and CCA) and deterministic (EMD and
-   wavelet-based) approaches. _EURASIP Journal on Advances in Signal
-   Processing_, 2012, 127. https://doi.org/10.1186/1687-6180-2012-127
+De Clercq, W., Vergult, A., Vanrumste, B., Van Paesschen, W., & Van Huffel, S.
+(2006). Canonical correlation analysis applied to remove muscle artifacts from
+the electroencephalogram. *IEEE Transactions on Biomedical Engineering*,
+53(12), 2583–2587. https://doi.org/10.1109/TBME.2006.879459
