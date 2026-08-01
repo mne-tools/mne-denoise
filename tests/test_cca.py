@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 import pytest
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 
 from mne_denoise.cca import LaggedCCA, compute_lagged_cca
-from mne_denoise.cca.core import _lagged_pairs
+from mne_denoise.cca.core import _apply_operator, _lagged_pairs
 
 
 @pytest.fixture()
@@ -234,3 +236,71 @@ def test_transform_sfreq_must_match_fitted_mne_data(muscle_data):
     estimator = LaggedCCA(lag_seconds=0.004).fit(train)
     with pytest.raises(ValueError, match="transform sfreq"):
         estimator.transform(different_rate)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "error", "message"),
+    [
+        ({"lag_samples": 1, "rho_threshold": True}, TypeError, "rho_threshold"),
+        ({"lag_seconds": np.nan, "sfreq": 100.0}, TypeError, "lag_seconds"),
+        ({"lag_seconds": -0.1, "sfreq": 100.0}, ValueError, "positive"),
+        ({"lag_seconds": 0.01, "sfreq": True}, TypeError, "sfreq"),
+        ({"lag_seconds": 0.01, "sfreq": 0.0}, ValueError, "sfreq"),
+    ],
+)
+def test_scalar_contracts_reject_ambiguous_values(rng, kwargs, error, message):
+    """Lag and selection scalars reject booleans, non-finite, and nonpositive values."""
+    with pytest.raises(error, match=message):
+        compute_lagged_cca(rng.standard_normal((3, 100)), **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("data", "lag", "message"),
+    [
+        (np.empty((0, 10)), 1, "at least one channel"),
+        (np.empty((0, 2, 10)), 1, "at least one epoch"),
+        (np.empty((2, 0, 10)), 1, "at least one epoch"),
+        (np.ones((2, 2)), 1, "at least two paired"),
+        (np.ones(10), 1, "2-D.*3-D"),
+    ],
+)
+def test_lagged_pair_shape_preconditions(data, lag, message):
+    """The pairing primitive rejects empty, undersampled, and ambiguous layouts."""
+    with pytest.raises(ValueError, match=message):
+        _lagged_pairs(data, lag)
+
+
+def test_function_and_operator_reject_unsupported_dimensions():
+    """Only channel-time and epoch-channel-time arrays are admissible."""
+    with pytest.raises(ValueError, match="2-D or 3-D"):
+        compute_lagged_cca(np.ones(10), lag_samples=1)
+    with pytest.raises(ValueError, match="2-D.*3-D"):
+        _apply_operator(np.ones(10), np.eye(2))
+
+
+def test_verbose_fit_reports_the_resolved_operating_point(rng, caplog):
+    """Opt-in logging reports the fitted lag and component counts."""
+    data = rng.standard_normal((4, 200))
+    with caplog.at_level(logging.INFO, logger="mne_denoise.cca.core"):
+        LaggedCCA(lag_samples=2, n_keep=2, verbose=True).fit(data)
+    assert "LaggedCCA: lag=2 samples, kept 2" in caplog.text
+
+
+def test_mne_evoked_round_trip_preserves_metadata(rng):
+    """Evoked output remains an Evoked copy with its acquisition metadata."""
+    mne = pytest.importorskip("mne")
+    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 200.0, "eeg")
+    evoked = mne.EvokedArray(
+        rng.standard_normal((3, 300)),
+        info,
+        tmin=-0.1,
+        comment="condition",
+        nave=12,
+        verbose=False,
+    )
+    cleaned = LaggedCCA(lag_samples=2, n_keep=2).fit_transform(evoked)
+    assert isinstance(cleaned, mne.Evoked)
+    assert cleaned.comment == evoked.comment
+    assert cleaned.nave == evoked.nave
+    assert cleaned.first == evoked.first
+    assert cleaned.data.shape == evoked.data.shape
