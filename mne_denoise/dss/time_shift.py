@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
+from numbers import Integral, Real
 from typing import Any
 
 import numpy as np
@@ -48,6 +49,8 @@ from .utils import compute_covariance
 from .utils.selection import auto_select_components_robust
 
 _COMPONENT_ACTIONS = frozenset({"extract", "retain", "subtract"})
+_PLATFORM_INT_INFO = np.iinfo(np.intp)
+_FLOAT_EXACT_INTEGER_LIMIT = 2**53
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,21 +192,61 @@ def _validate_sfreq(sfreq: float | None) -> float | None:
     return sfreq
 
 
-def _one_dimensional_numeric(values: Any, name: str) -> np.ndarray:
-    """Convert a lag declaration to a finite one-dimensional numeric array."""
+def _one_dimensional_values(values: Any, name: str) -> list[Any]:
+    """Return a non-empty one-dimensional lag declaration as Python values."""
     if isinstance(values, str | bytes) or np.isscalar(values):
         raise TypeError(f"{name} must be a one-dimensional sequence, not a scalar.")
-    array = np.asarray(values)
+    array = np.asarray(values, dtype=object)
     if array.ndim != 1 or array.size == 0:
         raise ValueError(f"{name} must be a non-empty one-dimensional sequence.")
-    if np.issubdtype(array.dtype, np.bool_) or not np.issubdtype(
-        array.dtype, np.number
-    ):
-        raise TypeError(f"{name} must contain numeric values, not booleans.")
-    array = np.asarray(array, dtype=float)
-    if not np.all(np.isfinite(array)):
-        raise ValueError(f"{name} must contain only finite values.")
-    return array
+    return array.tolist()
+
+
+def _platform_sample_offsets(values: Any) -> list[int]:
+    """Parse sample offsets exactly and enforce the platform index range."""
+    resolved = []
+    for idx, value in enumerate(_one_dimensional_values(values, "lag_samples")):
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError("lag_samples must contain numeric values, not booleans.")
+        if isinstance(value, Integral):
+            sample = int(value)
+        else:
+            numeric = float(value)
+            if not np.isfinite(numeric):
+                raise ValueError("lag_samples must contain only finite values.")
+            if abs(numeric) >= _FLOAT_EXACT_INTEGER_LIMIT:
+                raise ValueError(
+                    f"lag_samples[{idx}] cannot be resolved without floating-point "
+                    "precision loss; pass an exact integer sample offset."
+                )
+            if not numeric.is_integer():
+                raise ValueError("lag_samples must contain whole sample offsets.")
+            sample = int(numeric)
+        if sample < _PLATFORM_INT_INFO.min or sample > _PLATFORM_INT_INFO.max:
+            raise ValueError(
+                f"lag_samples[{idx}]={sample} is outside the platform integer range "
+                f"[{_PLATFORM_INT_INFO.min}, {_PLATFORM_INT_INFO.max}]."
+            )
+        resolved.append(sample)
+    return resolved
+
+
+def _finite_physical_lags(values: Any) -> np.ndarray:
+    """Convert physical lags to finite floats without accepting booleans."""
+    converted = []
+    for value in _one_dimensional_values(values, "lag_times"):
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError("lag_times must contain numeric values, not booleans.")
+        try:
+            numeric = float(value)
+        except OverflowError as error:
+            raise ValueError(
+                "lag_times must be representable as finite floating-point values."
+            ) from error
+        if not np.isfinite(numeric):
+            raise ValueError("lag_times must contain only finite values.")
+        converted.append(numeric)
+    return np.asarray(converted, dtype=float)
 
 
 def _resolve_lags(
@@ -218,19 +261,31 @@ def _resolve_lags(
     sfreq = _validate_sfreq(sfreq)
 
     if lag_samples is not None:
-        values = _one_dimensional_numeric(lag_samples, "lag_samples")
-        rounded = np.rint(values)
-        if not np.array_equal(values, rounded):
-            raise ValueError("lag_samples must contain whole sample offsets.")
-        resolved = rounded.astype(int)
+        resolved = _platform_sample_offsets(lag_samples)
         unit = "samples"
     else:
         if sfreq is None:
             raise ValueError("sfreq is required when lag_times are specified.")
-        values = _one_dimensional_numeric(lag_times, "lag_times")
-        sample_positions = values * sfreq
+        values = _finite_physical_lags(lag_times)
+        with np.errstate(over="ignore", invalid="ignore"):
+            sample_positions = values * sfreq
+        if not np.all(np.isfinite(sample_positions)):
+            raise ValueError(
+                "lag_times multiplied by sfreq must remain finite; the requested "
+                "sample offset overflowed floating-point range."
+            )
+        if np.any(np.abs(sample_positions) >= _FLOAT_EXACT_INTEGER_LIMIT):
+            raise ValueError(
+                "lag_times resolve beyond the exact floating-point integer range; "
+                "use lag_samples with exact integer offsets instead."
+            )
+        if np.any(sample_positions < _PLATFORM_INT_INFO.min) or np.any(
+            sample_positions > _PLATFORM_INT_INFO.max
+        ):
+            raise ValueError("lag_times resolve outside the platform integer range.")
         rounded = np.rint(sample_positions)
-        tolerance = 1e-9 * np.maximum(1.0, np.abs(sample_positions))
+        roundoff = 16 * np.finfo(float).eps * np.maximum(1.0, np.abs(sample_positions))
+        tolerance = np.minimum(1e-7, np.maximum(1e-12, roundoff))
         if np.any(np.abs(sample_positions - rounded) > tolerance):
             bad = int(np.flatnonzero(np.abs(sample_positions - rounded) > tolerance)[0])
             nearest = rounded[bad] / sfreq
@@ -239,23 +294,23 @@ def _resolve_lags(
                 f"lag_times[{bad}]={values[bad]!r} s is nearest to "
                 f"{nearest!r} s at sfreq={sfreq!r} Hz."
             )
-        resolved = rounded.astype(int)
+        resolved = [int(value) for value in rounded]
         unit = "seconds"
 
-    if len(set(resolved.tolist())) != resolved.size:
+    if len(set(resolved)) != len(resolved):
         raise ValueError("Lag offsets must remain unique after conversion to samples.")
     if 0 not in resolved:
         raise ValueError(
             "Lag offsets must explicitly include zero so sensor-space output "
             "has an unambiguous reference time."
         )
-    if resolved.size < 2 or np.all(resolved == 0):
+    if len(resolved) < 2 or all(value == 0 for value in resolved):
         raise ValueError(
             "Time-shift DSS requires zero and at least one non-zero lag; "
             "use DSS for an instantaneous filter."
         )
 
-    samples = tuple(sorted(int(value) for value in resolved))
+    samples = tuple(sorted(resolved))
     seconds = (
         tuple(float(value) / sfreq for value in samples) if sfreq is not None else None
     )

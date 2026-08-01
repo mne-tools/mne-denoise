@@ -82,6 +82,46 @@ def test_lag_contract_rejects_ambiguous_or_unaligned_values(kwargs, error, match
         _resolve_lags(**params)
 
 
+@pytest.mark.parametrize(
+    "lag_samples, match",
+    [
+        ([0, np.iinfo(np.intp).max + 1], "platform integer range"),
+        ([np.iinfo(np.intp).min - 1, 0], "platform integer range"),
+        ([0, float(2**53)], "precision loss"),
+        ([0, np.uint64(np.iinfo(np.uint64).max)], "platform integer range"),
+    ],
+)
+def test_sample_lags_reject_overflow_and_float_precision_loss(lag_samples, match):
+    with pytest.raises(ValueError, match=match):
+        _resolve_lags(lag_samples=lag_samples, lag_times=None, sfreq=None)
+
+
+def test_exact_large_integer_sample_lag_is_not_first_coerced_to_float():
+    # This value is larger than float's consecutive-integer range but remains
+    # inside a 64-bit platform index. The exact integer survives parsing and is
+    # then rejected only because no realistic input can span it.
+    if np.iinfo(np.intp).max <= 2**53:
+        pytest.skip("Platform integer range does not exceed float exact integers.")
+    lag = 2**53 + 1
+    samples, _, _, _ = _resolve_lags(lag_samples=[0, lag], lag_times=None, sfreq=None)
+    assert samples == (0, lag)
+
+
+@pytest.mark.parametrize(
+    "lag_times, sfreq, match",
+    [
+        ([0.0, np.finfo(float).max], 2.0, "overflowed"),
+        ([0.0, float(2**53)], 1.0, "exact floating-point integer range"),
+        ([0, 10**1000], 1.0, "representable as finite"),
+    ],
+)
+def test_physical_lags_reject_multiplication_overflow_and_precision_loss(
+    lag_times, sfreq, match
+):
+    with pytest.raises(ValueError, match=match):
+        _resolve_lags(lag_samples=None, lag_times=lag_times, sfreq=sfreq)
+
+
 def test_sample_and_physical_lag_declarations_are_equivalent():
     data = _array_data()
     sample_result = compute_time_shift_dss(
