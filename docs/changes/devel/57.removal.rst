@@ -1,0 +1,6 @@
+**DSS**:
+- Deprecated ``TimeShiftBias`` and ``time_shift_dss`` in favor of
+  ``LagAveragingBias`` and ``lag_averaging_dss``. Deprecated implicit
+  ``CycleAverageBias`` window units and event origins. These 0.x compatibility
+  paths emit ``FutureWarning`` and are scheduled for removal in 1.0;
+  ``TimeShiftDSS`` remains reserved for a future true lag-augmented estimator.
