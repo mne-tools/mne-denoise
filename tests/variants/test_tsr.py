@@ -2,8 +2,12 @@ import mne
 import numpy as np
 import pytest
 
-from mne_denoise.dss.denoisers.temporal import SmoothingBias, TimeShiftBias
-from mne_denoise.dss.variants.tsr import smooth_dss, time_shift_dss
+from mne_denoise.dss.denoisers.temporal import LagAveragingBias, SmoothingBias
+from mne_denoise.dss.variants.tsr import (
+    lag_averaging_dss,
+    smooth_dss,
+    time_shift_dss,
+)
 
 
 @pytest.fixture
@@ -32,7 +36,7 @@ def slow_data_generator():
 
 def test_tsr_array(slow_data_generator):
     data, slow = slow_data_generator((3, 500))
-    dss = time_shift_dss(shifts=10, n_components=3)
+    dss = lag_averaging_dss(shifts=10, n_components=3)
     dss.fit(data)
 
     sources = dss.transform(data)
@@ -46,7 +50,7 @@ def test_tsr_raw(slow_data_generator):
     info = mne.create_info(3, 100, "eeg")
     raw = mne.io.RawArray(data, info, verbose=False)
 
-    dss = time_shift_dss(shifts=10, n_components=3)
+    dss = lag_averaging_dss(shifts=10, n_components=3)
     dss.fit(raw)
 
     sources = dss.transform(raw)
@@ -59,7 +63,7 @@ def test_tsr_epochs(slow_data_generator):
     info = mne.create_info(3, 100, "eeg")
     epochs = mne.EpochsArray(data, info, verbose=False)
 
-    dss = time_shift_dss(shifts=10, n_components=2)
+    dss = lag_averaging_dss(shifts=10, n_components=2)
     dss.fit(epochs)
 
     sources = dss.transform(epochs)
@@ -92,8 +96,8 @@ def test_tsr_3d_bias_unit():
     rng = np.random.default_rng(42)
     data_3d = rng.standard_normal((3, 20, 5))  # (ch, times, epochs)
 
-    # 1. TimeShiftBias
-    bias = TimeShiftBias(shifts=2)
+    # 1. LagAveragingBias
+    bias = LagAveragingBias(shifts=2)
     out_3d = bias.apply(data_3d)
     assert out_3d.shape == data_3d.shape
     assert out_3d.ndim == 3
@@ -109,10 +113,31 @@ def test_tsr_prediction_method(slow_data_generator):
     """Test functionality of prediction method."""
     data, slow = slow_data_generator((3, 500))
 
-    dss = time_shift_dss(shifts=10, method="prediction", n_components=3)
+    dss = lag_averaging_dss(shifts=10, method="prediction", n_components=3)
     dss.fit(data)
 
     sources = dss.transform(data)
     # Should still extract the slow component
     corr = np.abs(np.corrcoef(sources[0], slow)[0, 1])
     assert corr > 0.8
+
+
+def test_time_shift_dss_compatibility_warning_and_parity():
+    """The old helper warns and still returns the canonical configuration."""
+    with pytest.warns(FutureWarning, match="lag_averaging_dss"):
+        legacy = time_shift_dss(shifts=[1, 3], method="prediction", n_components=2)
+    canonical = lag_averaging_dss(shifts=[1, 3], method="prediction", n_components=2)
+
+    assert isinstance(legacy.bias, LagAveragingBias)
+    assert legacy.bias.method == canonical.bias.method
+    np.testing.assert_array_equal(legacy.bias._shift_array, canonical.bias._shift_array)
+
+
+def test_canonical_lag_names_are_available_from_public_apis():
+    """Canonical class and helper are exposed by both flat APIs."""
+    import mne_denoise.dss as dss_api
+    import mne_denoise.dss.variants as variants_api
+
+    assert dss_api.LagAveragingBias is LagAveragingBias
+    assert dss_api.lag_averaging_dss is lag_averaging_dss
+    assert variants_api.lag_averaging_dss is lag_averaging_dss

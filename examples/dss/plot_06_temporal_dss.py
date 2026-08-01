@@ -1,15 +1,15 @@
 """
-=================================================
-Temporal DSS: Time-Shift Regression & Smoothness.
-=================================================
+=========================================
+Temporal DSS: Lag Averaging & Smoothness.
+=========================================
 
 This example demonstrates DSS for extracting **temporally structured** signals:
 autocorrelated components, slow drifts, and smooth waveforms.
 
-We cover both **linear biases** (TimeShiftBias, SmoothingBias) and
+We cover both **linear biases** (LagAveragingBias, SmoothingBias) and
 **nonlinear denoisers** (DCTDenoiser, TemporalSmoothnessDenoiser).
 
-The examples move from synthetic slow drifts to time-shift and smoothing
+The examples move from synthetic slow drifts to lag-averaging and smoothing
 biases, then to DCT-based iterative denoising and a real EEG slow-potential
 example.
 
@@ -29,10 +29,10 @@ from scipy import signal
 from mne_denoise.dss import DSS, IterativeDSS
 from mne_denoise.dss.denoisers import (
     DCTDenoiser,
+    LagAveragingBias,
     SmoothingBias,
-    TimeShiftBias,
 )
-from mne_denoise.dss.variants import smooth_dss, time_shift_dss
+from mne_denoise.dss.variants import lag_averaging_dss, smooth_dss
 from mne_denoise.viz import (
     plot_channel_time_course_comparison,
     plot_component_summary,
@@ -116,21 +116,21 @@ plt.show()
 
 
 # %%
-# Part 1: Time-Shift Regression (TimeShiftBias)
-# ==============================================
-# TSR finds components that are autocorrelated across time lags
+# Part 1: Bias-side lag averaging (LagAveragingBias)
+# ==================================================
+# Lag averaging finds components that are autocorrelated across time lags.
 
-print("\n--- Part 1: Time-Shift Regression ---")
+print("\n--- Part 1: Bias-side lag averaging ---")
 
-# Manual TimeShiftBias
-bias_tsr = TimeShiftBias(shifts=10, method="autocorrelation")
+# Manual LagAveragingBias
+bias_tsr = LagAveragingBias(shifts=10, method="autocorrelation")
 dss_tsr_manual = DSS(n_components=5, bias=bias_tsr)
 dss_tsr_manual.fit(raw_sim)
 
 print(f"Manual DSS Eigenvalues: {dss_tsr_manual.eigenvalues_[:5]}")
 
 # Wrapper for comparison
-dss_tsr_wrapper = time_shift_dss(shifts=10, n_components=5)
+dss_tsr_wrapper = lag_averaging_dss(shifts=10, n_components=5)
 dss_tsr_wrapper.fit(raw_sim)
 
 print(f"Wrapper Eigenvalues: {dss_tsr_wrapper.eigenvalues_[:5]}")
@@ -145,7 +145,7 @@ plot_component_summary(
     n_components=3,
     show=False,
 )
-plt.gcf().suptitle("TimeShiftBias (TSR): Autocorrelated Components")
+plt.gcf().suptitle("LagAveragingBias: Autocorrelated Components")
 plt.show()
 
 # %%
@@ -169,12 +169,12 @@ plt.plot(
     comp0_tsr[:2000] * (np.std(drift) / np.std(comp0_tsr)),
     "r",
     linewidth=1.5,
-    label=f"TSR Component 0 (r={corr_tsr:.3f})",
+    label=f"Lag-average component 0 (r={corr_tsr:.3f})",
     alpha=0.8,
 )
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude (scaled)")
-plt.title("Time-Shift Regression: Extracted Slow Drift")
+plt.title("Lag averaging: Extracted slow drift")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
@@ -279,8 +279,13 @@ axes[0].set_ylabel("Amplitude")
 axes[0].legend()
 axes[0].grid(True, alpha=0.3)
 
-axes[1].plot(t_compare, comp0_tsr[:2000] * scale, "r", label=f"TSR (r={corr_tsr:.3f})")
-axes[1].set_title("TimeShiftBias (Time-Shift Regression)")
+axes[1].plot(
+    t_compare,
+    comp0_tsr[:2000] * scale,
+    "r",
+    label=f"Lag averaging (r={corr_tsr:.3f})",
+)
+axes[1].set_title("LagAveragingBias (bias-side lag averaging)")
 axes[1].set_ylabel("Amplitude")
 axes[1].legend()
 axes[1].grid(True, alpha=0.3)
@@ -311,7 +316,7 @@ print("\n--- All methods successfully extract the slow drift ---")
 # %%
 # Part 4: Real EEG Data (Slow Cortical Potentials)
 # =================================================
-# Apply TSR to real EEG for slow drift extraction
+# Apply lag-averaging DSS to real EEG for slow-drift extraction.
 
 print("\n--- Part 4: Real EEG Data ---")
 
@@ -342,11 +347,11 @@ raw_eeg.crop(0, 30)  # 30 seconds
 
 print(f"EEG Data: {len(raw_eeg.ch_names)} channels, {raw_eeg.times[-1]:.1f}s")
 
-# Apply TSR
-dss_eeg_tsr = time_shift_dss(shifts=10, n_components=5)
+# Apply lag-averaging DSS.
+dss_eeg_tsr = lag_averaging_dss(shifts=10, n_components=5)
 dss_eeg_tsr.fit(raw_eeg)
 
-print(f"\nTSR Eigenvalues: {dss_eeg_tsr.eigenvalues_[:5]}")
+print(f"\nLag-averaging eigenvalues: {dss_eeg_tsr.eigenvalues_[:5]}")
 
 # Get sources for visualization
 sources_eeg = dss_eeg_tsr.transform(raw_eeg)
@@ -366,7 +371,7 @@ plot_channel_time_course_comparison(
     stop=int(10 * raw_single.info["sfreq"]),
     show=False,
 )
-plt.gcf().suptitle("Real EEG: Original vs TSR Component 0")
+plt.gcf().suptitle("Real EEG: Original vs lag-average component 0")
 plt.show()
 
 # %%
@@ -374,4 +379,4 @@ plot_psd_comparison(raw_single, comp_raw, fmin=0.1, fmax=10, show=False)
 plt.gcf().axes[0].set_title("Real EEG: PSD Comparison (Slow Oscillations)")
 plt.show()
 
-print("\nTSR successfully extracted slow cortical potentials from real EEG!")
+print("\nLag averaging extracted slow cortical potentials from real EEG!")

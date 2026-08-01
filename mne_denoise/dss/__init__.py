@@ -17,6 +17,7 @@ from .denoisers import (
     DCTDenoiser,
     GaussDenoiser,
     KurtosisDenoiser,
+    LagAveragingBias,
     LinearDenoiser,
     LineNoiseBias,
     NonlinearDenoiser,
@@ -54,7 +55,7 @@ from .variants.narrowband import narrowband_dss, narrowband_scan
 from .variants.ssvep import ssvep_dss
 
 # Variants (Direct Access)
-from .variants.tsr import smooth_dss, time_shift_dss
+from .variants.tsr import lag_averaging_dss, smooth_dss, time_shift_dss
 
 __all__ = [
     # Core
@@ -68,6 +69,7 @@ __all__ = [
     "ssvep",
     "narrowband",
     # Variants functions
+    "lag_averaging_dss",
     "time_shift_dss",
     "smooth_dss",
     "ssvep_dss",
@@ -85,6 +87,7 @@ __all__ = [
     "PeakFilterBias",
     "CombFilterBias",
     "CycleAverageBias",
+    "LagAveragingBias",
     "WienerMaskDenoiser",
     "TanhMaskDenoiser",
     "RobustTanhDenoiser",

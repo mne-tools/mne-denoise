@@ -1,7 +1,9 @@
-"""Time-Shift DSS (TSR) variant.
+"""Lag-averaging and smoothing DSS convenience constructors.
 
-Convenience wrapper for extracting temporally extended structure
-(autocorrelated signals, slow waves, DC shifts) [1]_.
+These bias-side temporal operators extract autocorrelated signals, slow waves,
+and DC shifts. They do not implement the data-side lag augmentation of true
+time-shift DSS [1]_; the ``TimeShiftDSS`` name is reserved for that future
+estimator.
 
 Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
          Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
@@ -14,23 +16,26 @@ References
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 
-from ..denoisers.temporal import SmoothingBias, TimeShiftBias
+from ..denoisers.temporal import LagAveragingBias, SmoothingBias
 from ..linear import DSS
 
 
-def time_shift_dss(
+def lag_averaging_dss(
     shifts: int | np.ndarray = 10,
     *,
     method: str = "autocorrelation",
     n_components: int | None = None,
     **dss_kws,
 ) -> DSS:
-    """Create a DSS configured for temporal predictability.
+    """Create a DSS configured with a bias-side lag average.
 
     Returns a pre-configured DSS object that extracts components with
-    high autocorrelation (temporally smooth or predictable signals).
+    high lag predictability. The resulting filter is spatial DSS; this helper
+    does not construct data-side lag-augmented filters.
 
     Parameters
     ----------
@@ -50,21 +55,49 @@ def time_shift_dss(
     Returns
     -------
     dss : DSS
-        A DSS object configured with a TimeShiftBias.
+        A DSS object configured with a :class:`LagAveragingBias`.
 
     Examples
     --------
     >>> # Extract temporally predictable components
-    >>> dss = time_shift_dss(shifts=20)
+    >>> dss = lag_averaging_dss(shifts=20)
     >>> dss.fit(data)
     >>> slow_sources = dss.transform(data)
 
     >>> # Use specific lags
-    >>> dss = time_shift_dss(shifts=np.array([1, 2, 5, 10, 20]))
+    >>> dss = lag_averaging_dss(shifts=np.array([1, 2, 5, 10, 20]))
     >>> dss.fit(data)
     """
-    bias = TimeShiftBias(shifts=shifts, method=method)
+    bias = LagAveragingBias(shifts=shifts, method=method)
     return DSS(bias=bias, n_components=n_components, **dss_kws)
+
+
+def time_shift_dss(
+    shifts: int | np.ndarray = 10,
+    *,
+    method: str = "autocorrelation",
+    n_components: int | None = None,
+    **dss_kws,
+) -> DSS:
+    """Construct lag-averaging DSS through its deprecated compatibility name.
+
+    The released helper configures bias-side lag averaging rather than true
+    time-shift DSS. Its 0.x numerical behavior is retained under the canonical
+    name while this compatibility wrapper emits ``FutureWarning``.
+    """
+    warnings.warn(
+        "'time_shift_dss' is deprecated and will be removed in mne-denoise "
+        "1.0; use 'lag_averaging_dss' instead. The 'TimeShiftDSS' name is "
+        "reserved for a future data-side lag-augmented implementation.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return lag_averaging_dss(
+        shifts=shifts,
+        method=method,
+        n_components=n_components,
+        **dss_kws,
+    )
 
 
 def smooth_dss(
