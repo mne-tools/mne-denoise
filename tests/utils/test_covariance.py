@@ -264,6 +264,19 @@ def test_compute_evoked_covariance_raises_on_too_few_samples():
         compute_evoked_covariance(evoked)
 
 
+def test_compute_evoked_covariance_requires_sample_mean():
+    """A one-Evoked wrapper cannot subtract an across-epoch sample mean."""
+    evoked, _ = _make_evoked()
+
+    cov = compute_evoked_covariance(
+        evoked, keep_sample_mean=True, method="empirical", verbose=False
+    )
+    assert isinstance(cov, mne.Covariance)
+
+    with pytest.raises(ValueError, match="keep_sample_mean must be True"):
+        compute_evoked_covariance(evoked, keep_sample_mean=False)
+
+
 def test_compute_evoked_covariance_rejects_non_2d_data():
     """Non-2D evoked data is rejected before reaching MNE."""
 

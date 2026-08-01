@@ -155,6 +155,8 @@ def compute_evoked_covariance(
     **kwargs
         Additional keyword arguments forwarded to
         :func:`mne.compute_covariance` (e.g. ``rank``, ``verbose``).
+        ``keep_sample_mean`` may be omitted or set to ``True``; ``False`` is
+        invalid because the temporary Epochs object has only one average.
 
     Returns
     -------
@@ -171,6 +173,13 @@ def compute_evoked_covariance(
     if data.shape[1] < 2:
         raise ValueError(
             "Evoked must have at least 2 time samples to estimate a covariance."
+        )
+
+    keep_sample_mean = kwargs.pop("keep_sample_mean", True)
+    if keep_sample_mean is not True:
+        raise ValueError(
+            "keep_sample_mean must be True for an Evoked covariance because "
+            "the temporary Epochs object contains only one averaged response."
         )
 
     # Wrap the single averaged response as a one-trial Epochs so MNE's
