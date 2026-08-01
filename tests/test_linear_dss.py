@@ -2035,15 +2035,26 @@ def test_default_segmenter_has_no_band_without_bias_frequency():
 def test_normalize_preserves_raw_annotations():
     rng = np.random.default_rng(0)
     info = mne.create_info(4, 250.0, "eeg")
-    raw = mne.io.RawArray(rng.standard_normal((4, 2500)) * 1e-6, info, verbose=False)
+    raw = mne.io.RawArray(
+        rng.standard_normal((4, 2500)) * 1e-6,
+        info,
+        first_samp=1_000,
+        verbose=False,
+    )
     raw.set_annotations(
         mne.Annotations(onset=[1.0], duration=[0.5], description=["bad"])
     )
 
     normalized = DSS(bias=lambda x: x)._normalize(raw, fit=True)
 
+    assert normalized.first_samp == raw.first_samp
     assert len(normalized.annotations) == 1
     assert normalized.annotations.description[0] == "bad"
+    assert_allclose(normalized.annotations.onset, raw.annotations.onset)
+    assert (
+        normalized.get_data(reject_by_annotation="omit").shape
+        == raw.get_data(reject_by_annotation="omit").shape
+    )
 
 
 def test_normalize_preserves_epochs_metadata():

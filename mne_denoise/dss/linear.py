@@ -52,6 +52,25 @@ logger = logging.getLogger(__name__)
 _COMPONENT_ACTIONS = frozenset({"extract", "retain", "subtract"})
 _LEGACY_SENSOR_RETURN_TYPES = frozenset({"raw", "epochs", "evoked"})
 
+
+def _raw_array_like(data: np.ndarray, source: BaseRaw) -> BaseRaw:
+    """Create a data-replaced Raw with identical acquisition annotations."""
+    out = mne.io.RawArray(
+        data,
+        source.info.copy(),
+        first_samp=source.first_samp,
+        verbose=False,
+    )
+    # With no ``orig_time``, MNE stores source onsets with ``first_time``
+    # already applied but expects relative onsets when attaching them to a new
+    # Raw. Undo that one offset before ``set_annotations`` applies it again.
+    annotations = source.annotations.copy()
+    if annotations.orig_time is None:
+        annotations.onset -= source.first_time
+    out.set_annotations(annotations)
+    return out
+
+
 # -----------------------------------------------------------------------------
 # 1. Core Algorithm
 # -----------------------------------------------------------------------------
@@ -806,11 +825,7 @@ class DSS(BaseEstimator, TransformerMixin):
 
         if is_mne:
             if mne_type == "raw":
-                out = mne.io.RawArray(data_norm, X.info.copy(), verbose=False)
-                # Preserve annotations
-                if hasattr(X, "annotations") and X.annotations is not None:
-                    out.set_annotations(X.annotations)
-                return out
+                return _raw_array_like(data_norm, X)
             elif mne_type == "epochs":
                 # Transpose back to MNE format: (n_ch, n_times, n_epochs) -> (n_epochs, n_ch, n_times)
                 data_norm = np.transpose(data_norm, (2, 0, 1))
@@ -897,7 +912,9 @@ class DSS(BaseEstimator, TransformerMixin):
         if isinstance(inst, BaseRaw):
             kws.setdefault("tstep", 2.0)
             baseline_cov = mne.compute_raw_covariance(inst, method=method, **kws)
-            biased_inst = mne.io.RawArray(biased_data, inst.info, verbose=False)
+            # ``compute_raw_covariance`` rejects BAD-annotated samples by
+            # default, so preserve them to keep covariance support identical.
+            biased_inst = _raw_array_like(biased_data, inst)
             biased_cov = mne.compute_raw_covariance(biased_inst, method=method, **kws)
 
         elif isinstance(inst, BaseEpochs):

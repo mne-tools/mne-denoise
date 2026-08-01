@@ -183,6 +183,50 @@ def test_raw_subtract_preserves_container_channels_and_metadata():
     assert list(out.annotations.description) == ["bad_motion"]
 
 
+def test_raw_covariances_use_identical_annotation_sample_support(monkeypatch):
+    """Baseline and biased Raw covariances reject the same annotated samples."""
+    rng = np.random.default_rng(41)
+    info = mne.create_info(["EEG 001", "EEG 002"], 100.0, "eeg")
+    raw = mne.io.RawArray(
+        rng.standard_normal((2, 1_000)),
+        info,
+        first_samp=1_000,
+        verbose=False,
+    )
+    raw.set_annotations(mne.Annotations([1.0], [2.0], ["BAD_motion"]))
+
+    original = mne.compute_raw_covariance
+    observed = []
+
+    def capture_sample_support(inst, *args, **kwargs):
+        observed.append(
+            {
+                "first_samp": inst.first_samp,
+                "onset": inst.annotations.onset.copy(),
+                "duration": inst.annotations.duration.copy(),
+                "description": inst.annotations.description.copy(),
+                "retained": inst.get_data(reject_by_annotation="omit").shape[-1],
+            }
+        )
+        return original(inst, *args, **kwargs)
+
+    monkeypatch.setattr(mne, "compute_raw_covariance", capture_sample_support)
+
+    DSS(
+        bias=_ranked_bias,
+        n_components=2,
+        component_action="retain",
+        component_selection=1,
+    ).fit(raw)
+
+    assert len(observed) == 2
+    assert observed[0]["first_samp"] == observed[1]["first_samp"] == raw.first_samp
+    assert observed[0]["retained"] == observed[1]["retained"] == 800
+    assert_array_equal(observed[0]["onset"], observed[1]["onset"])
+    assert_array_equal(observed[0]["duration"], observed[1]["duration"])
+    assert_array_equal(observed[0]["description"], observed[1]["description"])
+
+
 def test_epochs_retain_preserves_container_channels_and_metadata():
     """Epoch retention preserves events, metadata, and untouched channels."""
     pd = pytest.importorskip("pandas")
