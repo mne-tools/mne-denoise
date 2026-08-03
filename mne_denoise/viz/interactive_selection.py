@@ -20,7 +20,11 @@ from mne.time_frequency import psd_array_welch
 
 from ..dss.linear import DSS
 from ..dss.nonlinear import IterativeDSS
-from ..utils import extract_data_from_mne, reconstruct_mne_object
+from ..utils import (
+    epochs_to_continuous,
+    extract_data_from_mne,
+    reconstruct_mne_object,
+)
 from ..zapline.core import ZapLine
 from ._utils import _compute_gfp, _get_info, _get_patterns
 from .components import _resolve_component_indices
@@ -60,14 +64,23 @@ def _estimator_kind(estimator: Any) -> str:
     )
 
 
-def _to_continuous(
+def _resolve_layout(
     data: np.ndarray,
     *,
     n_channels: int,
     kind: str,
     mne_type: str,
 ) -> tuple[np.ndarray, str, tuple[int, ...]]:
-    """Convert estimator input data to a continuous channel-first array."""
+    """Flatten estimator input to channel-first, naming the layout it came from.
+
+    Which 3D convention applies depends on the estimator, not on the array:
+    epoched MNE input and the iterative-DSS/ZapLine estimators are
+    ``(n_epochs, n_channels, n_times)``, while linear-DSS array input is
+    ``(n_channels, n_times, n_epochs)`` and so flattens without a transpose.
+    Guessing wrong scrambles the data silently rather than raising, hence the
+    per-convention channel-axis checks below. The returned layout tag is what
+    :func:`_restore_layout` and :func:`_sources_for_plot` invert.
+    """
     data = np.asarray(data, dtype=float)
     shape = data.shape
     if data.ndim == 2:
@@ -85,9 +98,7 @@ def _to_continuous(
                 "Epoched input must have shape (n_epochs, n_channels, n_times); "
                 f"got {shape} for an estimator with {n_channels} channels."
             )
-        # transpose() + reshape() of a non-contiguous view already returns a fresh
-        # array, so no extra copy is needed to decouple from the caller's input.
-        continuous = np.transpose(data, (1, 0, 2)).reshape(n_channels, -1)
+        continuous = epochs_to_continuous(data)
         return continuous, "epochs_first", shape
 
     if data.shape[0] != n_channels:
@@ -284,7 +295,7 @@ def _prepare_selection_state(estimator: Any, data: Any) -> _SelectionState:
         ch_names=getattr(estimator, "_mne_ch_names_", None),
         auto_pick=not getattr(estimator, "whiten", False),
     )
-    continuous, layout, input_shape = _to_continuous(
+    continuous, layout, input_shape = _resolve_layout(
         extracted,
         n_channels=patterns.shape[0],
         kind=kind,

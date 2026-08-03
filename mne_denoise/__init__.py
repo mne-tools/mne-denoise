@@ -30,9 +30,31 @@ icanclean : Reference-Based Artifact Removal
 spectrum_interpolation : Spectrum Interpolation
     Removes power-line noise and its harmonics by interpolating spectral amplitudes
     while preserving phase.
+
+sound : SOUND Automatic Noise Suppression
+    Forward-model-based Wiener estimation that suppresses per-channel noise by
+    reconstructing each sensor from all others (Mutanen et al., 2018).
+
+sspsir : SSP-SIR Muscle Artifact Suppression
+    Signal-space projection with source-informed reconstruction, targeting
+    TMS-evoked muscle artifacts (Mutanen et al., 2016).
+
+overcorrection : Forward-Model Overcorrection Metrics
+    Quantifies how much any linear spatial filter attenuates or distorts
+    hypothetical cortical sources, via the forward model (Mutanen et al., 2022).
 """
 
-from . import asr, dss, icanclean, spectrum_interpolation, zapline
+from . import (
+    asr,
+    dss,
+    icanclean,
+    overcorrection,
+    sound,
+    spectrum_interpolation,
+    sspsir,
+    zapline,
+)
+from .overcorrection import quantify_overcorrection
 
 __version__ = "0.0.1"
 
@@ -40,6 +62,10 @@ __all__ = [
     "asr",
     "dss",
     "icanclean",
+    "overcorrection",
+    "quantify_overcorrection",
+    "sound",
     "spectrum_interpolation",
+    "sspsir",
     "zapline",
 ]

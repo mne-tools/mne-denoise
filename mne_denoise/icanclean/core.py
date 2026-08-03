@@ -707,7 +707,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         set_log_level_from_verbose(self.verbose)
         self._reset_qc_attrs()
 
-        data, sfreq_data, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
+        data, sfreq_data, mne_type, orig_inst, picks, _ = extract_data_from_mne(
             X, auto_pick=False
         )
         sfreq = sfreq_data if sfreq_data is not None else self.sfreq

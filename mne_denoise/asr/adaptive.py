@@ -28,7 +28,11 @@ from typing import Any
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
-from ..utils import extract_data_from_mne, reconstruct_mne_object
+from ..utils import (
+    epochs_to_continuous,
+    extract_data_from_mne,
+    reconstruct_mne_object,
+)
 from ._covariance import (
     _adaptive_covariance_sqrt,
 )
@@ -399,7 +403,7 @@ class AdaptiveASR(ASR):
         if not hasattr(self, "state_"):
             return self.fit(X, calibration_mask=calibration_mask)
 
-        data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
+        data, sfreq, mne_type, orig_inst, _, ch_names = extract_data_from_mne(
             X,
             auto_pick=True,
             concatenate_epochs=True,
@@ -688,7 +692,7 @@ class AdaptiveASR(ASR):
             )
         sfreq_val = self._resolve_sfreq(sfreq)
         if mne_type == "epochs":
-            data_2d = np.transpose(data, (1, 0, 2)).reshape(data.shape[1], -1)
+            data_2d = epochs_to_continuous(data)
         else:
             data_2d = np.asarray(data, dtype=np.float64)
         if mne_type == "raw" and self.reject_by_annotation:

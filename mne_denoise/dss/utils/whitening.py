@@ -245,9 +245,7 @@ def whiten_from_data_covariance(
     cov = compute_covariance(data_centered, assume_centered=True)
 
     # Get whitening matrices
-    whitener, dewhitener, eigenvalues = compute_data_covariance_whitener(
-        cov, rank=rank, reg=reg
-    )
+    whitener, dewhitener, _ = compute_data_covariance_whitener(cov, rank=rank, reg=reg)
 
     # Apply whitening through the shared channel-axis operation.
     whitened_2d = apply_spatial_transform(whitener, data_centered)

@@ -1,0 +1,16 @@
+Factored the epochs-to-continuous reshape into a single
+``mne_denoise.utils.epochs_to_continuous`` helper. The transpose-then-reshape
+that lays epochs end to end per channel was written out at eight separate call
+sites -- in ``extract_data_from_mne``, linear and iterative DSS, ZapLine,
+adaptive ASR, the interactive component selector, and SOUND -- where getting
+the transpose wrong scrambles epochs instead of concatenating them, silently.
+The helper documents that and the sites now share it. No behaviour change.
+Removed ten tuple unpackings whose names were never read, including one whole
+statement in ZapLine's adaptive path, and marked discarded return values as
+``_`` (the unused de-whitener in ``iterative_dss``, the unused eigenvalues in
+``whiten_from_data_covariance``, the unused ``f``/``t`` from
+``scipy.signal.stft``). Ruff's F841 does not flag tuple unpacking, so none of
+these were caught by linting. Also renamed the interactive selector's private
+``_to_continuous`` to ``_resolve_layout``, since it dispatches between two
+incompatible 3D layouts and returns the tag needed to invert the transform,
+rather than merely reshaping.

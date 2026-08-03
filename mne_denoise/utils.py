@@ -115,6 +115,32 @@ def _get_homogeneous_picks(
     return None
 
 
+def epochs_to_continuous(data: np.ndarray) -> np.ndarray:
+    """Lay epochs end to end into one continuous ``(n_channels, n_times)`` array.
+
+    Parameters
+    ----------
+    data : array, shape (n_epochs, n_channels, n_times) | (n_channels, n_times)
+        Epoched or already-continuous data. 2D input is returned unchanged.
+
+    Returns
+    -------
+    continuous : array, shape (n_channels, n_epochs * n_times)
+        Epochs concatenated along time, channels preserved.
+
+    Notes
+    -----
+    The transpose is what makes the epochs consecutive in time per channel;
+    reshaping without it would interleave them. Transposing and reshaping a
+    non-contiguous view already returns a fresh array, so the result never
+    shares memory with ``data`` and callers need no extra copy.
+    """
+    data = np.asarray(data)
+    if data.ndim != 3:
+        return data
+    return np.transpose(data, (1, 0, 2)).reshape(data.shape[1], -1)
+
+
 def extract_data_from_mne(
     X: Any,
     ch_names: list[str] | None = None,
@@ -247,7 +273,7 @@ def extract_data_from_mne(
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
         raise TypeError(f"Unsupported input type: {type(X)}")
     if concatenate_epochs and data.ndim == 3:
-        data = np.transpose(data, (1, 0, 2)).reshape(data.shape[1], -1)
+        data = epochs_to_continuous(data)
     elif channel_first_epochs and mne_type == "epochs":
         data = np.transpose(data, (1, 2, 0))
 

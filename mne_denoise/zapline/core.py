@@ -53,6 +53,7 @@ from ..dss.utils.whitening import (
     map_spatial_matrices_to_sensor_space,
 )
 from ..utils import (
+    epochs_to_continuous,
     extract_data_from_mne,
     reconstruct_mne_object,
 )
@@ -417,7 +418,7 @@ class ZapLine(DSS):
         # Standard Transform
         if data.ndim == 3:
             n_ep, n_ch, n_t = data.shape
-            data_cont = np.transpose(data, (1, 0, 2)).reshape(n_ch, -1)
+            data_cont = epochs_to_continuous(data)
             cleaned_cont = self._apply_standard_cleaning(data_cont)
             cleaned = cleaned_cont.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
         else:
@@ -484,7 +485,7 @@ class ZapLine(DSS):
         # Adaptive logic (ZapLine-plus)
         if data.ndim == 3:
             n_ep, n_ch, n_t = data.shape
-            data_cont = np.transpose(data, (1, 0, 2)).reshape(n_ch, -1)
+            data_cont = epochs_to_continuous(data)
         else:
             n_ch, n_t = data.shape
             data_cont = data
@@ -765,7 +766,6 @@ class ZapLine(DSS):
         results : dict
             Contains 'cleaned', 'removed', 'n_removed', 'chunk_info', etc.
         """
-        n_channels, n_times = data.shape
         params = self.adaptive_params.copy()
 
         # Extract params with defaults

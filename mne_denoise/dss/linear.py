@@ -32,7 +32,11 @@ except ImportError:
 
 from .._logging import set_log_level_from_verbose
 from ..blending import overlap_add_combine
-from ..utils import extract_data_from_mne, reconstruct_mne_object
+from ..utils import (
+    epochs_to_continuous,
+    extract_data_from_mne,
+    reconstruct_mne_object,
+)
 from .denoisers import LinearDenoiser
 from .denoisers.temporal import SmoothingBias
 from .utils import compute_covariance
@@ -1164,7 +1168,7 @@ class DSS(BaseEstimator, TransformerMixin):
         if data.ndim == 3:
             is_epochs = True
             n_ep, n_ch, n_t = data.shape
-            data_cont = np.transpose(data, (1, 0, 2)).reshape(n_ch, -1)
+            data_cont = epochs_to_continuous(data)
         else:
             data_cont = data
 

@@ -1,0 +1,19 @@
+Added ``mne_denoise.sound.SOUND`` and ``mne_denoise.sspsir.SSPSIR``, ports of
+two forward-model denoisers from the TMS-EEG literature. SOUND (Mutanen et al.,
+2018) estimates each sensor's noise amplitude by predicting it from the others
+through a forward model, then Wiener-filters to suppress channel-specific noise
+while preserving field-consistent brain signal. SSP-SIR (Mutanen et al., 2016)
+projects out the high-variance muscle-artifact subspace and reconstructs what
+that projection removed through the same model, crossfading it in only where
+the artifact lives, and exposes the deleted topographies as ``projs_``. Both
+follow the sklearn-style ``fit``/``transform`` API, take MNE ``Raw``,
+``Epochs``, ``Evoked`` objects or arrays and an optional ``mne.Forward``, and
+otherwise build a three-layer spherical lead field from the montage. SOUND's
+noise update uses the covariance identity of Mutanen et al. (2022),
+Eqs. (35)-(36), touching the time samples once instead of inside every
+iteration, so runtime is effectively independent of recording length. Also
+added ``mne_denoise.quantify_overcorrection``, which measures how much any
+linear spatial filter in this package attenuates or distorts hypothetical
+cortical sources by pushing its operator through the forward model. Both
+estimators ship with gallery examples and are checked against Tuomas Mutanen's
+``Sound-Demo-Package`` and EEGLAB's TESA (Issue #32, PR #46).

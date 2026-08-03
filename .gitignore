@@ -21,7 +21,8 @@ matlab_repos/
 zapline-plus/
 refs/
 
-# Generated files (allow docs images)
+*.pdf
+
 *.png
 *.jpg
 !docs/**/*.png

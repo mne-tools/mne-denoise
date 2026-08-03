@@ -63,6 +63,34 @@ iCanClean
    mne_denoise.icanclean.ICanClean
    mne_denoise.icanclean.compute_icanclean
 
+SOUND
+-----
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.sound.SOUND
+   mne_denoise.sound.compute_sound
+   mne_denoise.sound.compute_sound_ref_best
+
+SSP-SIR
+-------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.sspsir.SSPSIR
+   mne_denoise.sspsir.compute_sspsir
+   mne_denoise.sspsir.compute_sir
+
+Overcorrection metrics
+----------------------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.quantify_overcorrection
+
 Denoisers
 ---------
 .. autosummary::
