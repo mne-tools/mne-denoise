@@ -13,7 +13,7 @@ SFREQ = 250.0
 
 
 def test_asr_default_uses_original_spectral_shaping_filter():
-    """The estimator default follows the clean_rawdata paper implementation."""
+    """The estimator defaults to inverse-EEG spectral shaping."""
     assert ASR().filter_kind == "asr"
 
 

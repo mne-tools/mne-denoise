@@ -211,7 +211,7 @@ Choosing a variant
 A quick decision guide:
 
 - **Reference-compatible starting point** — ``ASR(method="standard")`` retains
-  ``cutoff=20`` as its default for legacy and clean_rawdata comparisons. The
+  ``cutoff=20`` as its default for legacy comparisons. The
   cutoff scale changes with calibration, filtering, reconstruction, and data
   regime, so this value is not a universal recommendation. Freeze it only after
   paired attenuation and neural-preservation validation.

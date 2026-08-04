@@ -32,7 +32,7 @@ class ASRState:
         Denominator coefficients for the statistics-only filter.
     filter_zi : ndarray
         Final causal filter state from calibration, used to initialize the
-        statistics path during reconstruction as in clean_rawdata.
+        statistics path during reconstruction without a filter discontinuity.
     cov : ndarray, shape (n_channels, n_channels)
         Robust calibration covariance.
     rank : int

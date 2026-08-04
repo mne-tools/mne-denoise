@@ -19,7 +19,7 @@ like calibration, spatial filtering, and reconstruction to focused internal subm
 from __future__ import annotations
 
 import warnings
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -112,11 +112,9 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration window.
     ref_tolerances : tuple of float, default=(-3.5, 5.0)
         Lower and upper robust z-score bounds for clean-window selection.
-    blocksize : int | 'clean_rawdata', default=10
+    blocksize : int, default=10
         Number of successive samples averaged into each covariance block for
-        robust calibration covariance estimation. ``'clean_rawdata'``
-        reproduces the MATLAB reference implementation's memory-dependent
-        block-size rule.
+        robust calibration covariance estimation.
     max_dims : float | int, default=0.66
         Maximum number of dimensions reconstructed per processing window.
     reject_by_annotation : bool, default=True
@@ -131,7 +129,7 @@ class ASR(BaseEstimator, TransformerMixin):
         Relative eigenvalue floor for covariance regularization.
     filter_kind : {'none', 'asr', 'highpass'}, default='asr'
         Statistics-only filter. The cleaned output is reconstructed from the
-        original unfiltered data.
+        original unfiltered data. Set ``'none'`` to disable spectral shaping.
     window_criterion : float | int | None, default=None
         Optional clean_windows-style final rejection criterion. If numeric,
         this is the maximum tolerated number or fraction of bad channels per
@@ -255,7 +253,7 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration_window_overlap: float = 0.66,
         ref_max_bad_channels: float = 0.075,
         ref_tolerances: tuple[float, float] = (-np.inf, 5.5),
-        blocksize: int | Literal["clean_rawdata"] = 10,
+        blocksize: int = 10,
         max_dims: float | int = 0.66,
         reject_by_annotation: bool = True,
         skip_by_annotation: tuple[str, ...] = ("bad", "bad_acq_skip"),

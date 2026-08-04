@@ -5,7 +5,6 @@ from mne_denoise.asr._filters import (
     _append_streaming_tail,
     _apply_statistics_filter,
     _apply_statistics_filter_streaming,
-    _design_aasr_filter,
     _design_asr_filter,
     _design_statistics_filter,
     _prepend_streaming_carry,
@@ -107,16 +106,6 @@ def test_apply_statistics_filter_streaming() -> None:
     assert not np.allclose(X, out)
 
 
-def test__design_aasr_filter() -> None:
-    """Test Yule-Walker filter design for AASR."""
-    b, a = _design_aasr_filter(250.0)
-    # The order is 8, so coefficients should be length 9
-    assert len(b) == 9
-    assert len(a) == 9
-    assert np.all(np.isfinite(b))
-    assert np.all(np.isfinite(a))
-
-
 @pytest.mark.parametrize(
     ("sfreq", "expected_b", "expected_a"),
     [
@@ -172,10 +161,8 @@ def test__design_aasr_filter() -> None:
         ),
     ],
 )
-def test_design_asr_filter_matches_clean_rawdata_coefficients(
-    sfreq, expected_b, expected_a
-):
-    """The paper-default filter matches clean_rawdata's published fixtures."""
+def test_design_asr_filter_matches_expected_coefficients(sfreq, expected_b, expected_a):
+    """The default spectral-shaping filter has stable coefficients."""
     b, a = _design_asr_filter(sfreq)
     np.testing.assert_allclose(b, expected_b, rtol=0.0, atol=1e-12)
     np.testing.assert_allclose(a, expected_a, rtol=0.0, atol=1e-12)

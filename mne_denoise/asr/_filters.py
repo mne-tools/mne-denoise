@@ -318,21 +318,12 @@ def _design_asr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
     )
     mags = np.array([3.0, 0.75, 0.33, 0.33, 1.0, 1.0, 3.0, 3.0], dtype=np.float64)
     if sfreq < 80.0:
-        # Match clean_rawdata/asr_calibrate.m: omit the 40-Hz breakpoint and
-        # its otherwise duplicated final gain when Nyquist is below 40 Hz.
+        # Omit the 40-Hz breakpoint and its otherwise duplicated final gain
+        # when Nyquist is below 40 Hz.
         freq_hz = np.delete(freq_hz, -3)
         mags = mags[:-1]
     freqs = freq_hz * 2.0 / sfreq
     return _yulewalk(8, freqs, mags)
-
-
-def _design_aasr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
-    """Design the ASR/AASR inverse-EEG pre-emphasis filter.
-
-    This compatibility name is retained because the adaptive implementation
-    and its external parity fixtures use the same filter as standard ASR.
-    """
-    return _design_asr_filter(sfreq)
 
 
 def _lfilter_channels(

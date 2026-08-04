@@ -36,7 +36,7 @@ from ._distribution import (
     _AASR_BETA_GRID,
     _fit_adaptive_thresholds,
 )
-from ._filters import _design_aasr_filter, _lfilter_channels
+from ._filters import _design_asr_filter, _lfilter_channels
 from ._learner import _AdaptiveSimilarityMatcher, _build_adaptive_learner
 from ._reconstruction import _process_adaptive_chunk
 from ._types import ASRState, _copy_asr_state, _copy_process_state
@@ -972,7 +972,7 @@ class AdaptiveASR(ASR):
             min_clean_fraction=self.min_clean_fraction,
             beta_grid=_AASR_BETA_GRID,
         )
-        filter_b, filter_a = _design_aasr_filter(sfreq)
+        filter_b, filter_a = _design_asr_filter(sfreq)
         X_filtered, iir_state = _lfilter_channels(X_clean, filter_b, filter_a)
         M, C, eigvals, V, covariance_memory_info = _adaptive_covariance_sqrt(
             X_filtered,

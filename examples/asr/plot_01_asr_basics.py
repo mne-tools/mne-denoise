@@ -49,7 +49,7 @@ for onset, stop in ((4.0, 4.8), (8.0, 8.6)):
 # %%
 # Fit and Apply ASR
 # -----------------
-# The value 20 is retained for comparison with common clean_rawdata workflows.
+# The value 20 is retained for comparison with common reference workflows.
 # It is not portable across calibration rules or implementations; tune and freeze
 # an operating point using artifact-attenuation and neural-preservation endpoints.
 asr = ASR(
