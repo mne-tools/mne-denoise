@@ -63,6 +63,20 @@ iCanClean
    mne_denoise.icanclean.ICanClean
    mne_denoise.icanclean.compute_icanclean
 
+Multi-channel Wiener filter
+---------------------------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.mwf.MultichannelWienerFilter
+   mne_denoise.mwf.MWF
+   mne_denoise.mwf.compute_mwf
+   mne_denoise.mwf.hf_power_mask
+   mne_denoise.mwf.mwf_filter
+
+``MWF`` is a short alias of ``MultichannelWienerFilter``.
+
 Denoisers
 ---------
 .. autosummary::

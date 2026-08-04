@@ -158,7 +158,7 @@ class SmoothingBias(LinearDenoiser):
     Uses a boxcar moving average filter to smooth the data. When used to split
     the signal into a smooth branch and a residual (``data - smooth``), fitting
     DSS on the residual and adding the smooth branch back follows ZapLine's
-    period-matched decomposition (de Cheveigné, 2020 [3]_): with
+    period-matched decomposition (de Cheveigné, 2020): with
     ``window = round(sfreq / f_line)`` the smoother has zeros at ``f_line`` and
     its harmonics, so the residual concentrates the narrowband artifact.
 
