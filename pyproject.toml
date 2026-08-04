@@ -59,7 +59,7 @@ Homepage = "https://mne.tools/mne-denoise/"
 
 [project.optional-dependencies]
 mne = [
-  "mne>=1.12.1",
+  "mne>1.12.1",
 ]
 progress = [
   "tqdm>=4.66",
@@ -70,7 +70,7 @@ viz = [
 
 [dependency-groups]
 lockfile_extras = [
-  "mne>=1.12.1",
+  "mne>1.12.1",
   "matplotlib>=3.8",
   "tqdm>=4.66",
 ]
@@ -85,7 +85,7 @@ test = [
 ]
 
 doc = [
-  "mne>=1.12.1",
+  "mne>1.12.1",
   "matplotlib>=3.8",
   "numpydoc>=1.6.0",
   "pydata-sphinx-theme>=0.15.2",
