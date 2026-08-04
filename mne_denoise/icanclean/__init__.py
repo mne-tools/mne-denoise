@@ -4,6 +4,8 @@ This module contains:
 - ``compute_icanclean``: The core array-based iCanClean algorithm.
 - ``ICanClean``: The Scikit-learn estimator compatible with MNE-Python
   objects or NumPy arrays.
+- ``RecursiveICanClean``: An explicitly experimental stateful composition of
+  recursive covariance CCA and the iCanClean subtraction rule.
 
 iCanClean removes artifact subspaces shared by primary channels and
 reference channels using canonical correlation analysis (CCA) [1]_ [2]_ [3]_.
@@ -28,8 +30,10 @@ References
 """
 
 from .core import ICanClean, compute_icanclean
+from .recursive import RecursiveICanClean
 
 __all__ = [
     "ICanClean",
+    "RecursiveICanClean",
     "compute_icanclean",
 ]

@@ -13,6 +13,7 @@ to extract reproducible or rhythmic components while preserving data rank.
    getting-started
    dss
    asr
+   recursive-icanclean
    auto_examples/index
 
 .. toctree::

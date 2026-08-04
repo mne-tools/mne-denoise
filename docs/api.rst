@@ -61,7 +61,15 @@ iCanClean
    :nosignatures:
 
    mne_denoise.icanclean.ICanClean
+   mne_denoise.icanclean.RecursiveICanClean
    mne_denoise.icanclean.compute_icanclean
+
+.. warning::
+
+   ``RecursiveICanClean`` is an unpublished, unvalidated experimental
+   composition. Published iCanClean uses batch CCA in fixed or moving windows
+   and describes recursive CCA only as future work. Do not treat ordinary
+   iCanClean validation as validation of this recursive implementation.
 
 Denoisers
 ---------
