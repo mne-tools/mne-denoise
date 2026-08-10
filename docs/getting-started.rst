@@ -25,7 +25,8 @@ Here is a simple example of using Linear DSS to enhance an evoked response.
 .. code-block:: python
 
    import numpy as np
-   from mne_denoise.dss import compute_dss, compute_covariance
+   from mne_denoise import compute_covariance
+   from mne_denoise.dss import compute_dss
 
    # Simulate data: (n_channels, n_times, n_trials)
    n_ch, n_times, n_trials = 10, 1000, 50

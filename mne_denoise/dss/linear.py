@@ -30,17 +30,17 @@ try:
 except ImportError:
     mne = None
 
+from .._covariance import compute_covariance
 from .._logging import set_log_level_from_verbose
+from .._spatial import apply_spatial_transform
 from ..blending import overlap_add_combine
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from .denoisers import LinearDenoiser
 from .denoisers.temporal import SmoothingBias
-from .utils import compute_covariance
 from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
 from .utils.selection import auto_select_components_robust
 from .utils.whitening import (
     apply_covariance_transform,
-    apply_spatial_transform,
     compute_data_covariance_whitener,
     compute_mne_sensor_whitener,
     map_spatial_matrices_to_sensor_space,
@@ -111,7 +111,8 @@ def compute_dss(
     Examples
     --------
     >>> import numpy as np
-    >>> from mne_denoise.dss import compute_dss, compute_covariance
+    >>> from mne_denoise import compute_covariance
+    >>> from mne_denoise.dss import compute_dss
     >>> # Generate synthetic data (n_channels, n_times)
     >>> data = np.random.randn(10, 1000)
     >>> # Compute covariances
@@ -296,12 +297,13 @@ class DSS(BaseEstimator, TransformerMixin):
     cov_method : str
         Method for covariance estimation.
         For MNE objects, passed as `method` to `mne.compute_covariance`.
-        For NumPy arrays, passed as `method` to `mne_denoise.utils.compute_covariance`.
+        For NumPy arrays, selects the internal array covariance estimator.
         Default 'empirical'.
     cov_kws : dict, optional
         Additional keywords options for covariance estimation.
         For MNE objects, passed to `mne.compute_covariance` (e.g. `{'tstep': 0.1, 'rank': 'info'}`).
-        For NumPy arrays, passed to `mne_denoise.utils.compute_covariance` (e.g. `{'shrinkage': 0.1}`).
+        For NumPy arrays, passed to the internal array covariance estimator
+        (e.g. ``{'shrinkage': 0.1}``).
     smooth : SmoothingBias | int | None, default=None
         Optional smoothing decomposition before DSS, inspired by ZapLine.
         When set, data is decomposed into ``smooth + residual`` and DSS

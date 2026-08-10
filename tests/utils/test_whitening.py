@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from mne_denoise._spatial import apply_spatial_transform
 from mne_denoise.dss.utils.whitening import (
     apply_covariance_transform,
-    apply_spatial_transform,
     compute_data_covariance_whitener,
     compute_mne_sensor_whitener,
     map_spatial_matrices_to_sensor_space,
@@ -35,6 +35,25 @@ def test_apply_spatial_transform_validates_shapes():
         apply_spatial_transform(np.ones(3), np.ones((3, 10)))
     with pytest.raises(ValueError, match="channel dimensions do not match"):
         apply_spatial_transform(np.eye(2), np.ones((3, 10)))
+
+
+def test_apply_spatial_transform_chunked_matches_full():
+    """Chunking changes memory use without changing the spatial result."""
+    rng = np.random.default_rng(1)
+    matrix = rng.standard_normal((4, 3))
+    data = rng.standard_normal((3, 7, 31))
+
+    full = apply_spatial_transform(matrix, data)
+    chunked = apply_spatial_transform(matrix, data, chunk_size=19)
+
+    np.testing.assert_allclose(chunked, full)
+
+
+@pytest.mark.parametrize("chunk_size", [0, -1, 2.5, True])
+def test_apply_spatial_transform_rejects_invalid_chunk_size(chunk_size):
+    """The shared chunk size has one validated contract."""
+    with pytest.raises((TypeError, ValueError), match="chunk_size"):
+        apply_spatial_transform(np.eye(3), np.ones((3, 10)), chunk_size=chunk_size)
 
 
 def test_apply_covariance_transform():

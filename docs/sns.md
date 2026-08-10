@@ -1,103 +1,121 @@
 # Sensor Noise Suppression (SNS)
 
-## Overview
+The `mne_denoise.sns` module implements Sensor Noise Suppression (SNS) [^1], a
+spatial method that regenerates each sensor from correlated neighboring
+sensors. It targets noise that is specific to individual sensors while
+preserving signals that are spatially redundant across the array.
 
-The `mne_denoise.sns` module implements **Sensor Noise Suppression (SNS)**
-(de Cheveigne & Simon 2008), a purely spatial, reference-free method that
-suppresses noise **specific to individual sensors**.
+SNS does not target ocular, cardiac, muscle, or other artifacts that are
+themselves correlated across sensors. Its assumptions should be checked for the
+recording system and scientific signal of interest.
 
-Each channel is regenerated from a least-squares projection onto the subspace
-spanned by its most-correlated *neighbour* channels. The method assumes signals
-of interest are spatially correlated and sensor-specific noise is not. It is
-applied to centered data as a single spatial operator `W`, with `W[k, k] = 0`,
-so a channel is never regenerated from itself.
-
-> **Scope.** SNS targets *sensor-specific* noise, not physiological artifacts
-> (ocular, muscle, cardiac), which may themselves be spatially correlated. Use
-> SNS as a first-stage sensor cleanup, complementary to artifact-specific
-> denoisers such as DSS and iCanClean.
-
-## Quick Start
+## Estimator API
 
 ```python
-import numpy as np
 from mne_denoise.sns import SNS
 
-data = np.random.randn(64, 20000)  # 64 channels, 20000 samples
-
-# Leakage-safe estimator API: learn the operator on train, apply to eval.
-est = SNS(n_neighbors=0)  # 0 = use all other channels
-est.fit(data)
-cleaned = est.transform(data)
+model = SNS(n_neighbors=20)
+model.fit(training_data)
+cleaned = model.transform(evaluation_data)
 ```
 
-The reference SNS convention centers each application before regeneration. Set
-`preserve_mean=True` to restore each input-channel mean after filtering its
-fluctuations:
+`fit()` learns a channel mean and spatial operator from the training data.
+`transform()` always uses that fitted mean, so a sample has the same result
+whether transformed alone, in a temporal chunk, or among other epochs. By
+default the fitted mean is subtracted and is not added back to the output.
+Set `preserve_mean=True` to restore the fitted training mean:
 
 ```python
 cleaned = SNS(n_neighbors=20, preserve_mean=True).fit_transform(data)
 ```
 
-On dense arrays, restricting to the most-correlated neighbours is faster and more
-robust, and `skip` can drop the closest channels (which may share local noise):
+For MNE Raw, Epochs, and Evoked inputs, SNS automatically selects one
+homogeneous data-channel type and returns a copy of the same container. Timing,
+annotations, events, epoch metadata, averaging information, and excluded
+channels are preserved. Fit and transform must use the same selected channel
+names in the same order.
+
+## Robust, iterative, and chunked fitting
+
+Global sample weights prevent selected samples from influencing the fitted mean
+or projections. Continuous weights have shape `(n_times,)`; epoched weights have
+shape `(n_epochs, n_times)`.
 
 ```python
-cleaned = SNS(n_neighbors=20, skip=1).fit_transform(data)
+weights = good_samples.astype(float)
+model = SNS(n_neighbors=20, n_iter=2, outlier_threshold=8.0, chunk_size=10_000)
+cleaned = model.fit_transform(data, sample_weight=weights)
 ```
 
-With MNE-Python objects:
+`outlier_threshold` applies an additional fixed binary mask while fitting. For
+each channel, SNS computes a median and `1.4826 * MAD` scale from manually
+included samples, falls back to standard deviation and then unit scale when
+needed, and rejects a sample if any channel exceeds the threshold. The combined
+manual and automatic weights remain fixed across iterations. The learned
+operator is applied to all samples, including rejected fitting samples.
 
-```python
-raw_clean = SNS(n_neighbors=40).fit_transform(raw)
-```
+With `n_iter > 1`, SNS learns a new projection from the output of each pass and
+composes every pass into one fixed `denoising_matrix_`. `chunk_size` bounds the
+temporary arrays used for weighted statistics and operator application. The
+shared MNE extractor still materializes MNE input, so this option is not an
+out-of-core MNE reader.
 
-## One-shot functional API
+## One-shot and covariance APIs
+
+`compute_sns()` self-centers a continuous array, learns the requested passes,
+and applies them immediately:
 
 ```python
 from mne_denoise.sns import compute_sns, compute_sns_weights
 
-cleaned, info = compute_sns(data, n_neighbors=20)  # (cleaned, {weights, n_neighbors})
+cleaned, diagnostics = compute_sns(
+    data, n_neighbors=20, n_iter=2, outlier_threshold=8.0
+)
 
-# Build the operator directly from a covariance matrix:
-W, n = compute_sns_weights(cov, n_neighbors=20, skip=0)
 centered = data - data.mean(axis=1, keepdims=True)
-cleaned = W @ centered
+covariance = centered @ centered.T / centered.shape[1]
+operator, n_used, ranks = compute_sns_weights(covariance, n_neighbors=20)
 ```
 
-## Parameters
+`compute_sns_weights()` is the covariance-level, single-pass primitive.
+`compute_sns()` is the main array algorithm used by `SNS`; it adds centering,
+weighting, masking, iteration, and chunking.
 
-| Parameter     | Description                                                                |
-| ------------- | ------------------------------------------------------------------------- |
-| `n_neighbors` | Neighbour channels used to regenerate each channel (`0` = all others).     |
-| `skip`        | Number of closest neighbours to skip (avoid channels sharing local noise). |
-| `rcond`       | Relative pseudoinverse cutoff for rank-deficient neighbour sets.            |
-| `preserve_mean` | Restore channel means after centered regeneration (default: `False`).     |
-| `verbose`     | MNE-style logging verbosity.                                               |
+## Diagnostics
 
-## Algorithm Details
+After fitting, the estimator exposes:
 
-Given demeaned data `X` (channels by samples) with covariance `C = X X.T / n`:
+- `training_mean_`: weighted training mean used by every transform;
+- `denoising_matrix_`: composed spatial operator;
+- `denoising_matrices_`: operator learned at each iteration;
+- `neighbor_ranks_` and `neighbor_ranks_per_iteration_`: numerical local ranks;
+- `input_rank_`, `effective_weight_sum_`, and `rejected_sample_count_`;
+- `n_neighbors_` and `n_iter_`: effective fitted operating point.
 
-1. Convert `C` to a correlation matrix for scale-invariant neighbour selection.
-2. For each channel `k`, sort the other channels by squared correlation with `k`,
-   skip the closest `skip`, and take the top `n_neighbors` as its neighbour set
-   `N`.
-3. Solve the least-squares projection weights `b = pinv(C[N, N]) @ C[N, k]` and
-   place them in the operator: `W[k, N] = b`, `W[k, k] = 0`.
-4. Apply `X_clean = W @ X` -- each channel is regenerated from its
-   neighbours.
+The one-shot function returns the corresponding values in its diagnostics
+dictionary. It reports only the effective weight sum and rejection count, not a
+full sample-weight vector.
 
-The projection is basis-invariant to the PCA-whitening used by the reference
-NoiseTools and MEEGkit implementations. This PR establishes implementation and
-invariant coverage only; regime-level attenuation and preservation claims remain
-unvalidated until frozen evidence campaigns are completed.
+## Choosing parameters
+
+- `n_neighbors=0` uses all eligible sensors. A smaller set is faster and may be
+  preferable for dense arrays.
+- `skip` omits the most correlated neighbors, which can help when adjacent
+  sensors share local noise.
+- Start with `n_iter=1`; repeated passes are more aggressive and typically show
+  diminishing changes.
+- Enable robust masking only after inspecting the data distribution. A threshold
+  near 8 is a useful demonstration value, not a universal recommendation.
+- Compare signal preservation and sensor-noise attenuation on data representative
+  of the intended analysis before adopting SNS in a pipeline.
+
+See the {ref}`sphx_glr_auto_examples_sns` gallery for basic usage and a
+deterministic exploration of the algorithm's assumptions and diagnostics. The
+standalone [`scripts/replicate_sns_paper.py`](../scripts/replicate_sns_paper.py)
+runs the larger synthetic experiments used for paper-oriented reproducibility.
 
 ## References
 
-1. de Cheveigne, A., & Simon, J. Z. (2008). Sensor noise suppression. _Journal
-   of Neuroscience Methods_, 168(1), 195-202.
-   https://doi.org/10.1016/j.jneumeth.2007.09.012
-2. de Cheveigne, A. NoiseTools (`nt_sns`), and the
-   [MEEGkit SNS implementation](https://github.com/nbara/python-meegkit/blob/8c9d44963e88140931ab8287e71611a6a010fb67/meegkit/sns.py)
-   -- reference implementations.
+[^1]: de Cheveigné, A., & Simon, J. Z. (2008). Sensor noise suppression.
+    *Journal of Neuroscience Methods, 168*(1), 195–202.
+    <https://doi.org/10.1016/j.jneumeth.2007.09.012>

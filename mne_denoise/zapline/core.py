@@ -42,6 +42,7 @@ import warnings
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
+from .._spatial import apply_spatial_transform
 
 # Inherit from DSS
 from ..dss.denoisers.spectral import LineNoiseBias
@@ -49,7 +50,6 @@ from ..dss.denoisers.temporal import SmoothingBias
 from ..dss.linear import DSS, _as_smoother
 from ..dss.utils.segmentation import CovarianceSegmenter
 from ..dss.utils.whitening import (
-    apply_spatial_transform,
     map_spatial_matrices_to_sensor_space,
 )
 from ..utils import (

@@ -1,4 +1,4 @@
-"""Robust covariance estimation.
+"""Internal covariance estimation shared by array-based algorithms.
 
 Provides methods for computing covariance matrices robust to outliers
 or low sample counts (shrinkage).
@@ -19,6 +19,7 @@ def compute_covariance(
     shrinkage: float | None = None,
     weights: np.ndarray | None = None,
     assume_centered: bool = False,
+    chunk_size: int | None = None,
 ) -> np.ndarray:
     """Compute covariance matrix.
 
@@ -45,12 +46,17 @@ def compute_covariance(
         zero weights ignore them. Currently only supported for `method='empirical'`.
     assume_centered : bool, default=False
         If True, treat ``data`` as already centered and skip mean subtraction.
+    chunk_size : int | None, default=None
+        Number of samples accumulated at a time for empirical covariance.
+        ``None`` uses one matrix multiplication over all samples. This option is
+        not supported by the shrinkage, OAS, or MCD estimators.
 
     Returns
     -------
     cov : ndarray, shape (n_channels, n_channels)
         The estimated covariance matrix.
     """
+    data = np.asarray(data, dtype=float)
     if data.ndim == 3:
         n_channels, n_times_in, n_epochs = data.shape
         data = data.reshape(n_channels, -1)
@@ -59,7 +65,19 @@ def compute_covariance(
             # Tile weights across epochs
             weights = np.tile(weights, n_epochs)
 
+    if data.ndim != 2:
+        raise ValueError(f"data must be 2D or 3D, got shape {data.shape}")
     n_channels, n_times = data.shape
+
+    if chunk_size is not None:
+        if isinstance(chunk_size, bool) or not isinstance(
+            chunk_size, (int, np.integer)
+        ):
+            raise TypeError("chunk_size must be a positive integer or None")
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be a positive integer or None")
+        if method != "empirical":
+            raise ValueError("chunk_size is only supported for empirical covariance")
 
     if weights is not None:
         if data.shape[1] != weights.shape[0]:
@@ -84,13 +102,21 @@ def compute_covariance(
     if assume_centered:
         data_centered = data
     else:
-        mean = np.sum(data * weights, axis=1, keepdims=True) / total_weight
+        mean = (data @ weights / total_weight)[:, np.newaxis]
         data_centered = data - mean
 
     if method == "empirical":
         # Weighted covariance: (X * w) @ X.T / sum(w)
         # Unweighted covariance: X @ X.T / n_times
-        cov = (data_centered * weights) @ data_centered.T / total_weight
+        if chunk_size is None:
+            cov = (data_centered * weights) @ data_centered.T / total_weight
+        else:
+            cov = np.zeros((n_channels, n_channels), dtype=float)
+            for start in range(0, n_times, chunk_size):
+                stop = min(start + chunk_size, n_times)
+                chunk = data_centered[:, start:stop]
+                cov += (chunk * weights[start:stop]) @ chunk.T
+            cov /= total_weight
 
     elif method == "shrinkage":
         # Ledoit-Wolf-like shrinkage

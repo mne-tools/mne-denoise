@@ -25,7 +25,7 @@ import numpy as np
 from scipy import signal
 from scipy.signal import find_peaks
 
-from .covariance import compute_covariance
+from ..._covariance import compute_covariance
 
 # ---------------------------------------------------------------------------
 # Covariance-based segmenter (generalised from ZapLine-plus)

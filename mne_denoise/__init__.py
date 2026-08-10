@@ -37,11 +37,13 @@ sns : Sensor Noise Suppression
 """
 
 from . import asr, dss, icanclean, sns, spectrum_interpolation, zapline
+from ._covariance import compute_covariance
 
 __version__ = "0.0.1"
 
 __all__ = [
     "asr",
+    "compute_covariance",
     "dss",
     "icanclean",
     "spectrum_interpolation",

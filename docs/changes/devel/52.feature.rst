@@ -1,3 +1,3 @@
-Add :class:`mne_denoise.sns.SNS` with explicit numerical operating points,
-reference-compatible centering, leakage-safe fit/apply semantics, MNE container
-alignment, and rank diagnostics.
+Add :class:`mne_denoise.sns.SNS` with fitted batch-invariant centering,
+weighted and robust fitting, iterative projections, chunked execution, shared
+MNE container integration, rank diagnostics, and a documentation gallery.
