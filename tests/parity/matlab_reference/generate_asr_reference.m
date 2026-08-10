@@ -12,8 +12,9 @@
 here = fileparts(mfilename('fullpath'));
 legacy_input_file = fullfile(here, 'asr_input_fixture.mat');
 legacy_output_file = fullfile(here, 'asr_reference_results.mat');
+case_filter = getenv('MNE_DENOISE_ASR_CASE');
 
-if ~exist(legacy_input_file, 'file')
+if isempty(case_filter) && ~exist(legacy_input_file, 'file')
     error('Missing %s. Run generate_asr_input.py first.', legacy_input_file);
 end
 if exist('clean_windows', 'file') ~= 2
@@ -32,6 +33,12 @@ if isempty(inputs)
 end
 [~, order] = sort({inputs.name});
 inputs = inputs(order);
+if ~isempty(case_filter)
+    inputs = inputs(contains({inputs.name}, case_filter));
+    if isempty(inputs)
+        error('No ASR input fixture matched MNE_DENOISE_ASR_CASE=%s.', case_filter);
+    end
+end
 
 for idx = 1:numel(inputs)
     input_path = fullfile(here, inputs(idx).name);
@@ -45,7 +52,7 @@ for idx = 1:numel(inputs)
     save(output_path, '-struct', 'payload', '-v7');
     fprintf('Wrote %s\n', output_path);
 
-    if idx == 1
+    if idx == 1 && isempty(case_filter)
         save(legacy_output_file, '-struct', 'legacy_payload', '-v7');
         fprintf('Wrote %s\n', legacy_output_file);
     end

@@ -75,7 +75,7 @@ for name, est in estimators.items():
 # Recommendation
 # --------------
 print("\nQuick guide:")
-print("  - most EEG ................... ASR(method='standard'), cutoff 20-30")
+print("  - reference-compatible start . ASR(method='standard'), then validate cutoff")
 print("  - robust calibration + cutoff  ASR(method='riemannian_windowed')")
 print("  - online / streaming ......... AdaptiveASR(variant='psw' or 'psp')")
 print("  - extreme MoBI / dense bursts  JugglerASR(strategy='gev' or 'dbscan')")

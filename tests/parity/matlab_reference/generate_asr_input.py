@@ -17,6 +17,8 @@ from pathlib import Path
 import numpy as np
 from scipy.io import savemat
 
+from mne_denoise.asr._filters import _design_asr_filter
+
 CASE_MATRIX: tuple[dict[str, object], ...] = (
     {
         "name": "manual_strong_cutoff20",
@@ -101,6 +103,28 @@ CASE_MATRIX: tuple[dict[str, object], ...] = (
         "ref_max_bad_channels": 0.075,
         "ref_tolerances": (-3.5, 5.5),
         "ref_window_length": 1.0,
+    },
+    {
+        "name": "manual_moderate_cutoff20_asrfilter",
+        "sfreq": 256.0,
+        "n_channels": 8,
+        "n_times": 3072,
+        "n_calibration": 1536,
+        "seed": 509,
+        "artifact_scale": 2.0,
+        "cutoff": 20.0,
+        "blocksize": 10.0,
+        "window_length": 0.5,
+        "window_overlap": 0.66,
+        "max_dropout_fraction": 0.1,
+        "min_clean_fraction": 0.25,
+        "max_dims": 0.66,
+        "maxmem": 64.0,
+        "use_auto_calibration": False,
+        "ref_max_bad_channels": 0.075,
+        "ref_tolerances": (-3.5, 5.5),
+        "ref_window_length": 1.0,
+        "spectral_shaping": True,
     },
     {
         "name": "auto_moderate_cutoff5",
@@ -188,6 +212,7 @@ def generate_asr_fixture(
     ref_max_bad_channels: float,
     ref_tolerances: tuple[float, float],
     ref_window_length: float,
+    spectral_shaping: bool = False,
 ) -> dict[str, np.ndarray | float]:
     """Return deterministic calibration and processing data for one case."""
     rng = np.random.default_rng(seed)
@@ -224,6 +249,11 @@ def generate_asr_fixture(
     data -= data.mean(axis=1, keepdims=True)
     calibration -= calibration.mean(axis=1, keepdims=True)
 
+    filter_b, filter_a = (
+        _design_asr_filter(sfreq)
+        if spectral_shaping
+        else (np.array([1.0]), np.array([1.0]))
+    )
     return {
         "data": data,
         "calibration": calibration,
@@ -236,8 +266,8 @@ def generate_asr_fixture(
         "min_clean_fraction": float(min_clean_fraction),
         "max_dims": float(max_dims),
         "maxmem": float(maxmem),
-        "filter_b": np.array([1.0], dtype=np.float64),
-        "filter_a": np.array([1.0], dtype=np.float64),
+        "filter_b": np.asarray(filter_b, dtype=np.float64),
+        "filter_a": np.asarray(filter_a, dtype=np.float64),
         "use_auto_calibration": float(use_auto_calibration),
         "ref_max_bad_channels": float(ref_max_bad_channels),
         "ref_tolerances": np.asarray(ref_tolerances, dtype=np.float64),
@@ -269,6 +299,7 @@ def iter_case_payloads() -> tuple[tuple[str, dict[str, np.ndarray | float]], ...
             ref_max_bad_channels=float(case["ref_max_bad_channels"]),
             ref_tolerances=tuple(case["ref_tolerances"]),  # type: ignore[arg-type]
             ref_window_length=float(case["ref_window_length"]),
+            spectral_shaping=bool(case.get("spectral_shaping", False)),
         )
         payloads.append((name, payload))
     return tuple(payloads)

@@ -1,0 +1,6 @@
+Fixed ASR spectral shaping, filter-state continuity, physical-unit invariance,
+and ``min_clean_fraction`` calibration semantics. ``AdaptiveASR`` updates are
+now transactional, while Juggler uses continuous filtering, unit-stable GEV
+fitting, and memory-bounded Chebyshev DBSCAN. ``ASR`` and ``GuidedASR`` now
+default to ``filter_kind="asr"``; parity coverage and cutoff guidance were also
+updated (PR #64).

@@ -17,16 +17,16 @@ This module exposes the following core components:
 
 from __future__ import annotations
 
+import itertools
 from typing import Any
 
 import numpy as np
-from scipy import optimize, stats
-from sklearn.cluster import DBSCAN
+from scipy import spatial, stats
 
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne
 from ._calibration import calibrate_asr
-from ._filters import _apply_statistics_filter, _design_statistics_filter
+from ._filters import _design_statistics_filter, _lfilter_channels
 from ._validation import (
     _validate_array_2d,
     _validate_backend_params,
@@ -88,7 +88,9 @@ def select_juggler_reference_samples(
     Returns
     -------
     X_ref : ndarray, shape (n_channels, n_selected_times)
-        Selected reference samples from the original input data.
+        Selected samples from the causally pre-emphasized data. Juggler applies
+        the ASR IIR filter before pointwise selection and calibrates from the
+        resulting filtered reference samples.
     sample_mask : ndarray, shape (n_times,)
         Boolean mask of the retained reference samples.
     diagnostics : dict
@@ -121,8 +123,7 @@ def select_juggler_reference_samples(
     )
 
     filter_b, filter_a = _design_statistics_filter(sfreq, selection_filter_kind)
-    X_stats = _apply_statistics_filter(X, filter_b, filter_a)
-    X_stats = X_stats - np.median(X_stats, axis=1, keepdims=True)
+    X_stats, filter_zi = _lfilter_channels(X, filter_b, filter_a)
 
     amplitude = np.abs(X_stats)
     sorted_amplitude = np.sort(amplitude, axis=0)[::-1]
@@ -135,6 +136,7 @@ def select_juggler_reference_samples(
         "selection_filter_kind": selection_filter_kind,
         "selection_filter_b": filter_b.copy(),
         "selection_filter_a": filter_a.copy(),
+        "selection_filter_zi": filter_zi.copy(),
         "leading_amplitude": leading_amplitude.copy(),
         "dbscan_top_k": int(top_k),
     }
@@ -154,18 +156,20 @@ def select_juggler_reference_samples(
         )
         diagnostics.update(gev_info)
 
-    keep_fraction = float(np.mean(sample_mask))
-    if keep_fraction < min_reference_fraction:
+    selected_samples = int(np.sum(sample_mask))
+    keep_fraction = float(selected_samples / sample_mask.size)
+    minimum_samples = max(1, int(np.floor(min_reference_fraction * sample_mask.size)))
+    if selected_samples < minimum_samples:
         raise RuntimeError(
             "Juggler reference selection retained too little data: "
             f"{keep_fraction * 100:.1f}% < {min_reference_fraction * 100:.1f}%."
         )
 
-    X_ref = X[:, sample_mask]
+    X_ref = X_stats[:, sample_mask]
     diagnostics.update(
         {
             "reference_sample_mask": sample_mask.copy(),
-            "reference_selected_samples": int(X_ref.shape[1]),
+            "reference_selected_samples": selected_samples,
             "reference_candidate_samples": int(X.shape[1]),
             "reference_selected_fraction": keep_fraction,
         }
@@ -390,6 +394,12 @@ class JugglerASR(ASR):
             gev_grid_size=self.gev_grid_size,
             min_reference_fraction=self.min_reference_fraction,
         )
+        if self.filter_kind != self.selection_filter_kind:
+            raise ValueError(
+                "JugglerASR requires filter_kind and selection_filter_kind to "
+                "match so calibration and reconstruction use the same "
+                "statistics filter"
+            )
 
         fit_input = X if calibration is None else calibration
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
@@ -447,11 +457,19 @@ class JugglerASR(ASR):
             min_clean_fraction=self.min_clean_fraction,
             cov_estimator=self.cov_estimator,
             regularization=self.regularization,
-            filter_kind=self.filter_kind,
+            # Reference samples have already been filtered continuously before
+            # pointwise selection. Filtering their concatenation again would
+            # introduce discontinuity transients and alter the calibration.
+            filter_kind="none",
             method="standard",
             max_mem_mb=self.max_mem_mb,
         )
+        state.filter_b = np.asarray(reference_info["selection_filter_b"]).copy()
+        state.filter_a = np.asarray(reference_info["selection_filter_a"]).copy()
+        state.filter_zi = np.asarray(reference_info["selection_filter_zi"]).copy()
         cal_info.update(reference_info)
+        cal_info["filter_kind"] = self.filter_kind
+        cal_info["calibration_input_filtering"] = "continuous_before_selection"
         cal_info["clean_window_mask"] = np.array([], dtype=bool)
         cal_info["clean_window_scores"] = np.empty(
             (0, data_2d.shape[0]), dtype=np.float64
@@ -543,13 +561,11 @@ def _select_dbscan_reference_mask(
         estimated_clean_count,
         features.shape[0],
     )
-    clusterer = DBSCAN(
+    labels, dbscan_memory_info = _dbscan_chebyshev_memory_bounded(
+        features,
         eps=eps,
         min_samples=min_samples,
-        metric="chebyshev",
-        n_jobs=None,
     )
-    labels = clusterer.fit_predict(features)
     candidate_labels = np.unique(labels[labels >= 0])
     if candidate_labels.size == 0:
         raise RuntimeError(
@@ -582,8 +598,242 @@ def _select_dbscan_reference_mask(
         "juggler_dbscan_cluster_sizes": np.asarray(cluster_sizes, dtype=int),
         "juggler_dbscan_cluster_scores": np.asarray(cluster_scores, dtype=np.float64),
         "juggler_dbscan_estimated_clean_count": int(estimated_clean_count),
+        **dbscan_memory_info,
     }
     return sample_mask, diagnostics
+
+
+def _dbscan_chebyshev_memory_bounded(
+    features: np.ndarray,
+    *,
+    eps: float,
+    min_samples: int,
+    count_batch_size: int = 4096,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Run exact Chebyshev DBSCAN without materializing all neighborhoods.
+
+    Scikit-learn's DBSCAN stores the complete radius-neighborhood graph. Dense
+    reference clusters can therefore require quadratic memory, which is
+    prohibitive for the 100,000-sample Juggler simulation. This implementation
+    preserves the DBSCAN definition while keeping only batched neighbor counts,
+    occupied grid cells, and one border-point neighborhood in memory.
+
+    Parameters
+    ----------
+    features : ndarray, shape (n_samples, n_features)
+        Feature vectors to cluster.
+    eps : float
+        Chebyshev neighborhood radius.
+    min_samples : int
+        Minimum neighborhood size, including the point itself, for a core
+        sample.
+    count_batch_size : int
+        Number of points used per radius-count query.
+
+    Returns
+    -------
+    labels : ndarray, shape (n_samples,)
+        DBSCAN cluster labels, with ``-1`` denoting noise.
+    diagnostics : dict
+        Memory-backend and core-sample diagnostics.
+    """
+    features = np.ascontiguousarray(features, dtype=np.float64)
+    if features.ndim != 2 or features.shape[0] == 0:
+        raise ValueError("features must be a non-empty 2D array")
+    if not np.isfinite(eps) or eps <= 0:
+        raise ValueError("eps must be positive and finite")
+    if min_samples < 1:
+        raise ValueError("min_samples must be at least 1")
+    count_batch_size = max(1, int(count_batch_size))
+
+    n_samples = features.shape[0]
+    cell_coordinates = np.floor(features / eps).astype(np.int64)
+    sample_cells: dict[tuple[int, ...], list[int]] = {}
+    for index in range(n_samples):
+        key = tuple(int(value) for value in cell_coordinates[index])
+        sample_cells.setdefault(key, []).append(index)
+    sample_cell_keys = sorted(sample_cells, key=lambda key: sample_cells[key][0])
+    sample_cell_positions = {
+        key: position for position, key in enumerate(sample_cell_keys)
+    }
+    sample_cell_trees = {
+        key: spatial.cKDTree(features[np.asarray(indices, dtype=int)])
+        for key, indices in sample_cells.items()
+    }
+    neighbor_offsets = tuple(itertools.product((-1, 0, 1), repeat=features.shape[1]))
+
+    # Points in the same eps-wide Chebyshev cell are all mutual neighbors.
+    # Accumulate exact counts only across occupied adjacent cells. This avoids
+    # a dense all-point radius query, whose running time can become quadratic
+    # even when ``return_length=True`` keeps its memory bounded.
+    neighbor_counts = np.empty(n_samples, dtype=np.int64)
+    for indices in sample_cells.values():
+        neighbor_counts[np.asarray(indices, dtype=int)] = len(indices)
+    for left_position, left_key in enumerate(sample_cell_keys):
+        left_indices = np.asarray(sample_cells[left_key], dtype=int)
+        left_points = features[left_indices]
+        for offset in neighbor_offsets:
+            right_key = tuple(
+                coordinate + delta for coordinate, delta in zip(left_key, offset)
+            )
+            right_position = sample_cell_positions.get(right_key)
+            if right_position is None or right_position <= left_position:
+                continue
+            right_indices = np.asarray(sample_cells[right_key], dtype=int)
+            right_points = features[right_indices]
+            left_needed = neighbor_counts[left_indices] < int(min_samples)
+            if np.any(left_needed):
+                neighbor_counts[left_indices[left_needed]] += sample_cell_trees[
+                    right_key
+                ].query_ball_point(
+                    left_points[left_needed],
+                    r=eps,
+                    p=np.inf,
+                    return_length=True,
+                    workers=1,
+                )
+            right_needed = neighbor_counts[right_indices] < int(min_samples)
+            if np.any(right_needed):
+                neighbor_counts[right_indices[right_needed]] += sample_cell_trees[
+                    left_key
+                ].query_ball_point(
+                    right_points[right_needed],
+                    r=eps,
+                    p=np.inf,
+                    return_length=True,
+                    workers=1,
+                )
+    core_mask = neighbor_counts >= int(min_samples)
+    core_indices = np.flatnonzero(core_mask)
+    labels = np.full(n_samples, -1, dtype=np.int64)
+    if core_indices.size == 0:
+        return labels, {
+            "juggler_dbscan_backend": "ckdtree_grid_memory_bounded",
+            "juggler_dbscan_core_samples": 0,
+            "juggler_dbscan_core_cells": 0,
+            "juggler_dbscan_count_batch_size": count_batch_size,
+        }
+
+    # Every pair of points in the same eps-wide Chebyshev grid cell is a
+    # neighbor. Connected components can therefore be found at cell level,
+    # avoiding a radius query for every point in a dense core cluster.
+    core_cells: dict[tuple[int, ...], list[int]] = {}
+    for index in core_indices:
+        key = tuple(int(value) for value in cell_coordinates[index])
+        core_cells.setdefault(key, []).append(int(index))
+    cell_keys = sorted(core_cells, key=lambda key: core_cells[key][0])
+    parent = np.arange(len(cell_keys), dtype=np.int64)
+    cell_min_index = np.asarray(
+        [core_cells[key][0] for key in cell_keys], dtype=np.int64
+    )
+
+    def find(position: int) -> int:
+        while parent[position] != position:
+            parent[position] = parent[parent[position]]
+            position = int(parent[position])
+        return position
+
+    def union(left: int, right: int) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root == right_root:
+            return
+        if cell_min_index[left_root] <= cell_min_index[right_root]:
+            parent[right_root] = left_root
+            cell_min_index[left_root] = min(
+                cell_min_index[left_root], cell_min_index[right_root]
+            )
+        else:
+            parent[left_root] = right_root
+            cell_min_index[right_root] = min(
+                cell_min_index[left_root], cell_min_index[right_root]
+            )
+
+    cell_trees = {
+        key: spatial.cKDTree(features[np.asarray(indices, dtype=int)])
+        for key, indices in core_cells.items()
+    }
+    cell_positions = {key: position for position, key in enumerate(cell_keys)}
+    for left_position, left_key in enumerate(cell_keys):
+        left_points = features[np.asarray(core_cells[left_key], dtype=int)]
+        for offset in neighbor_offsets:
+            right_key = tuple(
+                coordinate + delta for coordinate, delta in zip(left_key, offset)
+            )
+            right_position = cell_positions.get(right_key)
+            if right_position is None:
+                continue
+            if right_position <= left_position:
+                continue
+            right_points = features[np.asarray(core_cells[right_key], dtype=int)]
+            if left_points.shape[0] <= right_points.shape[0]:
+                distances, _ = cell_trees[right_key].query(
+                    left_points,
+                    k=1,
+                    p=np.inf,
+                    distance_upper_bound=eps,
+                    workers=1,
+                )
+            else:
+                distances, _ = cell_trees[left_key].query(
+                    right_points,
+                    k=1,
+                    p=np.inf,
+                    distance_upper_bound=eps,
+                    workers=1,
+                )
+            if np.any(np.isfinite(distances)):
+                union(left_position, right_position)
+
+    roots = np.asarray([find(position) for position in range(len(cell_keys))])
+    unique_roots = sorted(set(roots.tolist()), key=lambda root: cell_min_index[root])
+    root_to_label = {root: label for label, root in enumerate(unique_roots)}
+    for position, key in enumerate(cell_keys):
+        label = root_to_label[int(roots[position])]
+        labels[np.asarray(core_cells[key], dtype=int)] = label
+
+    # A non-core point is a DBSCAN border point when it neighbors a core
+    # sample. Grouping border points by grid cell avoids one tree query per
+    # point. All core points within one cell share a component label, and only
+    # the 3**n_features adjacent cells can contain Chebyshev neighbors.
+    border_cells: dict[tuple[int, ...], list[int]] = {}
+    for index in np.flatnonzero(~core_mask):
+        key = tuple(int(value) for value in cell_coordinates[index])
+        border_cells.setdefault(key, []).append(int(index))
+    for border_key, indices in border_cells.items():
+        border_indices = np.asarray(indices, dtype=int)
+        border_points = features[border_indices]
+        for offset in neighbor_offsets:
+            core_key = tuple(
+                coordinate + delta for coordinate, delta in zip(border_key, offset)
+            )
+            core_indices_in_cell = core_cells.get(core_key)
+            if core_indices_in_cell is None:
+                continue
+            core_label = int(labels[core_indices_in_cell[0]])
+            if core_key == border_key:
+                matched = np.ones(border_indices.size, dtype=bool)
+            else:
+                distances, _ = cell_trees[core_key].query(
+                    border_points,
+                    k=1,
+                    p=np.inf,
+                    distance_upper_bound=eps,
+                    workers=1,
+                )
+                matched = np.isfinite(distances)
+            matched_indices = border_indices[matched]
+            current = labels[matched_indices]
+            labels[matched_indices] = np.where(
+                current < 0, core_label, np.minimum(current, core_label)
+            )
+
+    return labels, {
+        "juggler_dbscan_backend": "ckdtree_grid_memory_bounded",
+        "juggler_dbscan_core_samples": int(core_indices.size),
+        "juggler_dbscan_core_cells": int(len(core_cells)),
+        "juggler_dbscan_count_batch_size": count_batch_size,
+    }
 
 
 def _select_gev_reference_mask(
@@ -606,36 +856,55 @@ def _select_gev_reference_mask(
     diagnostics : dict
         A dictionary containing the fitted GEV parameters and mode.
     """
+    amplitude_scale = float(np.median(leading_amplitude))
+    if not np.isfinite(amplitude_scale) or amplitude_scale <= 0:
+        amplitude_scale = float(np.max(leading_amplitude))
+    if not np.isfinite(amplitude_scale) or amplitude_scale <= 0:
+        raise RuntimeError("GEV fitting requires at least one positive amplitude")
+    normalized = leading_amplitude / amplitude_scale
     try:
-        shape, loc, scale = stats.genextreme.fit(leading_amplitude)
+        shape, loc_normalized, scale_normalized = stats.genextreme.fit(normalized)
     except Exception as exc:
         raise RuntimeError(f"GEV fitting failed: {exc}") from exc
-    if not np.isfinite(scale) or scale <= np.finfo(float).eps:
+    if not np.isfinite(scale_normalized) or scale_normalized <= 0:
         raise RuntimeError("GEV fitting returned a non-positive scale")
 
-    distribution = stats.genextreme(shape, loc=loc, scale=scale)
-    lower = max(float(np.min(leading_amplitude)), float(distribution.ppf(1e-6)))
-    upper = min(float(np.max(leading_amplitude)), float(distribution.ppf(1 - 1e-6)))
-    if not np.isfinite(lower) or not np.isfinite(upper) or upper <= lower:
-        mode = _histogram_mode(leading_amplitude)
+    distribution = stats.genextreme(
+        shape,
+        loc=loc_normalized,
+        scale=scale_normalized,
+    )
+    if shape < 1.0 and abs(shape) > 1e-10:
+        standardized_mode = (1.0 - (1.0 - shape) ** shape) / shape
+        mode_normalized = loc_normalized + scale_normalized * standardized_mode
+    elif abs(shape) <= 1e-10:
+        mode_normalized = float(loc_normalized)
     else:
-        objective = lambda x: -distribution.pdf(x)
-        optimum = optimize.minimize_scalar(
-            objective, bounds=(lower, upper), method="bounded"
-        )
-        if optimum.success and np.isfinite(optimum.x):
-            mode = float(optimum.x)
+        # For boundary-mode shapes, evaluate a fixed probability grid. Working
+        # in normalized coordinates keeps this fallback invariant to EEG units.
+        probabilities = np.linspace(1e-6, 1.0 - 1e-6, int(grid_size))
+        grid = np.asarray(distribution.ppf(probabilities), dtype=np.float64)
+        logpdf = np.asarray(distribution.logpdf(grid), dtype=np.float64)
+        valid = np.isfinite(grid) & np.isfinite(logpdf)
+        if grid.shape == probabilities.shape and np.any(valid):
+            valid_grid = grid[valid]
+            valid_logpdf = logpdf[valid]
+            mode_normalized = float(valid_grid[int(np.argmax(valid_logpdf))])
         else:
-            grid = np.linspace(lower, upper, int(grid_size))
-            pdf = distribution.pdf(grid)
-            mode = float(grid[int(np.nanargmax(pdf))])
-    sample_mask = leading_amplitude <= mode
+            mode_normalized = _histogram_mode(normalized)
+    if not np.isfinite(mode_normalized):
+        mode_normalized = _histogram_mode(normalized)
+    mode = float(mode_normalized * amplitude_scale)
+    sample_mask = normalized <= mode_normalized
+    loc = float(loc_normalized * amplitude_scale)
+    scale = float(scale_normalized * amplitude_scale)
     diagnostics = {
         "juggler_gev_shape": float(shape),
-        "juggler_gev_loc": float(loc),
-        "juggler_gev_scale": float(scale),
-        "juggler_gev_mode": float(mode),
+        "juggler_gev_loc": loc,
+        "juggler_gev_scale": scale,
+        "juggler_gev_mode": mode,
         "juggler_gev_grid_size": int(grid_size),
+        "juggler_gev_normalization_scale": amplitude_scale,
     }
     return sample_mask, diagnostics
 
@@ -657,7 +926,8 @@ def _histogram_mode(values: np.ndarray) -> float:
     values = values[np.isfinite(values)]
     if values.size == 0:
         raise ValueError("Cannot estimate a mode from empty values")
-    if np.allclose(values, values[0]):
+    scale = max(float(np.max(np.abs(values))), np.finfo(float).tiny)
+    if float(np.ptp(values)) <= np.finfo(float).eps * scale:
         return float(values[0])
     edges = np.histogram_bin_edges(values, bins="fd")
     if edges.size < 2:

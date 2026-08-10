@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "reference": {
+    "implementation": "sccn/clean_rawdata",
+    "repository": "https://github.com/sccn/clean_rawdata.git",
+    "commit": "d4b143f2a7719cf12d46c9b3e15aa827edb05614",
+    "matlab": "R2023b",
+    "generation_environment": "local Windows MATLAB"
+  },
+  "generation": {
+    "input_script": "generate_asr_input.py",
+    "reference_script": "generate_asr_reference.m",
+    "case": "manual_moderate_cutoff20_asrfilter",
+    "filter": "clean_rawdata inverse-EEG Yule-Walker pre-emphasis"
+  },
+  "verification": {
+    "command": "pytest tests/parity/test_asr_parity.py -q -k asrfilter",
+    "result": "3 passed"
+  },
+  "files": {
+    "asr_case_reference_manual_moderate_cutoff20_asrfilter.mat": "763220c4dcd9137feb2dd2731853b72446efbe317ecb412ed1b5bad21466ad73"
+  }
+}
