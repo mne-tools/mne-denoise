@@ -167,12 +167,11 @@ epochs = mne.read_epochs("sample-epo.fif")
 dss = DSS(bias=AverageBias(axis="epochs"), n_components=5)
 dss.fit(epochs)
 
-sources = dss.transform(epochs)          # component time courses
-pattern = dss.patterns_[:, 0]            # topography of component 1
+sources = dss.transform(epochs)  # component time courses
+pattern = dss.patterns_[:, 0]  # topography of component 1
 
 # To get denoised sensor-space data instead, set return_type on the estimator
-dss_sensor = DSS(bias=AverageBias(axis="epochs"), n_components=5,
-                 return_type="epochs")
+dss_sensor = DSS(bias=AverageBias(axis="epochs"), n_components=5, return_type="epochs")
 epochs_clean = dss_sensor.fit_transform(epochs)
 ```
 
