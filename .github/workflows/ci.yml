@@ -80,6 +80,14 @@ jobs:
         run: make -C docs html SPHINXOPTS="-W --keep-going"
       - name: Add .nojekyll to the build
         run: touch docs/_build/html/.nojekyll
+      # The deploy below is force_orphan, so it replaces the whole site. Refuse
+      # to publish a build that did not actually produce one.
+      - name: Verify the build produced a site
+        run: |
+          set -e
+          test -s docs/_build/html/index.html
+          test -s docs/_build/html/auto_examples/index.html
+          echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v6
         with:

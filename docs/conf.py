@@ -63,6 +63,9 @@ sphinx_gallery_conf = {
             "../examples/zapline",
             "../examples/asr",
             "../examples/spectrum_interpolation",
+            # Trailing wildcard: a new examples/ subdirectory sorts to the end
+            # instead of failing the whole docs build with a ConfigError.
+            "*",
         ]
     ),
     "within_subsection_order": FileNameSortKey,
