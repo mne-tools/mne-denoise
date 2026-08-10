@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mne-denoise"
 version = "0.0.1"
-description = "Denoising Source Separation (DSS) and ZapLine algorithms for MNE-Python."
+description = "Artifact removal for MNE-Python: ASR, DSS, ZapLine, iCanClean, SNS and spectrum interpolation."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -22,8 +22,13 @@ keywords = [
   "eeg",
   "meg",
   "denoising",
+  "artifact-removal",
+  "asr",
+  "artifact-subspace-reconstruction",
   "dss",
   "zapline",
+  "icanclean",
+  "line-noise",
   "neuroscience",
   "electrophysiology",
   "signal-processing",
