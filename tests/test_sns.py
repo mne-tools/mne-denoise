@@ -433,7 +433,7 @@ def test_sns_numpy_epochs_and_channel_count(rng):
     cleaned = estimator.transform(epochs)
     assert cleaned.shape == epochs.shape
     np.testing.assert_allclose(cleaned.mean(axis=(0, 2)), 0.0, atol=1e-12)
-    with pytest.raises(ValueError, match="channel count"):
+    with pytest.raises(ValueError, match="fitted data had"):
         estimator.transform(rng.standard_normal((5, 100)))
 
 

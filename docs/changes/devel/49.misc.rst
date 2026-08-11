@@ -1,0 +1,5 @@
+Consolidated duplicated internals under package-level ownership. New
+``mne_denoise._validation`` helpers and new ``mne_denoise._spatial``
+epoch-reshaping helpers replace validation and reshape logic that had been
+copied across ASR, DSS, SNS, ZapLine, spectrum interpolation, the covariance
+utilities, and the visualization module.

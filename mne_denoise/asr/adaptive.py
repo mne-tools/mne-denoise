@@ -28,6 +28,7 @@ from typing import Any
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
+from .._spatial import continuous_to_epochs
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from ._covariance import (
     _adaptive_covariance_sqrt,
@@ -833,10 +834,9 @@ class AdaptiveASR(ASR):
         elif mne_type == "epochs":
             n_epochs = data.shape[0]
             n_times_ep = data.shape[2]
-            reshaped = cleaned.reshape(
-                cleaned.shape[0], n_epochs, n_times_ep
-            ).transpose(1, 0, 2)
-            full[:, idx, :] = reshaped
+            full[:, idx, :] = continuous_to_epochs(
+                cleaned, (n_epochs, cleaned.shape[0], n_times_ep)
+            )
         else:
             full[idx, :] = cleaned
         result = reconstruct_mne_object(full, orig_inst, mne_type, verbose=False)

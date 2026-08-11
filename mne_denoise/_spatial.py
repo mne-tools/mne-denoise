@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from numbers import Integral
-
 import numpy as np
+
+from ._validation import check_chunk_size
 
 
 def apply_spatial_transform(
@@ -41,12 +41,7 @@ def apply_spatial_transform(
             "matrix and data channel dimensions do not match "
             f"({matrix.shape[1]} != {data.shape[0]})"
         )
-    if chunk_size is not None:
-        if isinstance(chunk_size, bool) or not isinstance(chunk_size, Integral):
-            raise TypeError("chunk_size must be a positive integer or None")
-        if chunk_size < 1:
-            raise ValueError("chunk_size must be a positive integer or None")
-        chunk_size = int(chunk_size)
+    chunk_size = check_chunk_size(chunk_size)
 
     flat = data.reshape(data.shape[0], -1)
     if chunk_size is None:
@@ -57,3 +52,55 @@ def apply_spatial_transform(
             stop = min(start + chunk_size, flat.shape[1])
             transformed[:, start:stop] = matrix @ flat[:, start:stop]
     return transformed.reshape((matrix.shape[0], *data.shape[1:]))
+
+
+def epochs_to_continuous(data: np.ndarray) -> np.ndarray:
+    """Concatenate epoched channel-first data along time.
+
+    Parameters
+    ----------
+    data : ndarray, shape (n_channels, n_times) | (n_epochs, n_channels, n_times)
+        Channel-first data. Two-dimensional input is returned unchanged.
+
+    Returns
+    -------
+    continuous : ndarray, shape (n_channels, n_times) | (n_channels, n_epochs * n_times)
+        Channel-first continuous data.
+
+    See Also
+    --------
+    continuous_to_epochs : Inverse operation.
+    """
+    data = np.asarray(data)
+    if data.ndim == 2:
+        return data
+    if data.ndim != 3:
+        raise ValueError(f"data must be 2D or 3D, got {data.ndim}D")
+    return data.transpose(1, 0, 2).reshape(data.shape[1], -1)
+
+
+def continuous_to_epochs(continuous: np.ndarray, shape: tuple[int, ...]) -> np.ndarray:
+    """Split continuous channel-first data back into epochs.
+
+    Parameters
+    ----------
+    continuous : ndarray, shape (n_channels, n_epochs * n_times)
+        Output of :func:`epochs_to_continuous`.
+    shape : tuple
+        Target shape. A two-element shape returns ``continuous`` unchanged.
+
+    Returns
+    -------
+    epoched : ndarray
+        Data reshaped to ``shape``.
+
+    See Also
+    --------
+    epochs_to_continuous : Inverse operation.
+    """
+    if len(shape) == 2:
+        return continuous
+    if len(shape) != 3:
+        raise ValueError(f"shape must have 2 or 3 entries, got {len(shape)}")
+    n_epochs, _n_channels, n_times = shape
+    return continuous.reshape(continuous.shape[0], n_epochs, n_times).transpose(1, 0, 2)

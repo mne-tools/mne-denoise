@@ -29,30 +29,21 @@ from sklearn.utils.validation import check_is_fitted
 
 from .._covariance import compute_covariance
 from .._logging import set_log_level_from_verbose
-from .._spatial import apply_spatial_transform
+from .._spatial import (
+    apply_spatial_transform,
+    continuous_to_epochs,
+    epochs_to_continuous,
+)
+from .._validation import (
+    check_channel_first_data,
+    check_channel_layout,
+    check_chunk_size,
+)
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 
 logger = logging.getLogger(__name__)
 
 _DEFAULT_RCOND = 1e-12
-
-
-def _check_data(X: np.ndarray, *, allow_epochs: bool) -> np.ndarray:
-    """Check and convert channel-first continuous or epoched data."""
-    X = np.asarray(X, dtype=np.float64)
-    expected = (2, 3) if allow_epochs else (2,)
-    if X.ndim not in expected:
-        shape_text = "2-D or 3-D" if allow_epochs else "2-D"
-        raise ValueError(f"Expected a {shape_text} channel-first array, got {X.shape}")
-    if X.shape[-2] < 2:
-        raise ValueError("SNS requires at least two channels")
-    if X.shape[-1] < 2:
-        raise ValueError("SNS requires at least two time samples")
-    if X.ndim == 3 and X.shape[0] < 1:
-        raise ValueError("SNS requires at least one epoch")
-    if not np.isfinite(X).all():
-        raise ValueError("X must contain only finite values")
-    return X
 
 
 def _automatic_sample_mask(
@@ -244,19 +235,14 @@ def compute_sns(
        suppression. Journal of Neuroscience Methods, 168(1), 195-202.
        https://doi.org/10.1016/j.jneumeth.2007.09.012
     """
-    X = _check_data(X, allow_epochs=True)
+    X = check_channel_first_data(X, name="SNS")
     if not isinstance(preserve_mean, bool):
         raise TypeError("preserve_mean must be a bool")
     if isinstance(n_iter, bool) or not isinstance(n_iter, Integral):
         raise TypeError("n_iter must be a positive integer")
     if n_iter < 1:
         raise ValueError("n_iter must be a positive integer")
-    if chunk_size is not None:
-        if isinstance(chunk_size, bool) or not isinstance(chunk_size, Integral):
-            raise TypeError("chunk_size must be a positive integer or None")
-        if chunk_size < 1:
-            raise ValueError("chunk_size must be a positive integer or None")
-        chunk_size = int(chunk_size)
+    chunk_size = check_chunk_size(chunk_size)
     if outlier_threshold is not None:
         if isinstance(outlier_threshold, bool) or not isinstance(
             outlier_threshold, Real
@@ -266,12 +252,8 @@ def compute_sns(
         if not np.isfinite(outlier_threshold) or outlier_threshold <= 0:
             raise ValueError("outlier_threshold must be finite and positive")
 
-    if X.ndim == 3:
-        continuous = X.transpose(1, 0, 2).reshape(X.shape[1], -1)
-        expected_weight_shape = (X.shape[0], X.shape[2])
-    else:
-        continuous = X
-        expected_weight_shape = (X.shape[1],)
+    continuous = epochs_to_continuous(X)
+    expected_weight_shape = (X.shape[0], X.shape[2]) if X.ndim == 3 else (X.shape[1],)
     if sample_weight is None:
         manual_weight = np.ones(continuous.shape[1], dtype=np.float64)
     else:
@@ -325,8 +307,7 @@ def compute_sns(
     cleaned = apply_spatial_transform(composite, centered, chunk_size=chunk_size)
     if preserve_mean:
         cleaned += training_mean
-    if X.ndim == 3:
-        cleaned = cleaned.reshape(X.shape[1], X.shape[0], X.shape[2]).transpose(1, 0, 2)
+    cleaned = continuous_to_epochs(cleaned, X.shape)
     return cleaned, {
         "weights": composite,
         "denoising_matrix": composite,
@@ -491,27 +472,17 @@ class SNS(BaseEstimator, TransformerMixin):
         data, _sfreq, mne_type, orig_inst, picks, names = extract_data_from_mne(
             X, auto_pick=True
         )
-        current_names = None if names is None else tuple(names)
-        if (
-            self.feature_names_in_ is not None
-            and current_names != self.feature_names_in_
-        ):
-            raise ValueError(
-                "MNE channel names/order differ from fit; apply SNS to the exact "
-                "fitted channel layout"
-            )
-        data = _check_data(np.asarray(data, dtype=np.float64), allow_epochs=True)
+        data = check_channel_first_data(data, name="SNS")
         if not isinstance(self.preserve_mean, bool):
             raise TypeError("preserve_mean must be a bool")
-        if data.shape[-2] != self.n_channels_in_:
-            raise ValueError(
-                "X has a different channel count from fit: "
-                f"expected {self.n_channels_in_}, got {data.shape[-2]}"
-            )
-        if data.ndim == 3:
-            continuous = data.transpose(1, 0, 2).reshape(data.shape[1], -1)
-        else:
-            continuous = data
+        check_channel_layout(
+            "SNS",
+            n_channels=data.shape[-2],
+            fitted_n_channels=self.n_channels_in_,
+            ch_names=None if names is None else tuple(names),
+            fitted_ch_names=self.feature_names_in_,
+        )
+        continuous = epochs_to_continuous(data)
         cleaned = apply_spatial_transform(
             self.denoising_matrix_,
             continuous - self.training_mean_,
@@ -519,10 +490,7 @@ class SNS(BaseEstimator, TransformerMixin):
         )
         if self.preserve_mean:
             cleaned += self.training_mean_
-        if data.ndim == 3:
-            cleaned = cleaned.reshape(
-                data.shape[1], data.shape[0], data.shape[2]
-            ).transpose(1, 0, 2)
+        cleaned = continuous_to_epochs(cleaned, data.shape)
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
     def fit_transform(

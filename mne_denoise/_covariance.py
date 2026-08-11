@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from ._validation import check_chunk_size
+
 
 def compute_covariance(
     data: np.ndarray,
@@ -69,15 +71,9 @@ def compute_covariance(
         raise ValueError(f"data must be 2D or 3D, got shape {data.shape}")
     n_channels, n_times = data.shape
 
-    if chunk_size is not None:
-        if isinstance(chunk_size, bool) or not isinstance(
-            chunk_size, (int, np.integer)
-        ):
-            raise TypeError("chunk_size must be a positive integer or None")
-        if chunk_size <= 0:
-            raise ValueError("chunk_size must be a positive integer or None")
-        if method != "empirical":
-            raise ValueError("chunk_size is only supported for empirical covariance")
+    chunk_size = check_chunk_size(chunk_size)
+    if chunk_size is not None and method != "empirical":
+        raise ValueError("chunk_size is only supported for empirical covariance")
 
     if weights is not None:
         if data.shape[1] != weights.shape[0]:

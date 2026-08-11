@@ -1,0 +1,4 @@
+:class:`mne_denoise.spectrum_interpolation.SpectrumInterpolation` no longer
+silently ignores an explicit ``sfreq`` when fitted on an MNE object. A declared
+sampling frequency that disagrees with ``info['sfreq']`` now raises instead of
+being discarded.

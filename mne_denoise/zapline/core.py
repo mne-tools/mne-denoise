@@ -42,7 +42,11 @@ import warnings
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
-from .._spatial import apply_spatial_transform
+from .._spatial import (
+    apply_spatial_transform,
+    continuous_to_epochs,
+    epochs_to_continuous,
+)
 
 # Inherit from DSS
 from ..dss.denoisers.spectral import LineNoiseBias
@@ -415,13 +419,9 @@ class ZapLine(DSS):
             )
 
         # Standard Transform
-        if data.ndim == 3:
-            n_ep, n_ch, n_t = data.shape
-            data_cont = np.transpose(data, (1, 0, 2)).reshape(n_ch, -1)
-            cleaned_cont = self._apply_standard_cleaning(data_cont)
-            cleaned = cleaned_cont.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
-        else:
-            cleaned = self._apply_standard_cleaning(data)
+        cleaned = continuous_to_epochs(
+            self._apply_standard_cleaning(epochs_to_continuous(data)), data.shape
+        )
 
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
@@ -484,7 +484,7 @@ class ZapLine(DSS):
         # Adaptive logic (ZapLine-plus)
         if data.ndim == 3:
             n_ep, n_ch, n_t = data.shape
-            data_cont = np.transpose(data, (1, 0, 2)).reshape(n_ch, -1)
+            data_cont = epochs_to_continuous(data)
         else:
             n_ch, n_t = data.shape
             data_cont = data
@@ -514,7 +514,7 @@ class ZapLine(DSS):
         self.adaptive_results_ = res
 
         if data.ndim == 3:
-            cleaned = cleaned.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
+            cleaned = continuous_to_epochs(cleaned, (n_ep, n_ch, n_t))
 
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 

@@ -32,7 +32,11 @@ except ImportError:
 
 from .._covariance import compute_covariance
 from .._logging import set_log_level_from_verbose
-from .._spatial import apply_spatial_transform
+from .._spatial import (
+    apply_spatial_transform,
+    continuous_to_epochs,
+    epochs_to_continuous,
+)
 from ..blending import overlap_add_combine
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 from .denoisers import LinearDenoiser
@@ -1166,7 +1170,7 @@ class DSS(BaseEstimator, TransformerMixin):
         if data.ndim == 3:
             is_epochs = True
             n_ep, n_ch, n_t = data.shape
-            data_cont = np.transpose(data, (1, 0, 2)).reshape(n_ch, -1)
+            data_cont = epochs_to_continuous(data)
         else:
             data_cont = data
 
@@ -1191,7 +1195,7 @@ class DSS(BaseEstimator, TransformerMixin):
 
         # Reshape back if epochs
         if is_epochs:
-            cleaned = cleaned.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
+            cleaned = continuous_to_epochs(cleaned, (n_ep, n_ch, n_t))
 
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, verbose=False)
 

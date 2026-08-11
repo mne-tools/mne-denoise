@@ -42,6 +42,7 @@ except ImportError:
     mne = None
     _HAS_MNE = False
 
+from .._validation import check_sfreq, resolve_sfreq
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 
 
@@ -94,11 +95,9 @@ def interpolate_spectrum(
     if data.shape[1] == 0:
         raise ValueError("data must contain at least one time sample")
 
-    sfreq = float(sfreq)
+    sfreq = check_sfreq(sfreq)
     bandwidth = float(bandwidth)
     neighbour_width = float(neighbour_width)
-    if not np.isfinite(sfreq) or sfreq <= 0:
-        raise ValueError("sfreq must be a positive, finite number")
     if not np.isfinite(bandwidth) or bandwidth <= 0:
         raise ValueError("bandwidth must be a positive, finite number")
     if not np.isfinite(neighbour_width) or neighbour_width <= 0:
@@ -219,17 +218,6 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         self.bandwidth = bandwidth
         self.neighbour_width = neighbour_width
 
-    def _resolve_sfreq(self, X: Any) -> float:
-        if _HAS_MNE and isinstance(X, BaseRaw | BaseEpochs | Evoked):
-            sfreq = float(X.info["sfreq"])
-        elif self.sfreq is None:
-            raise ValueError("sfreq must be provided when fitting on a NumPy array")
-        else:
-            sfreq = float(self.sfreq)
-        if not np.isfinite(sfreq) or sfreq <= 0:
-            raise ValueError("sfreq must be a positive, finite number")
-        return sfreq
-
     def _target_freqs(self, sfreq: float) -> np.ndarray:
         nyquist = sfreq / 2.0
         bandwidth = float(self.bandwidth)
@@ -300,8 +288,13 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         self : SpectrumInterpolation
             The fitted estimator.
         """
-        sfreq = self._resolve_sfreq(X)
-        if not (_HAS_MNE and isinstance(X, BaseRaw | BaseEpochs | Evoked)):
+        is_mne = _HAS_MNE and isinstance(X, BaseRaw | BaseEpochs | Evoked)
+        sfreq = resolve_sfreq(
+            self.sfreq,
+            float(X.info["sfreq"]) if is_mne else None,
+            context="a NumPy array input",
+        )
+        if not is_mne:
             data = np.asarray(X)
             if data.ndim not in (2, 3):
                 raise ValueError(f"data must be 2D or 3D, got {data.ndim}D")
