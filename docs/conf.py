@@ -59,6 +59,7 @@ sphinx_gallery_conf = {
     "subsection_order": ExplicitOrder(
         [
             "../examples/sns",
+            "../examples/bss_cca",
             "../examples/dss",
             "../examples/zapline",
             "../examples/asr",
