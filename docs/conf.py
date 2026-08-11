@@ -58,6 +58,7 @@ sphinx_gallery_conf = {
     "ignore_pattern": r"tutorials|_legacy",
     "subsection_order": ExplicitOrder(
         [
+            "../examples/sns",
             "../examples/dss",
             "../examples/zapline",
             "../examples/asr",

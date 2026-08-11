@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-from ..dss.utils.covariance import compute_covariance
+from .._covariance import compute_covariance
 from ._validation import _validate_covariance_matrix
 
 _EPS = float(np.finfo(np.float64).eps)

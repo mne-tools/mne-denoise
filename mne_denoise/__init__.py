@@ -34,17 +34,25 @@ spectrum_interpolation : Spectrum Interpolation
 cca : Reference-Free Lagged CCA
     Blind source separation based on canonical correlation with an explicitly
     lagged copy of the data, primarily for broadband muscle-artifact attenuation.
+
+sns : Sensor Noise Suppression
+    Removes channel-specific noise by reconstructing each sensor from correlated
+    neighboring sensors.
+
 """
 
-from . import asr, cca, dss, icanclean, spectrum_interpolation, zapline
+from . import asr, cca, dss, icanclean, sns, spectrum_interpolation, zapline
+from ._covariance import compute_covariance
 
 __version__ = "0.0.1"
 
 __all__ = [
     "asr",
     "cca",
+    "compute_covariance",
     "dss",
     "icanclean",
     "spectrum_interpolation",
+    "sns",
     "zapline",
 ]

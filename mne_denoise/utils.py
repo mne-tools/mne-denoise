@@ -261,7 +261,7 @@ def reconstruct_mne_object(
     picks: np.ndarray | None = None,
     verbose: bool = False,
 ) -> Any:
-    """Reconstruct MNE object from data and template instance.
+    """Insert processed data into a copy of an MNE object.
 
     Parameters
     ----------
@@ -274,7 +274,8 @@ def reconstruct_mne_object(
     picks : array of int | None
         If provided, `data` is re-inserted into a copy of `orig_inst` only at these channel indices.
     verbose : bool
-        Verbosity flag for MNE object creation.
+        Retained for API compatibility. Copy-based reconstruction does not
+        create a new MNE object.
 
     Returns
     -------
@@ -287,46 +288,33 @@ def reconstruct_mne_object(
     if not _HAS_MNE:
         return data
 
-    if picks is not None:
-        data_full = orig_inst.get_data().copy()
-        if mne_type == "epochs":
-            data_full[:, picks, :] = data
+    if mne_type in ("raw", "epochs"):
+        out = orig_inst.copy().load_data()
+        target = out._data
+        if picks is None:
+            if target.shape != data.shape:
+                raise ValueError(
+                    f"Processed data shape {data.shape} does not match {mne_type} "
+                    f"shape {target.shape}"
+                )
+            target[...] = data
+        elif mne_type == "epochs":
+            target[:, picks, :] = data
         else:
-            data_full[picks, :] = data
-        data = data_full
-
-    if mne_type == "raw":
-        out = mne.io.RawArray(data, orig_inst.info, verbose=verbose)
-        if hasattr(orig_inst, "annotations") and orig_inst.annotations:
-            out.set_annotations(orig_inst.annotations)
+            target[picks, :] = data
         return out
 
-    elif mne_type == "epochs":
-        events = getattr(orig_inst, "events", None)
-        event_id = getattr(orig_inst, "event_id", None)
-        tmin = getattr(orig_inst, "tmin", 0)
-        metadata = getattr(orig_inst, "metadata", None)
-
-        out = mne.EpochsArray(
-            data,
-            orig_inst.info,
-            events=events,
-            event_id=event_id,
-            tmin=tmin,
-            verbose=verbose,
-        )
-        if metadata is not None:
-            out.metadata = metadata.copy()
-        return out
-
-    elif mne_type == "evoked":
-        nave = getattr(orig_inst, "nave", 1)
-        tmin = getattr(orig_inst, "tmin", 0)
-        comment = getattr(orig_inst, "comment", "")
-
-        out = mne.EvokedArray(
-            data, orig_inst.info, tmin=tmin, nave=nave, comment=comment, verbose=verbose
-        )
+    if mne_type == "evoked":
+        out = orig_inst.copy()
+        if picks is None:
+            if out.data.shape != data.shape:
+                raise ValueError(
+                    f"Processed data shape {data.shape} does not match evoked "
+                    f"shape {out.data.shape}"
+                )
+            out.data[...] = data
+        else:
+            out.data[picks, :] = data
         return out
 
     return data

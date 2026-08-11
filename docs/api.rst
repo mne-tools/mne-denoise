@@ -72,6 +72,16 @@ Lagged CCA
    mne_denoise.cca.LaggedCCA
    mne_denoise.cca.compute_lagged_cca
 
+SNS
+---
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.sns.SNS
+   mne_denoise.sns.compute_sns
+   mne_denoise.sns.compute_sns_weights
+
 Denoisers
 ---------
 .. autosummary::

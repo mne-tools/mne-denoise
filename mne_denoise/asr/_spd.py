@@ -11,6 +11,13 @@ from typing import Any
 
 import numpy as np
 
+_TINY = float(np.finfo(np.float64).tiny)
+
+
+def _relative_floor(scale: float) -> float:
+    """Return a floating-point floor relative to a problem's numeric scale."""
+    return max(abs(float(scale)) * np.finfo(np.float64).eps, _TINY)
+
 
 def _geometric_median(
     covariances: np.ndarray,
@@ -40,11 +47,14 @@ def _geometric_median(
             (covariances - current).reshape(covariances.shape[0], -1),
             axis=1,
         )
-        distances = np.maximum(distances, np.finfo(float).eps)
+        distance_floor = _relative_floor(
+            max(float(np.max(distances)), float(np.linalg.norm(current)))
+        )
+        distances = np.maximum(distances, distance_floor)
         weights = 1.0 / distances
         update = np.tensordot(weights, covariances, axes=(0, 0)) / np.sum(weights)
         if np.linalg.norm(update - current) <= tol * max(
-            float(np.linalg.norm(current)), 1.0
+            float(np.linalg.norm(current)), _TINY
         ):
             current = update
             break
@@ -94,13 +104,16 @@ def _geometric_median_chunked(
                 (chunk - current).reshape(chunk.shape[0], -1),
                 axis=1,
             )
-            distances = np.maximum(distances, np.finfo(float).eps)
+            distance_floor = _relative_floor(
+                max(float(np.max(distances)), float(np.linalg.norm(current)))
+            )
+            distances = np.maximum(distances, distance_floor)
             weights = 1.0 / distances
             numerator += np.tensordot(weights, chunk, axes=(0, 0))
             denominator += float(np.sum(weights))
-        update = numerator / max(denominator, np.finfo(float).eps)
+        update = numerator / denominator
         if np.linalg.norm(update - current) <= tol * max(
-            float(np.linalg.norm(current)), 1.0
+            float(np.linalg.norm(current)), _TINY
         ):
             current = update
             break
@@ -125,7 +138,12 @@ def _regularize_spd(C: np.ndarray, regularization: float) -> np.ndarray:
     """
     C = (C + C.T) / 2
     w, V = np.linalg.eigh(C)
-    floor = regularization * max(float(np.trace(C)) / C.shape[0], np.max(w), 1.0)
+    scale = max(
+        abs(float(np.trace(C)) / C.shape[0]),
+        float(np.max(np.abs(w))),
+        _TINY,
+    )
+    floor = max(regularization * scale, _TINY)
     w = np.maximum(w, floor)
     return (V * w) @ V.T
 
@@ -147,7 +165,7 @@ def _sqrtm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
     """
     C = _regularize_spd(C, regularization)
     w, V = np.linalg.eigh(C)
-    return (V * np.sqrt(np.maximum(w, np.finfo(float).eps))) @ V.T
+    return (V * np.sqrt(np.maximum(w, _TINY))) @ V.T
 
 
 def _invsqrtm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
@@ -167,7 +185,7 @@ def _invsqrtm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
     """
     C = _regularize_spd(C, regularization)
     w, V = np.linalg.eigh(C)
-    w = np.maximum(w, np.finfo(float).eps)
+    w = np.maximum(w, _TINY)
     return (V * (1.0 / np.sqrt(w))) @ V.T
 
 
@@ -188,7 +206,7 @@ def _logm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
     """
     C = _regularize_spd(C, regularization)
     w, V = np.linalg.eigh(C)
-    w = np.maximum(w, np.finfo(float).eps)
+    w = np.maximum(w, _TINY)
     return (V * np.log(w)) @ V.T
 
 
@@ -286,7 +304,7 @@ def _karcher_mean_spd(
             )
             tangent += weight * _logm_spd(centered, regularization)
         update_norm = float(np.linalg.norm(tangent, ord="fro"))
-        if update_norm <= tol * max(float(np.linalg.norm(current, ord="fro")), 1.0):
+        if update_norm <= tol:
             converged = True
             break
         current = sqrt_current @ _expm_sym(tangent) @ sqrt_current
@@ -326,7 +344,8 @@ def _sqrt_and_eig(
     order = np.argsort(w)
     w = w[order]
     V = V[:, order]
-    floor = regularization * max(np.max(w), 1.0)
+    scale = max(float(np.max(np.abs(w))), _TINY)
+    floor = max(regularization * scale, _TINY)
     w = np.maximum(w, floor)
     M = (V * np.sqrt(w)) @ V.T
     return M, w, V

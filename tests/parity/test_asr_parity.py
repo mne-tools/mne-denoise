@@ -95,6 +95,7 @@ def _threshold_error(state, ref: dict) -> tuple[float, float, float]:
 def _calibrate_against_reference(ref: dict, *, method: str):
     use_auto = _bool_scalar(ref, "use_auto_calibration", default=False)
     fit_input = _array(ref, "data") if use_auto else _array(ref, "calibration")
+    filter_kind = "none" if _array(ref, "B").size == 1 else "asr"
     kwargs = {
         "cutoff": _scalar(ref, "cutoff"),
         "window_length": _scalar(ref, "window_length"),
@@ -109,7 +110,7 @@ def _calibrate_against_reference(ref: dict, *, method: str):
         "blocksize": int(round(_scalar(ref, "blocksize"))),
         "max_dropout_fraction": _scalar(ref, "max_dropout_fraction"),
         "min_clean_fraction": _scalar(ref, "min_clean_fraction"),
-        "filter_kind": "none",
+        "filter_kind": filter_kind,
         "method": method,
     }
     return calibrate_asr(fit_input, _scalar(ref, "sfreq"), **kwargs)
@@ -148,6 +149,9 @@ def test_asr_calibration_against_matlab_reference(ref_path: Path | None):
     """Standard ASR calibration tracks MATLAB clean_rawdata across cases."""
     ref = _load_reference(ref_path)
     state, diagnostics = _calibrate_against_reference(ref, method="standard")
+
+    np.testing.assert_allclose(state.filter_b, _array(ref, "B").ravel(), atol=1e-12)
+    np.testing.assert_allclose(state.filter_a, _array(ref, "A").ravel(), atol=1e-12)
 
     m_error = _relative_error(state.M, _array(ref, "M"))
     t_error, threshold_error, threshold_corr = _threshold_error(state, ref)
@@ -198,7 +202,7 @@ def test_asr_process_against_matlab_reference(ref_path: Path | None):
         max_dropout_fraction=_scalar(ref, "max_dropout_fraction"),
         min_clean_fraction=_scalar(ref, "min_clean_fraction"),
         max_dims=_scalar(ref, "max_dims"),
-        filter_kind="none",
+        filter_kind="none" if _array(ref, "B").size == 1 else "asr",
     )
     fit_input = data if use_auto else _array(ref, "calibration")
     asr.fit(fit_input)
