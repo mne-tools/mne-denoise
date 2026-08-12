@@ -52,7 +52,8 @@ def check_channel_first_data(
         shape_text = "2-D or 3-D" if allow_epochs else "2-D"
         raise ValueError(f"Expected a {shape_text} channel-first array, got {X.shape}")
     if X.shape[-2] < min_channels:
-        raise ValueError(f"{name} requires at least two channels")
+        count = "one channel" if min_channels == 1 else "two channels"
+        raise ValueError(f"{name} requires at least {count}")
     if X.shape[-1] < min_times:
         raise ValueError(f"{name} requires at least two time samples")
     if X.ndim == 3 and X.shape[0] < 1:

@@ -1,4 +1,4 @@
-"""Tests for the mne_denoise.ssa module (Singular Spectrum Analysis)."""
+"""Tests for Basic SSA decomposition, grouping, and integration."""
 
 from __future__ import annotations
 
@@ -7,56 +7,112 @@ import logging
 import numpy as np
 import pytest
 from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
 
 from mne_denoise.ssa import (
-    SSA,
     SingularSpectrumAnalysis,
-    compute_ssa,
+    compute_basic_ssa,
     ssa_clean_channel,
+    ssa_decompose,
+    ssa_w_correlation,
 )
+from mne_denoise.ssa._common import _diagonal_average
+
+from ._utils import band_power
 
 # ---------------------------------------------------------------------------
-# Fixtures
+# Mathematical core
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
-def rng():
-    """Shared random generator."""
-    return np.random.default_rng(0)
+def test_diagonal_average_includes_edge_weights():
+    """A hand-computed matrix verifies every anti-diagonal and edge weight."""
+    matrix = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    np.testing.assert_array_equal(_diagonal_average(matrix), [1.0, 3.0, 4.0, 6.0])
 
 
-@pytest.fixture()
-def drift_data(rng):
-    """Synthetic EEG with a strong slow drift + an alpha rhythm.
-
-    Returns ``(X, sfreq)``. The slow drift (0.4 Hz) should be dropped by SSA
-    (dominant frequency below ``drop_freq_max``) while the 10 Hz alpha rhythm is
-    preserved.
-    """
-    sfreq = 250.0
-    n_times = 2000
-    n_ch = 6
-    t = np.arange(n_times) / sfreq
-    X = np.empty((n_ch, n_times))
-    for c in range(n_ch):
-        drift = 4.0 * np.sin(2 * np.pi * 0.4 * t + rng.uniform(0, 2 * np.pi))
-        alpha = 1.0 * np.sin(2 * np.pi * 10.0 * t + rng.uniform(0, 2 * np.pi))
-        X[c] = drift + alpha + 0.05 * rng.standard_normal(n_times)
-    return X, sfreq
+@pytest.mark.parametrize(("n_times", "window"), [(7, 3), (30, 15), (31, 16)])
+def test_complete_elementary_reconstruction(n_times, window, rng):
+    """Every valid L/K orientation reconstructs the source additively."""
+    x = rng.standard_normal(n_times)
+    components, info = ssa_decompose(x, window)
+    np.testing.assert_allclose(components.sum(axis=0), x, rtol=2e-14, atol=2e-14)
+    assert info["trajectory_shape"] == (window, n_times - window + 1)
+    assert np.all(np.diff(info["singular_values"]) <= 0)
 
 
-def _band_power(x, sfreq, fmin, fmax):
-    """Total power in [fmin, fmax) for a 1-D or 2-D array (summed over channels)."""
-    x = np.atleast_2d(x)
-    spec = np.abs(np.fft.rfft(x, axis=-1)) ** 2
-    freqs = np.fft.rfftfreq(x.shape[-1], 1.0 / sfreq)
-    band = (freqs >= fmin) & (freqs < fmax)
-    return float(spec[:, band].sum())
+def test_constant_decomposition_and_w_correlation():
+    """A rank-one constant series has one exact component and finite diagnostics."""
+    x = np.full(20, 3.0)
+    components, info = ssa_decompose(x, 5)
+    assert info["rank"] == 1
+    np.testing.assert_allclose(components[0], x, atol=1e-13)
+    np.testing.assert_allclose(components[1:], 0.0, atol=1e-13)
+    correlation = ssa_w_correlation(components, 5)
+    assert correlation.shape == (5, 5)
+    assert correlation[0, 0] == pytest.approx(1.0)
+    assert np.isfinite(correlation).all()
+
+
+def test_sample_and_second_windows_are_equivalent(rng):
+    """Time- and sample-based embedding specifications resolve identically."""
+    x = rng.standard_normal(80)
+    by_sample, sample_info = ssa_decompose(x, 20, sfreq=100.0)
+    by_time, time_info = ssa_decompose(x, window_seconds=0.2, sfreq=100.0)
+    np.testing.assert_allclose(by_sample, by_time)
+    assert sample_info["window_length"] == time_info["window_length"] == 20
+
+
+def test_transform_before_fit_is_rejected(drift_data):
+    """The transductive estimator still follows the sklearn fitted-state contract."""
+    X, sfreq = drift_data
+    with pytest.raises(NotFittedError):
+        SingularSpectrumAnalysis(sfreq=sfreq).transform(X)
+
+
+def test_array_input_is_immutable(drift_data):
+    """Functional and estimator entry points never mutate caller-owned arrays."""
+    X, sfreq = drift_data
+    original = X.copy()
+    compute_basic_ssa(X, sfreq, window_length=40)
+    np.testing.assert_array_equal(X, original)
+    SingularSpectrumAnalysis(sfreq=sfreq, window_length=40).fit_transform(X)
+    np.testing.assert_array_equal(X, original)
+
+
+def test_epoch_boundaries_are_explicitly_transductive(drift_data):
+    """Independent epoch decompositions need not equal one continuous decomposition."""
+    X, sfreq = drift_data
+    continuous = SingularSpectrumAnalysis(sfreq=sfreq, window_length=40).fit_transform(
+        X[:2, :800]
+    )
+    epochs = X[:2, :800].reshape(2, 2, 400).transpose(1, 0, 2)
+    estimator = SingularSpectrumAnalysis(sfreq=sfreq, window_length=40)
+    split = estimator.fit_transform(epochs).transpose(1, 0, 2).reshape(2, 800)
+    assert not np.allclose(continuous, split)
+
+
+def test_estimator_delegates_to_public_compute(monkeypatch, drift_data):
+    """The estimator's canonical numerical path is the public compute function."""
+    X, sfreq = drift_data
+    calls = []
+
+    def fake_compute(data, passed_sfreq, *args, **kwargs):
+        calls.append((data.copy(), passed_sfreq))
+        return data.copy(), {
+            "dropped_counts": np.zeros(data.shape[0], dtype=int),
+            "dropped_frequencies": [np.empty(0) for _ in data],
+        }
+
+    monkeypatch.setattr("mne_denoise.ssa.basic.compute_basic_ssa", fake_compute)
+    result = SingularSpectrumAnalysis(sfreq=sfreq).fit_transform(X)
+    np.testing.assert_array_equal(result, X)
+    assert len(calls) == 1
+    assert calls[0][1] == sfreq
 
 
 # ---------------------------------------------------------------------------
-# ssa_clean_channel + compute_ssa
+# ssa_clean_channel + compute_basic_ssa
 # ---------------------------------------------------------------------------
 
 
@@ -66,31 +122,31 @@ def test_ssa_clean_channel_removes_drift(drift_data):
     x = X[0]
     cleaned = ssa_clean_channel(x, sfreq, drop_freq_max=3.0)
     assert cleaned.shape == x.shape
-    low_before = _band_power(x, sfreq, 0.0, 3.0)
-    low_after = _band_power(cleaned, sfreq, 0.0, 3.0)
-    alpha_before = _band_power(x, sfreq, 8.0, 12.0)
-    alpha_after = _band_power(cleaned, sfreq, 8.0, 12.0)
+    low_before = band_power(x, sfreq, 0.0, 3.0)
+    low_after = band_power(cleaned, sfreq, 0.0, 3.0)
+    alpha_before = band_power(x, sfreq, 8.0, 12.0)
+    alpha_after = band_power(cleaned, sfreq, 8.0, 12.0)
     assert low_after < 0.5 * low_before
     assert alpha_after > 0.7 * alpha_before
 
 
-def test_compute_ssa_shapes_and_info(drift_data):
-    """compute_ssa returns cleaned data + per-channel diagnostics."""
+def test_compute_basic_ssa_shapes_and_info(drift_data):
+    """compute_basic_ssa returns cleaned data and per-channel diagnostics."""
     X, sfreq = drift_data
-    cleaned, info = compute_ssa(X, sfreq, drop_freq_max=3.0)
+    cleaned, info = compute_basic_ssa(X, sfreq, drop_freq_max=3.0)
     assert cleaned.shape == X.shape
     assert info["dropped_counts"].shape == (X.shape[0],)
     assert len(info["dropped_freqs"]) == X.shape[0]
     assert np.all(info["dropped_counts"] >= 1)  # drift dropped in every channel
 
 
-def test_compute_ssa_rejects_1d():
-    """A 1-D input to compute_ssa raises a clear error."""
+def test_compute_basic_ssa_rejects_1d():
+    """A 1-D input to compute_basic_ssa raises a clear error."""
     with pytest.raises(ValueError, match="2-D"):
-        compute_ssa(np.zeros(100), 250.0)
+        compute_basic_ssa(np.zeros(100), 250.0)
 
 
-def test_compute_ssa_drop_band(rng):
+def test_compute_basic_ssa_drop_band(rng):
     """drop_band targets a specific frequency band instead of the low end."""
     sfreq = 250.0
     n = 2000
@@ -98,11 +154,11 @@ def test_compute_ssa_drop_band(rng):
     # 1.2 Hz "cardiac-like" component + 10 Hz alpha.
     x = 3.0 * np.sin(2 * np.pi * 1.2 * t) + np.sin(2 * np.pi * 10.0 * t)
     X = np.vstack([x, x])
-    cleaned, _ = compute_ssa(X, sfreq, drop_band=(0.8, 1.6))
-    band_before = _band_power(X, sfreq, 0.8, 1.6)
-    band_after = _band_power(cleaned, sfreq, 0.8, 1.6)
-    alpha_after = _band_power(cleaned, sfreq, 8.0, 12.0)
-    alpha_before = _band_power(X, sfreq, 8.0, 12.0)
+    cleaned, _ = compute_basic_ssa(X, sfreq, drop_band=(0.8, 1.6))
+    band_before = band_power(X, sfreq, 0.8, 1.6)
+    band_after = band_power(cleaned, sfreq, 0.8, 1.6)
+    alpha_after = band_power(cleaned, sfreq, 8.0, 12.0)
+    alpha_before = band_power(X, sfreq, 8.0, 12.0)
     assert band_after < 0.5 * band_before
     assert alpha_after > 0.7 * alpha_before
 
@@ -125,7 +181,7 @@ def test_ssa_attributes_after_transform(drift_data):
     X, sfreq = drift_data
     est = SingularSpectrumAnalysis(sfreq=sfreq).fit(X)
     est.transform(X)
-    assert est.n_channels_ == X.shape[0]
+    assert est.n_channels_in_ == X.shape[0]
     assert est.dropped_counts_.shape == (X.shape[0],)
 
 
@@ -136,11 +192,10 @@ def test_ssa_requires_sfreq_for_array(drift_data):
         SingularSpectrumAnalysis().fit_transform(X)
 
 
-def test_ssa_alias_and_positional_sfreq(drift_data):
-    """The concise SSA alias exposes the canonical estimator unchanged."""
+def test_ssa_positional_sfreq(drift_data):
+    """The canonical estimator accepts sampling frequency positionally."""
     X, sfreq = drift_data
-    assert SSA is SingularSpectrumAnalysis
-    cleaned = SSA(sfreq).fit_transform(X)
+    cleaned = SingularSpectrumAnalysis(sfreq).fit_transform(X)
     assert cleaned.shape == X.shape
 
 
@@ -174,7 +229,7 @@ def test_ssa_numpy_epochs_retain_all_diagnostics(drift_data):
         ({"sfreq": 0}, ValueError, "positive"),
         ({"sfreq": np.inf}, ValueError, "finite"),
         ({"sfreq": 250, "window_length": 1}, ValueError, "window_length"),
-        ({"sfreq": 250, "window_length": 101}, ValueError, "half"),
+        ({"sfreq": 250, "window_length": 101}, ValueError, "n_times"),
         ({"sfreq": 250, "n_check": 0}, ValueError, "n_check"),
         ({"sfreq": 250, "max_window": 1}, ValueError, "max_window"),
         ({"sfreq": 250, "drop_freq_max": 126}, ValueError, "Nyquist"),
@@ -189,12 +244,14 @@ def test_ssa_rejects_invalid_operating_points(kwargs, error, match):
 
 def test_ssa_rejects_short_and_nonfinite_inputs():
     """Inputs incapable of a finite trajectory decomposition fail explicitly."""
-    with pytest.raises(ValueError, match="at least 8"):
-        compute_ssa(np.ones((2, 7)), 250.0)
+    valid, _ = compute_basic_ssa(np.ones((2, 7)), 250.0)
+    assert valid.shape == (2, 7)
+    with pytest.raises(ValueError, match="at least 3"):
+        compute_basic_ssa(np.ones((2, 2)), 250.0)
     nonfinite = np.ones((2, 100))
     nonfinite[0, 0] = np.nan
     with pytest.raises(ValueError, match="finite"):
-        compute_ssa(nonfinite, 250.0)
+        compute_basic_ssa(nonfinite, 250.0)
 
 
 def test_ssa_zero_hz_component_is_not_hidden():
@@ -220,8 +277,8 @@ def test_ssa_mne_raw_roundtrip_infers_sfreq(drift_data):
     cleaned = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(raw)
     assert isinstance(cleaned, mne.io.BaseRaw)
     assert cleaned.get_data().shape == X.shape
-    low_before = _band_power(X, sfreq, 0.0, 3.0)
-    low_after = _band_power(cleaned.get_data(), sfreq, 0.0, 3.0)
+    low_before = band_power(X, sfreq, 0.0, 3.0)
+    low_after = band_power(cleaned.get_data(), sfreq, 0.0, 3.0)
     assert low_after < low_before
 
 
@@ -290,6 +347,18 @@ def test_ssa_rejects_conflicting_mne_sfreq(drift_data):
         SingularSpectrumAnalysis(sfreq=sfreq / 2).fit(raw)
 
 
+def test_ssa_rejects_changed_mne_channel_order(drift_data):
+    """Transform requires the exact fitted MNE channel names and order."""
+    mne = pytest.importorskip("mne")
+    X, sfreq = drift_data
+    names = [f"EEG{i:02d}" for i in range(X.shape[0])]
+    raw = mne.io.RawArray(X, mne.create_info(names, sfreq, "eeg"), verbose=False)
+    estimator = SingularSpectrumAnalysis(window_length=40).fit(raw)
+    reordered = raw.copy().reorder_channels(names[::-1])
+    with pytest.raises(ValueError, match="names/order"):
+        estimator.transform(reordered)
+
+
 @pytest.mark.parametrize(
     ("kwargs", "error", "match"),
     [
@@ -298,7 +367,7 @@ def test_ssa_rejects_conflicting_mne_sfreq(drift_data):
         ({"sfreq": 250.0, "drop_freq_max": np.nan}, ValueError, "finite"),
         ({"sfreq": 250.0, "drop_band": [1.0, 2.0]}, TypeError, "drop_band"),
         ({"sfreq": 250.0, "drop_band": (True, 2.0)}, TypeError, "bounds"),
-        ({"sfreq": 250.0, "drop_band": (1.0, np.nan)}, TypeError, "bounds"),
+        ({"sfreq": 250.0, "drop_band": (1.0, np.nan)}, ValueError, "bounds"),
     ],
 )
 def test_ssa_scalar_contracts_reject_ambiguous_values(kwargs, error, match):
@@ -310,7 +379,7 @@ def test_ssa_scalar_contracts_reject_ambiguous_values(kwargs, error, match):
 def test_single_channel_primitive_validates_shape_and_finiteness():
     """The single-channel API rejects multidimensional and non-finite series."""
     with pytest.raises(TypeError, match="sfreq"):
-        compute_ssa(np.ones((2, 20)), True)
+        compute_basic_ssa(np.ones((2, 20)), True)
     with pytest.raises(ValueError, match="one-dimensional"):
         ssa_clean_channel(np.ones((2, 20)), 100.0)
     nonfinite = np.ones(20)
@@ -328,7 +397,7 @@ def test_zero_singular_values_are_skipped_without_inventing_energy():
 def test_empty_channels_and_fit_input_validation():
     """Functional and estimator entry points reject empty or non-finite channels."""
     with pytest.raises(ValueError, match="at least one channel"):
-        compute_ssa(np.empty((0, 100)), 100.0)
+        compute_basic_ssa(np.empty((0, 100)), 100.0)
     with pytest.raises(ValueError, match="at least one channel"):
         SingularSpectrumAnalysis(sfreq=100.0).fit(np.empty((0, 100)))
     nonfinite = np.ones((2, 100))
@@ -362,6 +431,6 @@ def test_ssa_mne_evoked_preserves_metadata_and_stim_channel(drift_data):
 def test_ssa_verbose_reports_dropped_component_summary(drift_data, caplog):
     """Opt-in logging emits the descriptive fitted-run summary."""
     X, sfreq = drift_data
-    with caplog.at_level(logging.INFO, logger="mne_denoise.ssa.core"):
+    with caplog.at_level(logging.INFO, logger="mne_denoise.ssa.basic"):
         SingularSpectrumAnalysis(sfreq=sfreq, verbose=True).fit_transform(X[:2])
     assert "SSA: dropped a mean" in caplog.text

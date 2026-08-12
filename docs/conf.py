@@ -60,6 +60,7 @@ sphinx_gallery_conf = {
         [
             "../examples/sns",
             "../examples/bss_cca",
+            "../examples/ssa",
             "../examples/dss",
             "../examples/zapline",
             "../examples/asr",

@@ -1,16 +1,18 @@
-"""Singular Spectrum Analysis (SSA) artifact removal.
+"""Basic and local Singular Spectrum Analysis (SSA).
 
 This module contains:
 
 - ``ssa_clean_channel``: SSA cleaning of a single 1-D channel.
-- ``compute_ssa``: SSA cleaning of a multichannel array + a diagnostics dict.
+- ``ssa_decompose``: additive Basic SSA decomposition of one series.
+- ``compute_basic_ssa``: frequency-guided Basic SSA cleaning of a multichannel
+  array.
+- ``compute_local_ssa``: Teixeira local SSA artifact removal.
 - ``SingularSpectrumAnalysis``: the scikit-learn estimator, compatible with
-  MNE-Python objects or NumPy arrays. ``SSA`` is a convenience alias.
+  MNE-Python objects or NumPy arrays.
+- ``LocalSingularSpectrumAnalysis``: the local SSA estimator.
 
-SSA embeds each channel into a trajectory matrix, decomposes it by SVD, and
-drops eigentriples whose dominant frequency falls in an artifact band (slow
-drift / ocular by default) while preserving oscillatory neural activity. It is
-per-recording and unsupervised.
+SSA methods are per-recording and unsupervised. Their decompositions are
+transductive: changing record or epoch boundaries can change the result.
 
 References
 ----------
@@ -18,13 +20,26 @@ References
        Time Series. Springer. https://doi.org/10.1007/978-3-642-34913-3
 """
 
-from .core import SingularSpectrumAnalysis, compute_ssa, ssa_clean_channel
-
-SSA = SingularSpectrumAnalysis
+from .basic import (
+    SingularSpectrumAnalysis,
+    compute_basic_ssa,
+    ssa_clean_channel,
+    ssa_decompose,
+    ssa_w_correlation,
+)
+from .local import (
+    LocalSingularSpectrumAnalysis,
+    compute_local_ssa,
+    local_ssa_clean_channel,
+)
 
 __all__ = [
-    "SSA",
+    "LocalSingularSpectrumAnalysis",
     "SingularSpectrumAnalysis",
-    "compute_ssa",
+    "compute_basic_ssa",
+    "compute_local_ssa",
+    "local_ssa_clean_channel",
     "ssa_clean_channel",
+    "ssa_decompose",
+    "ssa_w_correlation",
 ]
