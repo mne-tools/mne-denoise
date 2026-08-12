@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from numbers import Integral, Real
+from numbers import Real
 from typing import Any
 
 import numpy as np
@@ -13,19 +13,11 @@ from .._logging import set_log_level_from_verbose
 from .._validation import (
     check_channel_first_data,
     check_channel_layout,
+    check_positive_integer,
     check_sfreq,
     resolve_sfreq,
 )
 from ..utils import extract_data_from_mne, reconstruct_mne_object
-
-
-def _check_positive_integer(value: int, *, name: str) -> int:
-    """Validate a positive integer parameter."""
-    if isinstance(value, bool) or not isinstance(value, Integral):
-        raise TypeError(f"{name} must be a positive integer")
-    if value < 1:
-        raise ValueError(f"{name} must be a positive integer")
-    return int(value)
 
 
 def _resolve_window_length(
@@ -39,7 +31,7 @@ def _resolve_window_length(
     """Resolve an SSA embedding dimension in the canonical ``L <= K`` range."""
     if n_times < 3:
         raise ValueError("SSA requires at least 3 time samples")
-    max_window = _check_positive_integer(max_window, name="max_window")
+    max_window = check_positive_integer(max_window, name="max_window")
     if max_window < 2:
         raise ValueError("max_window must be at least 2")
     if window_length is not None and window_seconds is not None:
@@ -53,7 +45,7 @@ def _resolve_window_length(
         sfreq = check_sfreq(sfreq, context="window_seconds")
         resolved = int(np.floor(window_seconds * sfreq + 0.5))
     elif window_length is not None:
-        resolved = _check_positive_integer(window_length, name="window_length")
+        resolved = check_positive_integer(window_length, name="window_length")
     elif sfreq is not None:
         sfreq = check_sfreq(sfreq)
         resolved = min(int(np.floor(0.5 * sfreq + 0.5)), max_window, (n_times + 1) // 2)

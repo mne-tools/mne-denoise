@@ -50,6 +50,7 @@ from .._spatial import (
     apply_spatial_transform,
     continuous_to_epochs,
     epochs_to_continuous,
+    fit_mixing_matrix,
 )
 from .._validation import (
     check_channel_first_data,
@@ -251,7 +252,7 @@ def _learn_operator(
     training_mean = continuous.mean(axis=1, keepdims=True)
     centered = continuous - training_mean
     sources = unmixing @ centered
-    mixing = (centered @ sources.T) @ np.linalg.pinv(sources @ sources.T)
+    mixing = fit_mixing_matrix(centered, sources)
 
     keep = _select_components(
         correlations, n_remove=n_remove, rho_threshold=rho_threshold

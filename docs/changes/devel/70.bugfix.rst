@@ -1,0 +1,2 @@
+Fixed 3-D covariance and ``AverageBias`` weights to follow time-by-epoch
+observation order, and made ``DSS`` transforms reuse their fitted global mean.

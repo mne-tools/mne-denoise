@@ -1,6 +1,6 @@
 """Temporal bias functions for DSS.
 
-Implements time-shift and smoothing biases for extracting temporally
+Implements lag-averaging and smoothing biases for extracting temporally
 extended structure (slow waves, autocorrelated signals).
 
 Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
@@ -8,11 +8,9 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 
 References
 ----------
-.. [1] de Cheveigné, A. (2010). Time-shift denoising source separation.
-       Journal of Neuroscience Methods, 189(1), 113-120.
-.. [2] de Cheveigné, A. & Simon, J.Z. (2008). Denoising based on spatial filtering.
+.. [1] de Cheveigné, A. & Simon, J.Z. (2008). Denoising based on spatial filtering.
        Journal of Neuroscience Methods, 171(2), 331-339.
-.. [3] de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
+.. [2] de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
        power line artifacts. NeuroImage, 207, 116356. (Period-matched
        smooth/residual decomposition: spatially clean only the residual branch
        and add the smooth branch back.)
@@ -20,31 +18,35 @@ References
 
 from __future__ import annotations
 
+from numbers import Integral
+
 import numpy as np
 
 from .base import LinearDenoiser, NonlinearDenoiser
 
 
-class TimeShiftBias(LinearDenoiser):
-    """Time-shift bias for extracting autocorrelated signals.
+class LagAverageBias(LinearDenoiser):
+    """Lag-averaging bias for emphasizing temporally smooth signals.
 
     Creates a bias by averaging time-shifted versions of the data,
-    emphasizing signals that are predictable across time lags.
+    emphasizing signals that remain similar across the selected lags. This is
+    a lightweight package bias for ordinary sensor-space DSS; it is not the
+    lag-augmented :class:`~mne_denoise.dss.TimeShiftDSS` estimator.
 
     Parameters
     ----------
-    shifts : int or array-like
-        If int, use lags from 1 to shifts.
+    lags : int or array-like
+        If int, use lags from 1 through ``lags``.
         If array, use specified lag values in samples.
         Default 10.
-    method : str
-        Method for constructing bias:
-        - 'autocorrelation': Average of shifted versions (default)
-        - 'prediction': Weighted average (closer lags weighted more)
+    weighting : {'uniform', 'inverse_lag'}
+        Weight every lag equally or weight it by inverse absolute lag.
+        Neither option estimates an autocorrelation function or fits prediction
+        coefficients.
 
     Examples
     --------
-    >>> bias = TimeShiftBias(shifts=[1, 2, 5, 10], method="prediction")
+    >>> bias = LagAverageBias(lags=[1, 2, 5, 10], weighting="inverse_lag")
     >>> biased_data = bias.apply(data)
 
     See Also
@@ -54,17 +56,32 @@ class TimeShiftBias(LinearDenoiser):
 
     def __init__(
         self,
-        shifts: int | np.ndarray = 10,
-        method: str = "autocorrelation",
+        lags: int | np.ndarray = 10,
+        weighting: str = "uniform",
     ) -> None:
-        self.shifts = shifts
-        self.method = method
+        self.lags = lags
+        self.weighting = weighting
 
-        # Resolve shifts to array
-        if isinstance(shifts, int):
-            self._shift_array = np.arange(1, shifts + 1)
-        else:
-            self._shift_array = np.asarray(shifts)
+    def _resolve_lags(self) -> np.ndarray:
+        """Return a validated, unique lag vector."""
+        if isinstance(self.lags, bool):
+            raise TypeError("lags must be a positive integer or integer array")
+        if isinstance(self.lags, Integral):
+            if self.lags < 1:
+                raise ValueError("lags must be positive")
+            return np.arange(1, int(self.lags) + 1)
+        values = np.asarray(self.lags, dtype=object)
+        if values.ndim != 1 or values.size == 0:
+            raise ValueError("lags must be a non-empty one-dimensional array")
+        if any(
+            isinstance(value, bool) or not isinstance(value, Integral)
+            for value in values.tolist()
+        ):
+            raise TypeError("lags must contain only integers")
+        resolved = np.unique(values.astype(int))
+        if not np.any(resolved != 0):
+            raise ValueError("lags must contain at least one nonzero lag")
+        return resolved
 
     def apply(self, data: np.ndarray) -> np.ndarray:
         """Apply time-shift bias.
@@ -79,31 +96,29 @@ class TimeShiftBias(LinearDenoiser):
         biased : ndarray, same shape as input
             Time-shifted averaged data.
         """
-        # Handle 3D data
-        orig_shape = data.shape
-        if data.ndim == 3:
-            n_ch, n_times, n_epochs = data.shape
-            data_2d = data.reshape(n_ch, -1)
+        data = np.asarray(data, dtype=np.float64)
+        if data.ndim not in (2, 3):
+            raise ValueError("data must be 2D or 3D")
+        self._lag_array = self._resolve_lags()
+        if self.weighting == "uniform":
+            operation = self._equal_lag_average
+        elif self.weighting == "inverse_lag":
+            operation = self._weighted_lag_average
         else:
-            data_2d = data
+            raise ValueError("weighting must be 'uniform' or 'inverse_lag'")
 
-        if self.method == "autocorrelation":
-            biased_2d = self._autocorrelation_bias(data_2d)
-        elif self.method == "prediction":
-            biased_2d = self._prediction_bias(data_2d)
-        else:
-            raise ValueError(f"Unknown method: {self.method}")
+        if data.ndim == 2:
+            return operation(data)
+        return np.stack(
+            [operation(data[:, :, epoch]) for epoch in range(data.shape[2])],
+            axis=2,
+        )
 
-        # Restore shape
-        if data.ndim == 3:
-            return biased_2d.reshape(orig_shape)
-        return biased_2d
-
-    def _autocorrelation_bias(self, data: np.ndarray) -> np.ndarray:
-        """Average of time-shifted versions."""
+    def _equal_lag_average(self, data: np.ndarray) -> np.ndarray:
+        """Average time-shifted versions with equal weights."""
         n_channels, n_samples = data.shape
-        shifts = self._shift_array
-        max_shift = np.max(np.abs(shifts))
+        lags = self._lag_array
+        max_shift = np.max(np.abs(lags))
 
         if max_shift >= n_samples // 2:
             raise ValueError(
@@ -115,22 +130,22 @@ class TimeShiftBias(LinearDenoiser):
         valid_length = valid_end - valid_start
 
         accumulated = np.zeros((n_channels, valid_length))
-        for shift in shifts:
+        for shift in lags:
             shifted = data[:, valid_start + shift : valid_end + shift]
             accumulated += shifted
 
-        biased = accumulated / len(shifts)
+        biased = accumulated / len(lags)
 
         # Pad to original length
         biased_full = np.zeros_like(data)
         biased_full[:, valid_start:valid_end] = biased
         return biased_full
 
-    def _prediction_bias(self, data: np.ndarray) -> np.ndarray:
-        """Weighted average (closer lags weighted more)."""
+    def _weighted_lag_average(self, data: np.ndarray) -> np.ndarray:
+        """Average time-shifted versions with inverse-lag weights."""
         n_channels, n_samples = data.shape
-        shifts = self._shift_array
-        max_shift = np.max(np.abs(shifts))
+        lags = self._lag_array
+        max_shift = np.max(np.abs(lags))
 
         valid_start = max_shift
         valid_end = n_samples - max_shift
@@ -139,7 +154,7 @@ class TimeShiftBias(LinearDenoiser):
         accumulated = np.zeros((n_channels, valid_length))
         total_weight = 0
 
-        for shift in shifts:
+        for shift in lags:
             weight = 1.0 / max(abs(shift), 1)
             shifted = data[:, valid_start + shift : valid_end + shift]
             accumulated += weight * shifted
@@ -158,7 +173,7 @@ class SmoothingBias(LinearDenoiser):
     Uses a boxcar moving average filter to smooth the data. When used to split
     the signal into a smooth branch and a residual (``data - smooth``), fitting
     DSS on the residual and adding the smooth branch back follows ZapLine's
-    period-matched decomposition (de Cheveigné, 2020 [3]_): with
+    period-matched decomposition (de Cheveigné, 2020): with
     ``window = round(sfreq / f_line)`` the smoother has zeros at ``f_line`` and
     its harmonics, so the residual concentrates the narrowband artifact.
 

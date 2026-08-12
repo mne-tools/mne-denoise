@@ -1,0 +1,2 @@
+Shared weighted CCA, sensor-mixing, and positive-integer validation helpers
+across DSS, BSS-CCA, and SSA.

@@ -22,10 +22,9 @@ from typing import Any
 
 import numpy as np
 
-from .._validation import check_channel_first_data, check_sfreq
+from .._validation import check_channel_first_data, check_positive_integer, check_sfreq
 from ._common import (
     _BaseSSATransformer,
-    _check_positive_integer,
     _diagonal_average,
     _resolve_window_length,
     _trajectory_matrix,
@@ -171,7 +170,7 @@ def ssa_w_correlation(components: np.ndarray, window_length: int) -> np.ndarray:
     components = np.asarray(components, dtype=np.float64)
     if components.ndim != 2 or components.shape[1] < 1:
         raise ValueError("components must have shape (n_components, n_times)")
-    window_length = _check_positive_integer(window_length, name="window_length")
+    window_length = check_positive_integer(window_length, name="window_length")
     n_times = components.shape[1]
     n_columns = n_times - window_length + 1
     if window_length > n_columns or window_length < 2:
@@ -227,7 +226,7 @@ def _check_frequency_parameters(
             raise ValueError("drop_band must satisfy 0 <= low < high <= Nyquist")
         drop_band = (low, high)
     if n_check is not None:
-        n_check = _check_positive_integer(n_check, name="n_check")
+        n_check = check_positive_integer(n_check, name="n_check")
     return sfreq, drop_freq_max, drop_band, n_check
 
 

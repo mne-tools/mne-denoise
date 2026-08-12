@@ -30,7 +30,7 @@ try:
 except ImportError:
     mne = None
 
-from .._covariance import compute_covariance
+from .._covariance import compute_covariance, compute_mean
 from .._logging import set_log_level_from_verbose
 from .._spatial import (
     apply_spatial_transform,
@@ -380,6 +380,10 @@ class DSS(BaseEstimator, TransformerMixin):
         Ignored when ``whiten=False``.
     verbose : bool | str | int | None, default=None
         Control logging verbosity.
+    center : bool, default=True
+        If True, subtract one global channel mean fitted on the training data
+        and reuse it for every transform. If False, use uncentered second
+        moments. Transform batches are never centered from their own data.
 
     Attributes
     ----------
@@ -389,6 +393,9 @@ class DSS(BaseEstimator, TransformerMixin):
         The spatial patterns (mixing matrix).
     eigenvalues_ : array, shape (n_components,)
         The power of each component in the biased data (bias score).
+    mean_ : array, shape (n_channels, 1)
+        Global training mean reused by :meth:`transform`, or zeros when
+        ``center=False``.
     n_selected_ : int | None
         Number of significant components detected by automatic selection.
         Only set when ``n_select`` is not ``None``. Use this to determine
@@ -447,6 +454,7 @@ class DSS(BaseEstimator, TransformerMixin):
         whiten: bool = False,
         noise_cov=None,
         verbose: bool | str | int | None = None,
+        center: bool = True,
     ) -> None:
         self.n_components = n_components
         self.bias = bias
@@ -457,6 +465,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.rank = rank
         self.reg = reg
         self.normalize_input = normalize_input
+        self.center = center
         self.cov_method = cov_method
         self.cov_kws = cov_kws
         self.smooth = smooth
@@ -478,6 +487,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.eigenvalues_: np.ndarray | None = None
         self.explained_variance_: np.ndarray | None = None
         self.channel_norms_: np.ndarray | None = None
+        self.mean_: np.ndarray | None = None
         self.n_selected_: np.ndarray | None = None
         self.segment_results_: list | None = None
         self._whitener_: np.ndarray | None = None
@@ -517,6 +527,8 @@ class DSS(BaseEstimator, TransformerMixin):
         set_log_level_from_verbose(self.verbose)
         self._mne_ch_names_ = None
         self._validate_component_action()
+        if not isinstance(self.center, bool):
+            raise TypeError("center must be a bool")
         if self.adaptive:
             logger.info(
                 "DSS(adaptive=True).fit() computes a single global fit. "
@@ -736,6 +748,15 @@ class DSS(BaseEstimator, TransformerMixin):
         else:
             return self.bias(data)
 
+    def _fit_mean(self, data: np.ndarray, weights: np.ndarray | None = None) -> None:
+        """Store the channel origin used by every subsequent transform."""
+        data = np.asarray(data, dtype=np.float64)
+        self.mean_ = (
+            compute_mean(data, weights=weights)
+            if self.center
+            else np.zeros((data.shape[0], 1), dtype=np.float64)
+        )
+
     def _fit_mne(
         self,
         inst: BaseRaw | BaseEpochs | Evoked,
@@ -763,11 +784,13 @@ class DSS(BaseEstimator, TransformerMixin):
         self.info_ = inst.info
         self._mne_info = self.info_
 
-        if weights is not None:
-            # Weighted MNE input uses the canonical channel-first NumPy path.
+        if weights is not None or not self.center or isinstance(inst, Evoked):
+            # Weighted or explicitly uncentered MNE input uses the canonical
+            # channel-first NumPy path.
             self._fit_numpy(data, weights=weights)
             return
 
+        self._fit_mean(data)
         biased_data = self._apply_bias(data)
 
         if isinstance(inst, BaseEpochs):
@@ -808,10 +831,12 @@ class DSS(BaseEstimator, TransformerMixin):
 
     def _fit_numpy(self, X: np.ndarray, weights: np.ndarray | None = None) -> None:
         """Fit using numpy arrays."""
+        self._fit_mean(X, weights)
         biased_X = self._apply_bias(X)
 
         method = self.cov_method
         kws = self.cov_kws.copy() if self.cov_kws else {}
+        kws["assume_centered"] = not self.center
 
         baseline_cov = compute_covariance(X, method=method, weights=weights, **kws)
         biased_cov = compute_covariance(biased_X, method=method, weights=weights, **kws)
@@ -850,6 +875,7 @@ class DSS(BaseEstimator, TransformerMixin):
         # The NumPy covariance helper does not accept MNE-only options.
         for key in ("rank", "verbose", "tstep"):
             kws.pop(key, None)
+        kws["assume_centered"] = not self.center
 
         data, _, _, orig_inst, picks, ch_names = extract_data_from_mne(
             X,
@@ -867,6 +893,7 @@ class DSS(BaseEstimator, TransformerMixin):
             self.info_ = None
         self._mne_info = self.info_
 
+        self._fit_mean(data, weights)
         data_w = self._prewhiten_sensor_data(
             data,
             info=self.info_,
@@ -986,10 +1013,12 @@ class DSS(BaseEstimator, TransformerMixin):
             data_2d = data_for_dss
             full_data_2d = data
 
-        # Center using mean on data_2d
-        # DSS implies zero-mean assumption for correct projection
-        mean_ = data_2d.mean(axis=1, keepdims=True)
-        data_centered = data_2d - mean_
+        # Apply the centering measure fitted with the DSS filters. Recomputing
+        # this mean from each transform batch would make a learned transform
+        # depend on unrelated observations supplied alongside it.
+        if self.mean_ is None:
+            raise RuntimeError("DSS fitted centering state is unavailable")
+        data_centered = data_2d - self.mean_
 
         sources = self.filters_ @ data_centered
 
@@ -1011,7 +1040,7 @@ class DSS(BaseEstimator, TransformerMixin):
         if action == "subtract":
             rec = full_data_2d - selected
         else:
-            rec = selected + mean_
+            rec = selected + self.mean_
             if data_smooth is not None:
                 smooth_2d = (
                     data_smooth.reshape(data_smooth.shape[0], -1)

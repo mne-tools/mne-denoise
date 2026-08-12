@@ -219,6 +219,56 @@ def test_dss_fit_transform():
     assert dss.eigenvalues_ is not None
 
 
+def test_dss_uses_fitted_mean_across_transform_batches():
+    """Unrelated transform observations cannot change frozen DSS sources."""
+    rng = np.random.default_rng(12)
+    train = rng.standard_normal((3, 200)) + np.array([[1.0], [4.0], [-2.0]])
+    held_out = rng.standard_normal((3, 40))
+    unrelated = rng.standard_normal((3, 60)) * 30.0 + 100.0
+    dss = DSS(bias=lambda values: values, n_components=3, normalize_input=False)
+    dss.fit(train)
+
+    prefix = dss.transform(held_out)
+    combined = dss.transform(np.concatenate([held_out, unrelated], axis=1))
+
+    assert_allclose(combined[:, : held_out.shape[1]], prefix, atol=1e-12)
+    assert_allclose(dss.mean_[:, 0], train.mean(axis=1))
+
+
+def test_dss_center_false_uses_uncentered_second_moments():
+    """Explicit uncentered DSS leaves offsets in its component transform."""
+    data = np.array([[1.0, 2.0, 3.0], [10.0, 10.0, 10.0]])
+    dss = DSS(
+        bias=lambda values: values,
+        n_components=2,
+        normalize_input=False,
+        center=False,
+    ).fit(data)
+
+    assert_allclose(dss.mean_, 0.0)
+    assert_allclose(dss.transform(data), dss.filters_ @ data)
+
+
+def test_dss_centering_does_not_change_bias_input():
+    """The transform origin must not alter the physical bias operation."""
+    data = np.arange(12.0).reshape(3, 4) + 10.0
+    received = []
+
+    def bias(values):
+        received.append(values.copy())
+        return values
+
+    DSS(bias=bias, normalize_input=False, center=True).fit(data)
+
+    assert_allclose(received[0], data)
+
+
+def test_dss_rejects_non_boolean_center():
+    """Centering semantics must be explicit rather than truthy."""
+    with pytest.raises(TypeError, match="center must be a bool"):
+        DSS(bias=lambda values: values, center=1).fit(np.eye(3))
+
+
 def test_dss_custom_bias_callable():
     """DSS should accept custom callable bias."""
     rng = np.random.default_rng(42)

@@ -20,7 +20,7 @@
 - **Linear DSS**: Extract components based on reproducibility across trials or characteristic frequencies
 - **Iterative DSS**: Powerful nonlinear separation for complex non-Gaussian sources
 - **20+ Pluggable Denoisers**: Spectral, temporal, periodic, and ICA-style bias functions
-- **Specialized Variants**: TSR, SSVEP enhancement, narrowband oscillation extraction
+- **Specialized Variants**: TimeShiftDSS, SSVEP enhancement, and narrowband oscillation extraction
 
 ### ZapLine Module
 
@@ -137,11 +137,11 @@ mne_denoise/
 │   ├── nonlinear.py        # Iterative DSS, IterativeDSS estimator
 │   ├── denoisers/          # 20+ pluggable bias functions
 │   │   ├── spectral.py     # BandpassBias, LineNoiseBias
-│   │   ├── temporal.py     # TimeShiftBias, SmoothingBias
+│   │   ├── temporal.py     # LagAverageBias, SmoothingBias
 │   │   ├── periodic.py     # CombFilterBias, PeakFilterBias
 │   │   └── ...
 │   └── variants/           # Pre-built applications
-│       ├── tsr.py          # Time-Shift Repeatability
+│       ├── tsr.py          # Time-shift DSS and temporal smoothing
 │       ├── ssvep.py        # SSVEP enhancement
 │       └── narrowband.py   # Oscillation extraction
 ├── zapline/                # Line noise removal

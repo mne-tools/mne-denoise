@@ -12,6 +12,7 @@ to extract reproducible or rhythmic components while preserving data rank.
 
    getting-started
    dss
+   time_shift_dss
    asr
    bss_cca
    sns

@@ -27,10 +27,9 @@ from typing import Any
 import numpy as np
 from sklearn.cluster import KMeans
 
-from .._validation import check_channel_first_data, check_sfreq
+from .._validation import check_channel_first_data, check_positive_integer, check_sfreq
 from ._common import (
     _BaseSSATransformer,
-    _check_positive_integer,
     _diagonal_average,
     _resolve_window_length,
     _trajectory_matrix,
@@ -139,8 +138,8 @@ def _check_local_parameters(
 ) -> tuple[int | str, int, int | None]:
     """Validate local SSA clustering parameters."""
     if n_clusters != "auto":
-        n_clusters = _check_positive_integer(n_clusters, name="n_clusters")
-    max_clusters = _check_positive_integer(max_clusters, name="max_clusters")
+        n_clusters = check_positive_integer(n_clusters, name="n_clusters")
+    max_clusters = check_positive_integer(max_clusters, name="max_clusters")
     if random_state is not None:
         if isinstance(random_state, bool) or not isinstance(random_state, Integral):
             raise TypeError("random_state must be an integer or None")

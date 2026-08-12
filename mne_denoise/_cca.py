@@ -34,6 +34,9 @@ from scipy import linalg as la
 def canonical_correlation(
     X: np.ndarray,
     Y: np.ndarray,
+    *,
+    sample_weight: np.ndarray | None = None,
+    rtol: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Compute canonical correlation analysis between two matrices.
 
@@ -44,7 +47,7 @@ def canonical_correlation(
 
     The computation proceeds as follows:
 
-    1. Mean-center ``X`` and ``Y``.
+    1. Mean-center ``X`` and ``Y`` (using ``sample_weight`` when supplied).
     2. Compute rank-revealing QR decompositions with column pivoting.
     3. Compute the singular value decomposition of :math:`Q_x^T Q_y`.
     4. Back-solve through the ``R`` factors to obtain canonical coefficients.
@@ -61,6 +64,12 @@ def canonical_correlation(
         First data matrix (e.g. EEG scalp channels).
     Y : ndarray, shape (n_samples, n_features_y)
         Second data matrix (e.g. reference noise channels).
+    sample_weight : ndarray, shape (n_samples,) | None
+        Optional non-negative observation weights. Weighted means, covariance
+        geometry, and canonical-variate normalization are then used.
+    rtol : float | None
+        Optional relative rank threshold applied to the diagonal of each QR
+        factor. ``None`` uses the existing machine-precision threshold.
 
     Returns
     -------
@@ -112,16 +121,49 @@ def canonical_correlation(
             f"got {X.shape[0]} and {Y.shape[0]}"
         )
 
-    Xc = X - X.mean(axis=0, keepdims=True)
-    Yc = Y - Y.mean(axis=0, keepdims=True)
+    if X.ndim != 2 or Y.ndim != 2:
+        raise ValueError("X and Y must both be two-dimensional")
+    if rtol is not None:
+        if not np.isscalar(rtol) or isinstance(rtol, bool):
+            raise TypeError("rtol must be a positive finite number or None")
+        rtol = float(rtol)
+        if not np.isfinite(rtol) or rtol <= 0:
+            raise ValueError("rtol must be a positive finite number or None")
 
-    Qx, Rx, Px = la.qr(Xc, mode="economic", pivoting=True)
-    Qy, Ry, Py = la.qr(Yc, mode="economic", pivoting=True)
+    if sample_weight is None:
+        weights = None
+        Xc = X - X.mean(axis=0, keepdims=True)
+        Yc = Y - Y.mean(axis=0, keepdims=True)
+        X_decomposition = Xc
+        Y_decomposition = Yc
+    else:
+        weights = np.asarray(sample_weight, dtype=np.float64)
+        if weights.shape != (X.shape[0],):
+            raise ValueError(
+                f"sample_weight must have shape ({X.shape[0]},); got {weights.shape}"
+            )
+        if not np.all(np.isfinite(weights)):
+            raise ValueError("sample_weight must contain only finite values")
+        if np.any(weights < 0):
+            raise ValueError("sample_weight must be non-negative")
+        total_weight = weights.sum()
+        if total_weight <= 0:
+            raise ValueError("sample_weight must have a positive sum")
+        Xc = X - (weights @ X / total_weight)[np.newaxis, :]
+        Yc = Y - (weights @ Y / total_weight)[np.newaxis, :]
+        root_weight = np.sqrt(weights)[:, np.newaxis]
+        X_decomposition = Xc * root_weight
+        Y_decomposition = Yc * root_weight
+
+    Qx, Rx, Px = la.qr(X_decomposition, mode="economic", pivoting=True)
+    Qy, Ry, Py = la.qr(Y_decomposition, mode="economic", pivoting=True)
 
     eps = np.finfo(np.float64).eps
 
-    tolx = eps * max(Xc.shape) * (np.abs(np.diag(Rx)).max() if Rx.size else 0.0)
-    toly = eps * max(Yc.shape) * (np.abs(np.diag(Ry)).max() if Ry.size else 0.0)
+    scale_x = np.abs(np.diag(Rx)).max() if Rx.size else 0.0
+    scale_y = np.abs(np.diag(Ry)).max() if Ry.size else 0.0
+    tolx = eps * max(Xc.shape) * scale_x if rtol is None else rtol * scale_x
+    toly = eps * max(Yc.shape) * scale_y if rtol is None else rtol * scale_y
     rx = int(np.sum(np.abs(np.diag(Rx)) > tolx)) if Rx.size else 0
     ry = int(np.sum(np.abs(np.diag(Ry)) > toly)) if Ry.size else 0
 
@@ -154,10 +196,11 @@ def canonical_correlation(
     U = Xc @ A
     V = Yc @ B
 
-    def _unit_var(
-        Z: np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        std = Z.std(axis=0, ddof=1)
+    def _unit_var(Z: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        if weights is None:
+            std = Z.std(axis=0, ddof=1)
+        else:
+            std = np.sqrt((weights @ (Z**2)) / weights.sum())
         std[std == 0] = 1.0
         return Z / std, 1.0 / std
 

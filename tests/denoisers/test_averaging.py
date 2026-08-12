@@ -40,6 +40,18 @@ def test_average_bias_epochs_weighted():
     assert_allclose(biased[0, 0, :], 12)
 
 
+def test_average_bias_epochs_observation_weighted():
+    """Time-by-epoch weights produce a separate average at every time."""
+    data = np.array([[[1.0, 3.0], [10.0, 20.0], [4.0, 8.0]]])
+    weights = np.array([[1.0, 1.0], [1.0, 3.0], [0.0, 0.0]])
+
+    biased = AverageBias(axis="epochs", weights=weights).apply(data)
+
+    expected = np.array([[2.0, 17.5, 0.0]])
+    assert_allclose(biased[:, :, 0], expected)
+    assert_allclose(biased[:, :, 1], expected)
+
+
 def test_average_bias_epochs_errors():
     """Test error handling for epochs axis."""
     bias = AverageBias(axis="epochs")

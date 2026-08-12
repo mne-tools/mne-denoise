@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from mne_denoise._spatial import apply_spatial_transform
+from mne_denoise._spatial import apply_spatial_transform, fit_mixing_matrix
 from mne_denoise.dss.utils.whitening import (
     apply_covariance_transform,
     compute_data_covariance_whitener,
@@ -54,6 +54,20 @@ def test_apply_spatial_transform_rejects_invalid_chunk_size(chunk_size):
     """The shared chunk size has one validated contract."""
     with pytest.raises((TypeError, ValueError), match="chunk_size"):
         apply_spatial_transform(np.eye(3), np.ones((3, 10)), chunk_size=chunk_size)
+
+
+def test_fit_mixing_matrix_weighted_epoched_data():
+    """Shared weighted regression recovers a sensor projection."""
+    rng = np.random.default_rng(42)
+    sources = rng.standard_normal((2, 20, 4))
+    expected = np.array([[1.0, 2.0], [-0.5, 0.25], [3.0, -1.0]])
+    data = np.einsum("cs,ste->cte", expected, sources)
+    weights = np.ones((20, 4))
+    weights[:3, 0] = 0.0
+
+    mixing = fit_mixing_matrix(data, sources, sample_weight=weights)
+
+    np.testing.assert_allclose(mixing, expected, atol=1e-12)
 
 
 def test_apply_covariance_transform():

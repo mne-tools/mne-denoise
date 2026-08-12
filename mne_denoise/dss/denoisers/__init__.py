@@ -28,8 +28,8 @@ from .spectral import (
 from .spectrogram import SpectrogramBias, SpectrogramDenoiser
 from .temporal import (
     DCTDenoiser,
+    LagAverageBias,
     SmoothingBias,
-    TimeShiftBias,
 )
 
 __all__ = [
@@ -44,6 +44,7 @@ __all__ = [
     "PeakFilterBias",
     "CombFilterBias",
     "CycleAverageBias",
+    "LagAverageBias",
     # Nonlinear denoisers (paper-faithful)
     "VarianceMaskDenoiser",
     "WienerMaskDenoiser",
@@ -61,7 +62,5 @@ __all__ = [
     "beta_tanh",
     "beta_pow3",
     "beta_gauss",
-    # Deprecated
-    "TimeShiftBias",
     "SmoothingBias",
 ]

@@ -78,6 +78,42 @@ def test_cca_unit_variance(rng):
     np.testing.assert_allclose(V.std(axis=0, ddof=1), 1.0, atol=1e-10)
 
 
+def test_weighted_cca_matches_repeated_observations(rng):
+    """Integer observation weights match explicit row replication."""
+    X = rng.standard_normal((80, 5))
+    Y = X[:, :3] @ rng.standard_normal((3, 4)) + 0.2 * rng.standard_normal((80, 4))
+    weights = rng.integers(1, 4, size=80)
+
+    _, _, weighted, U, V = canonical_correlation(X, Y, sample_weight=weights)
+    _, _, repeated, _, _ = canonical_correlation(
+        np.repeat(X, weights, axis=0), np.repeat(Y, weights, axis=0)
+    )
+
+    np.testing.assert_allclose(weighted, repeated, atol=1e-12)
+    np.testing.assert_allclose(
+        np.sqrt(weights @ (U**2) / weights.sum()), 1.0, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        np.sqrt(weights @ (V**2) / weights.sum()), 1.0, atol=1e-12
+    )
+
+
+@pytest.mark.parametrize(
+    "weights, match",
+    [
+        (np.ones(9), "shape"),
+        (np.r_[np.ones(9), np.nan], "finite"),
+        (np.r_[np.ones(9), -1.0], "non-negative"),
+        (np.zeros(10), "positive sum"),
+    ],
+)
+def test_weighted_cca_rejects_invalid_weights(weights, match):
+    """Weighted CCA validates its observation measure."""
+    X = np.arange(20.0).reshape(10, 2)
+    with pytest.raises(ValueError, match=match):
+        canonical_correlation(X, X, sample_weight=weights)
+
+
 def test_cca_mismatched_samples_raises(rng):
     """Different n_samples raises ValueError."""
     X = rng.standard_normal((100, 5))

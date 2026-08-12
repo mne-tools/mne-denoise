@@ -14,6 +14,59 @@ import numpy as np
 from ._validation import check_chunk_size
 
 
+def _flatten_observations(
+    data: np.ndarray, weights: np.ndarray | None
+) -> tuple[np.ndarray, np.ndarray, bool]:
+    """Return channel-by-observation data and its validated weight measure."""
+    data = np.asarray(data, dtype=float)
+    user_weights = weights is not None
+    if data.ndim == 3:
+        n_channels, n_times, n_epochs = data.shape
+        data = data.reshape(n_channels, -1)
+        if user_weights:
+            weights = np.asarray(weights, dtype=float)
+            if weights.shape == (n_times,):
+                weights = np.repeat(weights, n_epochs)
+            elif weights.shape == (n_times, n_epochs):
+                weights = weights.reshape(-1)
+            elif weights.shape != (n_times * n_epochs,):
+                raise ValueError(
+                    "For 3D data, weights must have shape "
+                    f"({n_times},), ({n_times}, {n_epochs}), or "
+                    f"({n_times * n_epochs},); got {weights.shape}"
+                )
+    if data.ndim != 2:
+        raise ValueError(f"data must be 2D or 3D, got shape {data.shape}")
+
+    if user_weights:
+        weights = np.asarray(weights, dtype=float)
+        if weights.ndim != 1:
+            raise ValueError(
+                "For 2D data, weights must be one-dimensional; "
+                f"got shape {weights.shape}"
+            )
+        if weights.shape[0] != data.shape[1]:
+            raise ValueError(
+                f"Weights length {weights.shape[0]} does not match "
+                f"data samples {data.shape[1]}"
+            )
+        if not np.all(np.isfinite(weights)):
+            raise ValueError("weights must contain only finite values")
+        if np.any(weights < 0):
+            raise ValueError("weights must be non-negative")
+        if weights.sum() <= 0:
+            raise ValueError("Sum of weights must be positive")
+    else:
+        weights = np.ones(data.shape[1])
+    return data, weights, user_weights
+
+
+def compute_mean(data: np.ndarray, *, weights: np.ndarray | None = None) -> np.ndarray:
+    """Compute one channel mean over 2-D or 3-D observations."""
+    data, weights, _ = _flatten_observations(data, weights)
+    return (data @ weights / weights.sum())[:, np.newaxis]
+
+
 def compute_covariance(
     data: np.ndarray,
     *,
@@ -43,9 +96,14 @@ def compute_covariance(
     shrinkage : float, optional
         Shrinkage parameter (0 to 1) for 'shrinkage' method. If None,
         optimal shrinkage is estimated.
-    weights : ndarray, shape (n_times,), optional
-        Sample weights for covariance computation. High weights emphasize time points,
-        zero weights ignore them. Currently only supported for `method='empirical'`.
+    weights : ndarray | None
+        Sample weights for covariance computation. High weights emphasize time
+        points and zero weights ignore them. For three-dimensional data, a
+        one-dimensional ``n_times`` vector is broadcast across epochs, a
+        ``(n_times, n_epochs)`` matrix assigns every observation explicitly,
+        and a flattened vector must follow the C-order observation layout of
+        ``data.reshape(n_channels, -1)``. Currently only supported for
+        ``method='empirical'``.
     assume_centered : bool, default=False
         If True, treat ``data`` as already centered and skip mean subtraction.
     chunk_size : int | None, default=None
@@ -58,41 +116,21 @@ def compute_covariance(
     cov : ndarray, shape (n_channels, n_channels)
         The estimated covariance matrix.
     """
-    data = np.asarray(data, dtype=float)
-    if data.ndim == 3:
-        n_channels, n_times_in, n_epochs = data.shape
-        data = data.reshape(n_channels, -1)
-
-        if weights is not None and weights.shape[0] == n_times_in:
-            # Tile weights across epochs
-            weights = np.tile(weights, n_epochs)
-
-    if data.ndim != 2:
-        raise ValueError(f"data must be 2D or 3D, got shape {data.shape}")
+    data, weights, user_weights = _flatten_observations(data, weights)
     n_channels, n_times = data.shape
 
     chunk_size = check_chunk_size(chunk_size)
     if chunk_size is not None and method != "empirical":
         raise ValueError("chunk_size is only supported for empirical covariance")
 
-    if weights is not None:
-        if data.shape[1] != weights.shape[0]:
-            raise ValueError(
-                f"Weights length {weights.shape[0]} does not match "
-                f"data samples {data.shape[1]}"
-            )
+    if user_weights:
         total_weight = np.sum(weights)
-        if total_weight == 0:
-            raise ValueError("Sum of weights is zero")
-
         if method != "empirical":
             # Currently we only support weighted empirical.
             raise ValueError(
                 f"Weighted covariance not implemented for method '{method}'"
             )
     else:
-        # If no weights are provided, use equal weights; to simplify the implementation
-        weights = np.ones(n_times)
         total_weight = n_times
 
     if assume_centered:

@@ -12,6 +12,15 @@ from numbers import Integral, Real
 import numpy as np
 
 
+def check_positive_integer(value: int, *, name: str) -> int:
+    """Validate a positive integer parameter."""
+    if isinstance(value, bool) or not isinstance(value, Integral):
+        raise TypeError(f"{name} must be a positive integer")
+    if value < 1:
+        raise ValueError(f"{name} must be a positive integer")
+    return int(value)
+
+
 def check_channel_first_data(
     X: np.ndarray,
     *,
