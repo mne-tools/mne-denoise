@@ -146,6 +146,13 @@ rules from the AASR repository.
    aasr.partial_fit(chunk_2)
    clean = aasr.transform(full_data)
 
+``chunk_1`` and ``chunk_2`` should be complete update segments. The published
+AASR demonstration uses 20-second segments and does not update on the final
+incomplete remainder. ``partial_fit()`` rejects a segment that is too short to
+form the one-second clean-selection window before changing any fitted state.
+Streaming applications should therefore accumulate short acquisition blocks
+into an update segment before calling ``partial_fit()``.
+
 The public API follows the package (sklearn-style) conventions:
 
 - ``fit()`` for initial calibration; ``partial_fit()`` for adaptive updates
@@ -203,8 +210,11 @@ Choosing a variant
 
 A quick decision guide:
 
-- **Most EEG** — ``ASR(method="standard")`` at ``cutoff=20`` (Chang 2020
-  recommends 20-30 for adult EEG). The default, and the right default.
+- **Reference-compatible starting point** — ``ASR(method="standard")`` retains
+  ``cutoff=20`` as its default for legacy comparisons. The
+  cutoff scale changes with calibration, filtering, reconstruction, and data
+  regime, so this value is not a universal recommendation. Freeze it only after
+  paired attenuation and neural-preservation validation.
 - **Need Riemannian-robust calibration with a working cutoff** —
   ``ASR(method="riemannian_windowed")``.
 - **Online / streaming BCI** — ``AdaptiveASR(variant="psw")`` (strongest SNR

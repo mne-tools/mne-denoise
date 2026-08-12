@@ -16,32 +16,14 @@ from typing import Any
 import numpy as np
 from numpy.linalg import LinAlgError
 
-from .covariance import compute_covariance
+from ..._covariance import compute_covariance
+from ..._spatial import apply_spatial_transform
 
 try:
     import mne
     from mne.cov import compute_whitener as compute_mne_whitener
 except ImportError:  # pragma: no cover
     mne = None  # pragma: no cover
-
-
-# Shared spatial operation
-# ------------------------
-def apply_spatial_transform(matrix: np.ndarray, data: np.ndarray) -> np.ndarray:
-    """Apply a spatial matrix along the channel axis of 2D or 3D data."""
-    matrix = np.asarray(matrix)
-    data = np.asarray(data)
-    if matrix.ndim != 2:
-        raise ValueError(f"matrix must be 2D, got {matrix.ndim}D")
-    if data.ndim not in (2, 3):
-        raise ValueError(f"data must be 2D or 3D, got {data.ndim}D")
-    if matrix.shape[1] != data.shape[0]:
-        raise ValueError(
-            "matrix and data channel dimensions do not match "
-            f"({matrix.shape[1]} != {data.shape[0]})"
-        )
-    flat = data.reshape(data.shape[0], -1)
-    return (matrix @ flat).reshape((matrix.shape[0], *data.shape[1:]))
 
 
 def apply_covariance_transform(

@@ -314,3 +314,19 @@ def test_spectrum_interpolation_3d_matches_epochwise_processing():
         [interpolate_spectrum(epoch, sfreq, [60.0]) for epoch in epochs]
     )
     assert np.allclose(clean, expected)
+
+
+def test_spectrum_interpolation_rejects_declared_sfreq_conflict():
+    """A declared sfreq that contradicts the container is an error, not ignored."""
+    data, sfreq = _synth(n_ch=2)
+    raw = mne.io.RawArray(data, mne.create_info(2, sfreq, "eeg"), verbose=False)
+    with pytest.raises(ValueError, match="disagrees with MNE info sfreq"):
+        SpectrumInterpolation(sfreq=sfreq / 2, line_freq=60.0).fit(raw)
+
+
+def test_spectrum_interpolation_accepts_agreeing_declared_sfreq():
+    """A redundant but consistent sfreq is accepted."""
+    data, sfreq = _synth(n_ch=2)
+    raw = mne.io.RawArray(data, mne.create_info(2, sfreq, "eeg"), verbose=False)
+    si = SpectrumInterpolation(sfreq=sfreq, line_freq=60.0).fit(raw)
+    assert si.sfreq_ == pytest.approx(sfreq)

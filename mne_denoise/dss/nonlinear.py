@@ -19,6 +19,7 @@ from collections.abc import Callable
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
+from .._spatial import continuous_to_epochs, epochs_to_continuous
 from ..utils import extract_data_from_mne
 from .utils.whitening import whiten_from_data_covariance
 
@@ -844,11 +845,7 @@ class IterativeDSS:
 
         original_shape = data.shape
 
-        if data.ndim == 3:
-            n_epochs, n_channels, n_times = data.shape
-            data_2d = data.transpose(1, 0, 2).reshape(n_channels, -1)
-        else:
-            data_2d = data
+        data_2d = epochs_to_continuous(data) if data.ndim == 3 else data
 
         if self.normalize_input:
             if self.channel_norms_ is None:
@@ -864,14 +861,8 @@ class IterativeDSS:
         sources = self.filters_ @ data_centered
 
         # Reshape to original 3D if needed
-        if len(original_shape) == 3:
-            # original: (n_epochs, n_channels, n_times)
-            # sources now: (n_components, n_epochs * n_times)
-            # reshape to: (n_components, n_epochs, n_times)
-            n_epochs, n_channels, n_times = original_shape
-            sources = sources.reshape(self.n_components, n_epochs, n_times)
-            # transpose to standard MNE: (n_epochs, n_components, n_times)
-            sources = sources.transpose(1, 0, 2)
+        # (n_components, n_epochs * n_times) -> (n_epochs, n_components, n_times)
+        sources = continuous_to_epochs(sources, original_shape)
 
         return sources
 

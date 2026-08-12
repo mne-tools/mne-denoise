@@ -59,9 +59,9 @@ from joblib import Parallel, delayed
 from scipy import linalg as la
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .._cca import canonical_correlation
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne, reconstruct_mne_object
-from ._cca import canonical_correlation
 
 # Optional MNE support
 try:

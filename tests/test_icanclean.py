@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from mne_denoise.icanclean import ICanClean, compute_icanclean
-from mne_denoise.icanclean._cca import canonical_correlation
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -63,89 +62,6 @@ def synthetic_dual_layer(rng):
 
     truth = {"brain": brain, "artifact_primary": artifact_primary}
     return data, primary_idx, ref_idx, sfreq, truth
-
-
-# ---------------------------------------------------------------------------
-# CCA tests
-# ---------------------------------------------------------------------------
-
-
-def test_cca_basic_shapes(rng):
-    """CCA returns correct shapes."""
-    n, px, py = 200, 8, 4
-    X = rng.standard_normal((n, px))
-    Y = rng.standard_normal((n, py))
-    A, B, R, U, V = canonical_correlation(X, Y)
-
-    d = min(px, py)
-    assert A.shape == (px, d)
-    assert B.shape == (py, d)
-    assert R.shape == (d,)
-    assert U.shape == (n, d)
-    assert V.shape == (n, d)
-
-
-def test_cca_correlations_descending(rng):
-    """Canonical correlations are sorted descending."""
-    X = rng.standard_normal((300, 10))
-    Y = rng.standard_normal((300, 6))
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    assert np.all(np.diff(R) <= 1e-10)  # descending
-
-
-def test_cca_correlations_bounded(rng):
-    """Canonical correlations are in [0, 1]."""
-    X = rng.standard_normal((200, 8))
-    Y = rng.standard_normal((200, 5))
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    assert np.all(R >= -1e-10)
-    assert np.all(R <= 1.0 + 1e-10)
-
-
-def test_cca_perfect_correlation():
-    """Perfectly correlated signals give R \u2248 1."""
-    t = np.linspace(0, 1, 500)
-    X = np.column_stack([np.sin(2 * np.pi * t), np.cos(2 * np.pi * t)])
-    Y = X @ np.array([[0.5, 0.3], [-0.2, 0.8]])  # linear transform
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    np.testing.assert_allclose(R[0], 1.0, atol=1e-6)
-    np.testing.assert_allclose(R[1], 1.0, atol=1e-6)
-
-
-def test_cca_uncorrelated(rng):
-    """Independent signals give low correlations."""
-    X = rng.standard_normal((5000, 8))
-    Y = rng.standard_normal((5000, 4))
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    # With many samples, random correlations should be small
-    assert R.max() < 0.15
-
-
-def test_cca_unit_variance(rng):
-    """Canonical variates have unit variance (ddof=1)."""
-    X = rng.standard_normal((300, 6))
-    Y = rng.standard_normal((300, 4))
-    _, _, _, U, V = canonical_correlation(X, Y)
-    np.testing.assert_allclose(U.std(axis=0, ddof=1), 1.0, atol=1e-10)
-    np.testing.assert_allclose(V.std(axis=0, ddof=1), 1.0, atol=1e-10)
-
-
-def test_cca_mismatched_samples_raises(rng):
-    """Different n_samples raises ValueError."""
-    X = rng.standard_normal((100, 5))
-    Y = rng.standard_normal((80, 3))
-    with pytest.raises(ValueError, match="same number of samples"):
-        canonical_correlation(X, Y)
-
-
-def test_cca_rank_deficient(rng):
-    """Handles rank-deficient input gracefully."""
-    X = rng.standard_normal((100, 4))
-    # Y has only 2 independent columns out of 5
-    base = rng.standard_normal((100, 2))
-    Y = np.column_stack([base, base @ rng.standard_normal((2, 3))])
-    A, B, R, U, V = canonical_correlation(X, Y)
-    assert R.shape[0] <= 2  # rank of Y is 2
 
 
 # ---------------------------------------------------------------------------

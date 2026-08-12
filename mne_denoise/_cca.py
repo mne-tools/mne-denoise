@@ -1,28 +1,27 @@
-"""Core canonical correlation analysis for iCanClean.
+"""Internal canonical correlation analysis shared by denoising algorithms.
 
 This module contains:
-1. ``canonical_correlation``: The core canonical correlation analysis solver
-   used by iCanClean [1]_ [2]_.
+
+1. ``canonical_correlation``: the core canonical correlation analysis solver
+   [1]_, shared by iCanClean and BSS-CCA.
+
+.. warning::
+
+   The returned coefficient matrices are built on a **pivoted coordinate
+   basis**. When the input is rank deficient the solver reduces onto ``rank``
+   *columns of the identity* chosen by the QR pivot order, not onto the data's
+   row space, so ``A`` has literal zero rows at the pivoted-out feature
+   indices. Using ``U``/``V`` as a regression basis is safe. Inverting ``A``
+   (or ``B``) to map component space back to feature space is **not**: the
+   result annihilates whole features. Back-project by least squares against
+   the data instead — see :func:`mne_denoise.bss_cca.compute_bss_cca`.
 
 Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
          Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
 
 References
 ----------
-.. [1] Downey, R. J., & Ferris, D. P. (2022). The iCanClean Algorithm:
-       How to Remove Artifacts using Reference Noise Recordings.
-       arXiv:2201.11798.
-.. [2] Downey, R. J., & Ferris, D. P. (2023). iCanClean Removes Motion,
-       Muscle, Eye, and Line-Noise Artifacts from Phantom EEG. Sensors,
-       23(19), 8214. https://doi.org/10.3390/s23198214
-.. [3] Gonsisko, C. B., Ferris, D. P., & Downey, R. J. (2023). iCanClean
-       Improves ICA of Mobile Brain Imaging with EEG. Sensors, 23(2), 928.
-       https://doi.org/10.3390/s23020928
-.. [4] Nordin, A. D., Hairston, W. D., & Ferris, D. P. (2018). Dual-electrode
-       motion artifact cancellation for mobile electroencephalography.
-       Journal of Neural Engineering, 15(5), 056024.
-       https://doi.org/10.1088/1741-2552/aad7d7
-.. [5] Hotelling, H. (1936). Relations between two sets of variates.
+.. [1] Hotelling, H. (1936). Relations between two sets of variates.
        Biometrika, 28(3/4), 321-377.
 """
 
@@ -38,10 +37,10 @@ def canonical_correlation(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Compute canonical correlation analysis between two matrices.
 
-    This implements the low-level canonical correlation analysis (CCA) solver
-    used by iCanClean [1]_. The algorithm identifies pairs of linear
+    This is the low-level canonical correlation analysis (CCA) solver shared by
+    the package's CCA-based algorithms. It identifies pairs of linear
     combinations of ``X`` and ``Y`` that are maximally correlated with each
-    other, ordered by decreasing canonical correlation [2]_.
+    other, ordered by decreasing canonical correlation [1]_.
 
     The computation proceeds as follows:
 
@@ -50,6 +49,11 @@ def canonical_correlation(
     3. Compute the singular value decomposition of :math:`Q_x^T Q_y`.
     4. Back-solve through the ``R`` factors to obtain canonical coefficients.
     5. Normalize the canonical variates to unit variance.
+
+    ``R`` is derived from singular values and is therefore **non-negative**:
+    a pair of variates that is perfectly *anti*-correlated yields ``R = 1``,
+    with the sign absorbed into ``B``. Callers that interpret ``R`` as a
+    correlation must account for this.
 
     Parameters
     ----------
@@ -62,19 +66,26 @@ def canonical_correlation(
     -------
     A : ndarray, shape (n_features_x, d)
         Coefficients for X canonical variates. ``d = min(rank(X), rank(Y))``.
+        Built on a pivoted coordinate basis; see the module warning before
+        inverting it.
     B : ndarray, shape (n_features_y, d)
         Coefficients for Y canonical variates.
     R : ndarray, shape (d,)
-        Canonical correlations in descending order.
+        Non-negative canonical correlations in descending order.
     U : ndarray, shape (n_samples, d)
         Canonical variates for X, unit-variance normalized (ddof=1).
     V : ndarray, shape (n_samples, d)
         Canonical variates for Y, unit-variance normalized (ddof=1).
 
+    Raises
+    ------
+    ValueError
+        If ``X`` and ``Y`` do not have the same number of samples.
+
     Examples
     --------
     >>> import numpy as np
-    >>> from mne_denoise.icanclean._cca import canonical_correlation
+    >>> from mne_denoise._cca import canonical_correlation
     >>> rng = np.random.default_rng(42)
     >>> X = rng.standard_normal((200, 8))
     >>> Y = rng.standard_normal((200, 4))
@@ -85,13 +96,11 @@ def canonical_correlation(
     See Also
     --------
     mne_denoise.icanclean.compute_icanclean : Core iCanClean cleaning pass.
-    mne_denoise.icanclean.ICanClean : Estimator interface for iCanClean.
+    mne_denoise.bss_cca.compute_bss_cca : Reference-free lagged BSS-CCA.
 
     References
     ----------
-    .. [1] Downey, R. J., & Ferris, D. P. (2022). The iCanClean Algorithm: How to
-           Remove Artifacts using Reference Noise Recordings. arXiv:2201.11798.
-    .. [2] Hotelling, H. (1936). Relations between two sets of variates.
+    .. [1] Hotelling, H. (1936). Relations between two sets of variates.
            Biometrika, 28(3/4), 321-377.
     """
     X = np.asarray(X, dtype=np.float64)

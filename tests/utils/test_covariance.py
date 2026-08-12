@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from mne_denoise.dss.utils.covariance import _ledoit_wolf_shrinkage, compute_covariance
+from mne_denoise import compute_covariance
+from mne_denoise._covariance import _ledoit_wolf_shrinkage
 
 
 def test_empirical_covariance_shape():
@@ -42,6 +43,31 @@ def test_empirical_covariance_assume_centered():
     cov = compute_covariance(data, assume_centered=True)
 
     assert_allclose(cov, data @ data.T / data.shape[1])
+
+
+def test_empirical_covariance_chunked_matches_full():
+    """Chunking should only change peak memory use."""
+    rng = np.random.default_rng(42)
+    data = rng.standard_normal((7, 503))
+    weights = rng.uniform(0.1, 1.0, data.shape[1])
+
+    full = compute_covariance(data, weights=weights)
+    chunked = compute_covariance(data, weights=weights, chunk_size=47)
+
+    assert_allclose(chunked, full, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("chunk_size", [0, -1, 2.5, True])
+def test_empirical_covariance_rejects_invalid_chunk_size(chunk_size):
+    """Chunk size must be a positive integer when supplied."""
+    with pytest.raises((TypeError, ValueError), match="chunk_size"):
+        compute_covariance(np.ones((3, 10)), chunk_size=chunk_size)
+
+
+def test_non_empirical_covariance_rejects_chunking():
+    """Chunking is limited to the empirical covariance path."""
+    with pytest.raises(ValueError, match="empirical"):
+        compute_covariance(np.ones((3, 10)), method="oas", chunk_size=4)
 
 
 def test_shrinkage_covariance_identity():
