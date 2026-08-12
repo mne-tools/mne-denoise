@@ -156,6 +156,63 @@ def test_lag_augmentation_sign_and_epoch_isolation():
     assert_array_equal(augmented[2], [[0.0, 100.0], [1.0, 101.0]])
 
 
+@pytest.mark.parametrize(
+    "lag_kws, error, match",
+    [
+        ({}, ValueError, "exactly one"),
+        (
+            {"lag_samples": [0, 1], "lag_times": [0.0, 0.01], "sfreq": 100.0},
+            ValueError,
+            "exactly one",
+        ),
+        ({"lag_samples": "0,1"}, TypeError, "one-dimensional sequence"),
+        ({"lag_samples": []}, ValueError, "non-empty"),
+        ({"lag_samples": [0, True]}, TypeError, "only integers"),
+        ({"lag_samples": [1, 2]}, ValueError, "contain zero"),
+        (
+            {"lag_times": "0,0.01", "sfreq": 100.0},
+            TypeError,
+            "one-dimensional sequence",
+        ),
+        (
+            {"lag_times": [0.0, np.nan], "sfreq": 100.0},
+            ValueError,
+            "finite",
+        ),
+    ],
+)
+def test_invalid_lag_declarations(lag_kws, error, match):
+    """Lag declarations reject ambiguous, malformed, and non-finite grids."""
+    with pytest.raises(error, match=match):
+        TimeShiftDSS(n_components=1, rank=1, **lag_kws).fit(_data())
+
+
+@pytest.mark.parametrize(
+    "data, match",
+    [
+        (np.ones((3, 20)), "requires epoched data"),
+        (np.empty((0, 20, 2)), "dimensions must be non-empty"),
+        (np.ones((3, 1, 2)), "dimensions must be non-empty"),
+        (np.ones((3, 20, 1)), "at least two repeated epochs"),
+        (np.full((3, 20, 2), np.nan), "finite values"),
+    ],
+)
+def test_invalid_epoched_array_geometry(data, match):
+    """The repeated-trial array contract is checked before decomposition."""
+    with pytest.raises(ValueError, match=match):
+        _estimator().fit(data)
+
+
+def test_lag_span_must_leave_two_common_samples():
+    """Lag grids cannot consume the complete within-epoch support."""
+    with pytest.raises(ValueError, match="fewer than two common"):
+        TimeShiftDSS(
+            lag_samples=[0, 19],
+            n_components=1,
+            rank=1,
+        ).fit(_data(shape=(3, 20, 2)))
+
+
 def test_lag_weights_use_minimum_across_touched_samples():
     """A zero-weight source sample invalidates every lag window touching it."""
     weights = np.ones((6, 2))
@@ -342,7 +399,31 @@ def test_explicit_rank_and_selection_contracts():
         TimeShiftDSS(lag_samples=[0, 1], n_components=5, rank=4).fit(data)
     with pytest.raises(ValueError, match="exceeds.*augmented"):
         TimeShiftDSS(lag_samples=[0, 1], n_components=4, rank=7).fit(data)
+    with pytest.raises(ValueError, match="n_select cannot exceed"):
+        _estimator(n_select=5).fit(data)
     assert not hasattr(_estimator(), "auto_select")
+
+
+@pytest.mark.parametrize(
+    "kwargs, error, match",
+    [
+        ({"component_action": "invalid"}, ValueError, "component_action"),
+        ({"center": 1}, TypeError, "center"),
+        ({"distortion_control": "invalid"}, ValueError, "distortion_control"),
+        (
+            {"distortion_control": "cca", "n_select": 2},
+            ValueError,
+            "CCA distortion control",
+        ),
+        ({"reg": True}, TypeError, "reg"),
+        ({"reg": 0.0}, ValueError, "reg"),
+        ({"reg": np.nan}, ValueError, "reg"),
+    ],
+)
+def test_invalid_estimator_parameters(kwargs, error, match):
+    """Constructor choices fail explicitly before fitting numerical state."""
+    with pytest.raises(error, match=match):
+        _estimator(**kwargs).fit(_data())
 
 
 def test_high_parameter_ratio_warns_instead_of_auto_selecting():
@@ -410,6 +491,60 @@ def test_score_requires_a_predeclared_subspace():
 
     with pytest.raises(ValueError, match="explicit n_select"):
         est.score(_data(seed=25, shape=(3, 80, 4)))
+
+
+def test_score_returns_zero_for_zero_power_held_out_data():
+    """A valid held-out set with no component power has a finite zero score."""
+    est = _estimator(n_select=2).fit(_data(seed=26))
+
+    assert est.score(np.zeros((3, 80, 4))) == 0.0
+
+
+def test_transform_rejects_container_and_channel_contract_changes():
+    """A fitted estimator freezes both input family and channel geometry."""
+    est = _estimator().fit(_data())
+    info = mne.create_info(3, 100.0, "eeg")
+    epochs = mne.EpochsArray(
+        np.transpose(_data(shape=(3, 80, 2)), (2, 0, 1)),
+        info,
+        verbose=False,
+    )
+
+    with pytest.raises(TypeError, match="container family"):
+        est.transform(epochs)
+    with pytest.raises(TypeError, match="supports MNE Epochs or NumPy arrays"):
+        est.transform([[[1.0]]])
+    with pytest.raises(ValueError, match="channels; fitted data had"):
+        est.transform(_data(shape=(4, 80, 2)))
+
+
+def test_mne_epochs_extract_returns_epoch_major_sources():
+    """MNE extraction returns an array in epochs-by-components orientation."""
+    data = np.transpose(_data(shape=(3, 40, 5)), (2, 0, 1)) * 1e-6
+    epochs = mne.EpochsArray(
+        data,
+        mne.create_info(3, 100.0, "eeg"),
+        verbose=False,
+    )
+
+    sources = _estimator().fit_transform(epochs)
+
+    assert isinstance(sources, np.ndarray)
+    assert sources.shape == (5, 4, 39)
+
+
+def test_empty_cca_solution_is_rejected(monkeypatch):
+    """CCA distortion control rejects a numerically empty canonical space."""
+
+    def _empty_cca(*args, **kwargs):
+        return None, None, np.array([]), None, None
+
+    monkeypatch.setattr(
+        "mne_denoise.dss.variants.tsr.canonical_correlation",
+        _empty_cca,
+    )
+    with pytest.raises(ValueError, match="CCA input has no variance"):
+        _estimator(distortion_control="cca").fit(_data())
 
 
 def test_mne_epochs_preserve_metadata_and_bad_channels():
