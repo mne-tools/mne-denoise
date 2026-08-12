@@ -281,6 +281,7 @@ class ZapLine(DSS):
             crossfade=crossfade,
             max_prop_remove=max_prop_remove,
             min_select=min_select,
+            component_action="subtract",
             n_select=n_select,
             selection_threshold=threshold,
             knee_rel_floor=knee_rel_floor,

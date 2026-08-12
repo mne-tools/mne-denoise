@@ -1,0 +1,2 @@
+Removed the ambiguous DSS ``return_type`` parameter in favor of the single
+``component_action`` operation contract.

@@ -82,7 +82,11 @@ eog_sensor_picks = np.arange(len(eog_epochs.ch_names))
 # We use AverageBias(axis='epochs') which works on pre-epoched data.
 # Note: We'll compare with CycleAverageBias later (artifact-specific approach).
 
-dss_eog = DSS(n_components=10, bias=AverageBias(axis="epochs"), return_type="sources")
+dss_eog = DSS(
+    n_components=10,
+    bias=AverageBias(axis="epochs"),
+    component_action="extract",
+)
 dss_eog.fit(eog_epochs)
 
 # %%
@@ -209,7 +213,11 @@ window_samples = (-int(0.1 * raw.info["sfreq"]), int(0.1 * raw.info["sfreq"]))
 bias_cycle = CycleAverageBias(event_samples=blink_samples, window=window_samples)
 
 # Fit DSS on continuous MEG data
-dss_cycle = DSS(n_components=10, bias=bias_cycle, return_type="sources")
+dss_cycle = DSS(
+    n_components=10,
+    bias=bias_cycle,
+    component_action="extract",
+)
 dss_cycle.fit(raw_meg)
 
 print("Fitted DSS with CycleAverageBias")

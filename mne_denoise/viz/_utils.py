@@ -109,14 +109,13 @@ def _get_components(estimator, data=None):
         )
 
     # 2. Compute sources for the provided data
-    # Check if we need to force 'return_type' for LinearDSS
-    if hasattr(estimator, "return_type"):
-        old_return_type = estimator.return_type
+    if hasattr(estimator, "component_action"):
+        old_action = estimator.component_action
         try:
-            estimator.return_type = "sources"
+            estimator.component_action = "extract"
             sources = estimator.transform(data)
         finally:
-            estimator.return_type = old_return_type
+            estimator.component_action = old_action
     else:
         # Assumed to be IterativeDSS or similar which transforms to sources
         sources = estimator.transform(data)

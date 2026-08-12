@@ -68,11 +68,15 @@ You can use the ``DSS`` class directly with MNE objects.
    epochs = mne.read_epochs("sample_epochs.fif")
 
    # Apply DSS to enhance evoked response
-   dss = DSS(bias=TrialAverageBias(), n_components=5)
-   dss.fit(epochs)
+   dss = DSS(
+       bias=TrialAverageBias(),
+       n_components=5,
+       n_select=2,
+       component_action="subtract",
+   )
 
-   # Return denoised epochs (projected back to sensor space)
-   epochs_clean = dss.transform(epochs, return_type="epochs")
+   # Remove the leading two biased components in sensor space.
+   epochs_clean = dss.fit_transform(epochs)
 
 Example gallery
 ---------------

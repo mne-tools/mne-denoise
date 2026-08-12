@@ -121,6 +121,7 @@ def extract_data_from_mne(
     auto_pick: bool | str = True,
     concatenate_epochs: bool = False,
     channel_first_epochs: bool = False,
+    exclude_bads: bool = False,
 ) -> tuple[np.ndarray, float | None, str, Any, np.ndarray | None, list[str] | None]:
     """
     Extract data and metadata from an MNE object or NumPy-compatible array.
@@ -148,6 +149,10 @@ def extract_data_from_mne(
         If True, return MNE Epochs as
         ``(n_channels, n_times, n_epochs)``. Cannot be combined with
         ``concatenate_epochs=True``.
+    exclude_bads : bool, default=False
+        If True, omit channels listed in ``X.info['bads']`` from automatic
+        channel selection. This has no effect when ``ch_names`` explicitly
+        defines the fitted channel contract.
 
     Returns
     -------
@@ -224,6 +229,22 @@ def extract_data_from_mne(
                 picks = _get_homogeneous_picks(X, auto_pick=auto_pick)
             else:
                 picks = None
+
+            if exclude_bads:
+                candidate_picks = (
+                    np.arange(len(X.ch_names), dtype=int)
+                    if picks is None
+                    else np.asarray(picks, dtype=int)
+                )
+                bads = set(X.info["bads"])
+                picks = np.asarray(
+                    [pick for pick in candidate_picks if X.ch_names[pick] not in bads],
+                    dtype=int,
+                )
+                if picks.size == 0:
+                    raise ValueError(
+                        "No good data channels remain after excluding bads"
+                    )
 
             if picks is not None:
                 data = X.get_data(picks=picks)

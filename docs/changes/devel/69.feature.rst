@@ -1,0 +1,3 @@
+Replaced the ambiguous DSS ``return_type`` behavior with explicit
+``component_action`` operations for extracting, retaining, or subtracting
+selected components while preserving segmented adaptive subtraction.

@@ -32,7 +32,7 @@ def fitted_dss(synthetic_data):
     def bias_func(d):
         return mne.filter.filter_data(d, 100.0, 8, 12, verbose=False)
 
-    dss = DSS(n_components=3, bias=bias_func, return_type="epochs")
+    dss = DSS(n_components=3, bias=bias_func, component_action="retain")
     dss.fit(synthetic_data)
     return dss
 

@@ -15,7 +15,7 @@ from mne_denoise.zapline import ZapLine
 data = np.random.randn(64, 10000)  # 64 channels, 10000 samples
 bias = BandpassBias(freq_band=(8, 12), sfreq=500)
 
-dss = DSS(bias=bias, n_components=5)
+dss = DSS(bias=bias, n_components=5, component_action="extract")
 dss.fit(data)
 alpha_sources = dss.transform(data)
 
@@ -46,6 +46,43 @@ dss.fit(data)
 sources = dss.transform(data)
 reconstructed = dss.inverse_transform(sources[:3])  # Keep top 3
 ```
+
+### Component operations
+
+Use `component_action` to state whether DSS components should be extracted,
+retained, or removed. It is the single operation contract for both
+`transform()` and `fit_transform()`.
+
+```python
+# Return four DSS component time courses.
+sources = DSS(
+    bias=my_bias_function,
+    n_components=4,
+    component_action="extract",
+).fit_transform(data)
+
+# Reconstruct the leading two components in sensor space.
+target = DSS(
+    bias=my_bias_function,
+    n_components=4,
+    n_select=2,
+    component_action="retain",
+).fit_transform(data)
+
+# Remove the leading two components from the input.
+cleaned = DSS(
+    bias=my_bias_function,
+    n_components=4,
+    n_select=2,
+    component_action="subtract",
+).fit_transform(data)
+```
+
+For `retain`, leaving `n_select=None` retains every fitted component. For
+`subtract`, leaving it unset is an exact no-op. Adaptive `fit_transform()`
+supports subtraction only because every segment has a separately fitted
+component basis; global extraction or retention remains available through
+`fit().transform()`.
 
 ### Iterative (Nonlinear) DSS
 

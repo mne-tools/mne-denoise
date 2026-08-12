@@ -65,14 +65,20 @@ from mne_denoise.dss import DSS, AverageBias
 epochs = mne.read_epochs("sample-epo.fif")
 
 # Create DSS with trial-average bias
-dss = DSS(bias=AverageBias(), n_components=5)
+dss = DSS(bias=AverageBias(), n_components=5, component_action="extract")
 dss.fit(epochs)
 
 # Option 1: Extract source time courses
 sources = dss.transform(epochs)
 
-# Option 2: Reconstruct denoised sensor data
-cleaned_epochs = dss.transform(epochs, return_type="epochs")
+# Option 2: Retain the leading two reproducible components in sensor space
+enhancer = DSS(
+    bias=AverageBias(),
+    n_components=5,
+    n_select=2,
+    component_action="retain",
+)
+enhanced_epochs = enhancer.fit_transform(epochs)
 ```
 
 ### DSS: Extracting Oscillations

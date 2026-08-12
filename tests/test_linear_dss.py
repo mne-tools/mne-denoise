@@ -271,12 +271,12 @@ def test_dss_without_normalization():
     assert sources.shape == (3, 200)
 
 
-def test_dss_return_type_raw():
-    """DSS transform with return_type='raw' should reconstruct data."""
+def test_dss_retain_reconstructs_sensor_data():
+    """DSS retention should reconstruct sensor-space data."""
     rng = np.random.default_rng(42)
     data = rng.standard_normal((5, 200))
 
-    dss = DSS(bias=lambda x: x, n_components=3, return_type="raw")
+    dss = DSS(bias=lambda x: x, n_components=3, component_action="retain")
     dss.fit(data)
     rec = dss.transform(data)
 
@@ -552,8 +552,8 @@ def test_dss_with_mne_evoked():
     assert sources.shape == (3, n_times)
 
 
-def test_dss_mne_return_type_epochs():
-    """DSS transform with return_type should return MNE object."""
+def test_dss_mne_retain_returns_epochs():
+    """DSS retention should preserve an MNE Epochs container."""
     rng = np.random.default_rng(42)
     n_channels, n_times, n_epochs = 4, 50, 10
     sfreq = 100.0
@@ -565,7 +565,7 @@ def test_dss_mne_return_type_epochs():
     )
     epochs = mne.EpochsArray(data, info, verbose=False)
 
-    dss = DSS(bias=lambda x: x, n_components=3, return_type="epochs")
+    dss = DSS(bias=lambda x: x, n_components=3, component_action="retain")
     dss.fit(epochs)
     result = dss.transform(epochs)
 
@@ -573,8 +573,8 @@ def test_dss_mne_return_type_epochs():
     assert isinstance(result, mne.epochs.BaseEpochs)
 
 
-def test_dss_mne_return_type_raw():
-    """DSS transform with return_type='raw' should return Raw object."""
+def test_dss_mne_retain_returns_raw():
+    """DSS retention should preserve an MNE Raw container."""
     rng = np.random.default_rng(42)
     n_channels, n_samples = 4, 2000
     sfreq = 500.0
@@ -586,7 +586,7 @@ def test_dss_mne_return_type_raw():
     )
     raw = mne.io.RawArray(data, info, verbose=False)
 
-    dss = DSS(bias=lambda x: x, n_components=3, return_type="raw")
+    dss = DSS(bias=lambda x: x, n_components=3, component_action="retain")
     dss.fit(raw)
     result = dss.transform(raw)
 
@@ -824,6 +824,247 @@ def test_dss_mne_evoked_extracts_known_signal():
     assert correlation > 0.85, f"Evoked signal correlation {correlation} too low"
 
 
+@pytest.mark.parametrize("normalize_input", [False, True])
+def test_dss_raw_covariances_use_identical_sample_support(monkeypatch, normalize_input):
+    """Baseline and biased Raw covariance must see identical sample support."""
+    rng = np.random.default_rng(42)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
+    raw = mne.io.RawArray(
+        rng.standard_normal((3, 1000)),
+        info,
+        first_samp=1000,
+        verbose=False,
+    )
+    raw.set_annotations(
+        mne.Annotations(
+            onset=[2.0],
+            duration=[2.0],
+            description=["BAD_test"],
+        )
+    )
+    raw.set_eeg_reference(projection=True, verbose=False)
+
+    original_compute = mne.compute_raw_covariance
+    calls = []
+
+    def _record_support(inst, *args, **kwargs):
+        cov = original_compute(inst, *args, **kwargs)
+        calls.append(
+            {
+                "first_samp": inst.first_samp,
+                "annotations": inst.annotations.copy(),
+                "nfree": cov.nfree,
+                "projectors": [
+                    (projector["desc"], projector["active"])
+                    for projector in inst.info["projs"]
+                ],
+            }
+        )
+        return cov
+
+    monkeypatch.setattr(mne, "compute_raw_covariance", _record_support)
+    DSS(
+        bias=lambda data: data,
+        normalize_input=normalize_input,
+    ).fit(raw)
+
+    assert len(calls) == 2
+    assert calls[0]["first_samp"] == calls[1]["first_samp"] == raw.first_samp
+    assert calls[0]["annotations"] == calls[1]["annotations"]
+    assert calls[0]["nfree"] == calls[1]["nfree"]
+    assert calls[0]["nfree"] < raw.n_times - 1
+    assert calls[0]["projectors"] == calls[1]["projectors"]
+
+
+@pytest.mark.parametrize("normalize_input", [False, True])
+def test_dss_raw_bad_channels_are_excluded_and_preserved(normalize_input):
+    """DSS must fit good channels and pass bad Raw channels through unchanged."""
+    rng = np.random.default_rng(43)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+    raw = mne.io.RawArray(
+        rng.standard_normal((4, 1000)),
+        info,
+        first_samp=250,
+        verbose=False,
+    )
+    raw.info["bads"] = ["EEG3"]
+    raw.set_annotations(
+        mne.Annotations(
+            onset=[1.0],
+            duration=[0.5],
+            description=["marker"],
+        )
+    )
+
+    dss = DSS(
+        bias=lambda data: data,
+        n_components=3,
+        normalize_input=normalize_input,
+        component_action="retain",
+    ).fit(raw)
+    transformed = dss.transform(raw)
+
+    assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
+    assert dss.filters_.shape == (3, 3)
+    assert transformed.first_samp == raw.first_samp
+    assert transformed.annotations == raw.annotations
+    assert transformed.info["bads"] == raw.info["bads"]
+    assert_allclose(transformed.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"]))
+
+
+def test_dss_fit_transform_preserves_bad_raw_channels():
+    """Artifact subtraction must operate only on the fitted good channels."""
+    rng = np.random.default_rng(44)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+    raw = mne.io.RawArray(rng.standard_normal((4, 1000)), info, verbose=False)
+    raw.info["bads"] = ["EEG3"]
+
+    cleaned = DSS(
+        bias=lambda data: data,
+        n_components=3,
+        n_select=1,
+        normalize_input=False,
+        component_action="subtract",
+    ).fit_transform(raw)
+
+    assert cleaned.info["bads"] == ["EEG3"]
+    assert_allclose(cleaned.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"]))
+
+
+@pytest.mark.parametrize("fit_kws", [{"smooth": 5}, {"whiten": True}])
+def test_dss_alternate_fit_paths_preserve_bad_raw_channels(fit_kws):
+    """Smoothing and whitening must follow the same good-channel contract."""
+    rng = np.random.default_rng(47)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+    raw = mne.io.RawArray(rng.standard_normal((4, 1000)), info, verbose=False)
+    raw.info["bads"] = ["EEG3"]
+
+    dss = DSS(
+        bias=lambda data: data,
+        n_components=3,
+        normalize_input=False,
+        component_action="retain",
+        **fit_kws,
+    ).fit(raw)
+    transformed = dss.transform(raw)
+
+    assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
+    assert dss.info_["ch_names"] == dss._mne_ch_names_
+    assert dss.filters_.shape == (3, 3)
+    assert_allclose(transformed.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"]))
+
+
+def test_dss_transform_aligns_reordered_mne_channels_by_name():
+    """Transform must align fitted channels by name, independent of input order."""
+    rng = np.random.default_rng(48)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+    raw = mne.io.RawArray(rng.standard_normal((4, 1000)), info, verbose=False)
+    raw.info["bads"] = ["EEG3"]
+    reordered = raw.copy().reorder_channels(["EEG2", "EEG0", "EEG3", "EEG1"])
+
+    dss = DSS(
+        bias=lambda data: data,
+        n_components=3,
+        normalize_input=False,
+        component_action="retain",
+    ).fit(raw)
+    transformed = dss.transform(reordered)
+
+    assert transformed.ch_names == reordered.ch_names
+    assert_allclose(transformed.get_data(), reordered.get_data(), atol=1e-12)
+
+
+def test_dss_transform_rejects_missing_fitted_channel():
+    """Missing fitted channels must raise an actionable error."""
+    rng = np.random.default_rng(49)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
+    raw = mne.io.RawArray(rng.standard_normal((3, 1000)), info, verbose=False)
+    dss = DSS(bias=lambda data: data, normalize_input=False).fit(raw)
+
+    with pytest.raises(ValueError, match="missing required channels.*EEG2"):
+        dss.transform(raw.copy().drop_channels(["EEG2"]))
+
+
+def test_dss_fit_rejects_all_bad_data_channels():
+    """DSS must fail clearly when no usable fitted channels remain."""
+    rng = np.random.default_rng(50)
+    info = mne.create_info(["EEG0", "EEG1"], 100.0, "eeg")
+    raw = mne.io.RawArray(rng.standard_normal((2, 1000)), info, verbose=False)
+    raw.info["bads"] = raw.ch_names
+
+    with pytest.raises(ValueError, match="No good data channels remain"):
+        DSS(bias=lambda data: data, normalize_input=False).fit(raw)
+
+
+def test_dss_epochs_bad_channels_are_excluded_and_preserved():
+    """DSS must preserve bad Epochs channels and epoch bookkeeping."""
+    pd = pytest.importorskip("pandas")
+    rng = np.random.default_rng(45)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+    events = np.column_stack(
+        [np.arange(5) * 100, np.zeros(5, dtype=int), np.ones(5, dtype=int)]
+    )
+    epochs = mne.EpochsArray(
+        rng.standard_normal((5, 4, 100)),
+        info,
+        events=events,
+        event_id={"stim": 1},
+        verbose=False,
+    )
+    epochs.info["bads"] = ["EEG3"]
+    epochs.metadata = pd.DataFrame({"condition": list("abcde")})
+
+    dss = DSS(
+        bias=lambda data: data,
+        n_components=3,
+        normalize_input=False,
+        component_action="retain",
+    ).fit(epochs)
+    transformed = dss.transform(epochs)
+
+    assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
+    assert dss.filters_.shape == (3, 3)
+    assert transformed.info["bads"] == epochs.info["bads"]
+    assert_allclose(
+        transformed.get_data(picks=["EEG3"]), epochs.get_data(picks=["EEG3"])
+    )
+    assert_allclose(transformed.events, epochs.events)
+    assert transformed.event_id == epochs.event_id
+    assert transformed.metadata.equals(epochs.metadata)
+
+
+def test_dss_evoked_bad_channels_are_excluded_and_preserved():
+    """The NumPy Evoked path must honor the same fitted-channel contract."""
+    rng = np.random.default_rng(46)
+    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+    evoked = mne.EvokedArray(
+        rng.standard_normal((4, 500)),
+        info,
+        tmin=-0.2,
+        comment="condition",
+        nave=17,
+        verbose=False,
+    )
+    evoked.info["bads"] = ["EEG3"]
+
+    dss = DSS(
+        bias=lambda data: data,
+        n_components=3,
+        normalize_input=False,
+        component_action="retain",
+    ).fit(evoked)
+    transformed = dss.transform(evoked)
+
+    assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
+    assert dss.filters_.shape == (3, 3)
+    assert transformed.info["bads"] == evoked.info["bads"]
+    assert transformed.comment == evoked.comment
+    assert transformed.nave == evoked.nave
+    assert_allclose(
+        transformed.get_data(picks=["EEG3"]), evoked.get_data(picks=["EEG3"])
+    )
+
+
 def test_dss_reconstruction_preserves_signal():
     """DSS transform + inverse_transform should preserve signal content."""
     rng = np.random.default_rng(42)
@@ -1030,7 +1271,10 @@ def test_dss_preserves_scale():
 
     bias = IdentityBias()
     dss = DSS(
-        bias=bias, n_components=n_channels, normalize_input=False, return_type="raw"
+        bias=bias,
+        n_components=n_channels,
+        normalize_input=False,
+        component_action="retain",
     )
     reconstructed = dss.fit_transform(data)
 
@@ -1131,7 +1375,7 @@ def test_dss_whiten_reconstruction_is_faithful_across_units():
     raw, _, data = _mixed_sensor_raw()
     bias = BandpassBias(freq_band=(8, 12), sfreq=raw.info["sfreq"])
 
-    dss = DSS(bias=bias, whiten=True, return_type="raw").fit(raw)
+    dss = DSS(bias=bias, whiten=True, component_action="retain").fit(raw)
     rec = dss.transform(raw).get_data()
 
     rel_error = np.linalg.norm(rec - data) / np.linalg.norm(data)
@@ -1175,7 +1419,7 @@ def test_dss_whiten_epochs():
     epochs = mne.EpochsArray(epoch_data, raw.info, verbose=False)
 
     bias = BandpassBias(freq_band=(8, 12), sfreq=raw.info["sfreq"])
-    dss = DSS(bias=bias, whiten=True, return_type="epochs").fit(epochs)
+    dss = DSS(bias=bias, whiten=True, component_action="retain").fit(epochs)
     rec = dss.transform(epochs).get_data()
 
     assert rec.shape == epoch_data.shape
@@ -1282,7 +1526,7 @@ def test_dss_whiten_inverse_transform_recovers_sensor_data():
 
     raw, _, data = _mixed_sensor_raw()
     bias = BandpassBias(freq_band=(8, 12), sfreq=raw.info["sfreq"])
-    dss = DSS(bias=bias, whiten=True, return_type="sources").fit(raw)
+    dss = DSS(bias=bias, whiten=True, component_action="extract").fit(raw)
 
     sources = dss.transform(raw)
     rec = dss.inverse_transform(sources)
@@ -1344,7 +1588,7 @@ class TestSegmentedDSS:
         """
         data = np.random.default_rng(0).standard_normal((8, 5000))
         bias = LineNoiseBias(freq=50.0, sfreq=250.0)
-        dss = DSS(bias, adaptive=True, n_components=2)
+        dss = DSS(bias, component_action="subtract", adaptive=True, n_components=2)
         dss.fit(data)
         assert dss.filters_ is not None
         assert dss.filters_.shape == (2, 8)
@@ -1357,7 +1601,12 @@ class TestSegmentedDSS:
             return x
 
         data = np.random.default_rng(0).standard_normal((8, 5000))
-        dss = DSS(bias_without_sfreq, adaptive=True, n_components=2)
+        dss = DSS(
+            bias_without_sfreq,
+            component_action="subtract",
+            adaptive=True,
+            n_components=2,
+        )
         with pytest.raises(ValueError, match="sfreq"):
             dss.fit_transform(data)
 
@@ -1367,6 +1616,7 @@ class TestSegmentedDSS:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             n_components=2,
             reg=1e-7,
             normalize_input=False,
@@ -1391,6 +1641,7 @@ class TestSegmentedDSS:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=2,
         )
@@ -1406,6 +1657,7 @@ class TestSegmentedDSS:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=2,
         )
@@ -1422,6 +1674,7 @@ class TestSegmentedDSS:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=4,
             n_select="auto",
@@ -1441,6 +1694,7 @@ class TestSegmentedDSS:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=4,
             n_select=1,
@@ -1467,6 +1721,7 @@ class TestSegmentedDSS:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=CovarianceSegmenter(sfreq=sfreq, min_chunk_len=20.0),
             n_components=2,
         )
@@ -1498,7 +1753,7 @@ class TestSegmentedDSS:
             verbose=False,
         )
         bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(bias, adaptive=True, n_components=2)
+        dss = DSS(bias, component_action="subtract", adaptive=True, n_components=2)
         # Epochs should either work (segmentation on concatenated) or raise
         try:
             dss.fit_transform(epochs)
@@ -1602,7 +1857,7 @@ class TestSmoothingDecomposition:
         info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
         raw = mne.io.RawArray(data, info, verbose=False)
         bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(bias, n_components=2, smooth=5, return_type="raw")
+        dss = DSS(bias, n_components=2, smooth=5, component_action="retain")
         dss.fit(raw)
         result = dss.transform(raw)
         result_data = result.get_data()
@@ -1622,6 +1877,7 @@ class TestSmoothingDecomposition:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=4,
             n_select=1,
@@ -1661,6 +1917,7 @@ class TestCapAndFloor:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=10,
             n_select="auto",
@@ -1680,6 +1937,7 @@ class TestCapAndFloor:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             n_components=4,
             n_select="auto",
@@ -1702,6 +1960,7 @@ class TestCrossfade:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             crossfade=1.0,
             n_components=4,
@@ -1721,6 +1980,7 @@ class TestCrossfade:
         dss_hard = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             crossfade=0.0,
             n_components=4,
@@ -1732,6 +1992,7 @@ class TestCrossfade:
         dss_xfade = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             crossfade=1.0,
             n_components=4,
@@ -1775,6 +2036,7 @@ class TestCrossfade:
         dss_hard = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=seg,
             crossfade=0.0,
             n_components=4,
@@ -1783,6 +2045,7 @@ class TestCrossfade:
         dss_xfade = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=seg,
             crossfade=1.0,
             n_components=4,
@@ -1803,6 +2066,7 @@ class TestCrossfade:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=seg,
             n_components=4,
             n_select="auto",
@@ -1813,6 +2077,7 @@ class TestCrossfade:
         dss0 = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=seg,
             crossfade=0.0,
             n_components=4,
@@ -1831,6 +2096,7 @@ class TestCrossfade:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
             crossfade=1.0,
             n_components=4,
@@ -1858,6 +2124,7 @@ class TestCrossfade:
         dss = DSS(
             bias,
             adaptive=True,
+            component_action="subtract",
             segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=10.0),
             crossfade=8.0,  # way too long
             n_components=4,
@@ -1943,7 +2210,7 @@ def test_get_normalized_patterns_returns_unit_columns():
 
 
 def test_fit_transform_subtracts_selected_components():
-    """Non-adaptive fit_transform with a non-'sources' return_type cleans."""
+    """Explicit subtraction removes selected components."""
     sfreq = 250.0
     n_times = int(20 * sfreq)
     t = np.arange(n_times) / sfreq
@@ -1952,7 +2219,7 @@ def test_fit_transform_subtracts_selected_components():
     data += np.sin(2 * np.pi * 50.0 * t) * 4.0
 
     bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-    dss = DSS(bias, n_select=2, return_type="raw")
+    dss = DSS(bias, n_select=2, component_action="subtract")
     cleaned = dss.fit_transform(data)
 
     assert cleaned.shape == data.shape
@@ -1966,7 +2233,7 @@ def test_fit_transform_without_selection_is_passthrough():
     rng = np.random.default_rng(0)
     data = rng.standard_normal((6, 2000))
 
-    dss = DSS(bias=lambda x: x, return_type="raw")
+    dss = DSS(bias=lambda x: x, component_action="subtract")
     cleaned = dss.fit_transform(data)
 
     assert dss.n_selected_ is None
@@ -1981,7 +2248,9 @@ def test_empty_segmentation_raises():
     rng = np.random.default_rng(0)
     data = rng.standard_normal((6, 5000))
     bias = LineNoiseBias(freq=50.0, sfreq=250.0)
-    dss = DSS(bias, adaptive=True, segmenter=EmptySegmenter())
+    dss = DSS(
+        bias, component_action="subtract", adaptive=True, segmenter=EmptySegmenter()
+    )
 
     with pytest.raises(ValueError, match="no segments"):
         dss.fit_transform(data)

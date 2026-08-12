@@ -66,6 +66,36 @@ def test_extract_data_from_mne_all_data_channels():
     assert ch_names == ["MAG", "GRAD", "EEG"]
 
 
+def test_extract_data_from_mne_can_exclude_bads():
+    """Automatic extraction can establish a good-channel fitted contract."""
+    info = mne.create_info(["C1", "C2", "C3"], 100.0, "eeg")
+    raw = mne.io.RawArray(np.arange(300).reshape(3, 100), info, verbose=False)
+    raw.info["bads"] = ["C2"]
+
+    data, _, _, _, picks, ch_names = extract_data_from_mne(raw, exclude_bads=True)
+
+    np.testing.assert_array_equal(picks, [0, 2])
+    np.testing.assert_array_equal(data, raw.get_data(picks=[0, 2]))
+    assert ch_names == ["C1", "C3"]
+
+
+def test_extract_data_from_mne_explicit_names_override_bad_exclusion():
+    """Explicit names remain authoritative when applying a fitted contract."""
+    info = mne.create_info(["C1", "C2"], 100.0, "eeg")
+    raw = mne.io.RawArray(np.ones((2, 100)), info, verbose=False)
+    raw.info["bads"] = ["C2"]
+
+    data, _, _, _, picks, ch_names = extract_data_from_mne(
+        raw,
+        ch_names=["C2"],
+        exclude_bads=True,
+    )
+
+    np.testing.assert_array_equal(picks, [1])
+    assert data.shape == (1, 100)
+    assert ch_names == ["C2"]
+
+
 def test_extract_data_from_mne_epoch_layout_options_are_exclusive():
     """Epoch concatenation and channel-first 3D output cannot be requested together."""
     with pytest.raises(ValueError, match="cannot both be True"):
