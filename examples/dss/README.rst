@@ -22,6 +22,7 @@ Files
 - ``plot_10_benchmarking.py``: Efficiency benchmarking against PCA, ICA, and averaging.
 - ``plot_11_wiener_masking.py``: Adaptive Wiener masking for bursty signals.
 - ``plot_12_joint_dss.py``: Joint DSS for multi-dataset repeatability.
+- ``plot_13_cardiac_composition.py``: Explicit, held-out cardiac DSS composition with attenuation and preservation checks.
 
 Data Requirements
 -----------------

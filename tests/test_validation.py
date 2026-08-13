@@ -10,6 +10,7 @@ from mne_denoise._validation import (
     check_channel_layout,
     check_chunk_size,
     check_sfreq,
+    resolve_sample_window,
     resolve_sfreq,
 )
 
@@ -118,6 +119,38 @@ def test_rejects_non_positive_or_non_finite(value):
     """A sampling frequency must be finite and strictly positive."""
     with pytest.raises(ValueError, match="sfreq must be a positive, finite number"):
         check_sfreq(value)
+
+
+# ---------------------------------------------------------------------------
+# resolve_sample_window
+# ---------------------------------------------------------------------------
+
+
+def test_sample_window_resolves_samples_and_seconds():
+    """Both explicit units use one shared half-open conversion contract."""
+    assert resolve_sample_window((-2, 3), unit="samples") == (-2, 3)
+    assert resolve_sample_window((-0.015, 0.025), unit="seconds", sfreq=100.0) == (
+        -2,
+        2,
+    )
+
+
+@pytest.mark.parametrize(
+    ("window", "unit", "sfreq", "match"),
+    [
+        ((-1.5, 2), "samples", None, "must be integers"),
+        ((2, -1), "samples", None, "strictly less"),
+        ((0, 0.001), "seconds", 100.0, "empty or reversed"),
+        ((-1, 2), "seconds", None, "sfreq is required"),
+        ((-1, 2), "minutes", None, "window_unit"),
+        ((-(2**63) - 1, 2), "samples", None, "signed 64-bit"),
+        ((-1e308, 1e308), "seconds", 1e308, "finite sample range"),
+    ],
+)
+def test_sample_window_rejects_invalid_contracts(window, unit, sfreq, match):
+    """Invalid windows fail consistently at the shared package boundary."""
+    with pytest.raises((TypeError, ValueError), match=match):
+        resolve_sample_window(window, unit=unit, sfreq=sfreq)
 
 
 # ---------------------------------------------------------------------------

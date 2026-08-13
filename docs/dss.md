@@ -125,21 +125,96 @@ print(f"Power reduction: {est.n_removed_} components")
 | `TrialAverageBias` | Evoked responses     | Epoch averaging for phase-locked signals |
 | `BandpassBias`     | Rhythm extraction    | Narrow-band filter for oscillations      |
 | `NotchBias`        | Line noise isolation | Isolate specific frequency               |
-| `CycleAverageBias` | Artifact removal     | Cycle-locked averaging for ECG/blinks    |
+| `CycleAverageBias` | Event-locked contrast | Fixed-window averaging for ECG/blinks    |
 
 Example usage:
 
 ```python
-from mne_denoise.dss import TrialAverageBias, CycleAverageBias
+from mne_denoise.dss import AverageBias, CycleAverageBias
 
 # Evoked response enhancement
 epochs_data = np.random.randn(64, 200, 100)  # channels x times x epochs
-bias = TrialAverageBias()
+bias = AverageBias(axis="epochs")
 
 # ECG artifact removal
 r_peaks = find_r_peaks(ecg_signal)
-bias = CycleAverageBias(event_samples=r_peaks, window=(-0.1, 0.3), sfreq=500)
+bias = CycleAverageBias(
+    event_samples=r_peaks,
+    window=(-0.1, 0.3),
+    window_unit="seconds",
+    sfreq=500,
+    event_origin="data",
+)
 ```
+
+`CycleAverageBias` uses the half-open interval
+`[event + start, event + stop)`. It deduplicates coordinates, averages
+overlapping reconstructions commutatively, rejects incomplete windows, and
+requires at least two unique events. For channel-first epoched input, events
+must be explicit `(epoch_index, sample_index)` pairs; flat indices never join
+independent epochs. Two events are only the mathematical minimum. Practical
+cardiac estimates generally need many representative beats.
+
+This operation is a fixed-window package extension. It is not the complete
+quasiperiodic algorithm in Särelä and Valpola (2005), which detects
+peak-to-peak periods, maps variable periods to a common length, maps the
+average back to each period, and iteratively re-estimates QRS events in the
+cardiac application.
+
+### Cardiac cleaning by composition
+
+Cardiac DSS is expressed using the public event detector, bias, and canonical
+`DSS` estimator rather than a separate wrapper:
+
+```python
+from mne.preprocessing import find_ecg_events
+from mne_denoise.dss import CycleAverageBias, DSS
+
+train_events, _, _ = find_ecg_events(train_raw, ch_name="ECG")
+train_data = train_raw.copy().pick("eeg")
+held_out_data = held_out_raw.copy().pick("eeg")
+
+bias = CycleAverageBias(
+    event_samples=train_events[:, 0],
+    window=(-0.15, 0.25),
+    window_unit="seconds",
+    sfreq=train_data.info["sfreq"],
+    event_origin="raw",
+    first_samp=train_data.first_samp,
+)
+cleaner = DSS(
+    bias=bias,
+    rank={"eeg": 32},
+    n_components=10,
+    n_select=1,
+    component_action="subtract",
+)
+cleaner.fit(train_data)
+held_out_clean = cleaner.transform(held_out_data)
+```
+
+The bias and ECG events are used during fitting only; `transform()` applies a
+frozen spatial operator. Quantify QRS-locked attenuation and neural
+preservation on held-out data before accepting subtraction. A reproducible
+cardiac-locked component can contain neural signal as well as artifact, so
+`n_select=1` above is an explicit scientific choice, not an automatic safety
+guarantee. See the cardiac composition gallery example for executable metrics.
+
+The standalone validation can be run with:
+
+```bash
+python scripts/validate_cardiac_dss.py --output cardiac_dss_validation.json
+```
+
+For its deterministic synthetic positive control, the current run reports
+22.74 dB isolated cardiac RMS attenuation, 99.87% target-neural retained
+power, 0.999998 target waveform correlation, and 20.93 dB held-out SNR
+improvement. These figures establish behavior for that declared simulation,
+not superiority or clinical validity. The JSON also records shuffled,
+time-reversed, circularly shifted, pure-noise, neural-only, wrong-origin,
+resampling, and parameter-sensitivity controls. An optional local FIF pathway
+compares unchanged data, the composition, and MNE ECG SSP on one recording;
+one recording demonstrates plausibility and failure modes only.
 
 ### Nonlinear Biases
 

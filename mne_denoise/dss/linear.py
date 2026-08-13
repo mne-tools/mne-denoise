@@ -527,6 +527,7 @@ class DSS(BaseEstimator, TransformerMixin):
         set_log_level_from_verbose(self.verbose)
         self._mne_ch_names_ = None
         self._validate_component_action()
+        self._validate_decomposition_parameters()
         if not isinstance(self.center, bool):
             raise TypeError("center must be a bool")
         if self.adaptive:
@@ -619,6 +620,23 @@ class DSS(BaseEstimator, TransformerMixin):
                 "component_action must be one of "
                 f"{{{allowed}}}, got {self.component_action!r}."
             )
+
+    def _validate_decomposition_parameters(self) -> None:
+        """Reject nonsensical component, rank, and selection counts early."""
+        if self.n_components is not None and (
+            isinstance(self.n_components, bool)
+            or not isinstance(self.n_components, int | np.integer)
+            or int(self.n_components) <= 0
+        ):
+            raise ValueError("n_components must be a positive integer or None")
+        if isinstance(self.rank, int | np.integer) and (
+            isinstance(self.rank, bool) or int(self.rank) <= 0
+        ):
+            raise ValueError("rank must be a positive integer when specified as an int")
+        if isinstance(self.n_select, int | np.integer) and (
+            isinstance(self.n_select, bool) or int(self.n_select) < 0
+        ):
+            raise ValueError("n_select must be a non-negative integer, 'auto', or None")
 
     def auto_select(self, threshold: float | None = None) -> int:
         """Automatically determine how many DSS components are significant.

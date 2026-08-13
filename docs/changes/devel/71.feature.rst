@@ -1,0 +1,2 @@
+Added an explicit cardiac-cleaning composition from MNE ECG detection,
+``CycleAverageBias``, and subtractive ``DSS``, with a held-out gallery example.

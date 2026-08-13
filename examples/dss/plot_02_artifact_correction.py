@@ -210,7 +210,13 @@ print(f"Found {len(blink_samples)} blink events")
 # Create CycleAverageBias
 # Window: 100ms before to 100ms after each blink (in samples)
 window_samples = (-int(0.1 * raw.info["sfreq"]), int(0.1 * raw.info["sfreq"]))
-bias_cycle = CycleAverageBias(event_samples=blink_samples, window=window_samples)
+bias_cycle = CycleAverageBias(
+    event_samples=blink_samples,
+    window=window_samples,
+    window_unit="samples",
+    event_origin="raw",
+    first_samp=raw_meg.first_samp,
+)
 
 # Fit DSS on continuous MEG data
 dss_cycle = DSS(
@@ -261,8 +267,8 @@ plot_component_patterns(
 plt.gcf().suptitle("CycleAverageBias: Blink Component Topography")
 plt.show()
 
-print("\nBoth approaches extract the same blink artifact!")
-print("- TrialAverageBias: Works on MNE Epochs (easier integration)")
+print("\nBoth approaches can emphasize a reproducible blink-locked pattern.")
+print("- AverageBias(axis='epochs'): Works on MNE Epochs (easier integration)")
 print("- CycleAverageBias: Works on continuous data + event samples (more direct)")
 
 # %%

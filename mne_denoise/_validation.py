@@ -7,6 +7,7 @@ consistent across the package.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from numbers import Integral, Real
 
 import numpy as np
@@ -104,6 +105,81 @@ def check_sfreq(sfreq: float | None, *, context: str | None = None) -> float:
     if not np.isfinite(sfreq) or sfreq <= 0:
         raise ValueError("sfreq must be a positive, finite number")
     return sfreq
+
+
+def resolve_sample_window(
+    window: Sequence[int | float],
+    *,
+    unit: str,
+    sfreq: float | None = None,
+    name: str = "window",
+) -> tuple[int, int]:
+    """Validate a half-open time window and resolve it to sample offsets.
+
+    Parameters
+    ----------
+    window : sequence of int or float
+        Ordered ``(start, stop)`` boundaries.
+    unit : {"samples", "seconds"}
+        Unit of the supplied boundaries. Sample-valued boundaries must be
+        integers. Second-valued boundaries use nearest-sample rounding with
+        ties to even.
+    sfreq : float | None, default=None
+        Sampling frequency. Required for second-valued windows and validated
+        when supplied for sample-valued windows.
+    name : str, default="window"
+        Parameter name used in error messages.
+
+    Returns
+    -------
+    sample_window : tuple of int
+        Nonempty half-open ``(start, stop)`` sample offsets.
+    """
+    if unit not in {"samples", "seconds"}:
+        raise ValueError(f"{name}_unit must be 'samples' or 'seconds', got {unit!r}.")
+
+    values = np.asarray(window, dtype=object)
+    if values.shape != (2,):
+        raise ValueError(f"{name} must contain exactly two numeric boundaries.")
+    normalized = []
+    for value in values.tolist():
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise ValueError(f"{name} must contain exactly two numeric boundaries.")
+        if isinstance(value, Integral):
+            normalized.append(int(value))
+            continue
+        if not np.isfinite(float(value)):
+            raise ValueError(f"{name} boundaries must be finite.")
+        normalized.append(float(value))
+    if normalized[0] >= normalized[1]:
+        raise ValueError(f"{name} start must be strictly less than {name} stop.")
+
+    if unit == "samples":
+        if any(not isinstance(value, Integral) for value in normalized):
+            raise ValueError(
+                f"{name} boundaries must be integers when {name}_unit='samples'."
+            )
+        if sfreq is not None:
+            check_sfreq(sfreq)
+        resolved = [int(value) for value in normalized]
+    else:
+        sfreq = check_sfreq(sfreq, context=f"{name}_unit='seconds'")
+        scaled = [float(value) * sfreq for value in normalized]
+        if not np.all(np.isfinite(scaled)):
+            raise ValueError(
+                f"{name} boundaries in seconds resolve outside the finite sample range."
+            )
+        resolved = [round(value) for value in scaled]
+
+    bounds = np.iinfo(np.int64)
+    if any(value < int(bounds.min) or value > int(bounds.max) for value in resolved):
+        raise ValueError(f"{name} boundaries must fit in signed 64-bit samples.")
+    if resolved[0] >= resolved[1]:
+        raise ValueError(
+            f"{name} resolves to an empty or reversed sample interval; "
+            "increase its duration or sfreq."
+        )
+    return int(resolved[0]), int(resolved[1])
 
 
 def check_chunk_size(chunk_size: int | None) -> int | None:

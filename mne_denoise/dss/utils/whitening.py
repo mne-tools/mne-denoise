@@ -130,6 +130,10 @@ def compute_data_covariance_whitener(
         raise TypeError("rank must be an int or None")
     if rank is not None and rank <= 0:
         raise ValueError("rank must be positive")
+    if rank is not None and rank > cov.shape[0]:
+        raise ValueError(
+            f"rank ({rank}) cannot exceed the channel count ({cov.shape[0]})"
+        )
     if isinstance(reg, bool) or not isinstance(reg, Real):
         raise TypeError("reg must be a real number")
     if not np.isfinite(reg) or reg < 0:
