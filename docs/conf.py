@@ -65,6 +65,9 @@ sphinx_gallery_conf = {
             "../examples/zapline",
             "../examples/asr",
             "../examples/spectrum_interpolation",
+            # Keep new example sections buildable until they receive an
+            # intentional position above this fallback.
+            "*",
         ]
     ),
     "within_subsection_order": FileNameSortKey,

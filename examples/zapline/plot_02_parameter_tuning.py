@@ -3,8 +3,8 @@ ZapLine: Parameter Tuning and Real Data.
 =========================================
 
 This example shows how the main ZapLine tuning parameters change the cleaning
-behavior on synthetic data, then applies the same workflow to a real NoiseTools
-MEG recording.
+behavior on synthetic data, then applies the same workflow to the real MNE
+Sample MEG recording.
 
 Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
          Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
@@ -13,14 +13,10 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 # %%
 # Imports
 # -------
-from pathlib import Path
-from urllib.request import urlretrieve
-
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
 from scipy import signal
-from scipy.io import loadmat
 
 from mne_denoise.viz import (
     plot_component_cleaning_summary,
@@ -29,40 +25,6 @@ from mne_denoise.viz import (
     plot_psd_comparison,
 )
 from mne_denoise.zapline import ZapLine
-
-NOISETOOLS_BASE_URL = "http://audition.ens.fr/adc/NoiseTools/DATA"
-
-
-def _find_repo_root():
-    """Return the repository root for this example."""
-    starts = []
-    if "__file__" in globals():
-        starts.append(Path(__file__).resolve())
-    starts.append(Path.cwd().resolve())
-
-    for start in starts:
-        current = start if start.is_dir() else start.parent
-        for candidate in (current, *current.parents):
-            mne_ok = (candidate / "mne_denoise").exists()
-            ex_ok = (candidate / "examples").exists()
-            if mne_ok and ex_ok:
-                return candidate
-
-    raise FileNotFoundError("Could not locate the repository root.")
-
-
-def _load_or_fetch_data_file(name):
-    """Return one ZapLine example data file, downloading it if needed."""
-    path = _find_repo_root() / "examples" / "zapline" / "data" / name
-    if path.exists():
-        return path
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    url = f"{NOISETOOLS_BASE_URL}/{name}"
-    print(f"Downloading {name} to {path}...")
-    urlretrieve(url, str(path))
-    return path
-
 
 # %%
 # Part 1: n_remove Parameter
@@ -243,24 +205,28 @@ plt.tight_layout()
 plt.show()
 
 # %%
-# Part 4: Real MEG Data (NoiseTools)
+# Part 4: Real MEG Data (MNE Sample)
 # ----------------------------------
-# Apply ZapLine to real MEG data from NoiseTools dataset.
-# The file is cached under ``examples/zapline/data`` after the first run.
+# Apply ZapLine to a real MEG recording managed by MNE's dataset fetcher. MNE
+# verifies the dataset archive and reuses its local copy across examples.
 
 print("\nPart 4: Real MEG Data")
 
-# Load data1.mat (MEG with large near-DC fluctuations)
-data1_path = _load_or_fetch_data_file("data1.mat")
-mat = loadmat(str(data1_path))
-meg_data = mat["data"].T  # Transpose to (channels, times)
-sfreq_meg = float(mat["sr"].flatten()[0])
+# Load 30 seconds of gradiometer data and resample to keep the gallery build
+# compact. The MNE Sample recording was acquired in a 60 Hz mains environment.
+sample_path = mne.datasets.sample.data_path()
+raw_path = sample_path / "MEG" / "sample" / "sample_audvis_raw.fif"
+raw_meg = mne.io.read_raw_fif(raw_path, preload=False, verbose="ERROR")
+grad_picks = mne.pick_types(raw_meg.info, meg="grad", exclude="bads")
+raw_meg.pick(grad_picks).crop(0, 30).load_data().resample(300, verbose="ERROR")
+meg_data = raw_meg.get_data() * 1e12  # Constant scale for readable values
+sfreq_meg = raw_meg.info["sfreq"]
 
 # Demean
 meg_data = meg_data - np.mean(meg_data, axis=1, keepdims=True)
 
-print(f"Loaded data1.mat: {meg_data.shape}, sfreq={sfreq_meg} Hz")
-print("MEG data with large near-DC fluctuations")
+print(f"Loaded MNE Sample data: {meg_data.shape}, sfreq={sfreq_meg} Hz")
+print("Real gradiometer data with 60 Hz line interference")
 
 # %%
 # Apply ZapLine to MEG Data
