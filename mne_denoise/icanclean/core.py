@@ -507,6 +507,22 @@ class ICanClean(BaseEstimator, TransformerMixin):
         on the broader window but only the inner ``segment_len`` portion
         is cleaned. This is only valid for ``'sliding'`` and ``'hybrid'``
         modes and must be greater than or equal to ``segment_len``.
+    filter_ref : tuple | None, default=None
+        Filter applied to the reference block before CCA, as
+        ``(kind, freqs)``: ``('notch', (lo, hi))`` band-stops lo-hi Hz,
+        ``('bp', (lo, hi))`` band-passes, ``('hp', f)`` and ``('lp', f)``
+        high- and low-pass. Zero-phase 4th-order Butterworth. Note that
+        ``'notch'`` here is a wide band-stop used to shape what the
+        reference retains, not a narrowband line-noise filter.
+    pseudo_ref : bool, default=False
+        Derive the reference block from the primary channels instead of
+        using physical reference sensors. A copy of the primary channels is
+        filtered with ``filter_ref`` and appended as the reference, so CCA
+        correlates the EEG against a version of itself that keeps only
+        out-of-band content -- typically drift below the brain band and
+        EMG/line above it. Requires ``filter_ref``; makes ``ref_channels``
+        optional. This is the pseudo-reference method of Downey & Ferris
+        (2023), for recordings with no dual-layer noise electrodes.
     global_threshold : float | 'auto' | None, default=None
         Threshold for the explicit global pass in ``mode='hybrid'``.
     global_clean_with : {'X', 'Y', 'both'} | None, default=None
@@ -622,13 +638,25 @@ class ICanClean(BaseEstimator, TransformerMixin):
         reref_primary: bool | str = False,
         reref_ref: bool | str = False,
         stats_segment_len: float | None = None,
+        filter_ref: tuple | None = None,
+        pseudo_ref: bool = False,
         global_threshold: float | str | None = None,
         global_clean_with: str | None = None,
         global_max_reject_fraction: float | None = None,
         verbose: bool | str | int | None = None,
     ):
-        if ref_channels is None:
+        # In pseudo-reference mode the reference block is derived from the
+        # primary channels themselves, so there are no reference channels for
+        # the caller to name.
+        if ref_channels is None and not pseudo_ref:
             raise ValueError("ref_channels must be provided explicitly")
+        _validate_filter_ref(filter_ref)
+        if pseudo_ref and filter_ref is None:
+            raise ValueError(
+                "pseudo_ref=True requires filter_ref. Without a filter the "
+                "reference block is identical to the primary block, every "
+                "canonical correlation is 1.0, and the whole signal is removed."
+            )
         _validate_icanclean_config(
             mode=mode,
             clean_with=clean_with,
@@ -656,6 +684,8 @@ class ICanClean(BaseEstimator, TransformerMixin):
         self.reref_primary = reref_primary
         self.reref_ref = reref_ref
         self.stats_segment_len = stats_segment_len
+        self.filter_ref = filter_ref
+        self.pseudo_ref = pseudo_ref
         self.global_threshold = global_threshold
         self.global_clean_with = global_clean_with
         self.global_max_reject_fraction = global_max_reject_fraction
@@ -713,15 +743,75 @@ class ICanClean(BaseEstimator, TransformerMixin):
         sfreq = sfreq_data if sfreq_data is not None else self.sfreq
         channel_data = data[0] if mne_type == "epochs" else data
         primary_idx, ref_idx = self._resolve_channels(channel_data, orig_inst)
+        data, ref_idx, n_orig = self._build_reference_block(
+            data, sfreq, primary_idx, ref_idx
+        )
 
         if mne_type == "epochs":
             cleaned = self._transform_epochs(data, sfreq, primary_idx, ref_idx)
         else:
             cleaned = self._clean_continuous(data, sfreq, primary_idx, ref_idx)
 
+        if n_orig is not None:
+            # Drop the pseudo-reference rows appended above so the output has
+            # the same channel set as the input.
+            cleaned = cleaned[..., :n_orig, :]
+
         return reconstruct_mne_object(
             cleaned, orig_inst, mne_type, picks=picks, verbose=False
         )
+
+    def _build_reference_block(
+        self,
+        data: np.ndarray,
+        sfreq: float,
+        primary_idx: np.ndarray,
+        ref_idx: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray, int | None]:
+        """Construct the reference block CCA will run against.
+
+        Three cases:
+
+        - ``pseudo_ref=True``: no physical reference exists. A copy of the
+          primary channels is filtered with ``filter_ref`` and appended as the
+          reference block, so CCA correlates the EEG against a version of
+          itself that retains only out-of-band content. This is the
+          pseudo-reference method of Downey & Ferris (2023).
+        - ``filter_ref`` set without ``pseudo_ref``: the real reference
+          channels are filtered in place, on a copy.
+        - neither: the data is returned untouched.
+
+        Returns
+        -------
+        data, ref_idx, n_orig
+            ``n_orig`` is the original channel count when rows were appended
+            and must be stripped afterwards, else ``None``.
+        """
+        if not self.pseudo_ref and self.filter_ref is None:
+            return data, ref_idx, None
+
+        # Continuous data is (n_channels, n_times); epochs are
+        # (n_epochs, n_channels, n_times). Filtering always runs on the last
+        # axis, but the channel axis moves.
+        ch_axis = data.ndim - 2
+        n_orig = data.shape[ch_axis]
+
+        if self.pseudo_ref:
+            pseudo = _filter_channels(
+                np.take(data, primary_idx, axis=ch_axis).copy(), self.filter_ref, sfreq
+            )
+            data = np.concatenate([data, pseudo], axis=ch_axis)
+            return data, np.arange(n_orig, data.shape[ch_axis], dtype=int), n_orig
+
+        data = data.copy()
+        filtered = _filter_channels(
+            np.take(data, ref_idx, axis=ch_axis), self.filter_ref, sfreq
+        )
+        if ch_axis == 0:
+            data[ref_idx, :] = filtered
+        else:
+            data[:, ref_idx, :] = filtered
+        return data, ref_idx, None
 
     def fit_transform(self, X: Any, y=None, **fit_params) -> Any:
         """Fit and apply ICanClean in one step.
@@ -908,6 +998,24 @@ class ICanClean(BaseEstimator, TransformerMixin):
         ch_names = None
         if mne is not None and orig_inst is not None and hasattr(orig_inst, "ch_names"):
             ch_names = list(orig_inst.ch_names)
+
+        if self.ref_channels is None:
+            # Only reachable with pseudo_ref=True, which the constructor
+            # enforces. The reference block does not exist yet; it is built
+            # from the primary channels in _build_reference_block.
+            if self.primary_channels is not None:
+                if ch_names is not None and isinstance(self.primary_channels[0], str):
+                    primary_idx = np.array(
+                        [ch_names.index(ch) for ch in self.primary_channels], dtype=int
+                    )
+                else:
+                    primary_idx = np.asarray(self.primary_channels, dtype=int)
+            else:
+                primary_idx = np.arange(n_channels, dtype=int)
+            if ch_names is not None:
+                self.primary_channels_ = [ch_names[i] for i in primary_idx]
+                self.ref_channels_ = None
+            return primary_idx, np.array([], dtype=int)
 
         if ch_names is not None and isinstance(self.ref_channels[0], str):
             ref_idx = np.array(
@@ -1154,6 +1262,72 @@ def _validate_icanclean_config(
             "global_max_reject_fraction are only supported when "
             "mode='hybrid'"
         )
+
+
+#: Filter kinds accepted by ``filter_ref``, mapped to their scipy btype.
+_FILTER_REF_BTYPES = {
+    "notch": "bandstop",
+    "hp": "highpass",
+    "lp": "lowpass",
+    "bp": "bandpass",
+}
+
+
+def _validate_filter_ref(filter_ref: tuple | None) -> None:
+    """Check a ``filter_ref`` spec before any data is touched."""
+    if filter_ref is None:
+        return
+    if not isinstance(filter_ref, (tuple, list)) or len(filter_ref) != 2:
+        raise ValueError(
+            f"filter_ref must be a (kind, freqs) pair, got {filter_ref!r}"
+        )
+    kind, freqs = filter_ref
+    if kind not in _FILTER_REF_BTYPES:
+        raise ValueError(
+            f"filter_ref kind must be one of {sorted(_FILTER_REF_BTYPES)}, got {kind!r}"
+        )
+    if kind in ("notch", "bp"):
+        if not isinstance(freqs, (tuple, list)) or len(freqs) != 2:
+            raise ValueError(f"filter_ref {kind!r} needs a (low, high) pair")
+        if not freqs[0] < freqs[1]:
+            raise ValueError(f"filter_ref {kind!r} needs low < high, got {freqs!r}")
+    elif not np.isscalar(freqs):
+        raise ValueError(f"filter_ref {kind!r} needs a single frequency")
+
+
+def _filter_channels(
+    data: np.ndarray,
+    filter_spec: tuple | None,
+    sfreq: float,
+) -> np.ndarray:
+    """Filter along the last axis with a zero-phase 4th-order Butterworth.
+
+    ``('notch', (lo, hi))`` is a **band-stop**: it removes lo-hi Hz and keeps
+    everything outside. That is the operation the pseudo-reference method
+    needs -- suppressing the brain band leaves drift below it and EMG/line
+    above it, which is what CCA should lock onto. This matches MATLAB
+    ``filtYtype='Notch'``; it is not a narrowband line-noise notch.
+    """
+    if filter_spec is None:
+        return data
+    from scipy.signal import butter, sosfiltfilt
+
+    kind, freqs = filter_spec
+    nyquist = sfreq / 2.0
+    wn = list(freqs) if kind in ("notch", "bp") else [freqs]
+    if max(wn) >= nyquist:
+        raise ValueError(
+            f"filter_ref {filter_spec!r} exceeds Nyquist ({nyquist} Hz) for "
+            f"sfreq={sfreq}"
+        )
+    sos = butter(
+        4,
+        wn if len(wn) == 2 else wn[0],
+        btype=_FILTER_REF_BTYPES[kind],
+        fs=sfreq,
+        output="sos",
+    )
+    return sosfiltfilt(sos, data, axis=-1)
 
 
 def _select_basis(

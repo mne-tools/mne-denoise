@@ -517,14 +517,101 @@ def test_icanclean_validation_removed_workflows():
         ICanClean(sfreq=250.0, ref_channels=[0], primary_prefix="EEG")
     with pytest.raises(TypeError):
         ICanClean(sfreq=250.0, ref_channels=[0], exclude_pattern="EXG")
-    with pytest.raises(TypeError):
-        ICanClean(sfreq=250.0, ref_channels=[0], pseudo_ref=True)
-    with pytest.raises(TypeError):
-        ICanClean(
-            sfreq=250.0,
-            ref_channels=[0],
-            filter_ref=("notch", (49.0, 51.0)),
-        )
+
+
+# ---------------------------------------------------------------------------
+# Pseudo-reference mode (Downey & Ferris 2023, Sensors 23(19):8214)
+# ---------------------------------------------------------------------------
+
+
+def test_filter_ref_validation():
+    """A malformed filter_ref spec is rejected before any data is touched."""
+    for bad in [("bogus", 10.0), ("notch", 10.0), ("notch", (45.0, 5.0)), ("hp", (1, 2))]:
+        with pytest.raises(ValueError):
+            ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad)
+
+
+def test_pseudo_ref_requires_filter_ref():
+    """Without a filter the reference equals the primary block: r=1 everywhere."""
+    with pytest.raises(ValueError, match="requires filter_ref"):
+        ICanClean(sfreq=250.0, primary_channels=[0, 1], pseudo_ref=True)
+
+
+def test_pseudo_ref_needs_no_ref_channels():
+    """pseudo_ref supplies its own reference, so ref_channels is optional."""
+    icc = ICanClean(
+        sfreq=250.0,
+        primary_channels=[0, 1],
+        pseudo_ref=True,
+        filter_ref=("notch", (5.0, 45.0)),
+    )
+    assert icc.ref_channels is None
+    with pytest.raises(ValueError, match="ref_channels must be provided"):
+        ICanClean(sfreq=250.0, primary_channels=[0, 1])
+
+
+def test_filter_channels_bandstop_removes_only_the_band():
+    """('notch', (lo, hi)) must be a band-stop: keep outside, drop inside."""
+    from mne_denoise.icanclean.core import _filter_channels
+
+    sfreq, n = 250.0, 5000
+    t = np.arange(n) / sfreq
+    inside = np.sin(2 * np.pi * 20.0 * t)  # 20 Hz, inside 5-45
+    outside = np.sin(2 * np.pi * 2.0 * t)  # 2 Hz, below the band
+    data = np.vstack([inside, outside])
+
+    out = _filter_channels(data, ("notch", (5.0, 45.0)), sfreq)
+    edge = int(sfreq)  # ignore filter edge transients
+    kept_in = np.std(out[0, edge:-edge]) / np.std(inside[edge:-edge])
+    kept_out = np.std(out[1, edge:-edge]) / np.std(outside[edge:-edge])
+    assert kept_in < 0.05, f"20 Hz should be suppressed, kept {kept_in:.3f}"
+    assert kept_out > 0.90, f"2 Hz should survive, kept {kept_out:.3f}"
+
+
+def test_pseudo_ref_preserves_channel_count_and_shape(synthetic_dual_layer):
+    """The appended pseudo-reference rows must not leak into the output."""
+    data, primary_idx, _ref_idx, sfreq, _truth = synthetic_dual_layer
+    icc = ICanClean(
+        sfreq=sfreq,
+        primary_channels=primary_idx,
+        pseudo_ref=True,
+        filter_ref=("notch", (5.0, 45.0)),
+        segment_len=1.0,
+        threshold=0.9,
+        verbose=False,
+    )
+    out = icc.fit_transform(data)
+    assert out.shape == data.shape
+
+
+def test_pseudo_ref_removes_out_of_band_artifact(synthetic_dual_layer):
+    """A strong sub-band drift shared across channels should be attenuated.
+
+    The pseudo-reference retains only content outside 5-45 Hz, so CCA can see
+    the drift but not the in-band signal.
+    """
+    data, primary_idx, _ref_idx, sfreq, truth = synthetic_dual_layer
+    primary = truth["brain"]
+    n_times = primary.shape[1]
+    t = np.arange(n_times) / sfreq
+    drift = 8.0 * np.sin(2 * np.pi * 0.7 * t)
+    contaminated = primary + drift[None, :]
+
+    icc = ICanClean(
+        sfreq=sfreq,
+        primary_channels=list(range(len(primary_idx))),
+        pseudo_ref=True,
+        filter_ref=("notch", (5.0, 45.0)),
+        segment_len=2.0,
+        threshold=0.5,
+        verbose=False,
+    )
+    cleaned = icc.fit_transform(contaminated)
+
+    edge = int(sfreq)
+    before = np.mean(np.abs(contaminated[:, edge:-edge] - primary[:, edge:-edge]))
+    after = np.mean(np.abs(cleaned[:, edge:-edge] - primary[:, edge:-edge]))
+    assert after < before, f"drift not attenuated: {before:.3f} -> {after:.3f}"
 
 
 def test_icanclean_max_reject_zero_preserves_data(synthetic_dual_layer):
