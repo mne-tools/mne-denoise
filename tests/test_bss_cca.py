@@ -985,3 +985,31 @@ def test_threshold_on_rejects_unknown_value():
         compute_bss_cca(
             observed, lag_samples=1, rho_threshold=0.5, threshold_on="r2"
         )
+
+
+def test_estimator_forwards_reject_and_threshold_on():
+    """The estimator must honour both knobs, not just the functional API.
+
+    Regression: ``BSSCCA.__init__`` stored ``reject``/``threshold_on`` but
+    ``fit`` did not pass them to ``compute_bss_cca``, so the estimator silently
+    used the defaults. It surfaced as a parity failure against the ds004784
+    reference implementation -- identical canonical correlations, but 8
+    components removed where MATLAB removed 107, because a threshold meant as
+    r-squared was applied to rho.
+    """
+    rng = np.random.default_rng(11)
+    observed, _drift, _muscle = _drift_and_muscle(rng)
+
+    # rho ordering is fixed, so thresholding rho**2 at t must remove at least as
+    # many components as thresholding rho at the same t.
+    on_rho = BSSCCA(rho_threshold=0.59, threshold_on="rho").fit(observed)
+    on_rsq = BSSCCA(rho_threshold=0.59, threshold_on="rsq").fit(observed)
+    assert on_rsq.n_removed_ >= on_rho.n_removed_
+    assert (on_rsq.n_removed_, on_rho.n_removed_) != (0, 0)
+
+    # And the estimator must agree with the function it delegates to.
+    for kwargs in ({"reject": "high"}, {"threshold_on": "rsq"},
+                   {"reject": "high", "threshold_on": "rsq"}):
+        est = BSSCCA(rho_threshold=0.59, **kwargs).fit(observed)
+        _cleaned, info = compute_bss_cca(observed, rho_threshold=0.59, **kwargs)
+        np.testing.assert_array_equal(est.kept_mask_, info["kept_mask"])

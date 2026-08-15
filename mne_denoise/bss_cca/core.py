@@ -833,6 +833,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             sfreq=sfreq,
             n_remove=self.n_remove,
             rho_threshold=self.rho_threshold,
+            reject=self.reject,
+            threshold_on=self.threshold_on,
             segment_len=self.segment_len,
             overlap=self.overlap,
             preserve_mean=self.preserve_mean,
