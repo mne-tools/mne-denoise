@@ -135,6 +135,22 @@ def _check_selection(
     return None, rho_threshold
 
 
+def _check_reject(reject: str) -> str:
+    """Validate which end of the autocorrelation spectrum is artifactual."""
+    if reject not in ("low", "high"):
+        raise ValueError(f"reject must be 'low' or 'high', got {reject!r}")
+    return reject
+
+
+def _check_threshold_on(threshold_on: str) -> str:
+    """Validate the scale ``rho_threshold`` is expressed on."""
+    if threshold_on not in ("rho", "rsq"):
+        raise ValueError(
+            f"threshold_on must be 'rho' or 'rsq', got {threshold_on!r}"
+        )
+    return threshold_on
+
+
 def _lagged_pairs(X: np.ndarray, lag_samples: int) -> tuple[np.ndarray, np.ndarray]:
     """Return current/past CCA views without wrap or epoch-boundary pairs.
 
@@ -170,12 +186,27 @@ def _select_components(
     *,
     n_remove: int | None,
     rho_threshold: float | None,
+    reject: str = "low",
+    threshold_on: str = "rho",
 ) -> np.ndarray:
     """Choose which canonical components to retain.
 
-    ``correlations`` is descending, so the artifactual low-autocorrelation
-    components are at the tail. ``n_remove`` drops that many from the bottom,
-    matching the operating knob used throughout [1]_.
+    ``correlations`` is descending, so low-autocorrelation components are at the
+    tail and high-autocorrelation components at the head.
+
+    ``reject`` selects which end is artifactual:
+
+    ``'low'``
+        Drop the tail. Broadband, temporally incoherent sources -- muscle/EMG --
+        have low lag-1 autocorrelation, which is the regime De Clercq et al.
+        [1]_ target and the package's original behaviour.
+    ``'high'``
+        Drop the head. Strongly autocorrelated sources -- slow drift and
+        movement artifact -- sit at the top of the spectrum. This is the
+        ``rejHiLo='Hi'`` branch of ``autoLagCCA.m`` in ds004784, whose own
+        parameter sweep selects it for the clean, eye and motion conditions.
+
+    ``n_remove`` drops that many components from the chosen end.
     """
     n_components = correlations.size
     if n_remove is not None:
@@ -185,17 +216,29 @@ def _select_components(
             )
         keep = np.ones(n_components, dtype=bool)
         if n_remove:
-            keep[n_components - n_remove :] = False
+            if reject == "low":
+                keep[n_components - n_remove :] = False
+            else:
+                keep[:n_remove] = False
         return keep
 
-    keep = correlations >= rho_threshold
+    # ``rsq`` compares against the SQUARED correlation, which is the scale the
+    # ds004784 reference implementation and its published sweep use
+    # (``find(R.^2 > rsq_thres)``). Squaring the data rather than
+    # square-rooting the threshold keeps the comparison exact at the endpoints.
+    metric = correlations if threshold_on == "rho" else correlations**2
+    keep = metric >= rho_threshold if reject == "low" else metric <= rho_threshold
     if not keep.any():
+        bound = "reaches" if reject == "low" else "falls below"
         logger.warning(
-            "BSS-CCA: no component reaches rho_threshold=%.4f (max rho=%.4f); "
-            "every component will be removed. Lower the threshold or use "
+            "BSS-CCA: no component %s rho_threshold=%.4f (%s range %.4f-%.4f); "
+            "every component will be removed. Adjust the threshold or use "
             "n_remove.",
+            bound,
             rho_threshold,
-            float(correlations.max()) if n_components else float("nan"),
+            threshold_on,
+            float(metric.min()) if n_components else float("nan"),
+            float(metric.max()) if n_components else float("nan"),
         )
     return keep
 
@@ -206,6 +249,8 @@ def _learn_operator(
     lag_samples: int,
     n_remove: int | None,
     rho_threshold: float | None,
+    reject: str,
+    threshold_on: str,
     bound: tuple[int, int, int, int],
 ) -> dict[str, Any]:
     """Learn one BSS-CCA channel-space operator and its diagnostics.
@@ -255,7 +300,11 @@ def _learn_operator(
     mixing = fit_mixing_matrix(centered, sources)
 
     keep = _select_components(
-        correlations, n_remove=n_remove, rho_threshold=rho_threshold
+        correlations,
+        n_remove=n_remove,
+        rho_threshold=rho_threshold,
+        reject=reject,
+        threshold_on=threshold_on,
     )
     cleaning = mixing @ (keep[:, np.newaxis] * unmixing)
 
@@ -348,6 +397,8 @@ def compute_bss_cca(
     sfreq: float | None = None,
     n_remove: int | None = None,
     rho_threshold: float | None = None,
+    reject: str = "low",
+    threshold_on: str = "rho",
     segment_len: float | None = None,
     overlap: float = 0.0,
     preserve_mean: bool = True,
@@ -380,6 +431,18 @@ def compute_bss_cca(
         used in [1]_.
     rho_threshold : float | None, default=None
         Retain components whose canonical correlation is at least this value.
+        Note this thresholds the correlation itself, not its square.
+    reject : {'low', 'high'}, default='low'
+        Which end of the autocorrelation spectrum is artifactual. ``'low'``
+        drops the least autocorrelated components, where muscle concentrates
+        [1]_. ``'high'`` drops the most autocorrelated components, where slow
+        drift and movement artifact concentrate; this is the ``rejHiLo='Hi'``
+        branch of the reference implementation shipped with ds004784.
+    threshold_on : {'rho', 'rsq'}, default='rho'
+        Scale on which ``rho_threshold`` is expressed: the canonical correlation
+        itself, or its square. ``'rsq'`` matches the ``rsq_thres`` convention of
+        the ds004784 reference implementation, so its published sweep values
+        transfer without conversion. Ignored when ``n_remove`` is used.
     segment_len : float | None, default=None
         Block length in seconds. ``None`` learns one operator for all data.
         A value fits an independent operator per block, as in the contiguous
@@ -453,6 +516,8 @@ def compute_bss_cca(
     if not isinstance(preserve_mean, bool):
         raise TypeError("preserve_mean must be a bool")
     n_remove, rho_threshold = _check_selection(n_remove, rho_threshold)
+    reject = _check_reject(reject)
+    threshold_on = _check_threshold_on(threshold_on)
     lag = _resolve_lag_samples(
         lag_samples=lag_samples,
         lag_seconds=lag_seconds,
@@ -484,6 +549,8 @@ def compute_bss_cca(
             lag_samples=lag,
             n_remove=n_remove,
             rho_threshold=rho_threshold,
+            reject=reject,
+            threshold_on=threshold_on,
             bound=bound,
         )
         for bound in bounds
@@ -647,7 +714,19 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         Number of lowest-correlation components to remove.
     rho_threshold : float | None, default=None
         Retain components whose canonical correlation is at least this value.
-        Exactly one of ``n_remove`` or ``rho_threshold`` is required.
+        Exactly one of ``n_remove`` or ``rho_threshold`` is required. Note this
+        thresholds the correlation itself, not its square.
+    reject : {'low', 'high'}, default='low'
+        Which end of the autocorrelation spectrum is artifactual. ``'low'``
+        drops the least autocorrelated components, where muscle concentrates
+        [1]_. ``'high'`` drops the most autocorrelated components, where slow
+        drift and movement artifact concentrate; this is the ``rejHiLo='Hi'``
+        branch of the reference implementation shipped with ds004784.
+    threshold_on : {'rho', 'rsq'}, default='rho'
+        Scale on which ``rho_threshold`` is expressed: the canonical correlation
+        itself, or its square. ``'rsq'`` matches the ``rsq_thres`` convention of
+        the ds004784 reference implementation, so its published sweep values
+        transfer without conversion. Ignored when ``n_remove`` is used.
     segment_len : float | None, default=None
         Block length in seconds. ``None`` learns one operator for all data.
     overlap : float, default=0.0
@@ -707,6 +786,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         sfreq: float | None = None,
         n_remove: int | None = None,
         rho_threshold: float | None = None,
+        reject: str = "low",
+        threshold_on: str = "rho",
         segment_len: float | None = None,
         overlap: float = 0.0,
         preserve_mean: bool = True,
@@ -717,6 +798,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         self.sfreq = sfreq
         self.n_remove = n_remove
         self.rho_threshold = rho_threshold
+        self.reject = reject
+        self.threshold_on = threshold_on
         self.segment_len = segment_len
         self.overlap = overlap
         self.preserve_mean = preserve_mean
