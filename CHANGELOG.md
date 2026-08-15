@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **ICanClean pseudo-reference mode** (restores functionality removed in
+  `e38e8f5` without a changelog entry; see issue #68)
+  - `pseudo_ref=True` derives the CCA reference block from the primary
+    channels themselves rather than from physical noise electrodes, for
+    recordings with no dual-layer cap. Implements the pseudo-reference
+    method of Downey & Ferris 2023, *Sensors* 23(19):8214.
+  - `filter_ref=(btype, freqs)` shapes the reference block before CCA,
+    using scipy's own filter-kind names: `'bandstop'`, `'bandpass'`,
+    `'highpass'`, `'lowpass'`; zero-phase 4th-order Butterworth. Usable
+    on its own to filter physical reference channels.
+  - `ref_channels` must be left as `None` when `pseudo_ref=True`; the two
+    are mutually exclusive.
+  - `pseudo_ref=True` without `filter_ref` raises: an unfiltered copy of
+    the primary block is perfectly correlated with itself and would remove
+    the entire signal.
+
 ## [0.0.1] - 2026-01-23
 
 ### Added
