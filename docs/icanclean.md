@@ -127,6 +127,9 @@ achieved ratio.
 | `'calibrated'` | 1 | one global decomposition, reused for window-local scoring |
 | `'hybrid'` | 1 + one per window | a global pass, then a sliding pass on its output |
 
+All four are **batch**: each sees the whole recording before returning cleaned
+data, and none updates its decomposition sample by sample.
+
 Which is best is **artifact-dependent**, not universal. On a stationary artifact a
 long window exploits more data; on a non-stationary one a short window tracks the
 change. Measured on real recordings, best operating point at 90% alpha retention:
@@ -144,10 +147,23 @@ is not comparable with the other modes.
 
 `'hybrid'` is an mne-denoise extension, not part of the published algorithm; the
 reference implementation applies iCanClean exactly once. It is motivated by the
-authors' own open question about whether "incorporating larger windows of data"
-helps. Current evidence is suggestive but underpowered: across 40 subjects it
-removed more artifact than the best single-pass mode at every preservation floor,
-but every confidence interval included zero.
+authors' open question about whether "incorporating larger windows of data"
+helps — pass 1 estimates on the whole recording, pass 2 then tracks what is left.
+Current evidence is suggestive but underpowered: across 40 subjects it removed
+more artifact than the best single-pass mode at every preservation floor, but
+every confidence interval included zero.
+
+```{note}
+`'hybrid'` is a **two-pass batch** refinement. It is not an online or recursive
+estimator: both passes see the entire recording, and neither updates its
+decomposition as samples arrive.
+
+The 2023 paper raises two distinct possibilities in one sentence — using larger
+windows, and computing CCA *recursively*. Only the first is addressed here. A
+recursive formulation, in the sense of moments updated incrementally for causal
+streaming use, is a different design on a different axis, and nothing on this
+page should be read as evaluating one.
+```
 
 ## Reference modes
 
