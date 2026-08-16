@@ -1,0 +1,23 @@
+- **iCanClean**: ``threshold='null'`` sets the rejection threshold from the data
+  instead of a constant. It estimates the largest squared canonical correlation
+  attributable to sampling noise for the current window length and channel counts
+  -- by recomputing the spectrum against circularly shifted copies of the
+  reference -- and rejects only components exceeding it.
+
+  ``threshold`` is an absolute :math:`R^2`, but the achievable scale is set by the
+  data and by how the reference is built. It varies by ~500x between a physical
+  dual-layer reference (median :math:`R^2` 0.001) and a pseudo-reference (median
+  0.64), and by 3.4x between subjects of a single cohort. A constant tuned on one
+  recording can silently become a no-op or remove nearly everything on the next.
+
+  ``'null'`` also closes a failure that is invisible today: canonical correlations
+  are upward-biased when a window is short relative to ``n_primary + n_reference``.
+  On independent data with 40 + 40 channels and a sample-to-variable ratio of 2.0 --
+  a 2 s window at 250 Hz on a 120 + 120 montage -- a fixed ``threshold=0.85``
+  removes about 10 of 40 components. ``'null'`` removes 0.12, while still
+  recovering exactly 0, 1, 3 and 8 genuinely shared components when those are
+  injected.
+
+  Use ``null_random_state`` for reproducible surrogates. Note that ``'null'``
+  determines whether a component shares *real* variance with the reference, not
+  whether that variance is artifact.

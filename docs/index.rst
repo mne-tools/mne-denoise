@@ -17,6 +17,7 @@ to extract reproducible or rhythmic components while preserving data rank.
    bss_cca
    sns
    ssa
+   icanclean
    auto_examples/index
 
 .. toctree::

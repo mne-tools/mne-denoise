@@ -1,0 +1,9 @@
+- **iCanClean**: new fitted attributes ``max_r2_``, ``thresholds_`` and
+  ``samples_per_variable_`` record, per window, the highest squared canonical
+  correlation observed, the threshold applied, and the sample-to-variable ratio.
+  Without these, ``n_removed_ == 0`` is indistinguishable from "the threshold was
+  above every achievable :math:`R^2`" -- a distinction that decides whether a null
+  result is about the data or about the configuration.
+- **iCanClean**: added ``docs/icanclean.md``, the module's first narrative
+  documentation page, covering threshold scale, window conditioning, the four
+  operating modes and the two reference constructions.

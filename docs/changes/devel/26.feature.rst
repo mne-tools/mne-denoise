@@ -8,7 +8,9 @@
 - Implemented four specialized cleaning modes:
     * ``'global'``: Static CCA cleaning over the entire recording.
     * ``'sliding'``: Dynamic, windowed CCA cleaning for non-stationary artifacts.
-    * ``'calibrated'``: Reference-driven cleaning using a dedicated calibration period.
+    * ``'calibrated'``: One global CCA decomposition, reused for window-local
+      scoring and subtraction. It calibrates on the same data it cleans; there
+      is no separate calibration recording.
     * ``'hybrid'``: A multi-stage approach combining global subspace removal
       with sliding-window refinement.
 - Added support for flexible cleaning bases (primary, reference, or both) and

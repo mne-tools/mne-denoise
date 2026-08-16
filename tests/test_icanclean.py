@@ -976,3 +976,134 @@ def test_compute_icanclean_calibrated_zero_components_mock(monkeypatch):
     data = np.ones((1, 500))
     with pytest.raises(ValueError, match="CCA returned 0 components"):
         compute_icanclean(data, data, 100.0, mode="calibrated")
+
+
+# ---------------------------------------------------------------------------
+# threshold='null' -- scale-free rejection (issue: absolute R^2 does not transfer)
+# ---------------------------------------------------------------------------
+def _ar1(rng, n_ch, n_times, rho=0.95):
+    """Autocorrelated noise. White surrogates make the null test too easy."""
+    e = rng.standard_normal((n_ch, n_times))
+    x = np.empty_like(e)
+    x[:, 0] = e[:, 0]
+    for t in range(1, n_times):
+        x[:, t] = rho * x[:, t - 1] + e[:, t]
+    return x
+
+
+def test_null_threshold_accepts_and_validates():
+    """'null' is a legal threshold; out-of-range floats and strings are not."""
+    from mne_denoise.icanclean.core import _validate_threshold
+
+    for good in ("auto", "null", 0.0, 0.5, 1.0):
+        _validate_threshold(good, "threshold")
+    # 5.0 silently made the estimator a pass-through before this check existed.
+    for bad in (5.0, -1.0, "0.5", None):
+        with pytest.raises(ValueError):
+            _validate_threshold(bad, "threshold")
+
+
+def test_null_threshold_rejects_nothing_when_blocks_are_independent():
+    """The property the whole design rests on: no shared structure, no removals.
+
+    A fixed threshold cannot do this. At n/(p+q) ~ 6 a constant r2=0.65 removes
+    several components from data that shares nothing, because short windows make
+    canonical correlations overfit.
+    """
+    rng = np.random.default_rng(0)
+    p = q = 20
+    for n_times in (250, 500, 2000):
+        X, Y = _ar1(rng, p, n_times), _ar1(rng, q, n_times)
+        icc = ICanClean(
+            sfreq=250.0,
+            primary_channels=list(range(p)),
+            ref_channels=list(range(p, p + q)),
+            mode="global",
+            threshold="null",
+            null_random_state=0,
+            verbose=False,
+        )
+        icc.fit_transform(np.vstack([X, Y]))
+        assert icc.n_removed_.sum() == 0, (
+            f"null threshold removed {icc.n_removed_.sum()} components from "
+            f"independent blocks at n={n_times}"
+        )
+
+
+def test_null_threshold_recovers_injected_components():
+    """Safety must not come from timidity: genuine shared structure is found."""
+    rng = np.random.default_rng(7)
+    p = q = 20
+    n_times = 4000
+    for n_shared in (0, 1, 3):
+        X, Y = _ar1(rng, p, n_times), _ar1(rng, q, n_times)
+        if n_shared:
+            shared = _ar1(rng, n_shared, n_times)
+            X[:n_shared] += 2.0 * shared
+            Y[:n_shared] += 2.0 * shared
+        icc = ICanClean(
+            sfreq=250.0,
+            primary_channels=list(range(p)),
+            ref_channels=list(range(p, p + q)),
+            mode="global",
+            threshold="null",
+            null_random_state=0,
+            verbose=False,
+        )
+        icc.fit_transform(np.vstack([X, Y]))
+        assert int(icc.n_removed_.sum()) == n_shared
+
+
+def test_qc_records_max_r2_and_conditioning():
+    """A zero removal must be distinguishable from an unreachable threshold."""
+    rng = np.random.default_rng(3)
+    p = q = 16
+    n_times = 2000
+    icc = ICanClean(
+        sfreq=250.0,
+        primary_channels=list(range(p)),
+        ref_channels=list(range(p, p + q)),
+        mode="global",
+        threshold=0.99,
+        verbose=False,
+    )
+    icc.fit_transform(np.vstack([_ar1(rng, p, n_times), _ar1(rng, q, n_times)]))
+    assert icc.n_removed_.sum() == 0
+    # The evidence that explains the zero.
+    assert icc.max_r2_.shape == icc.thresholds_.shape
+    assert float(icc.max_r2_[0]) < float(icc.thresholds_[0])
+    assert icc.samples_per_variable_ == pytest.approx(n_times / (p + q))
+
+
+def test_reset_clears_hybrid_window_counters():
+    """global_n_windows_/sliding_n_windows_ leaked across re-fits before this."""
+    rng = np.random.default_rng(5)
+    p = q = 12
+    data = np.vstack([_ar1(rng, p, 1500), _ar1(rng, q, 1500)])
+    kw = {
+        "sfreq": 250.0,
+        "primary_channels": list(range(p)),
+        "ref_channels": list(range(p, p + q)),
+        "verbose": False,
+    }
+    icc = ICanClean(
+        mode="hybrid",
+        segment_len=2.0,
+        threshold=0.9,
+        global_threshold=0.9,
+        global_clean_with="X",
+        global_max_reject_fraction=0.5,
+        **kw,
+    )
+    icc.fit_transform(data)
+    assert hasattr(icc, "global_n_windows_")
+
+    icc.set_params(
+        mode="sliding",
+        global_threshold=None,
+        global_clean_with=None,
+        global_max_reject_fraction=None,
+    )
+    icc.fit_transform(data)
+    assert not hasattr(icc, "global_n_windows_")
+    assert not hasattr(icc, "sliding_n_windows_")
