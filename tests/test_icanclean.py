@@ -526,7 +526,12 @@ def test_icanclean_validation_removed_workflows():
 
 def test_filter_ref_validation():
     """A malformed filter_ref spec is rejected before any data is touched."""
-    for bad in [("bogus", 10.0), ("notch", 10.0), ("notch", (45.0, 5.0)), ("hp", (1, 2))]:
+    for bad in [
+        ("bogus", 10.0),
+        ("notch", 10.0),
+        ("notch", (45.0, 5.0)),
+        ("hp", (1, 2)),
+    ]:
         with pytest.raises(ValueError):
             ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad)
 

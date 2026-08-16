@@ -1278,9 +1278,7 @@ def _validate_filter_ref(filter_ref: tuple | None) -> None:
     if filter_ref is None:
         return
     if not isinstance(filter_ref, (tuple, list)) or len(filter_ref) != 2:
-        raise ValueError(
-            f"filter_ref must be a (kind, freqs) pair, got {filter_ref!r}"
-        )
+        raise ValueError(f"filter_ref must be a (kind, freqs) pair, got {filter_ref!r}")
     kind, freqs = filter_ref
     if kind not in _FILTER_REF_BTYPES:
         raise ValueError(
