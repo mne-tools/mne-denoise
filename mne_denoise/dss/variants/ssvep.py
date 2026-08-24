@@ -51,8 +51,14 @@ def ssvep_dss(
     >>> dss.fit(epochs)
     >>> ssvep_sources = dss.transform(epochs)
 
-    >>> # Get denoised data back in sensor space
-    >>> dss = ssvep_dss(sfreq=250, stim_freq=12, return_type="epochs")
+    >>> # Retain the leading SSVEP component in sensor space
+    >>> dss = ssvep_dss(
+    ...     sfreq=250,
+    ...     stim_freq=12,
+    ...     n_components=3,
+    ...     n_select=1,
+    ...     component_action="retain",
+    ... )
     >>> dss.fit(epochs)
     >>> denoised_epochs = dss.transform(epochs)
     """

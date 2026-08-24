@@ -34,7 +34,10 @@ class AverageBias(LinearDenoiser):
         - 'epochs' (default): Average across trials. Input shape: (n_channels, n_times, n_epochs)
         - 'datasets': Average across datasets/subjects. Input shape: (n_datasets, n_channels, n_times)
     weights : array-like, optional
-        Weights for averaging. If None, uniform weighting.
+        Weights for averaging. For ``axis='epochs'``, either one weight per
+        epoch or a ``(n_times, n_epochs)`` observation-weight matrix. For
+        ``axis='datasets'``, one weight per dataset. If None, use uniform
+        weighting.
 
     Examples
     --------
@@ -92,13 +95,36 @@ class AverageBias(LinearDenoiser):
         n_channels, n_times, n_epochs = data.shape
 
         if self.weights is not None:
-            weights = np.asarray(self.weights)
-            if weights.shape[0] != n_epochs:
-                raise ValueError(
-                    f"weights length ({len(weights)}) must match n_epochs ({n_epochs})"
+            weights = np.asarray(self.weights, dtype=float)
+            if not np.all(np.isfinite(weights)) or np.any(weights < 0):
+                raise ValueError("weights must be finite and non-negative")
+            if weights.shape == (n_epochs,):
+                if weights.sum() <= 0:
+                    raise ValueError("weights must have a positive sum")
+                avg = np.tensordot(
+                    data, weights / weights.sum(), axes=(2, 0)
+                )  # (n_ch, n_times)
+            elif weights.shape == (n_times, n_epochs):
+                weight_per_time = weights.sum(axis=1)
+                if not np.any(weight_per_time > 0):
+                    raise ValueError("weights must contain a positive observation")
+                weighted_sum = np.einsum("cte,te->ct", data, weights, optimize=True)
+                avg = np.divide(
+                    weighted_sum,
+                    weight_per_time[np.newaxis, :],
+                    out=np.zeros_like(weighted_sum, dtype=float),
+                    where=weight_per_time[np.newaxis, :] > 0,
                 )
-            weights = weights / weights.sum()
-            avg = np.tensordot(data, weights, axes=(2, 0))  # (n_ch, n_times)
+            else:
+                if weights.ndim == 1:
+                    raise ValueError(
+                        f"weights length ({weights.size}) must match "
+                        f"n_epochs ({n_epochs})"
+                    )
+                raise ValueError(
+                    "weights must have shape "
+                    f"({n_epochs},) or ({n_times}, {n_epochs}); got {weights.shape}"
+                )
         else:
             avg = data.mean(axis=2)
 
@@ -117,11 +143,20 @@ class AverageBias(LinearDenoiser):
         n_datasets, n_channels, n_times = data.shape
 
         if self.weights is not None:
-            weights = np.asarray(self.weights)
-            if weights.shape[0] != n_datasets:
+            weights = np.asarray(self.weights, dtype=float)
+            if weights.shape != (n_datasets,):
+                if weights.ndim == 1:
+                    raise ValueError(
+                        f"weights length ({weights.size}) must match "
+                        f"n_datasets ({n_datasets})"
+                    )
                 raise ValueError(
-                    f"weights length ({len(weights)}) must match n_datasets ({n_datasets})"
+                    f"weights must have shape ({n_datasets},); got {weights.shape}"
                 )
+            if not np.all(np.isfinite(weights)) or np.any(weights < 0):
+                raise ValueError("weights must be finite and non-negative")
+            if weights.sum() <= 0:
+                raise ValueError("weights must have a positive sum")
             weights = weights / weights.sum()
             avg = np.tensordot(weights, data, axes=(0, 0))  # (n_ch, n_times)
         else:

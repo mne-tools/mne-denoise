@@ -42,6 +42,11 @@ import warnings
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
+from .._spatial import (
+    apply_spatial_transform,
+    continuous_to_epochs,
+    epochs_to_continuous,
+)
 
 # Inherit from DSS
 from ..dss.denoisers.spectral import LineNoiseBias
@@ -49,11 +54,9 @@ from ..dss.denoisers.temporal import SmoothingBias
 from ..dss.linear import DSS, _as_smoother
 from ..dss.utils.segmentation import CovarianceSegmenter
 from ..dss.utils.whitening import (
-    apply_spatial_transform,
     map_spatial_matrices_to_sensor_space,
 )
 from ..utils import (
-    epochs_to_continuous,
     extract_data_from_mne,
     reconstruct_mne_object,
 )
@@ -278,6 +281,7 @@ class ZapLine(DSS):
             crossfade=crossfade,
             max_prop_remove=max_prop_remove,
             min_select=min_select,
+            component_action="subtract",
             n_select=n_select,
             selection_threshold=threshold,
             knee_rel_floor=knee_rel_floor,
@@ -416,13 +420,9 @@ class ZapLine(DSS):
             )
 
         # Standard Transform
-        if data.ndim == 3:
-            n_ep, n_ch, n_t = data.shape
-            data_cont = epochs_to_continuous(data)
-            cleaned_cont = self._apply_standard_cleaning(data_cont)
-            cleaned = cleaned_cont.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
-        else:
-            cleaned = self._apply_standard_cleaning(data)
+        cleaned = continuous_to_epochs(
+            self._apply_standard_cleaning(epochs_to_continuous(data)), data.shape
+        )
 
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
@@ -515,7 +515,7 @@ class ZapLine(DSS):
         self.adaptive_results_ = res
 
         if data.ndim == 3:
-            cleaned = cleaned.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
+            cleaned = continuous_to_epochs(cleaned, (n_ep, n_ch, n_t))
 
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
@@ -766,6 +766,7 @@ class ZapLine(DSS):
         results : dict
             Contains 'cleaned', 'removed', 'n_removed', 'chunk_info', etc.
         """
+        n_channels, n_times = data.shape
         params = self.adaptive_params.copy()
 
         # Extract params with defaults

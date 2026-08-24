@@ -1,0 +1,4 @@
+Made documentation builds resilient without dropping real-data gallery output:
+CI now prefetches and caches the complete MNE dataset inventory, ZapLine uses a
+maintained MNE recording instead of the unavailable NoiseTools host, and an
+incomplete build cannot replace the published site.

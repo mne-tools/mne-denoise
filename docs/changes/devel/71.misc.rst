@@ -1,0 +1,3 @@
+Added deterministic cardiac DSS scientific validation with isolated-source
+metrics, negative controls, sensitivity sweeps, resampling, and optional ECG SSP
+comparison on a local recording.

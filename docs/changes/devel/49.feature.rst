@@ -1,0 +1,7 @@
+Added :class:`mne_denoise.bss_cca.BSSCCA` and
+:func:`mne_denoise.bss_cca.compute_bss_cca` implementing reference-free BSS-CCA
+for broadband muscle-artifact attenuation, with an explicit lag in samples or
+physical time, paper-aligned ``n_remove`` component selection, optional
+contiguous block-wise operation, signed autocorrelation diagnostics, and
+leakage-safe ``fit``/``transform`` semantics. The shared canonical-correlation
+solver moved from ``mne_denoise.icanclean._cca`` to ``mne_denoise._cca``.

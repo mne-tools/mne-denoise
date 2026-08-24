@@ -276,6 +276,9 @@ Documentation is built with Sphinx and hosted on GitHub Pages.
 # Build HTML documentation
 make -C docs html
 
+# Populate the real-data cache before a full gallery build
+python scripts/prefetch_docs_data.py
+
 # View in browser
 open docs/_build/html/index.html  # macOS
 xdg-open docs/_build/html/index.html  # Linux
@@ -288,6 +291,12 @@ start docs/_build/html/index.html  # Windows
 - `docs/getting-started.rst` - Installation and quick start
 - `docs/dss.md` - DSS module guide
 - `examples/` - Gallery examples (rendered by sphinx-gallery)
+
+Documentation CI executes the complete gallery. Its MNE Sample, Somato, and
+EEGBCI downloads are prefetched and cached using an inventory-derived key; a
+twice-weekly trusted build keeps that cache available to pull requests. When
+adding a new real dataset to an example, also add it to
+`scripts/prefetch_docs_data.py` so failures happen before Sphinx starts.
 
 ### Adding Examples
 

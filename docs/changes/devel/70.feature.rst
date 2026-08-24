@@ -1,0 +1,3 @@
+Added ``TimeShiftDSS`` for explicit lag-augmented repeated-trial DSS, with
+weighted fitting, held-out scoring, sensor reconstruction, optional CCA
+distortion control, and a scientific validation script.

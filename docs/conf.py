@@ -58,12 +58,18 @@ sphinx_gallery_conf = {
     "ignore_pattern": r"tutorials|_legacy",
     "subsection_order": ExplicitOrder(
         [
+            "../examples/sns",
+            "../examples/bss_cca",
+            "../examples/ssa",
             "../examples/dss",
             "../examples/zapline",
             "../examples/asr",
             "../examples/spectrum_interpolation",
             "../examples/sound",
             "../examples/sspsir",
+            # Keep new example sections buildable until they receive an
+            # intentional position above this fallback.
+            "*",
         ]
     ),
     "within_subsection_order": FileNameSortKey,

@@ -1,0 +1,3 @@
+Fixed DSS fitting and reconstruction for MNE objects with bad channels, and
+preserved Raw annotations, acquisition sample coordinates, projections, and
+sample rejection consistently between baseline and biased covariance estimates.

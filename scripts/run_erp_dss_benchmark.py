@@ -552,7 +552,7 @@ def apply_c2_dss(
 ):
     """C2: DSS (AverageBias)."""
     bias = AverageBias(axis="epochs")
-    dss = DSS(bias=bias, n_components=n_components, return_type="sources")
+    dss = DSS(bias=bias, n_components=n_components, component_action="extract")
     dss.fit(epochs_train)
 
     sources_test = dss.transform(epochs_test)
@@ -841,7 +841,11 @@ def run_group(subjects, deriv_root=None):
     #  QA Level A: Component Diagnostics
     # ══════════════════════════════════════════════════════════════════════
     bias_show = AverageBias(axis="epochs")
-    dss_show = DSS(bias=bias_show, n_components=DSS_N_COMPONENTS, return_type="sources")
+    dss_show = DSS(
+        bias=bias_show,
+        n_components=DSS_N_COMPONENTS,
+        component_action="extract",
+    )
     dss_show.fit(epochs_train_show)
     evals = dss_show.eigenvalues_
     n_ev = len(evals)

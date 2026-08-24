@@ -25,7 +25,8 @@ import numpy as np
 from scipy import signal
 from scipy.signal import find_peaks
 
-from .covariance import compute_covariance
+from ..._covariance import compute_covariance
+from ..._filtering import design_butter_sos
 
 # ---------------------------------------------------------------------------
 # Covariance-based segmenter (generalised from ZapLine-plus)
@@ -99,9 +100,7 @@ class CovarianceSegmenter:
         # Optional bandpass filter to focus analysis
         if self.bandpass is not None:
             f_low, f_high = self.bandpass
-            sos = signal.butter(
-                4, [f_low, f_high], btype="bandpass", fs=self.sfreq, output="sos"
-            )
+            sos = design_butter_sos(4, [f_low, f_high], "bandpass", self.sfreq)
             data_filt = signal.sosfiltfilt(sos, data, axis=1)
         else:
             data_filt = data

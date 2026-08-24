@@ -30,27 +30,29 @@ try:
 except ImportError:
     mne = None
 
+from .._covariance import compute_covariance, compute_mean
 from .._logging import set_log_level_from_verbose
-from ..blending import overlap_add_combine
-from ..utils import (
+from .._spatial import (
+    apply_spatial_transform,
+    continuous_to_epochs,
     epochs_to_continuous,
-    extract_data_from_mne,
-    reconstruct_mne_object,
 )
+from ..blending import overlap_add_combine
+from ..utils import extract_data_from_mne, reconstruct_mne_object
 from .denoisers import LinearDenoiser
 from .denoisers.temporal import SmoothingBias
-from .utils import compute_covariance
 from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
 from .utils.selection import auto_select_components_robust
 from .utils.whitening import (
     apply_covariance_transform,
-    apply_spatial_transform,
     compute_data_covariance_whitener,
     compute_mne_sensor_whitener,
     map_spatial_matrices_to_sensor_space,
 )
 
 logger = logging.getLogger(__name__)
+
+_COMPONENT_ACTIONS = frozenset({"extract", "retain", "subtract"})
 
 # -----------------------------------------------------------------------------
 # 1. Core Algorithm
@@ -115,7 +117,8 @@ def compute_dss(
     Examples
     --------
     >>> import numpy as np
-    >>> from mne_denoise.dss import compute_dss, compute_covariance
+    >>> from mne_denoise import compute_covariance
+    >>> from mne_denoise.dss import compute_dss
     >>> # Generate synthetic data (n_channels, n_times)
     >>> data = np.random.randn(10, 1000)
     >>> # Compute covariances
@@ -300,12 +303,13 @@ class DSS(BaseEstimator, TransformerMixin):
     cov_method : str
         Method for covariance estimation.
         For MNE objects, passed as `method` to `mne.compute_covariance`.
-        For NumPy arrays, passed as `method` to `mne_denoise.utils.compute_covariance`.
+        For NumPy arrays, selects the internal array covariance estimator.
         Default 'empirical'.
     cov_kws : dict, optional
         Additional keywords options for covariance estimation.
         For MNE objects, passed to `mne.compute_covariance` (e.g. `{'tstep': 0.1, 'rank': 'info'}`).
-        For NumPy arrays, passed to `mne_denoise.utils.compute_covariance` (e.g. `{'shrinkage': 0.1}`).
+        For NumPy arrays, passed to the internal array covariance estimator
+        (e.g. ``{'shrinkage': 0.1}``).
     smooth : SmoothingBias | int | None, default=None
         Optional smoothing decomposition before DSS, inspired by ZapLine.
         When set, data is decomposed into ``smooth + residual`` and DSS
@@ -323,7 +327,9 @@ class DSS(BaseEstimator, TransformerMixin):
         independently per segment.  This handles **non-stationary**
         artifacts whose spatial or spectral profile changes over
         time.  The per-segment pathway runs in :meth:`fit_transform`;
-        :meth:`fit` still produces a single global fit.
+        :meth:`fit` still produces a single global fit. Segmented
+        :meth:`fit_transform` requires ``component_action='subtract'``
+        because component bases differ between segments.
 
         This is the same switch :class:`~mne_denoise.zapline.ZapLine`
         exposes as ``adaptive``, which inherits this parameter directly.
@@ -354,9 +360,14 @@ class DSS(BaseEstimator, TransformerMixin):
         strength.  Only effective when ``adaptive=True``.  Mirrors
         ZapLine-plus's fixed-removal floor (``fixedNremove``; Klug &
         Kloosterman, 2022).
-    return_type : {'sources', 'epochs', 'raw'}
-        Type of object to return from `transform`. 'sources' returns a numpy array
-        of DSS components. 'epochs'/'raw' returns the denoised input object.
+    component_action : {'extract', 'retain', 'subtract'}, default='extract'
+        Explicit operation applied to DSS components. ``'extract'`` returns
+        component time courses. ``'retain'`` reconstructs the leading selected
+        components in sensor space. ``'subtract'`` removes them from the input.
+        ``n_select`` controls the number retained or subtracted; when it is
+        ``None``, retention uses every fitted component and subtraction is an
+        exact no-op. In adaptive :meth:`fit_transform`, only subtraction is
+        supported because each segment has a different fitted basis.
     whiten : bool, default=False
         If True, decompose all data channel types jointly (e.g. mag + grad + eeg)
         instead of isolating a single homogeneous type. The data is whitened
@@ -369,6 +380,10 @@ class DSS(BaseEstimator, TransformerMixin):
         Ignored when ``whiten=False``.
     verbose : bool | str | int | None, default=None
         Control logging verbosity.
+    center : bool, default=True
+        If True, subtract one global channel mean fitted on the training data
+        and reuse it for every transform. If False, use uncentered second
+        moments. Transform batches are never centered from their own data.
 
     Attributes
     ----------
@@ -378,6 +393,9 @@ class DSS(BaseEstimator, TransformerMixin):
         The spatial patterns (mixing matrix).
     eigenvalues_ : array, shape (n_components,)
         The power of each component in the biased data (bias score).
+    mean_ : array, shape (n_channels, 1)
+        Global training mean reused by :meth:`transform`, or zeros when
+        ``center=False``.
     n_selected_ : int | None
         Number of significant components detected by automatic selection.
         Only set when ``n_select`` is not ``None``. Use this to determine
@@ -394,14 +412,19 @@ class DSS(BaseEstimator, TransformerMixin):
     >>> # Create a bias (e.g. emphasize 10Hz oscillations)
     >>> bias = BandpassBias(sfreq=250, freq=10, bandwidth=2)
     >>> # Initialize DSS
-    >>> dss = DSS(bias=bias, n_components=3)
+    >>> dss = DSS(bias=bias, n_components=3, component_action="extract")
     >>> # Fit on data (MNE Raw/Epochs or NumPy)
     >>> dss.fit(raw_data)
     >>> # Extract sources
     >>> sources = dss.transform(raw_data)
-    >>> # Or return denoised data
-    >>> dss.return_type = "raw"
-    >>> denoised_raw = dss.transform(raw_data)
+    >>> # Or remove the leading biased component in sensor space
+    >>> cleaner = DSS(
+    ...     bias=bias,
+    ...     n_components=3,
+    ...     n_select=1,
+    ...     component_action="subtract",
+    ... )
+    >>> denoised_raw = cleaner.fit_transform(raw_data)
 
     See Also
     --------
@@ -427,10 +450,11 @@ class DSS(BaseEstimator, TransformerMixin):
         crossfade: float = 0.0,
         max_prop_remove: float | None = None,
         min_select: int = 0,
-        return_type: str = "sources",
+        component_action: str = "extract",
         whiten: bool = False,
         noise_cov=None,
         verbose: bool | str | int | None = None,
+        center: bool = True,
     ) -> None:
         self.n_components = n_components
         self.bias = bias
@@ -441,6 +465,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.rank = rank
         self.reg = reg
         self.normalize_input = normalize_input
+        self.center = center
         self.cov_method = cov_method
         self.cov_kws = cov_kws
         self.smooth = smooth
@@ -449,7 +474,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.crossfade = crossfade
         self.max_prop_remove = max_prop_remove
         self.min_select = min_select
-        self.return_type = return_type
+        self.component_action = component_action
         self.whiten = whiten
         self.noise_cov = noise_cov
         self.verbose = verbose
@@ -462,12 +487,14 @@ class DSS(BaseEstimator, TransformerMixin):
         self.eigenvalues_: np.ndarray | None = None
         self.explained_variance_: np.ndarray | None = None
         self.channel_norms_: np.ndarray | None = None
+        self.mean_: np.ndarray | None = None
         self.n_selected_: np.ndarray | None = None
         self.segment_results_: list | None = None
         self._whitener_: np.ndarray | None = None
         self._dewhitener_: np.ndarray | None = None
         self._smoother = None  # Resolved SmoothingBias instance
         self._mne_info = None
+        self._mne_ch_names_: list[str] | None = None
 
     def fit(
         self,
@@ -498,6 +525,11 @@ class DSS(BaseEstimator, TransformerMixin):
             The fitted transformer.
         """
         set_log_level_from_verbose(self.verbose)
+        self._mne_ch_names_ = None
+        self._validate_component_action()
+        self._validate_decomposition_parameters()
+        if not isinstance(self.center, bool):
+            raise TypeError("center must be a bool")
         if self.adaptive:
             logger.info(
                 "DSS(adaptive=True).fit() computes a single global fit. "
@@ -521,9 +553,19 @@ class DSS(BaseEstimator, TransformerMixin):
 
         # If smoothing is enabled, decompose and fit on the residual only
         if self._smoother is not None:
-            data, _, _, _, _, _ = extract_data_from_mne(
-                X_norm, channel_first_epochs=True
+            data, _, _, orig_inst, picks, ch_names = extract_data_from_mne(
+                X_norm,
+                ch_names=self._mne_ch_names_,
+                exclude_bads=self._mne_ch_names_ is None,
+                channel_first_epochs=True,
             )
+            self._mne_ch_names_ = ch_names
+            if orig_inst is not None:
+                fitted_inst = orig_inst.copy()
+                if picks is not None:
+                    fitted_inst.pick(picks)
+                self.info_ = fitted_inst.info
+                self._mne_info = self.info_
             data_residual = data - self._smoother.apply(data)
             # Fit DSS on residual (always numpy path)
             self._fit_numpy(data_residual, weights=weights)
@@ -569,6 +611,32 @@ class DSS(BaseEstimator, TransformerMixin):
                 "knee_rel_floor, and knee_min_ratio."
             )
         return self.n_select
+
+    def _validate_component_action(self) -> None:
+        """Validate the explicit component-operation contract."""
+        if self.component_action not in _COMPONENT_ACTIONS:
+            allowed = ", ".join(sorted(_COMPONENT_ACTIONS))
+            raise ValueError(
+                "component_action must be one of "
+                f"{{{allowed}}}, got {self.component_action!r}."
+            )
+
+    def _validate_decomposition_parameters(self) -> None:
+        """Reject nonsensical component, rank, and selection counts early."""
+        if self.n_components is not None and (
+            isinstance(self.n_components, bool)
+            or not isinstance(self.n_components, int | np.integer)
+            or int(self.n_components) <= 0
+        ):
+            raise ValueError("n_components must be a positive integer or None")
+        if isinstance(self.rank, int | np.integer) and (
+            isinstance(self.rank, bool) or int(self.rank) <= 0
+        ):
+            raise ValueError("rank must be a positive integer when specified as an int")
+        if isinstance(self.n_select, int | np.integer) and (
+            isinstance(self.n_select, bool) or int(self.n_select) < 0
+        ):
+            raise ValueError("n_select must be a non-negative integer, 'auto', or None")
 
     def auto_select(self, threshold: float | None = None) -> int:
         """Automatically determine how many DSS components are significant.
@@ -643,22 +711,16 @@ class DSS(BaseEstimator, TransformerMixin):
         This mimics MNE's Scaling capabilities, ensuring channels with different
         units (e.g. MAG vs GRAD) contribute equally.
         """
-        # Helper to get numpy data
-        is_mne = False
-        mne_type = None
-        if mne is not None and isinstance(X, BaseRaw | BaseEpochs | Evoked):
-            data = X.get_data()
-            is_mne = True
-            if isinstance(X, BaseEpochs):
-                mne_type = "epochs"
-                # MNE Epochs: (n_epochs, n_channels, n_times) -> (n_channels, n_times, n_epochs)
-                data = np.transpose(data, (1, 2, 0))
-            elif isinstance(X, Evoked):
-                mne_type = "evoked"
-            else:
-                mne_type = "raw"
-        else:
-            data = X
+        is_mne = mne is not None and isinstance(X, BaseRaw | BaseEpochs | Evoked)
+        fitted_ch_names = None if fit else self._mne_ch_names_
+        data, _, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
+            X,
+            ch_names=fitted_ch_names,
+            exclude_bads=fit,
+            channel_first_epochs=True,
+        )
+        if fit and is_mne:
+            self._mne_ch_names_ = ch_names
 
         # Now data is always (n_channels, ...) for both 2D and 3D
         orig_shape = data.shape
@@ -684,40 +746,18 @@ class DSS(BaseEstimator, TransformerMixin):
         if len(orig_shape) == 3:
             data_norm = data_norm.reshape(orig_shape)
 
-        if is_mne:
-            if mne_type == "raw":
-                out = mne.io.RawArray(data_norm, X.info.copy(), verbose=False)
-                # Preserve annotations
-                if hasattr(X, "annotations") and X.annotations is not None:
-                    out.set_annotations(X.annotations)
-                return out
-            elif mne_type == "epochs":
-                # Transpose back to MNE format: (n_ch, n_times, n_epochs) -> (n_epochs, n_ch, n_times)
-                data_norm = np.transpose(data_norm, (2, 0, 1))
-                out = mne.EpochsArray(
-                    data_norm,
-                    X.info.copy(),
-                    events=getattr(X, "events", None),
-                    tmin=getattr(X, "tmin", 0),
-                    event_id=getattr(X, "event_id", None),
-                    verbose=False,
-                )
-                # Preserve metadata
-                if hasattr(X, "metadata") and X.metadata is not None:
-                    out.metadata = X.metadata.copy()
-                return out
-            else:  # Evoked
-                out = mne.EvokedArray(
-                    data_norm,
-                    X.info.copy(),
-                    tmin=getattr(X, "tmin", 0),
-                    comment=getattr(X, "comment", ""),
-                    nave=getattr(X, "nave", 1),
-                    verbose=False,
-                )
-                return out
-        else:
+        if not is_mne:
             return data_norm
+
+        if mne_type == "epochs":
+            data_norm = np.transpose(data_norm, (2, 0, 1))
+        return reconstruct_mne_object(
+            data_norm,
+            orig_inst,
+            mne_type,
+            picks=picks,
+            verbose=False,
+        )
 
     def _apply_bias(self, data: np.ndarray) -> np.ndarray:
         """Apply bias function to data."""
@@ -726,49 +766,68 @@ class DSS(BaseEstimator, TransformerMixin):
         else:
             return self.bias(data)
 
+    def _fit_mean(self, data: np.ndarray, weights: np.ndarray | None = None) -> None:
+        """Store the channel origin used by every subsequent transform."""
+        data = np.asarray(data, dtype=np.float64)
+        self.mean_ = (
+            compute_mean(data, weights=weights)
+            if self.center
+            else np.zeros((data.shape[0], 1), dtype=np.float64)
+        )
+
     def _fit_mne(
         self,
         inst: BaseRaw | BaseEpochs | Evoked,
         weights: np.ndarray | None = None,
     ) -> None:
         """Fit using MNE objects."""
-        self.info_ = inst.info
-
-        if weights is not None:
-            # If weights provided, extract data and use numpy path
-            data = inst.get_data()
-            self._fit_numpy(data, weights=weights)
-            return
-
         method = self.cov_method
         kws = self.cov_kws.copy() if self.cov_kws else {}
         # Set defaults if not in kws
         kws.setdefault("rank", self.rank)
         kws.setdefault("verbose", False)
 
-        data, _, _, _, picks, ch_names = extract_data_from_mne(
-            inst, channel_first_epochs=True
+        data, _, mne_type, _, picks, ch_names = extract_data_from_mne(
+            inst,
+            ch_names=self._mne_ch_names_,
+            exclude_bads=self._mne_ch_names_ is None,
+            channel_first_epochs=True,
         )
         self._mne_ch_names_ = ch_names
 
-        # MNE covariance computation requires the inst object to match the array
+        # MNE covariance computation and the fitted spatial matrices must use
+        # exactly the same good-channel contract.
         if picks is not None:
             inst = inst.copy().pick(picks)
+        self.info_ = inst.info
+        self._mne_info = self.info_
 
+        if weights is not None or not self.center or isinstance(inst, Evoked):
+            # Weighted or explicitly uncentered MNE input uses the canonical
+            # channel-first NumPy path.
+            self._fit_numpy(data, weights=weights)
+            return
+
+        self._fit_mean(data)
         biased_data = self._apply_bias(data)
 
         if isinstance(inst, BaseEpochs):
             biased_data = np.transpose(biased_data, (2, 0, 1))
 
+        biased_inst = reconstruct_mne_object(
+            biased_data,
+            inst,
+            mne_type,
+            verbose=False,
+        )
+
         if isinstance(inst, BaseRaw):
             kws.setdefault("tstep", 2.0)
             baseline_cov = mne.compute_raw_covariance(inst, method=method, **kws)
-            biased_inst = mne.io.RawArray(biased_data, inst.info, verbose=False)
             biased_cov = mne.compute_raw_covariance(biased_inst, method=method, **kws)
 
         elif isinstance(inst, BaseEpochs):
             baseline_cov = mne.compute_covariance(inst, method=method, **kws)
-            biased_inst = mne.EpochsArray(biased_data, inst.info, verbose=False)
             biased_cov = mne.compute_covariance(biased_inst, method=method, **kws)
 
         else:  # Evoked - use numpy path since MNE doesn't support Evoked covariance
@@ -790,10 +849,12 @@ class DSS(BaseEstimator, TransformerMixin):
 
     def _fit_numpy(self, X: np.ndarray, weights: np.ndarray | None = None) -> None:
         """Fit using numpy arrays."""
+        self._fit_mean(X, weights)
         biased_X = self._apply_bias(X)
 
         method = self.cov_method
         kws = self.cov_kws.copy() if self.cov_kws else {}
+        kws["assume_centered"] = not self.center
 
         baseline_cov = compute_covariance(X, method=method, weights=weights, **kws)
         biased_cov = compute_covariance(biased_X, method=method, weights=weights, **kws)
@@ -832,16 +893,25 @@ class DSS(BaseEstimator, TransformerMixin):
         # The NumPy covariance helper does not accept MNE-only options.
         for key in ("rank", "verbose", "tstep"):
             kws.pop(key, None)
+        kws["assume_centered"] = not self.center
 
-        data, _, _, orig_inst, _, ch_names = extract_data_from_mne(
+        data, _, _, orig_inst, picks, ch_names = extract_data_from_mne(
             X,
             auto_pick="data",
+            exclude_bads=True,
             channel_first_epochs=True,
         )
         self._mne_ch_names_ = ch_names
-        self.info_ = orig_inst.info if orig_inst is not None else None
+        if orig_inst is not None:
+            fitted_inst = orig_inst.copy()
+            if picks is not None:
+                fitted_inst.pick(picks)
+            self.info_ = fitted_inst.info
+        else:
+            self.info_ = None
         self._mne_info = self.info_
 
+        self._fit_mean(data, weights)
         data_w = self._prewhiten_sensor_data(
             data,
             info=self.info_,
@@ -892,7 +962,7 @@ class DSS(BaseEstimator, TransformerMixin):
     def transform(
         self, X: BaseRaw | BaseEpochs | Evoked | np.ndarray
     ) -> np.ndarray | BaseRaw | BaseEpochs | Evoked:
-        """Apply DSS spatial filters.
+        """Apply the configured DSS component operation.
 
         Parameters
         ----------
@@ -903,11 +973,29 @@ class DSS(BaseEstimator, TransformerMixin):
         Returns
         -------
         out : array | Raw | Epochs | Evoked
-            If return_type='sources', returns the source time series.
-            If return_type='raw'/'epochs'/'evoked', returns the reconstructed data (denoised)
-            projected back to sensor space (keeping n_components).
+            Component time courses for extraction, otherwise transformed data
+            in the same container type as the input.
         """
+        self._validate_component_action()
+        return self._transform_with_action(X, self.component_action)
+
+    def _operation_component_count(self, action: str, n_available: int) -> int:
+        """Return the leading component count used in sensor space."""
+        if action == "retain" and self.n_selected_ is None:
+            return n_available
+        if self.n_selected_ is None:
+            return 0
+        return min(max(int(self.n_selected_), 0), n_available)
+
+    def _transform_with_action(
+        self,
+        X: BaseRaw | BaseEpochs | Evoked | np.ndarray,
+        action: str,
+    ) -> np.ndarray | BaseRaw | BaseEpochs | Evoked:
+        """Apply a validated operation without mutating estimator parameters."""
         set_log_level_from_verbose(self.verbose)
+        if action not in _COMPONENT_ACTIONS:
+            raise ValueError(f"Unknown component action {action!r}.")
         if self.filters_ is None:
             raise RuntimeError("DSS not fitted. Call fit() first.")
 
@@ -919,7 +1007,7 @@ class DSS(BaseEstimator, TransformerMixin):
 
         # Helper to extract data
         # DSS internal convention for Epochs: (n_channels, n_times, n_epochs)
-        data, _, mne_type, orig_inst, picks, _ = extract_data_from_mne(
+        data, _, mne_type, _, picks, _ = extract_data_from_mne(
             X_in,
             ch_names=getattr(self, "_mne_ch_names_", None),
             channel_first_epochs=True,
@@ -937,41 +1025,47 @@ class DSS(BaseEstimator, TransformerMixin):
         if data_for_dss.ndim == 3:
             n_ch, n_times, n_epochs = data_for_dss.shape
             data_2d = data_for_dss.reshape(n_ch, -1)
+            full_data_2d = data.reshape(n_ch, -1)
         else:
             n_ch, n_times = data_for_dss.shape
             data_2d = data_for_dss
+            full_data_2d = data
 
-        # Center using mean on data_2d
-        # DSS implies zero-mean assumption for correct projection
-        mean_ = data_2d.mean(axis=1, keepdims=True)
-        data_centered = data_2d - mean_
+        # Apply the centering measure fitted with the DSS filters. Recomputing
+        # this mean from each transform batch would make a learned transform
+        # depend on unrelated observations supplied alongside it.
+        if self.mean_ is None:
+            raise RuntimeError("DSS fitted centering state is unavailable")
+        data_centered = data_2d - self.mean_
 
         sources = self.filters_ @ data_centered
 
-        if self.return_type == "sources":
+        if action == "extract":
             if len(orig_shape) == 3:
-                sources = sources.reshape(
-                    self.n_components or sources.shape[0], n_times, n_epochs
-                )
+                sources = sources.reshape(sources.shape[0], n_times, n_epochs)
                 if mne_type == "epochs":
                     # Return as (n_epochs, n_components, n_times)
                     return sources.transpose(2, 0, 1)
             return sources
 
-        # Use only kept components
-        n_keep = self.n_components if self.n_components else self.filters_.shape[0]
-        # mixing shape: (n_channels, n_components)
-        rec = self.mixing_[:, :n_keep] @ sources[:n_keep]
-        rec += mean_
+        n_action = self._operation_component_count(action, sources.shape[0])
+        if action == "subtract" and n_action == 0:
+            if hasattr(X, "copy"):
+                return X.copy()
+            return np.array(X, copy=True)
 
-        # Add back smooth component if it was separated
-        if data_smooth is not None:
-            smooth_2d = (
-                data_smooth.reshape(data_smooth.shape[0], -1)
-                if data_smooth.ndim == 3
-                else data_smooth
-            )
-            rec = rec + smooth_2d
+        selected = self.mixing_[:, :n_action] @ sources[:n_action]
+        if action == "subtract":
+            rec = full_data_2d - selected
+        else:
+            rec = selected + self.mean_
+            if data_smooth is not None:
+                smooth_2d = (
+                    data_smooth.reshape(data_smooth.shape[0], -1)
+                    if data_smooth.ndim == 3
+                    else data_smooth
+                )
+                rec = rec + smooth_2d
 
         # Reshape to original
         if len(orig_shape) == 3:
@@ -989,7 +1083,11 @@ class DSS(BaseEstimator, TransformerMixin):
             rec = np.transpose(rec, (2, 0, 1))
 
         return reconstruct_mne_object(
-            rec, orig_inst, mne_type, picks=picks, verbose=False
+            rec,
+            X if mne_type != "array" else None,
+            mne_type,
+            picks=picks,
+            verbose=False,
         )
 
     def inverse_transform(
@@ -1093,7 +1191,7 @@ class DSS(BaseEstimator, TransformerMixin):
     # -----------------------------------------------------------------
 
     def fit_transform(self, X, y=None, **fit_params):
-        """Fit and transform data in one step.
+        """Fit and apply the configured component operation.
 
         In **adaptive mode** (``adaptive=True``), the data is split into
         segments and each segment gets its own independent DSS fit +
@@ -1101,8 +1199,9 @@ class DSS(BaseEstimator, TransformerMixin):
         processing because ``fit()`` alone is not meaningful when
         filters differ per segment.
 
-        In standard mode, this is equivalent to
-        ``self.fit(X).transform(X)``.
+        With an explicit ``component_action``, standard mode is equivalent to
+        ``self.fit(X).transform(X)``. Adaptive mode remains a deliberately
+        transductive, per-segment fit-and-subtract operation.
 
         Parameters
         ----------
@@ -1117,41 +1216,26 @@ class DSS(BaseEstimator, TransformerMixin):
         -------
         X_out : ndarray | Raw | Epochs | Evoked
             In adaptive mode, returns cleaned data (same type as input).
-            In standard mode with ``return_type='sources'``, returns DSS
-            source time-series.  With any other ``return_type``, returns
-            cleaned (denoised) data produced by subtracting the artifact
-            captured by the first ``n_selected_`` components.
+            In standard mode, the result follows ``component_action``.
         """
+        self._validate_component_action()
         if not self.adaptive:
             self.fit(X, **fit_params)
+            return self.transform(X)
 
-            if self.return_type == "sources":
-                return self.transform(X)
-
-            # ── Denoise via artifact subtraction ──
-            data, _, mne_type, orig_inst, _, _ = extract_data_from_mne(X)
-
-            n_remove = self.n_selected_ if self.n_selected_ is not None else 0
-            if n_remove > 0:
-                # Temporarily switch to get source time-series
-                saved_rt = self.return_type
-                self.return_type = "sources"
-                try:
-                    sources = self.transform(X)
-                finally:
-                    self.return_type = saved_rt
-
-                artifact = self.inverse_transform(
-                    sources, component_indices=np.arange(n_remove)
-                )
-                cleaned = data - artifact
-            else:
-                cleaned = data
-
-            return reconstruct_mne_object(cleaned, orig_inst, mne_type, verbose=False)
+        if self.component_action != "subtract":
+            raise ValueError(
+                "adaptive fit_transform supports only "
+                "component_action='subtract' because each segment has a "
+                "different fitted component basis. Use fit().transform() for "
+                "global extraction or retention."
+            )
 
         # --- adaptive (per-segment) mode ---
-        data, extracted_sfreq, mne_type, orig_inst, _, _ = extract_data_from_mne(X)
+        data, extracted_sfreq, mne_type, orig_inst, picks, ch_names = (
+            extract_data_from_mne(X, exclude_bads=True)
+        )
+        self._mne_ch_names_ = ch_names
 
         # Determine sfreq
         sfreq = extracted_sfreq
@@ -1193,9 +1277,15 @@ class DSS(BaseEstimator, TransformerMixin):
 
         # Reshape back if epochs
         if is_epochs:
-            cleaned = cleaned.reshape(n_ch, n_ep, n_t).transpose(1, 0, 2)
+            cleaned = continuous_to_epochs(cleaned, (n_ep, n_ch, n_t))
 
-        return reconstruct_mne_object(cleaned, orig_inst, mne_type, verbose=False)
+        return reconstruct_mne_object(
+            cleaned,
+            orig_inst,
+            mne_type,
+            picks=picks,
+            verbose=False,
+        )
 
     def _resolve_segmenter(self, sfreq: float):
         """Resolve the segmenter parameter.
@@ -1362,7 +1452,6 @@ class DSS(BaseEstimator, TransformerMixin):
             n_select=self._effective_n_select(),
             segmenter=None,
             crossfade=0.0,
-            return_type="sources",
             # Per-segment caps are applied by the caller, not the clone.
             max_prop_remove=None,
             min_select=0,

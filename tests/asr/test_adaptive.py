@@ -367,6 +367,73 @@ def test_adaptive_partial_fit_calibration_mask():
     assert aasr.calibration_mask_kind_ == "window"
 
 
+@pytest.mark.parametrize("variant", ["psp", "psw"])
+def test_adaptive_partial_fit_short_chunk_is_atomic(variant):
+    """An incomplete update segment must not mutate the fitted adaptive state."""
+    X = _eeg(n_times=8000)
+    aasr = AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X[:, :4000])
+    state_before = {
+        "M": aasr.M_.copy(),
+        "T": aasr.T_.copy(),
+        "thresholds": aasr.thresholds_.copy(),
+        "learner_M": aasr.adaptive_learner_.M.copy(),
+        "learner_W": aasr.adaptive_learner_.W.copy(),
+        "learner_Minv": aasr.adaptive_learner_.Minv.copy(),
+    }
+
+    with pytest.raises(ValueError, match="requires at least 251 samples"):
+        aasr.partial_fit(X[:, 4000:4250])
+
+    np.testing.assert_array_equal(aasr.M_, state_before["M"])
+    np.testing.assert_array_equal(aasr.T_, state_before["T"])
+    np.testing.assert_array_equal(aasr.thresholds_, state_before["thresholds"])
+    np.testing.assert_array_equal(aasr.adaptive_learner_.M, state_before["learner_M"])
+    np.testing.assert_array_equal(aasr.adaptive_learner_.W, state_before["learner_W"])
+    np.testing.assert_array_equal(
+        aasr.adaptive_learner_.Minv, state_before["learner_Minv"]
+    )
+
+
+@pytest.mark.parametrize("variant", ["psp", "psw"])
+def test_adaptive_fit_rejects_segment_without_clean_window(variant):
+    X = _eeg(n_times=250, bursts=0)
+    with pytest.raises(ValueError, match=r"fit\(\) requires at least 251 samples"):
+        AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X)
+
+
+@pytest.mark.parametrize("variant", ["psp", "psw"])
+def test_adaptive_partial_fit_threshold_failure_is_atomic(variant, monkeypatch):
+    """A downstream fit failure must not commit the candidate learner update."""
+    X = _eeg(n_times=8000)
+    aasr = AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X[:, :4000])
+    state_before = {
+        "M": aasr.M_.copy(),
+        "T": aasr.T_.copy(),
+        "thresholds": aasr.thresholds_.copy(),
+        "learner_M": aasr.adaptive_learner_.M.copy(),
+        "learner_W": aasr.adaptive_learner_.W.copy(),
+        "learner_Minv": aasr.adaptive_learner_.Minv.copy(),
+    }
+
+    def _fail_threshold_fit(*args, **kwargs):
+        raise RuntimeError("threshold fit failed")
+
+    monkeypatch.setattr(
+        "mne_denoise.asr.adaptive._fit_adaptive_thresholds", _fail_threshold_fit
+    )
+    with pytest.raises(RuntimeError, match="threshold fit failed"):
+        aasr.partial_fit(X[:, 4000:])
+
+    np.testing.assert_array_equal(aasr.M_, state_before["M"])
+    np.testing.assert_array_equal(aasr.T_, state_before["T"])
+    np.testing.assert_array_equal(aasr.thresholds_, state_before["thresholds"])
+    np.testing.assert_array_equal(aasr.adaptive_learner_.M, state_before["learner_M"])
+    np.testing.assert_array_equal(aasr.adaptive_learner_.W, state_before["learner_W"])
+    np.testing.assert_array_equal(
+        aasr.adaptive_learner_.Minv, state_before["learner_Minv"]
+    )
+
+
 def test_adaptive_transform_raw_with_window_criterion():
     mne = pytest.importorskip("mne")
     X = _eeg(n_times=8000, bursts=8)

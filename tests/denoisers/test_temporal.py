@@ -1,104 +1,129 @@
-"""Unit tests for temporal denoisers (TimeShiftBias, SmoothingBias)."""
+"""Unit tests for temporal denoisers."""
 
 import numpy as np
 import pytest
 
 from mne_denoise.dss.denoisers.temporal import (
     DCTDenoiser,
+    LagAverageBias,
     SmoothingBias,
-    TimeShiftBias,
 )
 
 
-def test_timeshift_basic_2d():
-    """Test TimeShiftBias with 2D data."""
+def test_lag_average_basic_2d():
+    """Test LagAverageBias with 2D data."""
     rng = np.random.default_rng(42)
     n_ch, n_times = 3, 200
     data = rng.normal(0, 1, (n_ch, n_times))
 
-    bias = TimeShiftBias(shifts=5)
+    bias = LagAverageBias(lags=5)
     biased = bias.apply(data)
 
     assert biased.shape == data.shape
 
 
-def test_timeshift_basic_3d():
-    """Test TimeShiftBias with 3D epoched data."""
+def test_lag_average_basic_3d():
+    """Test LagAverageBias with 3D epoched data."""
     rng = np.random.default_rng(42)
     n_ch, n_times, n_epochs = 3, 200, 4
     data = rng.normal(0, 1, (n_ch, n_times, n_epochs))
 
-    bias = TimeShiftBias(shifts=5)
+    bias = LagAverageBias(lags=5)
     biased = bias.apply(data)
 
     assert biased.shape == data.shape
     assert biased.ndim == 3
 
 
-def test_shifts_as_array():
-    """Test TimeShiftBias with shifts specified as array."""
+def test_lag_average_3d_never_crosses_epoch_boundaries():
+    """Every epoch is lagged independently along its time axis."""
+    data = np.array([[[0, 100], [1, 101], [2, 102], [3, 103], [4, 104], [5, 105]]])
+
+    biased = LagAverageBias(lags=[1]).apply(data)
+
+    np.testing.assert_array_equal(biased[0, :, 0], [0, 2, 3, 4, 5, 0])
+    np.testing.assert_array_equal(biased[0, :, 1], [0, 102, 103, 104, 105, 0])
+    assert np.issubdtype(biased.dtype, np.floating)
+
+
+def test_lags_as_array():
+    """Test explicit lag arrays."""
     rng = np.random.default_rng(42)
     data = rng.normal(0, 1, (2, 100))
 
-    shifts = np.array([1, 2, 5, 10])
-    bias = TimeShiftBias(shifts=shifts)
+    lags = np.array([1, 2, 5, 10])
+    bias = LagAverageBias(lags=lags)
     biased = bias.apply(data)
 
     assert biased.shape == data.shape
 
 
-def test_autocorrelation_method():
-    """Test TimeShiftBias with autocorrelation method."""
+def test_uniform_weighting():
+    """Test equal weighting across lags."""
     rng = np.random.default_rng(42)
     data = rng.normal(0, 1, (2, 100))
 
-    bias = TimeShiftBias(shifts=5, method="autocorrelation")
+    bias = LagAverageBias(lags=5, weighting="uniform")
     biased = bias.apply(data)
 
     assert biased.shape == data.shape
 
 
-def test_prediction_method():
-    """Test TimeShiftBias with prediction method."""
+def test_inverse_lag_weighting():
+    """Test inverse-lag weighting."""
     rng = np.random.default_rng(42)
     data = rng.normal(0, 1, (2, 100))
 
-    bias = TimeShiftBias(shifts=5, method="prediction")
+    bias = LagAverageBias(lags=5, weighting="inverse_lag")
     biased = bias.apply(data)
 
     assert biased.shape == data.shape
 
 
-def test_unknown_method_error():
-    """Test TimeShiftBias raises error for unknown method."""
+def test_unknown_weighting_error():
+    """Reject unknown weighting rules."""
     rng = np.random.default_rng(42)
     data = rng.normal(0, 1, (2, 100))
 
-    bias = TimeShiftBias(shifts=5, method="unknown")
-    with pytest.raises(ValueError, match="Unknown method"):
+    bias = LagAverageBias(lags=5, weighting="unknown")
+    with pytest.raises(ValueError, match="weighting must be"):
         bias.apply(data)
 
 
+@pytest.mark.parametrize("lags", [0, -1, [], [0]])
+def test_invalid_lags(lags):
+    """Reject empty or non-operational lag declarations."""
+    with pytest.raises(ValueError, match="lags must"):
+        LagAverageBias(lags=lags).apply(np.ones((2, 20)))
+
+
+@pytest.mark.parametrize("lags", [True, [1.5], [False, 1]])
+def test_non_integer_lags(lags):
+    """Reject booleans and fractional lags."""
+    with pytest.raises(TypeError, match="lags must"):
+        LagAverageBias(lags=lags).apply(np.ones((2, 20)))
+
+
 def test_shift_too_large_error():
-    """Test TimeShiftBias raises error when shift too large."""
+    """Test LagAverageBias raises error when lag is too large."""
     data = np.ones((2, 20))
 
-    bias = TimeShiftBias(shifts=15)  # Too large for data length 20
+    bias = LagAverageBias(lags=15)  # Too large for data length 20
     with pytest.raises(ValueError, match="too large"):
         bias.apply(data)
 
 
 def test_data_too_short_error():
-    """Test TimeShiftBias raises error when data too short."""
+    """Test LagAverageBias raises error when data is too short."""
     data = np.ones((2, 10))
 
-    bias = TimeShiftBias(shifts=5)
+    bias = LagAverageBias(lags=5)
     with pytest.raises(ValueError, match="too short|too large"):
         bias.apply(data)
 
 
 def test_autocorrelated_signal_preserved():
-    """Test TimeShiftBias preserves autocorrelated signals."""
+    """Test LagAverageBias preserves autocorrelated signals."""
     n_times = 500
     times = np.arange(n_times) / 100
 
@@ -111,7 +136,7 @@ def test_autocorrelated_signal_preserved():
 
     data = (slow_signal + fast_noise)[np.newaxis, :]
 
-    bias = TimeShiftBias(shifts=10)
+    bias = LagAverageBias(lags=10)
     biased = bias.apply(data)
 
     # Slow signal should be better correlated with biased output

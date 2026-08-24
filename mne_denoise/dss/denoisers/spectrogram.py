@@ -26,7 +26,7 @@ def _apply_tf_mask(
     data_1d: np.ndarray, mask: np.ndarray, nperseg: int, noverlap: int
 ) -> np.ndarray:
     """Apply TF mask to 1D signal."""
-    _, _, Zxx = signal.stft(data_1d, nperseg=nperseg, noverlap=noverlap)
+    f, t, Zxx = signal.stft(data_1d, nperseg=nperseg, noverlap=noverlap)
 
     # Resize mask if needed
     if mask.shape != Zxx.shape:
@@ -186,7 +186,7 @@ class SpectrogramDenoiser(NonlinearDenoiser):
         """Process 1D source."""
         # STFT just to calculate mask if adaptive
         if self.mask is None:
-            _, _, Zxx = signal.stft(
+            f, t, Zxx = signal.stft(
                 source, nperseg=self.nperseg, noverlap=self.noverlap
             )
             # Adaptive magnitude-based mask

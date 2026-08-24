@@ -45,6 +45,8 @@ import numpy as np
 from scipy import signal
 from scipy.signal import find_peaks, welch
 
+from .._filtering import design_butter_sos
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,18 +91,14 @@ def apply_cleanline_notch(
     """
     # Design notch filter
     nyquist = sfreq / 2
-    low = (freq - bandwidth / 2) / nyquist
-    high = (freq + bandwidth / 2) / nyquist
-
-    # Ensure within valid range
-    low = max(0.001, min(low, 0.999))
-    high = max(0.001, min(high, 0.999))
+    low = max(0.001 * nyquist, freq - bandwidth / 2)
+    high = min(0.999 * nyquist, freq + bandwidth / 2)
 
     if low >= high:
         return data  # Cannot filter, return unchanged
 
     # Use bandstop (notch) filter
-    sos = signal.butter(order, [low, high], btype="bandstop", output="sos")
+    sos = design_butter_sos(order, [low, high], "bandstop", sfreq)
     filtered = signal.sosfiltfilt(sos, data, axis=1)
 
     return filtered

@@ -31,6 +31,17 @@ spectrum_interpolation : Spectrum Interpolation
     Removes power-line noise and its harmonics by interpolating spectral amplitudes
     while preserving phase.
 
+ssa : Singular Spectrum Analysis
+    Temporal decomposition for trend, oscillation, and residual reconstruction.
+
+bss_cca : Reference-Free BSS-CCA
+    Blind source separation by canonical correlation between the data and a
+    lagged copy of itself, for broadband muscle-artifact attenuation.
+
+sns : Sensor Noise Suppression
+    Removes channel-specific noise by reconstructing each sensor from correlated
+    neighboring sensors.
+
 sound : SOUND Automatic Noise Suppression
     Forward-model-based Wiener estimation that suppresses per-channel noise by
     reconstructing each sensor from all others (Mutanen et al., 2018).
@@ -40,32 +51,41 @@ sspsir : SSP-SIR Muscle Artifact Suppression
     TMS-evoked muscle artifacts (Mutanen et al., 2016).
 
 overcorrection : Forward-Model Overcorrection Metrics
-    Quantifies how much any linear spatial filter attenuates or distorts
-    hypothetical cortical sources, via the forward model (Mutanen et al., 2022).
+    Quantifies how much a linear spatial filter attenuates or distorts
+    hypothetical cortical sources through a forward model (Mutanen et al., 2022).
+
 """
 
 from . import (
     asr,
+    bss_cca,
     dss,
     icanclean,
     overcorrection,
+    sns,
     sound,
     spectrum_interpolation,
+    ssa,
     sspsir,
     zapline,
 )
+from ._covariance import compute_covariance
 from .overcorrection import quantify_overcorrection
 
 __version__ = "0.0.1"
 
 __all__ = [
     "asr",
+    "bss_cca",
+    "compute_covariance",
     "dss",
     "icanclean",
     "overcorrection",
     "quantify_overcorrection",
     "sound",
     "spectrum_interpolation",
+    "ssa",
+    "sns",
     "sspsir",
     "zapline",
 ]

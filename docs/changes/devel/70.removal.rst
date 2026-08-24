@@ -1,0 +1,2 @@
+Renamed ``TimeShiftBias`` to ``LagAverageBias`` and removed the ambiguous
+``time_shift_dss()`` convenience constructor.

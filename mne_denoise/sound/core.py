@@ -39,11 +39,8 @@ from sklearn.utils.validation import check_is_fitted
 
 from .._leadfield import resolve_leadfield
 from .._logging import logger, set_log_level_from_verbose
-from ..utils import (
-    epochs_to_continuous,
-    extract_data_from_mne,
-    reconstruct_mne_object,
-)
+from .._spatial import epochs_to_continuous
+from ..utils import extract_data_from_mne, reconstruct_mne_object
 
 
 def _noise_level(noise_filter: np.ndarray, cov: np.ndarray, n_times: int) -> float:

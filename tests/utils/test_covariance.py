@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from mne_denoise.dss.utils.covariance import _ledoit_wolf_shrinkage, compute_covariance
+from mne_denoise import compute_covariance
+from mne_denoise._covariance import _ledoit_wolf_shrinkage
 
 
 def test_empirical_covariance_shape():
@@ -42,6 +43,31 @@ def test_empirical_covariance_assume_centered():
     cov = compute_covariance(data, assume_centered=True)
 
     assert_allclose(cov, data @ data.T / data.shape[1])
+
+
+def test_empirical_covariance_chunked_matches_full():
+    """Chunking should only change peak memory use."""
+    rng = np.random.default_rng(42)
+    data = rng.standard_normal((7, 503))
+    weights = rng.uniform(0.1, 1.0, data.shape[1])
+
+    full = compute_covariance(data, weights=weights)
+    chunked = compute_covariance(data, weights=weights, chunk_size=47)
+
+    assert_allclose(chunked, full, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("chunk_size", [0, -1, 2.5, True])
+def test_empirical_covariance_rejects_invalid_chunk_size(chunk_size):
+    """Chunk size must be a positive integer when supplied."""
+    with pytest.raises((TypeError, ValueError), match="chunk_size"):
+        compute_covariance(np.ones((3, 10)), chunk_size=chunk_size)
+
+
+def test_non_empirical_covariance_rejects_chunking():
+    """Chunking is limited to the empirical covariance path."""
+    with pytest.raises(ValueError, match="empirical"):
+        compute_covariance(np.ones((3, 10)), method="oas", chunk_size=4)
 
 
 def test_shrinkage_covariance_identity():
@@ -117,17 +143,33 @@ def test_covariance_3d_data():
 
 
 def test_covariance_3d_with_weights():
-    """Test covariance with 3D data and per-time-point weights."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 3, 100, 5
-    data = rng.standard_normal((n_ch, n_times, n_epochs))
-
-    # Weights matching n_times (will be tiled)
-    weights = rng.uniform(0.5, 1.5, n_times)
+    """Per-time weights broadcast across epochs in flattened data order."""
+    data = np.array(
+        [
+            [[1.0, 10.0], [2.0, 20.0], [4.0, 40.0]],
+            [[3.0, 30.0], [5.0, 50.0], [9.0, 90.0]],
+        ]
+    )
+    weights = np.array([1.0, 2.0, 7.0])
+    expected_weights = np.repeat(weights, data.shape[2])
+    flattened = data.reshape(data.shape[0], -1)
 
     cov = compute_covariance(data, weights=weights)
+    expected = compute_covariance(flattened, weights=expected_weights)
 
-    assert cov.shape == (n_ch, n_ch)
+    assert_allclose(cov, expected)
+
+
+def test_covariance_3d_weight_matrix_matches_c_order_flattening():
+    """A time-by-epoch weight matrix aligns exactly with C-order samples."""
+    rng = np.random.default_rng(42)
+    data = rng.standard_normal((3, 5, 4))
+    weights = np.arange(1.0, 21.0).reshape(5, 4)
+
+    matrix_result = compute_covariance(data, weights=weights)
+    flat_result = compute_covariance(data.reshape(3, -1), weights=weights.reshape(-1))
+
+    assert_allclose(matrix_result, flat_result)
 
 
 def test_covariance_3d_with_full_weights():
@@ -160,8 +202,28 @@ def test_covariance_zero_weights_error():
     data = rng.standard_normal((3, 100))
     weights = np.zeros(100)  # All zero weights
 
-    with pytest.raises(ValueError, match="Sum of weights is zero"):
+    with pytest.raises(ValueError, match="Sum of weights must be positive"):
         compute_covariance(data, weights=weights)
+
+
+@pytest.mark.parametrize(
+    "weights, match",
+    [
+        (np.array([1.0, -1.0, 1.0]), "non-negative"),
+        (np.array([1.0, np.nan, 1.0]), "finite"),
+        (np.ones((3, 1)), "one-dimensional"),
+    ],
+)
+def test_covariance_rejects_invalid_2d_weights(weights, match):
+    """Weights are a finite, nonnegative one-dimensional sample measure."""
+    with pytest.raises(ValueError, match=match):
+        compute_covariance(np.ones((2, 3)), weights=weights)
+
+
+def test_covariance_rejects_invalid_3d_weight_shape():
+    """Three-dimensional weights must follow an explicit supported layout."""
+    with pytest.raises(ValueError, match="For 3D data"):
+        compute_covariance(np.ones((2, 3, 4)), weights=np.ones((4, 3)))
 
 
 def test_covariance_weighted_non_empirical_error():

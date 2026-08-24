@@ -139,7 +139,7 @@ print(f"Created epochs: {epochs.get_data().shape}")
 # Bias: Maximize power of the mean over epochs.
 
 print("\n--- Synthetic: Trial Average Bias ---")
-dss_evoked = DSS(n_components=3, bias=AverageBias(), return_type="sources")
+dss_evoked = DSS(n_components=3, bias=AverageBias(), component_action="extract")
 dss_evoked.fit(epochs)
 
 # Visualize

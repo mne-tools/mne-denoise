@@ -25,7 +25,8 @@ Here is a simple example of using Linear DSS to enhance an evoked response.
 .. code-block:: python
 
    import numpy as np
-   from mne_denoise.dss import compute_dss, compute_covariance
+   from mne_denoise import compute_covariance
+   from mne_denoise.dss import compute_dss
 
    # Simulate data: (n_channels, n_times, n_trials)
    n_ch, n_times, n_trials = 10, 1000, 50
@@ -67,11 +68,15 @@ You can use the ``DSS`` class directly with MNE objects.
    epochs = mne.read_epochs("sample_epochs.fif")
 
    # Apply DSS to enhance evoked response
-   dss = DSS(bias=TrialAverageBias(), n_components=5)
-   dss.fit(epochs)
+   dss = DSS(
+       bias=TrialAverageBias(),
+       n_components=5,
+       n_select=2,
+       component_action="subtract",
+   )
 
-   # Return denoised epochs (projected back to sensor space)
-   epochs_clean = dss.transform(epochs, return_type="epochs")
+   # Remove the leading two biased components in sensor space.
+   epochs_clean = dss.fit_transform(epochs)
 
 Example gallery
 ---------------

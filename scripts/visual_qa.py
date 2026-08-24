@@ -174,7 +174,7 @@ epochs_train = epochs[np.arange(0, n_ep, 2)]
 epochs_test = epochs[np.arange(1, n_ep, 2)]
 
 bias = AverageBias(axis="epochs")
-dss = DSS(bias=bias, n_components=DSS_N_COMPONENTS, return_type="sources")
+dss = DSS(bias=bias, n_components=DSS_N_COMPONENTS, component_action="extract")
 dss.fit(epochs_train)
 
 sources_train = dss.transform(epochs_train)

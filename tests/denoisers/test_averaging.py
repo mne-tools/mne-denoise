@@ -40,6 +40,18 @@ def test_average_bias_epochs_weighted():
     assert_allclose(biased[0, 0, :], 12)
 
 
+def test_average_bias_epochs_observation_weighted():
+    """Time-by-epoch weights produce a separate average at every time."""
+    data = np.array([[[1.0, 3.0], [10.0, 20.0], [4.0, 8.0]]])
+    weights = np.array([[1.0, 1.0], [1.0, 3.0], [0.0, 0.0]])
+
+    biased = AverageBias(axis="epochs", weights=weights).apply(data)
+
+    expected = np.array([[2.0, 17.5, 0.0]])
+    assert_allclose(biased[:, :, 0], expected)
+    assert_allclose(biased[:, :, 1], expected)
+
+
 def test_average_bias_epochs_errors():
     """Test error handling for epochs axis."""
     bias = AverageBias(axis="epochs")
@@ -60,6 +72,24 @@ def test_average_bias_weight_mismatch():
     bias = AverageBias(axis="epochs", weights=weights)
     with pytest.raises(ValueError, match="weights length.*must match"):
         bias.apply(data)
+
+
+@pytest.mark.parametrize(
+    "weights, match",
+    [
+        ([np.nan, 1.0], "finite and non-negative"),
+        ([-1.0, 1.0], "finite and non-negative"),
+        ([0.0, 0.0], "positive sum"),
+        (np.zeros((3, 2)), "positive observation"),
+        (np.ones((2, 2)), "weights must have shape"),
+    ],
+)
+def test_average_bias_epochs_invalid_weights(weights, match):
+    """Epoch weights reject invalid values, mass, and observation shapes."""
+    data = np.ones((1, 3, 2))
+
+    with pytest.raises(ValueError, match=match):
+        AverageBias(axis="epochs", weights=weights).apply(data)
 
 
 def test_average_bias_datasets():
@@ -98,6 +128,23 @@ def test_average_bias_datasets_errors():
     bias_w = AverageBias(axis="datasets", weights=np.ones(5))
     with pytest.raises(ValueError, match="weights length"):
         bias_w.apply(data)
+
+
+@pytest.mark.parametrize(
+    "weights, match",
+    [
+        (np.ones((3, 1)), "weights must have shape"),
+        ([np.nan, 1.0, 1.0], "finite and non-negative"),
+        ([-1.0, 1.0, 1.0], "finite and non-negative"),
+        ([0.0, 0.0, 0.0], "positive sum"),
+    ],
+)
+def test_average_bias_datasets_invalid_weights(weights, match):
+    """Dataset weights reject invalid values, mass, and shapes."""
+    data = np.ones((3, 2, 4))
+
+    with pytest.raises(ValueError, match=match):
+        AverageBias(axis="datasets", weights=weights).apply(data)
 
 
 def test_average_bias_properties():

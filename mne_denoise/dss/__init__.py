@@ -2,7 +2,7 @@
 
 This module contains:
 - Core DSS algorithms (linear and nonlinear)
-- Variants and applications (TSR, SSVEP, Narrowband)
+- Variants and applications (Time-shift DSS, SSVEP, Narrowband)
 
 For ZapLine, see `mne_denoise.zapline`.
 """
@@ -17,6 +17,7 @@ from .denoisers import (
     DCTDenoiser,
     GaussDenoiser,
     KurtosisDenoiser,
+    LagAverageBias,
     LinearDenoiser,
     LineNoiseBias,
     NonlinearDenoiser,
@@ -29,7 +30,6 @@ from .denoisers import (
     SpectrogramBias,
     SpectrogramDenoiser,
     TanhMaskDenoiser,
-    TimeShiftBias,
     WienerMaskDenoiser,
     beta_gauss,
     beta_pow3,
@@ -54,12 +54,13 @@ from .variants.narrowband import narrowband_dss, narrowband_scan
 from .variants.ssvep import ssvep_dss
 
 # Variants (Direct Access)
-from .variants.tsr import smooth_dss, time_shift_dss
+from .variants.tsr import TimeShiftDSS, smooth_dss
 
 __all__ = [
     # Core
     "compute_dss",
     "DSS",
+    "TimeShiftDSS",
     "iterative_dss",
     "iterative_dss_one",
     "IterativeDSS",
@@ -68,7 +69,6 @@ __all__ = [
     "ssvep",
     "narrowband",
     # Variants functions
-    "time_shift_dss",
     "smooth_dss",
     "ssvep_dss",
     "narrowband_scan",
@@ -99,6 +99,6 @@ __all__ = [
     "beta_tanh",
     "beta_pow3",
     "beta_gauss",
-    "TimeShiftBias",
+    "LagAverageBias",
     "SmoothingBias",
 ]

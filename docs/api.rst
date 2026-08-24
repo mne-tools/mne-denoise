@@ -33,6 +33,7 @@ DSS
 
    mne_denoise.dss.compute_dss
    mne_denoise.dss.DSS
+   mne_denoise.dss.TimeShiftDSS
    mne_denoise.dss.iterative_dss
    mne_denoise.dss.IterativeDSS
 
@@ -91,6 +92,40 @@ Overcorrection metrics
 
    mne_denoise.quantify_overcorrection
 
+BSS-CCA
+-------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.bss_cca.BSSCCA
+   mne_denoise.bss_cca.compute_bss_cca
+
+SNS
+---
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.sns.SNS
+   mne_denoise.sns.compute_sns
+   mne_denoise.sns.compute_sns_weights
+
+SSA
+---
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.ssa.SingularSpectrumAnalysis
+   mne_denoise.ssa.LocalSingularSpectrumAnalysis
+   mne_denoise.ssa.ssa_decompose
+   mne_denoise.ssa.ssa_w_correlation
+   mne_denoise.ssa.compute_basic_ssa
+   mne_denoise.ssa.ssa_clean_channel
+   mne_denoise.ssa.compute_local_ssa
+   mne_denoise.ssa.local_ssa_clean_channel
+
 Denoisers
 ---------
 .. autosummary::
@@ -104,7 +139,7 @@ Denoisers
    mne_denoise.dss.denoisers.LineNoiseBias
    mne_denoise.dss.denoisers.PeakFilterBias
    mne_denoise.dss.denoisers.CombFilterBias
-   mne_denoise.dss.denoisers.TimeShiftBias
+   mne_denoise.dss.denoisers.LagAverageBias
    mne_denoise.dss.denoisers.SmoothingBias
    mne_denoise.dss.denoisers.SpectrogramBias
    mne_denoise.dss.denoisers.NonlinearDenoiser
@@ -124,12 +159,10 @@ Variants
    :toctree: generated/
    :nosignatures:
 
-   mne_denoise.dss.variants.time_shift_dss
    mne_denoise.dss.variants.smooth_dss
    mne_denoise.dss.variants.narrowband_dss
    mne_denoise.dss.variants.narrowband_scan
    mne_denoise.dss.variants.ssvep_dss
-   mne_denoise.dss.variants.tsr
 
 Quality Assurance
 -----------------

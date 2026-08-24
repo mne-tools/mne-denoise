@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from mne_denoise.icanclean import ICanClean, compute_icanclean
-from mne_denoise.icanclean._cca import canonical_correlation
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -63,89 +62,6 @@ def synthetic_dual_layer(rng):
 
     truth = {"brain": brain, "artifact_primary": artifact_primary}
     return data, primary_idx, ref_idx, sfreq, truth
-
-
-# ---------------------------------------------------------------------------
-# CCA tests
-# ---------------------------------------------------------------------------
-
-
-def test_cca_basic_shapes(rng):
-    """CCA returns correct shapes."""
-    n, px, py = 200, 8, 4
-    X = rng.standard_normal((n, px))
-    Y = rng.standard_normal((n, py))
-    A, B, R, U, V = canonical_correlation(X, Y)
-
-    d = min(px, py)
-    assert A.shape == (px, d)
-    assert B.shape == (py, d)
-    assert R.shape == (d,)
-    assert U.shape == (n, d)
-    assert V.shape == (n, d)
-
-
-def test_cca_correlations_descending(rng):
-    """Canonical correlations are sorted descending."""
-    X = rng.standard_normal((300, 10))
-    Y = rng.standard_normal((300, 6))
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    assert np.all(np.diff(R) <= 1e-10)  # descending
-
-
-def test_cca_correlations_bounded(rng):
-    """Canonical correlations are in [0, 1]."""
-    X = rng.standard_normal((200, 8))
-    Y = rng.standard_normal((200, 5))
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    assert np.all(R >= -1e-10)
-    assert np.all(R <= 1.0 + 1e-10)
-
-
-def test_cca_perfect_correlation():
-    """Perfectly correlated signals give R \u2248 1."""
-    t = np.linspace(0, 1, 500)
-    X = np.column_stack([np.sin(2 * np.pi * t), np.cos(2 * np.pi * t)])
-    Y = X @ np.array([[0.5, 0.3], [-0.2, 0.8]])  # linear transform
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    np.testing.assert_allclose(R[0], 1.0, atol=1e-6)
-    np.testing.assert_allclose(R[1], 1.0, atol=1e-6)
-
-
-def test_cca_uncorrelated(rng):
-    """Independent signals give low correlations."""
-    X = rng.standard_normal((5000, 8))
-    Y = rng.standard_normal((5000, 4))
-    _, _, R, _, _ = canonical_correlation(X, Y)
-    # With many samples, random correlations should be small
-    assert R.max() < 0.15
-
-
-def test_cca_unit_variance(rng):
-    """Canonical variates have unit variance (ddof=1)."""
-    X = rng.standard_normal((300, 6))
-    Y = rng.standard_normal((300, 4))
-    _, _, _, U, V = canonical_correlation(X, Y)
-    np.testing.assert_allclose(U.std(axis=0, ddof=1), 1.0, atol=1e-10)
-    np.testing.assert_allclose(V.std(axis=0, ddof=1), 1.0, atol=1e-10)
-
-
-def test_cca_mismatched_samples_raises(rng):
-    """Different n_samples raises ValueError."""
-    X = rng.standard_normal((100, 5))
-    Y = rng.standard_normal((80, 3))
-    with pytest.raises(ValueError, match="same number of samples"):
-        canonical_correlation(X, Y)
-
-
-def test_cca_rank_deficient(rng):
-    """Handles rank-deficient input gracefully."""
-    X = rng.standard_normal((100, 4))
-    # Y has only 2 independent columns out of 5
-    base = rng.standard_normal((100, 2))
-    Y = np.column_stack([base, base @ rng.standard_normal((2, 3))])
-    A, B, R, U, V = canonical_correlation(X, Y)
-    assert R.shape[0] <= 2  # rank of Y is 2
 
 
 # ---------------------------------------------------------------------------
@@ -601,14 +517,129 @@ def test_icanclean_validation_removed_workflows():
         ICanClean(sfreq=250.0, ref_channels=[0], primary_prefix="EEG")
     with pytest.raises(TypeError):
         ICanClean(sfreq=250.0, ref_channels=[0], exclude_pattern="EXG")
-    with pytest.raises(TypeError):
-        ICanClean(sfreq=250.0, ref_channels=[0], pseudo_ref=True)
-    with pytest.raises(TypeError):
+
+
+# ---------------------------------------------------------------------------
+# Pseudo-reference mode (Downey & Ferris 2023, Sensors 23(19):8214)
+# ---------------------------------------------------------------------------
+
+
+def test_filter_ref_validation():
+    """A malformed filter_ref spec is rejected before any data is touched."""
+    for bad in [
+        ("bogus", 10.0),
+        ("bandstop", 10.0),
+        ("bandstop", (45.0, 5.0)),
+        ("highpass", (1, 2)),
+    ]:
+        with pytest.raises(ValueError):
+            ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad)
+
+
+def test_pseudo_ref_requires_filter_ref():
+    """Without a filter the reference equals the primary block: r=1 everywhere."""
+    with pytest.raises(ValueError, match="requires filter_ref"):
+        ICanClean(sfreq=250.0, primary_channels=[0, 1], pseudo_ref=True)
+
+
+def test_pseudo_ref_needs_no_ref_channels():
+    """pseudo_ref supplies its own reference, so ref_channels is optional."""
+    icc = ICanClean(
+        sfreq=250.0,
+        primary_channels=[0, 1],
+        pseudo_ref=True,
+        filter_ref=("bandstop", (5.0, 45.0)),
+    )
+    assert icc.ref_channels is None
+    with pytest.raises(ValueError, match="ref_channels must be provided"):
+        ICanClean(sfreq=250.0, primary_channels=[0, 1])
+
+
+def test_pseudo_ref_rejects_ref_channels():
+    """pseudo_ref builds its own reference; a real ref_channels would be
+
+    silently ignored (the CCA reference is always rebuilt from the primary
+    channels once pseudo_ref=True), so combining the two must raise instead.
+    """
+    with pytest.raises(ValueError, match="ref_channels is not used"):
         ICanClean(
             sfreq=250.0,
-            ref_channels=[0],
-            filter_ref=("notch", (49.0, 51.0)),
+            ref_channels=[3],
+            pseudo_ref=True,
+            filter_ref=("bandstop", (5.0, 45.0)),
         )
+
+
+def test_filter_ref_rejects_non_positive_frequencies():
+    """A zero or negative band edge fails scipy's own Wn check with a
+
+    confusing message; catch it at construction like the Nyquist check does.
+    """
+    for bad in [
+        ("highpass", 0.0),
+        ("lowpass", -1.0),
+        ("bandstop", (0.0, 45.0)),
+        ("bandpass", (-5.0, 10.0)),
+    ]:
+        with pytest.raises(ValueError):
+            ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad)
+
+
+def test_filter_ref_rejects_band_edge_at_or_above_nyquist():
+    """A band edge at or above Nyquist must raise at construction, not fail
+
+    inside scipy the first time data is transformed.
+    """
+    with pytest.raises(ValueError, match="Nyquist"):
+        ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=("lowpass", 125.0))
+    with pytest.raises(ValueError, match="Nyquist"):
+        ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=("bandstop", (5.0, 200.0)))
+
+
+def test_pseudo_ref_preserves_channel_count_and_shape(synthetic_dual_layer):
+    """The appended pseudo-reference rows must not leak into the output."""
+    data, primary_idx, _ref_idx, sfreq, _truth = synthetic_dual_layer
+    icc = ICanClean(
+        sfreq=sfreq,
+        primary_channels=primary_idx,
+        pseudo_ref=True,
+        filter_ref=("bandstop", (5.0, 45.0)),
+        segment_len=1.0,
+        threshold=0.9,
+        verbose=False,
+    )
+    out = icc.fit_transform(data)
+    assert out.shape == data.shape
+
+
+def test_pseudo_ref_removes_out_of_band_artifact(synthetic_dual_layer):
+    """A strong sub-band drift shared across channels should be attenuated.
+
+    The pseudo-reference retains only content outside 5-45 Hz, so CCA can see
+    the drift but not the in-band signal.
+    """
+    data, primary_idx, _ref_idx, sfreq, truth = synthetic_dual_layer
+    primary = truth["brain"]
+    n_times = primary.shape[1]
+    t = np.arange(n_times) / sfreq
+    drift = 8.0 * np.sin(2 * np.pi * 0.7 * t)
+    contaminated = primary + drift[None, :]
+
+    icc = ICanClean(
+        sfreq=sfreq,
+        primary_channels=list(range(len(primary_idx))),
+        pseudo_ref=True,
+        filter_ref=("bandstop", (5.0, 45.0)),
+        segment_len=2.0,
+        threshold=0.5,
+        verbose=False,
+    )
+    cleaned = icc.fit_transform(contaminated)
+
+    edge = int(sfreq)
+    before = np.mean(np.abs(contaminated[:, edge:-edge] - primary[:, edge:-edge]))
+    after = np.mean(np.abs(cleaned[:, edge:-edge] - primary[:, edge:-edge]))
+    assert after < before, f"drift not attenuated: {before:.3f} -> {after:.3f}"
 
 
 def test_icanclean_max_reject_zero_preserves_data(synthetic_dual_layer):

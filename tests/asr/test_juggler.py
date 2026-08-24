@@ -4,10 +4,57 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from sklearn.cluster import DBSCAN
 
 from mne_denoise.asr import JugglerASR, select_juggler_reference_samples
+from mne_denoise.asr._filters import _design_statistics_filter, _lfilter_channels
+from mne_denoise.asr.juggler import _dbscan_chebyshev_memory_bounded
 
 SFREQ = 250.0
+
+
+@pytest.mark.parametrize("seed", [3, 17, 91])
+def test_memory_bounded_dbscan_matches_sklearn(seed):
+    """The bounded backend preserves exact Chebyshev DBSCAN memberships."""
+    rng = np.random.default_rng(seed)
+    features = np.vstack(
+        [
+            rng.normal(-1.0, 0.12, size=(80, 5)),
+            rng.normal(1.0, 0.12, size=(70, 5)),
+            rng.uniform(-3.0, 3.0, size=(20, 5)),
+        ]
+    )
+    expected = DBSCAN(eps=0.32, min_samples=6, metric="chebyshev").fit_predict(features)
+    observed, diagnostics = _dbscan_chebyshev_memory_bounded(
+        features,
+        eps=0.32,
+        min_samples=6,
+        count_batch_size=23,
+    )
+
+    np.testing.assert_array_equal(observed == -1, expected == -1)
+    expected_same_cluster = expected[:, None] == expected[None, :]
+    observed_same_cluster = observed[:, None] == observed[None, :]
+    non_noise_pairs = (expected[:, None] >= 0) & (expected[None, :] >= 0)
+    np.testing.assert_array_equal(
+        observed_same_cluster[non_noise_pairs],
+        expected_same_cluster[non_noise_pairs],
+    )
+    assert diagnostics["juggler_dbscan_backend"] == ("ckdtree_grid_memory_bounded")
+
+
+def test_memory_bounded_dbscan_handles_one_dense_cell():
+    """A dense 100k-style cluster is compressed to one occupied core cell."""
+    rng = np.random.default_rng(8)
+    features = rng.uniform(0.0, 0.01, size=(5000, 5))
+    labels, diagnostics = _dbscan_chebyshev_memory_bounded(
+        features,
+        eps=1.0,
+        min_samples=500,
+        count_batch_size=127,
+    )
+    np.testing.assert_array_equal(labels, np.zeros(features.shape[0], dtype=int))
+    assert diagnostics["juggler_dbscan_core_cells"] == 1
 
 
 def _make_synthetic_eeg(
@@ -459,6 +506,23 @@ def test_select_juggler_reference_samples_rejects_burst_samples(
     assert diagnostics["reference_selected_samples"] == int(np.sum(sample_mask))
 
 
+def test_juggler_reference_contains_continuously_filtered_samples(
+    synthetic_burst_data,
+):
+    """Pointwise selection must not re-filter concatenated sample fragments."""
+    data, _, _, sfreq = synthetic_burst_data
+    reference, sample_mask, diagnostics = select_juggler_reference_samples(
+        data,
+        sfreq,
+        strategy="gev",
+    )
+    b, a = _design_statistics_filter(sfreq, "asr")
+    filtered, zf = _lfilter_channels(data, b, a)
+
+    np.testing.assert_allclose(reference, filtered[:, sample_mask])
+    np.testing.assert_allclose(diagnostics["selection_filter_zi"], zf)
+
+
 @pytest.mark.parametrize("strategy", ["dbscan", "gev"])
 def test_juggler_asr_reduces_synthetic_bursts(synthetic_burst_data, strategy):
     """JugglerASR reuses standard ASR repair after sample-wise calibration."""
@@ -482,6 +546,47 @@ def test_juggler_asr_reduces_synthetic_bursts(synthetic_burst_data, strategy):
     before = np.var(data[:, burst_mask] - brain[:, burst_mask])
     after = np.var(cleaned[:, burst_mask] - brain[:, burst_mask])
     assert after < before
+
+
+@pytest.mark.parametrize("strategy", ["dbscan", "gev"])
+def test_juggler_cleaning_is_invariant_to_eeg_unit_scaling(
+    synthetic_burst_data, strategy
+):
+    """Juggler gives equivalent results for volts and microvolts."""
+    data_uv, _, _, sfreq = synthetic_burst_data
+    model_uv = JugglerASR(
+        sfreq=sfreq,
+        cutoff=5.0,
+        strategy=strategy,
+        verbose=False,
+    )
+    clean_uv = model_uv.fit_transform(data_uv)
+
+    model_v = JugglerASR(
+        sfreq=sfreq,
+        cutoff=5.0,
+        strategy=strategy,
+        verbose=False,
+    )
+    clean_v = model_v.fit_transform(data_uv * 1e-6)
+
+    np.testing.assert_allclose(clean_v * 1e6, clean_uv, rtol=2e-7, atol=2e-8)
+    np.testing.assert_array_equal(
+        model_v.n_components_reconstructed_, model_uv.n_components_reconstructed_
+    )
+
+
+def test_juggler_rejects_mismatched_statistics_filters(synthetic_burst_data):
+    """Selection and reconstruction must use the same statistics filter."""
+    data, _, _, sfreq = synthetic_burst_data
+    model = JugglerASR(
+        sfreq=sfreq,
+        filter_kind="asr",
+        selection_filter_kind="none",
+        verbose=False,
+    )
+    with pytest.raises(ValueError, match="filter_kind and selection_filter_kind"):
+        model.fit(data)
 
 
 def test_juggler_asr_reference_annotations_and_metrics(synthetic_burst_data):
@@ -553,7 +658,10 @@ def test_juggler_edge_cases():
     with pytest.raises(RuntimeError, match="zero-amplitude"):
         _resolve_dbscan_eps("auto", 0.0, np.zeros(10))
 
-    with patch("sklearn.cluster.DBSCAN.fit_predict", return_value=np.full(100, -1)):
+    with patch(
+        "mne_denoise.asr.juggler._dbscan_chebyshev_memory_bounded",
+        return_value=(np.full(100, -1), {}),
+    ):
         with pytest.raises(RuntimeError, match="DBSCAN found no non-noise cluster"):
             select_juggler_reference_samples(clean, SFREQ, strategy="dbscan")
 

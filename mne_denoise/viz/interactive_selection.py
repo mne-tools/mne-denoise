@@ -18,13 +18,10 @@ from matplotlib.colors import to_rgba
 from matplotlib.gridspec import GridSpec
 from mne.time_frequency import psd_array_welch
 
+from .._spatial import continuous_to_epochs, epochs_to_continuous
 from ..dss.linear import DSS
 from ..dss.nonlinear import IterativeDSS
-from ..utils import (
-    epochs_to_continuous,
-    extract_data_from_mne,
-    reconstruct_mne_object,
-)
+from ..utils import extract_data_from_mne, reconstruct_mne_object
 from ..zapline.core import ZapLine
 from ._utils import _compute_gfp, _get_info, _get_patterns
 from .components import _resolve_component_indices
@@ -64,22 +61,20 @@ def _estimator_kind(estimator: Any) -> str:
     )
 
 
-def _resolve_layout(
+def _flatten_with_layout(
     data: np.ndarray,
     *,
     n_channels: int,
     kind: str,
     mne_type: str,
 ) -> tuple[np.ndarray, str, tuple[int, ...]]:
-    """Flatten estimator input to channel-first, naming the layout it came from.
+    """Flatten estimator input to continuous channel-first data.
 
-    Which 3D convention applies depends on the estimator, not on the array:
-    epoched MNE input and the iterative-DSS/ZapLine estimators are
-    ``(n_epochs, n_channels, n_times)``, while linear-DSS array input is
-    ``(n_channels, n_times, n_epochs)`` and so flattens without a transpose.
-    Guessing wrong scrambles the data silently rather than raising, hence the
-    per-convention channel-axis checks below. The returned layout tag is what
-    :func:`_restore_layout` and :func:`_sources_for_plot` invert.
+    Returns the flattened data, a tag naming the layout it came from, and
+    the original shape, so :func:`_restore_layout` can invert it. Unlike
+    :func:`mne_denoise._spatial.epochs_to_continuous`, this also detects
+    which of three layouts it was handed and validates the channel count
+    against the fitted estimator.
     """
     data = np.asarray(data, dtype=float)
     shape = data.shape
@@ -98,6 +93,8 @@ def _resolve_layout(
                 "Epoched input must have shape (n_epochs, n_channels, n_times); "
                 f"got {shape} for an estimator with {n_channels} channels."
             )
+        # transpose() + reshape() of a non-contiguous view already returns a fresh
+        # array, so no extra copy is needed to decouple from the caller's input.
         continuous = epochs_to_continuous(data)
         return continuous, "epochs_first", shape
 
@@ -119,8 +116,7 @@ def _restore_layout(
     if layout == "continuous":
         return continuous
     if layout == "epochs_first":
-        n_epochs, n_channels, n_times = shape
-        return continuous.reshape(n_channels, n_epochs, n_times).transpose(1, 0, 2)
+        return continuous_to_epochs(continuous, shape)
     return continuous.reshape(shape)
 
 
@@ -295,7 +291,7 @@ def _prepare_selection_state(estimator: Any, data: Any) -> _SelectionState:
         ch_names=getattr(estimator, "_mne_ch_names_", None),
         auto_pick=not getattr(estimator, "whiten", False),
     )
-    continuous, layout, input_shape = _resolve_layout(
+    continuous, layout, input_shape = _flatten_with_layout(
         extracted,
         n_channels=patterns.shape[0],
         kind=kind,

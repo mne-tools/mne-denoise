@@ -115,38 +115,13 @@ def _get_homogeneous_picks(
     return None
 
 
-def epochs_to_continuous(data: np.ndarray) -> np.ndarray:
-    """Lay epochs end to end into one continuous ``(n_channels, n_times)`` array.
-
-    Parameters
-    ----------
-    data : array, shape (n_epochs, n_channels, n_times) | (n_channels, n_times)
-        Epoched or already-continuous data. 2D input is returned unchanged.
-
-    Returns
-    -------
-    continuous : array, shape (n_channels, n_epochs * n_times)
-        Epochs concatenated along time, channels preserved.
-
-    Notes
-    -----
-    The transpose is what makes the epochs consecutive in time per channel;
-    reshaping without it would interleave them. Transposing and reshaping a
-    non-contiguous view already returns a fresh array, so the result never
-    shares memory with ``data`` and callers need no extra copy.
-    """
-    data = np.asarray(data)
-    if data.ndim != 3:
-        return data
-    return np.transpose(data, (1, 0, 2)).reshape(data.shape[1], -1)
-
-
 def extract_data_from_mne(
     X: Any,
     ch_names: list[str] | None = None,
     auto_pick: bool | str = True,
     concatenate_epochs: bool = False,
     channel_first_epochs: bool = False,
+    exclude_bads: bool = False,
 ) -> tuple[np.ndarray, float | None, str, Any, np.ndarray | None, list[str] | None]:
     """
     Extract data and metadata from an MNE object or NumPy-compatible array.
@@ -174,6 +149,10 @@ def extract_data_from_mne(
         If True, return MNE Epochs as
         ``(n_channels, n_times, n_epochs)``. Cannot be combined with
         ``concatenate_epochs=True``.
+    exclude_bads : bool, default=False
+        If True, omit channels listed in ``X.info['bads']`` from automatic
+        channel selection. This has no effect when ``ch_names`` explicitly
+        defines the fitted channel contract.
 
     Returns
     -------
@@ -251,6 +230,22 @@ def extract_data_from_mne(
             else:
                 picks = None
 
+            if exclude_bads:
+                candidate_picks = (
+                    np.arange(len(X.ch_names), dtype=int)
+                    if picks is None
+                    else np.asarray(picks, dtype=int)
+                )
+                bads = set(X.info["bads"])
+                picks = np.asarray(
+                    [pick for pick in candidate_picks if X.ch_names[pick] not in bads],
+                    dtype=int,
+                )
+                if picks.size == 0:
+                    raise ValueError(
+                        "No good data channels remain after excluding bads"
+                    )
+
             if picks is not None:
                 data = X.get_data(picks=picks)
                 extracted_ch_names = [X.ch_names[p] for p in picks]
@@ -273,7 +268,7 @@ def extract_data_from_mne(
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
         raise TypeError(f"Unsupported input type: {type(X)}")
     if concatenate_epochs and data.ndim == 3:
-        data = epochs_to_continuous(data)
+        data = np.transpose(data, (1, 0, 2)).reshape(data.shape[1], -1)
     elif channel_first_epochs and mne_type == "epochs":
         data = np.transpose(data, (1, 2, 0))
 
@@ -287,7 +282,7 @@ def reconstruct_mne_object(
     picks: np.ndarray | None = None,
     verbose: bool = False,
 ) -> Any:
-    """Reconstruct MNE object from data and template instance.
+    """Insert processed data into a copy of an MNE object.
 
     Parameters
     ----------
@@ -300,7 +295,8 @@ def reconstruct_mne_object(
     picks : array of int | None
         If provided, `data` is re-inserted into a copy of `orig_inst` only at these channel indices.
     verbose : bool
-        Verbosity flag for MNE object creation.
+        Retained for API compatibility. Copy-based reconstruction does not
+        create a new MNE object.
 
     Returns
     -------
@@ -313,46 +309,33 @@ def reconstruct_mne_object(
     if not _HAS_MNE:
         return data
 
-    if picks is not None:
-        data_full = orig_inst.get_data().copy()
-        if mne_type == "epochs":
-            data_full[:, picks, :] = data
+    if mne_type in ("raw", "epochs"):
+        out = orig_inst.copy().load_data()
+        target = out._data
+        if picks is None:
+            if target.shape != data.shape:
+                raise ValueError(
+                    f"Processed data shape {data.shape} does not match {mne_type} "
+                    f"shape {target.shape}"
+                )
+            target[...] = data
+        elif mne_type == "epochs":
+            target[:, picks, :] = data
         else:
-            data_full[picks, :] = data
-        data = data_full
-
-    if mne_type == "raw":
-        out = mne.io.RawArray(data, orig_inst.info, verbose=verbose)
-        if hasattr(orig_inst, "annotations") and orig_inst.annotations:
-            out.set_annotations(orig_inst.annotations)
+            target[picks, :] = data
         return out
 
-    elif mne_type == "epochs":
-        events = getattr(orig_inst, "events", None)
-        event_id = getattr(orig_inst, "event_id", None)
-        tmin = getattr(orig_inst, "tmin", 0)
-        metadata = getattr(orig_inst, "metadata", None)
-
-        out = mne.EpochsArray(
-            data,
-            orig_inst.info,
-            events=events,
-            event_id=event_id,
-            tmin=tmin,
-            verbose=verbose,
-        )
-        if metadata is not None:
-            out.metadata = metadata.copy()
-        return out
-
-    elif mne_type == "evoked":
-        nave = getattr(orig_inst, "nave", 1)
-        tmin = getattr(orig_inst, "tmin", 0)
-        comment = getattr(orig_inst, "comment", "")
-
-        out = mne.EvokedArray(
-            data, orig_inst.info, tmin=tmin, nave=nave, comment=comment, verbose=verbose
-        )
+    if mne_type == "evoked":
+        out = orig_inst.copy()
+        if picks is None:
+            if out.data.shape != data.shape:
+                raise ValueError(
+                    f"Processed data shape {data.shape} does not match evoked "
+                    f"shape {out.data.shape}"
+                )
+            out.data[...] = data
+        else:
+            out.data[picks, :] = data
         return out
 
     return data

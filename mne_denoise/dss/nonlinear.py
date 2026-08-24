@@ -19,7 +19,8 @@ from collections.abc import Callable
 import numpy as np
 
 from .._logging import set_log_level_from_verbose
-from ..utils import epochs_to_continuous, extract_data_from_mne
+from .._spatial import continuous_to_epochs, epochs_to_continuous
+from ..utils import extract_data_from_mne
 from .utils.whitening import whiten_from_data_covariance
 
 
@@ -328,7 +329,7 @@ def iterative_dss(
     data_centered = data_2d - data_2d.mean(axis=1, keepdims=True)
 
     # Whiten data
-    X_whitened, whitener, _ = whiten_from_data_covariance(
+    X_whitened, whitener, dewhitener = whiten_from_data_covariance(
         data_centered, rank=rank, reg=reg
     )
     n_whitened = X_whitened.shape[0]
@@ -454,7 +455,7 @@ def _iterative_dss_deflation(
             w_i = None
 
         # Run single-component iteration
-        w, _, n_iter, converged = iterative_dss_one(
+        w, source, n_iter, converged = iterative_dss_one(
             X_deflated,
             denoiser,
             w_init=w_i,
@@ -776,7 +777,7 @@ class IterativeDSS:
         """
         set_log_level_from_verbose(self.verbose)
         # Validate and extract data using shared helper
-        data, _, mne_type, mne_info, _, ch_names = extract_data_from_mne(
+        data, _, mne_type, mne_info, picks, ch_names = extract_data_from_mne(
             X,
             concatenate_epochs=True,
         )
@@ -838,16 +839,13 @@ class IterativeDSS:
             raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
 
         # Validate and extract data
-        data, *_ = extract_data_from_mne(
+        data, _, mne_type, _, picks, _ = extract_data_from_mne(
             X, ch_names=getattr(self, "_mne_ch_names_", None)
         )
 
         original_shape = data.shape
 
-        if data.ndim == 3:
-            data_2d = epochs_to_continuous(data)
-        else:
-            data_2d = data
+        data_2d = epochs_to_continuous(data) if data.ndim == 3 else data
 
         if self.normalize_input:
             if self.channel_norms_ is None:
@@ -863,14 +861,8 @@ class IterativeDSS:
         sources = self.filters_ @ data_centered
 
         # Reshape to original 3D if needed
-        if len(original_shape) == 3:
-            # original: (n_epochs, n_channels, n_times)
-            # sources now: (n_components, n_epochs * n_times)
-            # reshape to: (n_components, n_epochs, n_times)
-            n_epochs, n_channels, n_times = original_shape
-            sources = sources.reshape(self.n_components, n_epochs, n_times)
-            # transpose to standard MNE: (n_epochs, n_components, n_times)
-            sources = sources.transpose(1, 0, 2)
+        # (n_components, n_epochs * n_times) -> (n_epochs, n_components, n_times)
+        sources = continuous_to_epochs(sources, original_shape)
 
         return sources
 

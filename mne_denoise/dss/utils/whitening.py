@@ -16,32 +16,14 @@ from typing import Any
 import numpy as np
 from numpy.linalg import LinAlgError
 
-from .covariance import compute_covariance
+from ..._covariance import compute_covariance
+from ..._spatial import apply_spatial_transform
 
 try:
     import mne
     from mne.cov import compute_whitener as compute_mne_whitener
 except ImportError:  # pragma: no cover
     mne = None  # pragma: no cover
-
-
-# Shared spatial operation
-# ------------------------
-def apply_spatial_transform(matrix: np.ndarray, data: np.ndarray) -> np.ndarray:
-    """Apply a spatial matrix along the channel axis of 2D or 3D data."""
-    matrix = np.asarray(matrix)
-    data = np.asarray(data)
-    if matrix.ndim != 2:
-        raise ValueError(f"matrix must be 2D, got {matrix.ndim}D")
-    if data.ndim not in (2, 3):
-        raise ValueError(f"data must be 2D or 3D, got {data.ndim}D")
-    if matrix.shape[1] != data.shape[0]:
-        raise ValueError(
-            "matrix and data channel dimensions do not match "
-            f"({matrix.shape[1]} != {data.shape[0]})"
-        )
-    flat = data.reshape(data.shape[0], -1)
-    return (matrix @ flat).reshape((matrix.shape[0], *data.shape[1:]))
 
 
 def apply_covariance_transform(
@@ -148,6 +130,10 @@ def compute_data_covariance_whitener(
         raise TypeError("rank must be an int or None")
     if rank is not None and rank <= 0:
         raise ValueError("rank must be positive")
+    if rank is not None and rank > cov.shape[0]:
+        raise ValueError(
+            f"rank ({rank}) cannot exceed the channel count ({cov.shape[0]})"
+        )
     if isinstance(reg, bool) or not isinstance(reg, Real):
         raise TypeError("reg must be a real number")
     if not np.isfinite(reg) or reg < 0:
@@ -245,7 +231,9 @@ def whiten_from_data_covariance(
     cov = compute_covariance(data_centered, assume_centered=True)
 
     # Get whitening matrices
-    whitener, dewhitener, _ = compute_data_covariance_whitener(cov, rank=rank, reg=reg)
+    whitener, dewhitener, eigenvalues = compute_data_covariance_whitener(
+        cov, rank=rank, reg=reg
+    )
 
     # Apply whitening through the shared channel-axis operation.
     whitened_2d = apply_spatial_transform(whitener, data_centered)

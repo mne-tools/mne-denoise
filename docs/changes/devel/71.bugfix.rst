@@ -1,0 +1,3 @@
+Fixed ``CycleAverageBias`` so epochs cannot share windows, overlaps are
+event-order invariant, integer averages cannot truncate, and event coordinates,
+boundaries, origins, duplicates, and minimum counts have explicit contracts.

@@ -1,0 +1,10 @@
+Added ``pseudo_ref``/``filter_ref`` to :class:`mne_denoise.icanclean.ICanClean`,
+to add the pseudo-reference mode. ``pseudo_ref=True`` derives the CCA reference
+block from the primary channels themselves (a copy filtered with ``filter_ref``
+and appended as the reference) the method of Downey & Ferris (2023),
+*Sensors* 23(19):8214, for recordings with no dual-layer cap;
+``ref_channels`` must then be left ``None``. ``filter_ref=(btype, freqs)``
+also works standalone to filter real reference channels, via zero-phase 4th-order
+Butterworth. An unfiltered pseudo-reference, a non-positive frequency, or a band
+edge at or past Nyquist now raises at construction, rather than silently removing
+the whole signal or failing inside scipy the first time data is transformed.

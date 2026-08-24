@@ -1,0 +1,7 @@
+Added ``mne_denoise._filtering.design_butter_sos``, replacing independently
+hand-rolled Butterworth SOS design in ICanClean, the DSS covariance segmenter,
+ZapLine's cleanline notch fallback, and DSS's ``BandpassBias``. Also removed
+the manual per-epoch ``sosfiltfilt`` loops in ``BandpassBias``,
+``PeakFilterBias``, and ``CombFilterBias``: ``sosfiltfilt`` already filters
+along a given axis independently of the others, so a 3-D
+``(n_channels, n_times, n_epochs)`` array needs no loop.
