@@ -1,0 +1,10 @@
+Added ``reject={'low', 'high'}`` and ``threshold_on={'rho', 'rsq'}`` to
+:func:`mne_denoise.bss_cca.compute_bss_cca` and
+:class:`mne_denoise.bss_cca.BSSCCA`. ``reject='high'`` drops the most
+autocorrelated components -- slow drift and movement artifact -- instead of
+the least autocorrelated ones -- muscle; ``threshold_on='rsq'`` thresholds the
+squared canonical correlation. Both match the ``rejHiLo``/``rsq_thres``
+convention of ``autoLagCCA.m``, the reference implementation distributed with
+the ds004784 phantom dataset, so its published threshold values transfer
+without conversion. Both parameters default to the package's existing
+behaviour.

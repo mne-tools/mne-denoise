@@ -982,9 +982,7 @@ def test_threshold_on_rejects_unknown_value():
     rng = np.random.default_rng(6)
     observed, _drift, _muscle = _drift_and_muscle(rng)
     with pytest.raises(ValueError, match="threshold_on must be 'rho' or 'rsq'"):
-        compute_bss_cca(
-            observed, lag_samples=1, rho_threshold=0.5, threshold_on="r2"
-        )
+        compute_bss_cca(observed, lag_samples=1, rho_threshold=0.5, threshold_on="r2")
 
 
 def test_estimator_forwards_reject_and_threshold_on():
@@ -1008,8 +1006,11 @@ def test_estimator_forwards_reject_and_threshold_on():
     assert (on_rsq.n_removed_, on_rho.n_removed_) != (0, 0)
 
     # And the estimator must agree with the function it delegates to.
-    for kwargs in ({"reject": "high"}, {"threshold_on": "rsq"},
-                   {"reject": "high", "threshold_on": "rsq"}):
+    for kwargs in (
+        {"reject": "high"},
+        {"threshold_on": "rsq"},
+        {"reject": "high", "threshold_on": "rsq"},
+    ):
         est = BSSCCA(rho_threshold=0.59, **kwargs).fit(observed)
         _cleaned, info = compute_bss_cca(observed, rho_threshold=0.59, **kwargs)
         np.testing.assert_array_equal(est.kept_mask_, info["kept_mask"])

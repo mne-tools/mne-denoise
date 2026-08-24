@@ -145,9 +145,7 @@ def _check_reject(reject: str) -> str:
 def _check_threshold_on(threshold_on: str) -> str:
     """Validate the scale ``rho_threshold`` is expressed on."""
     if threshold_on not in ("rho", "rsq"):
-        raise ValueError(
-            f"threshold_on must be 'rho' or 'rsq', got {threshold_on!r}"
-        )
+        raise ValueError(f"threshold_on must be 'rho' or 'rsq', got {threshold_on!r}")
     return threshold_on
 
 
@@ -427,11 +425,12 @@ def compute_bss_cca(
     sfreq : float | None, default=None
         Sampling frequency, required by ``lag_seconds`` and ``segment_len``.
     n_remove : int | None, default=None
-        Number of lowest-correlation components to remove, the operating knob
-        used in [1]_.
+        Number of components to remove from the end selected by ``reject``,
+        the operating knob used in [1]_.
     rho_threshold : float | None, default=None
-        Retain components whose canonical correlation is at least this value.
-        Note this thresholds the correlation itself, not its square.
+        Retain components whose canonical correlation is on the side of this
+        value selected by ``reject`` -- at least it for ``'low'``, at most it
+        for ``'high'``.
     reject : {'low', 'high'}, default='low'
         Which end of the autocorrelation spectrum is artifactual. ``'low'``
         drops the least autocorrelated components, where muscle concentrates
@@ -711,11 +710,12 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         Sampling frequency for NumPy data. A value supplied alongside an MNE
         input must agree with ``info['sfreq']``.
     n_remove : int | None, default=None
-        Number of lowest-correlation components to remove.
+        Number of components to remove from the end selected by ``reject``.
     rho_threshold : float | None, default=None
-        Retain components whose canonical correlation is at least this value.
-        Exactly one of ``n_remove`` or ``rho_threshold`` is required. Note this
-        thresholds the correlation itself, not its square.
+        Retain components whose canonical correlation is on the side of this
+        value selected by ``reject`` -- at least it for ``'low'``, at most it
+        for ``'high'``. Exactly one of ``n_remove`` or ``rho_threshold`` is
+        required.
     reject : {'low', 'high'}, default='low'
         Which end of the autocorrelation spectrum is artifactual. ``'low'``
         drops the least autocorrelated components, where muscle concentrates
