@@ -528,9 +528,9 @@ def test_filter_ref_validation():
     """A malformed filter_ref spec is rejected before any data is touched."""
     for bad in [
         ("bogus", 10.0),
-        ("notch", 10.0),
-        ("notch", (45.0, 5.0)),
-        ("hp", (1, 2)),
+        ("bandstop", 10.0),
+        ("bandstop", (45.0, 5.0)),
+        ("highpass", (1, 2)),
     ]:
         with pytest.raises(ValueError):
             ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad)
@@ -548,29 +548,52 @@ def test_pseudo_ref_needs_no_ref_channels():
         sfreq=250.0,
         primary_channels=[0, 1],
         pseudo_ref=True,
-        filter_ref=("notch", (5.0, 45.0)),
+        filter_ref=("bandstop", (5.0, 45.0)),
     )
     assert icc.ref_channels is None
     with pytest.raises(ValueError, match="ref_channels must be provided"):
         ICanClean(sfreq=250.0, primary_channels=[0, 1])
 
 
-def test_filter_channels_bandstop_removes_only_the_band():
-    """('notch', (lo, hi)) must be a band-stop: keep outside, drop inside."""
-    from mne_denoise.icanclean.core import _filter_channels
+def test_pseudo_ref_rejects_ref_channels():
+    """pseudo_ref builds its own reference; a real ref_channels would be
 
-    sfreq, n = 250.0, 5000
-    t = np.arange(n) / sfreq
-    inside = np.sin(2 * np.pi * 20.0 * t)  # 20 Hz, inside 5-45
-    outside = np.sin(2 * np.pi * 2.0 * t)  # 2 Hz, below the band
-    data = np.vstack([inside, outside])
+    silently ignored (the CCA reference is always rebuilt from the primary
+    channels once pseudo_ref=True), so combining the two must raise instead.
+    """
+    with pytest.raises(ValueError, match="ref_channels is not used"):
+        ICanClean(
+            sfreq=250.0,
+            ref_channels=[3],
+            pseudo_ref=True,
+            filter_ref=("bandstop", (5.0, 45.0)),
+        )
 
-    out = _filter_channels(data, ("notch", (5.0, 45.0)), sfreq)
-    edge = int(sfreq)  # ignore filter edge transients
-    kept_in = np.std(out[0, edge:-edge]) / np.std(inside[edge:-edge])
-    kept_out = np.std(out[1, edge:-edge]) / np.std(outside[edge:-edge])
-    assert kept_in < 0.05, f"20 Hz should be suppressed, kept {kept_in:.3f}"
-    assert kept_out > 0.90, f"2 Hz should survive, kept {kept_out:.3f}"
+
+def test_filter_ref_rejects_non_positive_frequencies():
+    """A zero or negative band edge fails scipy's own Wn check with a
+
+    confusing message; catch it at construction like the Nyquist check does.
+    """
+    for bad in [
+        ("highpass", 0.0),
+        ("lowpass", -1.0),
+        ("bandstop", (0.0, 45.0)),
+        ("bandpass", (-5.0, 10.0)),
+    ]:
+        with pytest.raises(ValueError):
+            ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad)
+
+
+def test_filter_ref_rejects_band_edge_at_or_above_nyquist():
+    """A band edge at or above Nyquist must raise at construction, not fail
+
+    inside scipy the first time data is transformed.
+    """
+    with pytest.raises(ValueError, match="Nyquist"):
+        ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=("lowpass", 125.0))
+    with pytest.raises(ValueError, match="Nyquist"):
+        ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=("bandstop", (5.0, 200.0)))
 
 
 def test_pseudo_ref_preserves_channel_count_and_shape(synthetic_dual_layer):
@@ -580,7 +603,7 @@ def test_pseudo_ref_preserves_channel_count_and_shape(synthetic_dual_layer):
         sfreq=sfreq,
         primary_channels=primary_idx,
         pseudo_ref=True,
-        filter_ref=("notch", (5.0, 45.0)),
+        filter_ref=("bandstop", (5.0, 45.0)),
         segment_len=1.0,
         threshold=0.9,
         verbose=False,
@@ -606,7 +629,7 @@ def test_pseudo_ref_removes_out_of_band_artifact(synthetic_dual_layer):
         sfreq=sfreq,
         primary_channels=list(range(len(primary_idx))),
         pseudo_ref=True,
-        filter_ref=("notch", (5.0, 45.0)),
+        filter_ref=("bandstop", (5.0, 45.0)),
         segment_len=2.0,
         threshold=0.5,
         verbose=False,

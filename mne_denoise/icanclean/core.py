@@ -60,6 +60,7 @@ from scipy import linalg as la
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .._cca import canonical_correlation
+from .._filtering import _filter_channels
 from .._logging import set_log_level_from_verbose
 from ..utils import extract_data_from_mne, reconstruct_mne_object
 
@@ -509,20 +510,21 @@ class ICanClean(BaseEstimator, TransformerMixin):
         modes and must be greater than or equal to ``segment_len``.
     filter_ref : tuple | None, default=None
         Filter applied to the reference block before CCA, as
-        ``(kind, freqs)``: ``('notch', (lo, hi))`` band-stops lo-hi Hz,
-        ``('bp', (lo, hi))`` band-passes, ``('hp', f)`` and ``('lp', f)``
-        high- and low-pass. Zero-phase 4th-order Butterworth. Note that
-        ``'notch'`` here is a wide band-stop used to shape what the
-        reference retains, not a narrowband line-noise filter.
+        ``(btype, freqs)`` using scipy's own filter-kind names:
+        ``('bandstop', (lo, hi))``, ``('bandpass', (lo, hi))``,
+        ``('highpass', f)``, ``('lowpass', f)``. Zero-phase 4th-order
+        Butterworth. ``'bandstop'`` here is a wide band-stop used to shape
+        what the reference retains (ie. notch) a narrowband line-noise filter.
     pseudo_ref : bool, default=False
         Derive the reference block from the primary channels instead of
         using physical reference sensors. A copy of the primary channels is
         filtered with ``filter_ref`` and appended as the reference, so CCA
         correlates the EEG against a version of itself that keeps only
         out-of-band content -- typically drift below the brain band and
-        EMG/line above it. Requires ``filter_ref``; makes ``ref_channels``
-        optional. This is the pseudo-reference method of Downey & Ferris
-        (2023), for recordings with no dual-layer noise electrodes.
+        EMG/line above it. Requires ``filter_ref``; mutually exclusive with
+        ``ref_channels``, which must be left as ``None``. This is the
+        pseudo-reference method of Downey & Ferris (2023) [2]_, for
+        recordings with no dual-layer noise electrodes.
     global_threshold : float | 'auto' | None, default=None
         Threshold for the explicit global pass in ``mode='hybrid'``.
     global_clean_with : {'X', 'Y', 'both'} | None, default=None
@@ -650,7 +652,13 @@ class ICanClean(BaseEstimator, TransformerMixin):
         # the caller to name.
         if ref_channels is None and not pseudo_ref:
             raise ValueError("ref_channels must be provided explicitly")
-        _validate_filter_ref(filter_ref)
+        if pseudo_ref and ref_channels is not None:
+            raise ValueError(
+                "pseudo_ref=True builds its own reference block from the "
+                "primary channels; ref_channels is not used in this mode "
+                "and would be silently ignored, so it must be left as None."
+            )
+        _validate_filter_ref(filter_ref, sfreq)
         if pseudo_ref and filter_ref is None:
             raise ValueError(
                 "pseudo_ref=True requires filter_ref. Without a filter the "
@@ -1264,68 +1272,42 @@ def _validate_icanclean_config(
         )
 
 
-#: Filter kinds accepted by ``filter_ref``, mapped to their scipy btype.
-_FILTER_REF_BTYPES = {
-    "notch": "bandstop",
-    "hp": "highpass",
-    "lp": "lowpass",
-    "bp": "bandpass",
-}
+#: btypes accepted by ``filter_ref`` -- scipy's own names, not a shorthand.
+_FILTER_REF_BTYPES = ("bandpass", "bandstop", "highpass", "lowpass")
 
 
-def _validate_filter_ref(filter_ref: tuple | None) -> None:
-    """Check a ``filter_ref`` spec before any data is touched."""
+def _validate_filter_ref(filter_ref: tuple | None, sfreq: float) -> None:
+    """Check a ``filter_ref`` spec against ``sfreq`` before any data is touched."""
     if filter_ref is None:
         return
     if not isinstance(filter_ref, (tuple, list)) or len(filter_ref) != 2:
-        raise ValueError(f"filter_ref must be a (kind, freqs) pair, got {filter_ref!r}")
+        raise ValueError(
+            f"filter_ref must be a (btype, freqs) pair, got {filter_ref!r}"
+        )
     kind, freqs = filter_ref
     if kind not in _FILTER_REF_BTYPES:
         raise ValueError(
-            f"filter_ref kind must be one of {sorted(_FILTER_REF_BTYPES)}, got {kind!r}"
+            f"filter_ref btype must be one of {sorted(_FILTER_REF_BTYPES)}, got {kind!r}"
         )
-    if kind in ("notch", "bp"):
+    if kind in ("bandstop", "bandpass"):
         if not isinstance(freqs, (tuple, list)) or len(freqs) != 2:
             raise ValueError(f"filter_ref {kind!r} needs a (low, high) pair")
-        if not freqs[0] < freqs[1]:
-            raise ValueError(f"filter_ref {kind!r} needs low < high, got {freqs!r}")
-    elif not np.isscalar(freqs):
-        raise ValueError(f"filter_ref {kind!r} needs a single frequency")
-
-
-def _filter_channels(
-    data: np.ndarray,
-    filter_spec: tuple | None,
-    sfreq: float,
-) -> np.ndarray:
-    """Filter along the last axis with a zero-phase 4th-order Butterworth.
-
-    ``('notch', (lo, hi))`` is a **band-stop**: it removes lo-hi Hz and keeps
-    everything outside. That is the operation the pseudo-reference method
-    needs -- suppressing the brain band leaves drift below it and EMG/line
-    above it, which is what CCA should lock onto. This matches MATLAB
-    ``filtYtype='Notch'``; it is not a narrowband line-noise notch.
-    """
-    if filter_spec is None:
-        return data
-    from scipy.signal import butter, sosfiltfilt
-
-    kind, freqs = filter_spec
+        if not 0 < freqs[0] < freqs[1]:
+            raise ValueError(f"filter_ref {kind!r} needs 0 < low < high, got {freqs!r}")
+        max_freq = freqs[1]
+    else:
+        if not np.isscalar(freqs):
+            raise ValueError(f"filter_ref {kind!r} needs a single frequency")
+        if freqs <= 0:
+            raise ValueError(
+                f"filter_ref {kind!r} needs a positive frequency, got {freqs!r}"
+            )
+        max_freq = freqs
     nyquist = sfreq / 2.0
-    wn = list(freqs) if kind in ("notch", "bp") else [freqs]
-    if max(wn) >= nyquist:
+    if max_freq >= nyquist:
         raise ValueError(
-            f"filter_ref {filter_spec!r} exceeds Nyquist ({nyquist} Hz) for "
-            f"sfreq={sfreq}"
+            f"filter_ref {filter_ref!r} exceeds Nyquist ({nyquist} Hz) for sfreq={sfreq}"
         )
-    sos = butter(
-        4,
-        wn if len(wn) == 2 else wn[0],
-        btype=_FILTER_REF_BTYPES[kind],
-        fs=sfreq,
-        output="sos",
-    )
-    return sosfiltfilt(sos, data, axis=-1)
 
 
 def _select_basis(
