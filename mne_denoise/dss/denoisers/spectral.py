@@ -18,6 +18,7 @@ import numpy as np
 from scipy import signal
 from scipy.fft import fft, ifft
 
+from ..._filtering import design_butter_sos
 from .base import LinearDenoiser
 
 
@@ -85,12 +86,7 @@ class BandpassBias(LinearDenoiser):
 
         if self.method == "butter":
             # Use second-order sections for stability
-            self._sos = signal.butter(
-                self.order,
-                [low / nyq, high / nyq],
-                btype="band",
-                output="sos",
-            )
+            self._sos = design_butter_sos(self.order, [low, high], "band", self.sfreq)
         else:
             raise ValueError(f"Unknown filter method: {self.method}")
 
@@ -107,19 +103,11 @@ class BandpassBias(LinearDenoiser):
         biased : ndarray, same shape as input
             Bandpass filtered data.
         """
-        # Handle 3D epoched data
-        if data.ndim == 3:
-            n_channels, n_times, n_epochs = data.shape
-            # Process each epoch separately to avoid edge effects between epochs
-            biased = np.zeros_like(data)
-            for ep in range(n_epochs):
-                biased[:, :, ep] = signal.sosfiltfilt(self._sos, data[:, :, ep], axis=1)
-        elif data.ndim == 2:
-            biased = signal.sosfiltfilt(self._sos, data, axis=1)
-        else:
+        if data.ndim not in (2, 3):
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
-
-        return biased
+        # sosfiltfilt filters along `axis` independently of the other axes,
+        # so a 3D (n_channels, n_times, n_epochs) array needs no per-epoch loop.
+        return signal.sosfiltfilt(self._sos, data, axis=1)
 
 
 class LineNoiseBias(LinearDenoiser):

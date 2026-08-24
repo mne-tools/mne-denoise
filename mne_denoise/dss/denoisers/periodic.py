@@ -109,17 +109,11 @@ class PeakFilterBias(LinearDenoiser):
         biased : ndarray, same shape as input
             Peak-filtered data.
         """
-        if data.ndim == 3:
-            n_channels, n_times, n_epochs = data.shape
-            biased = np.zeros_like(data)
-            for ep in range(n_epochs):
-                biased[:, :, ep] = signal.sosfiltfilt(self._sos, data[:, :, ep], axis=1)
-        elif data.ndim == 2:
-            biased = signal.sosfiltfilt(self._sos, data, axis=1)
-        else:
+        if data.ndim not in (2, 3):
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
-
-        return biased
+        # sosfiltfilt filters along `axis` independently of the other axes,
+        # so a 3D (n_channels, n_times, n_epochs) array needs no per-epoch loop.
+        return signal.sosfiltfilt(self._sos, data, axis=1)
 
 
 class CombFilterBias(LinearDenoiser):
@@ -252,20 +246,14 @@ class CombFilterBias(LinearDenoiser):
         """
         if len(self._peak_filters) == 0:
             raise ValueError("No valid harmonics within Nyquist frequency")
+        if data.ndim not in (2, 3):
+            raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
 
+        # sosfiltfilt filters along `axis` independently of the other axes,
+        # so a 3D (n_channels, n_times, n_epochs) array needs no per-epoch loop.
         biased = np.zeros_like(data)
-
         for sos, weight in self._peak_filters:
-            if data.ndim == 3:
-                n_channels, n_times, n_epochs = data.shape
-                for ep in range(n_epochs):
-                    biased[:, :, ep] += weight * signal.sosfiltfilt(
-                        sos, data[:, :, ep], axis=1
-                    )
-            elif data.ndim == 2:
-                biased += weight * signal.sosfiltfilt(sos, data, axis=1)
-            else:
-                raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
+            biased += weight * signal.sosfiltfilt(sos, data, axis=1)
 
         return biased
 
