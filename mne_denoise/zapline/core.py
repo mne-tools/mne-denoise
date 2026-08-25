@@ -98,9 +98,11 @@ class ZapLine(DSS):
         If ``None`` and ``adaptive=False``, raises an error.
     n_select : int | 'auto', default='auto'
         Number of noise components to remove. Inherited from :class:`DSS`;
-        ``'auto'`` defers to :meth:`DSS.auto_select`, an ``int`` removes
-        exactly that many. The resolved count is stored in
-        :attr:`n_removed_`.
+        ``'auto'`` first uses :meth:`DSS.auto_select` and, when that returns
+        zero despite a spectral artifact at ``line_freq``, evaluates
+        successive leading DSS components with ZapLine's spectral quality
+        assessment. An ``int`` removes exactly that many. The resolved count
+        is stored in :attr:`n_removed_`.
     n_harmonics : int | None, default=None
         Number of harmonics to include in the bias function.
         If ``None``, auto-determined based on Nyquist frequency.
@@ -542,7 +544,7 @@ class ZapLine(DSS):
             data_work = data
 
         # 1. Smooth data
-        _, data_residual = self._get_smooth_residual(data_work, warn=True)
+        data_smooth, data_residual = self._get_smooth_residual(data_work, warn=True)
 
         # 2. Setup (Rank)
         dss_rank = self.nkeep if self.nkeep is not None else self.rank
@@ -563,6 +565,8 @@ class ZapLine(DSS):
         # Keep full DSS solution before truncating to removed components.
         full_filters = self.filters_.copy()
         full_mixing = self.mixing_.copy()
+        qa_filters = full_filters
+        qa_mixing = full_mixing
         if self.whiten:
             full_filters, full_mixing = map_spatial_matrices_to_sensor_space(
                 full_filters,
@@ -573,9 +577,28 @@ class ZapLine(DSS):
         self.mixing_ = full_mixing
 
         # 4. Resolve the component count. DSS.auto_select handles both the 'auto' and
-        # the explicit-int cases, so the policy lives in exactly one place.
+        # the explicit-int cases, so the primary policy lives in exactly one place.
         self.n_removed_ = self.auto_select()
         if self.n_select == "auto":
+            if self.n_removed_ == 0 and check_artifact_presence(
+                data_work, self.sfreq, self.line_freq
+            ):
+                logger.info(
+                    "ZapLine auto-selection found no DSS component boundary, "
+                    "but a line-noise peak is present at %.3g Hz; evaluating "
+                    "component counts spectrally.",
+                    self.line_freq,
+                )
+                self.n_removed_ = self._find_min_components_for_line_suppression(
+                    data_smooth=data_smooth,
+                    data_residual=data_residual,
+                    full_filters=qa_filters,
+                    full_mixing=qa_mixing,
+                )
+                logger.info(
+                    "ZapLine spectral fallback selected %d components.",
+                    self.n_removed_,
+                )
             logger.info(
                 "ZapLine auto-selected %d/%d components "
                 "(eigenvalues: max=%.3g, min=%.3g)",
@@ -595,6 +618,76 @@ class ZapLine(DSS):
             self.filters_ = np.zeros((0, data.shape[0]))
             self.patterns_ = np.zeros((data.shape[0], 0))
             self._artifact_mixing_ = np.zeros((data.shape[0], 0))
+
+    def _find_min_components_for_line_suppression(
+        self,
+        *,
+        data_smooth: np.ndarray,
+        data_residual: np.ndarray,
+        full_filters: np.ndarray,
+        full_mixing: np.ndarray,
+    ) -> int:
+        """Find the smallest DSS subspace that passes spectral QA.
+
+        This is a ZapLine-specific fallback for the case where the generic DSS
+        eigenvalue selector finds no component boundary despite a detected line
+        artifact. The DSS decomposition is already fitted; only the number of
+        leading components used for reconstruction changes between candidates.
+
+        Parameters
+        ----------
+        data_smooth : ndarray, shape (n_channels, n_times)
+            Smooth branch from the fitted data.
+        data_residual : ndarray, shape (n_channels, n_times)
+            Residual branch from the fitted data.
+        full_filters : ndarray, shape (n_components, n_channels)
+            Complete DSS filter matrix.
+        full_mixing : ndarray, shape (n_channels, n_components)
+            Complete DSS mixing matrix.
+
+        Returns
+        -------
+        n_selected : int
+            Smallest candidate for which :func:`check_spectral_qa` returns
+            ``"ok"``. If no candidate passes, the largest candidate before an
+            over-cleaning result is returned and a warning is emitted.
+        """
+        n_candidates = full_filters.shape[0]
+        last_status = None
+        best_before_overcleaning = 0
+
+        for n_selected in range(1, n_candidates + 1):
+            filters = full_filters[:n_selected]
+            mixing = full_mixing[:, :n_selected]
+            sources = filters @ data_residual
+            artifact = mixing @ sources
+            candidate_clean = data_smooth + (data_residual - artifact)
+            status = check_spectral_qa(
+                candidate_clean,
+                self.sfreq,
+                self.line_freq,
+            )
+            last_status = status
+
+            if status == "ok":
+                return n_selected
+            if status == "weak":
+                best_before_overcleaning = n_selected
+
+        if best_before_overcleaning == 0:
+            best_before_overcleaning = n_candidates
+        warnings.warn(
+            "Line noise remains after evaluating the available DSS components "
+            "without a satisfactory spectral-QA result. Consider setting "
+            "n_select manually or using adaptive ZapLine.",
+            stacklevel=2,
+        )
+        logger.info(
+            "ZapLine spectral fallback ended with status %r after %d candidates.",
+            last_status,
+            n_candidates,
+        )
+        return best_before_overcleaning
 
     def _apply_standard_cleaning(self, data: np.ndarray) -> np.ndarray:
         """Apply noise cleaning using fitted DSS filters.

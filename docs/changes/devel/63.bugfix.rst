@@ -1,0 +1,5 @@
+Fixed standard ``ZapLine`` with ``n_select="auto"`` returning zero components
+when line noise is distributed across several DSS components with a smoothly
+decaying eigenvalue spectrum. ZapLine now uses spectral artifact detection and
+cleaning QA as a fallback when eigenvalue-based selection returns zero (Issue
+#63).

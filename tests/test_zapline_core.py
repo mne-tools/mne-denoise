@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import mne
 import numpy as np
 import pytest
@@ -77,6 +79,50 @@ def mixed_sensor_raw():
         [f"CH{idx}" for idx in range(len(ch_types))], sfreq, ch_types
     )
     return mne.io.RawArray(data, info, verbose=False)
+
+
+@pytest.fixture(scope="module")
+def smooth_spectrum_line_noise():
+    """Reproduce Issue #63 with stochastic, distributed line noise."""
+    sfreq = 500.0
+    line_freq = 50.0
+    n_channels = 19
+    n_times = int(sfreq * 120)
+    rng = np.random.default_rng(0)
+    bandpass = signal.butter(
+        2,
+        [(line_freq - 0.2) / (sfreq / 2), (line_freq + 0.2) / (sfreq / 2)],
+        btype="band",
+    )
+
+    sources = np.empty((n_channels, n_times))
+    for component in range(n_channels):
+        pink = np.cumsum(rng.standard_normal(n_times))
+        pink /= pink.std()
+        white = rng.standard_normal(n_times)
+        white /= white.std()
+        sources[component] = (pink + 0.15 * white) * (1 + 0.35 * component / n_channels)
+
+    amplitudes = np.array(
+        [0.35, 0.21, 0.155, 0.08, 0.047, 0.03, 0.02]
+        + [0.02 * 0.8 ** (component + 1) for component in range(n_channels - 7)]
+    )
+    for component, amplitude in enumerate(amplitudes):
+        line = signal.filtfilt(bandpass[0], bandpass[1], rng.standard_normal(n_times))
+        sources[component] += amplitude * line / line.std()
+
+    mixing, _ = np.linalg.qr(rng.standard_normal((n_channels, n_channels)))
+    data = (mixing @ sources) * 3e-6
+    return data, sfreq, line_freq
+
+
+@pytest.fixture(scope="module")
+def fitted_smooth_spectrum_line_noise(smooth_spectrum_line_noise):
+    """Fit standard auto-selection on the Issue #63 reproducer once."""
+    data, sfreq, line_freq = smooth_spectrum_line_noise
+    estimator = ZapLine(sfreq=sfreq, line_freq=line_freq, n_select="auto")
+    estimator.fit(data)
+    return estimator
 
 
 def test_zapline_class_init(minimal_data):
@@ -205,9 +251,11 @@ def test_zapline_n_remove_fixed(minimal_data):
     """ZapLine should remove exactly n_select components when specified."""
     data = minimal_data["data"]
     est = ZapLine(line_freq=50.0, sfreq=minimal_data["sfreq"], n_select=2)
-    est.fit(data)
+    with patch("mne_denoise.zapline.core.check_artifact_presence") as check_presence:
+        est.fit(data)
 
     assert est.n_removed_ == 2
+    check_presence.assert_not_called()
 
 
 def test_zapline_n_remove_auto(minimal_data):
@@ -219,6 +267,82 @@ def test_zapline_n_remove_auto(minimal_data):
 
     assert est.n_removed_ >= 0
     assert cleaned.shape == data.shape
+
+
+def test_zapline_auto_spectral_fallback_selects_components(
+    smooth_spectrum_line_noise, fitted_smooth_spectrum_line_noise
+):
+    """Auto-selection removes Issue #63's distributed stochastic line noise."""
+    data, _, line_freq = smooth_spectrum_line_noise
+    estimator = fitted_smooth_spectrum_line_noise
+    cleaned = estimator.transform(data)
+
+    freqs, psd_before = signal.welch(data, fs=estimator.sfreq, nperseg=8192, axis=-1)
+    _, psd_after = signal.welch(cleaned, fs=estimator.sfreq, nperseg=8192, axis=-1)
+    line_index = np.argmin(np.abs(freqs - line_freq))
+    power_before = psd_before[:, line_index].mean()
+    power_after = psd_after[:, line_index].mean()
+
+    assert estimator.n_removed_ > 0
+    assert power_after < power_before * 0.1
+
+
+def test_zapline_auto_spectral_fallback_keeps_clean_data_unchanged():
+    """Auto-selection still removes zero components without line noise."""
+    rng = np.random.default_rng(0)
+    sfreq = 250.0
+    data = rng.standard_normal((12, int(sfreq * 60))) * 1e-6
+    estimator = ZapLine(sfreq=sfreq, line_freq=50.0, n_select="auto").fit(data)
+
+    assert estimator.n_removed_ == 0
+
+
+def test_zapline_spectral_fallback_stops_at_first_ok():
+    """The fallback selects the smallest candidate passing spectral QA."""
+    estimator = ZapLine(sfreq=500.0, line_freq=50.0)
+    data_smooth = np.zeros((3, 20))
+    data_residual = np.ones((3, 20))
+    full_filters = np.eye(3)
+    full_mixing = np.eye(3)
+
+    with patch(
+        "mne_denoise.zapline.core.check_spectral_qa",
+        side_effect=["weak", "weak", "ok"],
+    ) as check_qa:
+        selected = estimator._find_min_components_for_line_suppression(
+            data_smooth=data_smooth,
+            data_residual=data_residual,
+            full_filters=full_filters,
+            full_mixing=full_mixing,
+        )
+
+    assert selected == 3
+    assert check_qa.call_count == 3
+
+
+def test_zapline_spectral_fallback_warns_when_no_candidate_passes():
+    """The fallback warns when every candidate remains over-cleaned."""
+    estimator = ZapLine(sfreq=500.0, line_freq=50.0)
+    data_smooth = np.zeros((2, 20))
+    data_residual = np.ones((2, 20))
+    full_filters = np.eye(2)
+    full_mixing = np.eye(2)
+
+    with (
+        patch(
+            "mne_denoise.zapline.core.check_spectral_qa",
+            return_value="strong",
+        ),
+        pytest.warns(UserWarning, match="Line noise remains"),
+    ):
+        selected = estimator._find_min_components_for_line_suppression(
+            data_smooth=data_smooth,
+            data_residual=data_residual,
+            full_filters=full_filters,
+            full_mixing=full_mixing,
+        )
+
+    assert selected == 2
 
 
 def test_zapline_with_harmonics(line_noise_data):
