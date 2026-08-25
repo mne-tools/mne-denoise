@@ -72,13 +72,25 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-#: Default number of circular-shift surrogates for ``threshold='null'``.
-_NULL_N_SURROGATE = 20
+#: Default number of circular-shift surrogates for ``threshold='null'``. 20 is
+#: the floor at which the default alpha's quantile is even defined; 100 gives
+#: a materially more stable estimate at a still-cheap cost per window.
+_NULL_N_SURROGATE = 100
 #: Default family-wise false-rejection rate for ``threshold='null'``.
 _NULL_ALPHA = 0.05
 #: Smallest circular shift, as a fraction of the window, when building the null.
 #: Shifts near zero leave the blocks nearly aligned and inflate the threshold.
 _NULL_MIN_SHIFT = 0.1
+
+
+def _r2_from_projections(U: np.ndarray, V: np.ndarray) -> np.ndarray:
+    """Squared correlation of each column pair of two projected CCA bases."""
+    U_zm = U - U.mean(axis=0, keepdims=True)
+    V_zm = V - V.mean(axis=0, keepdims=True)
+    denom = np.sqrt(np.sum(U_zm**2, axis=0)) * np.sqrt(np.sum(V_zm**2, axis=0))
+    denom[denom == 0] = 1.0
+    R = np.sum(U_zm * V_zm, axis=0) / denom
+    return np.clip(R**2, 0.0, 1.0).astype(np.float64)
 
 
 def null_r2_threshold(
@@ -119,7 +131,11 @@ def null_r2_threshold(
     alpha : float
         Family-wise false-rejection rate. Default 0.05.
     n_surrogate : int
-        Number of circular shifts. Default 20.
+        Number of circular shifts. Default 100. The quantile this estimates
+        needs at least ``1 / alpha`` samples to exist at all (19 at the
+        default ``alpha``); a value that close to the floor makes the
+        returned threshold noisy run to run. 100 trades a still-cheap
+        surrogate pass for a materially more stable quantile.
     random_state : int | Generator | None
         Seed or generator for the shift offsets.
 
@@ -153,14 +169,32 @@ def null_r2_threshold(
     candidate regardless of whether that variance is artifact or brain. With a
     pseudo-reference -- a band-stopped copy of the primary block -- almost every
     component shares real variance, so the null alone will select broadly.
+
+    In ``mode='calibrated'``, the score being thresholded is a projection
+    through CCA weights fit once on the whole recording, not a fresh per-window
+    fit -- yet this function always re-searches CCA on the surrogate. Matching
+    the null to the fixed-weight projection sounds like the correct fix, but
+    empirically makes rejections *more* false-positive-prone here: a window
+    that contributed to fitting those weights scores higher on its own
+    (unshifted) data than an out-of-sample window would, an in-sample leakage
+    effect a shift-based null does not remove. The search-based null used here
+    happens to run high enough to absorb that leakage in practice, but this is
+    an empirical observation on AR(1) test data, not a property proven to hold
+    in general -- treat ``'null'`` with ``mode='calibrated'`` as unvalidated.
     """
     rng = np.random.default_rng(random_state)
     n_times = X_cca.shape[0]
     lo = max(1, int(_NULL_MIN_SHIFT * n_times))
     hi = n_times - lo
+    if hi <= lo:
+        # The guard band leaves no room on a very short window. Any nonzero
+        # shift still decorrelates the blocks; falling back to one fixed
+        # shift for every surrogate would collapse the quantile to a single
+        # sample instead of estimating one.
+        lo, hi = 1, n_times
     maxima = np.empty(n_surrogate, dtype=np.float64)
     for i in range(n_surrogate):
-        shift = int(rng.integers(lo, hi)) if hi > lo else 1
+        shift = int(rng.integers(lo, hi))
         try:
             _, _, R_null, _, _ = canonical_correlation(
                 X_cca, np.roll(Y_cca, shift, axis=0)
@@ -433,13 +467,7 @@ def compute_icanclean(
             Y_cca_mc = Y_cca - Y_cca.mean(axis=0, keepdims=True)
             U = X_cca_mc @ A_global
             V = Y_cca_mc @ B_global
-
-            U_zm = U - U.mean(axis=0, keepdims=True)
-            V_zm = V - V.mean(axis=0, keepdims=True)
-            denom = np.sqrt(np.sum(U_zm**2, axis=0)) * np.sqrt(np.sum(V_zm**2, axis=0))
-            denom[denom == 0] = 1.0
-            R = np.sum(U_zm * V_zm, axis=0) / denom
-            r2 = np.clip(R**2, 0.0, 1.0).astype(np.float64)
+            r2 = _r2_from_projections(U, V)
             A = A_global
             B = B_global
         else:
@@ -1314,10 +1342,11 @@ class ICanClean(BaseEstimator, TransformerMixin):
 def _validate_threshold(value: Any, name: str) -> None:
     """Accept 'auto', 'null', or a float in [0, 1].
 
-    The range check is not cosmetic. Previously any parseable value was allowed,
-    so ``threshold=5.0`` silently turned the estimator into a pass-through (no
-    R^2 can exceed it), ``threshold=-1`` flagged every component, and the string
-    ``"0.5"`` was accepted and compared against floats. All three failed quietly.
+    A value above 1 makes the estimator a silent pass-through, since no
+    :math:`R^2` can exceed it; a value below 0 silently flags every
+    component; a numeric string such as ``"0.5"`` would silently compare
+    against floats without conversion. None of these raise on their own, so
+    this check exists to turn them into an explicit error at construction.
     """
     if value in ("auto", "null"):
         return

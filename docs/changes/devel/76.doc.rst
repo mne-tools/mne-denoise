@@ -1,0 +1,3 @@
+Added ``docs/icanclean.md``, the module's first narrative documentation page,
+covering threshold scale, window conditioning, the four operating modes and
+the two reference constructions.
