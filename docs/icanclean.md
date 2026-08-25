@@ -40,7 +40,7 @@ from mne_denoise.icanclean import ICanClean
 
 icc = ICanClean(sfreq=raw.info["sfreq"], ref_channels=noise_ch, threshold=0.7)
 icc.fit_transform(raw)
-print(icc.max_r2_)      # highest r2 actually observed, per window
+print(icc.max_r2_)  # highest r2 actually observed, per window
 print(icc.thresholds_)  # the threshold applied, per window
 ```
 
@@ -58,7 +58,7 @@ exceeds it:
 icc = ICanClean(
     sfreq=raw.info["sfreq"],
     ref_channels=noise_ch,
-    threshold="null",     # calibrated per window
+    threshold="null",  # calibrated per window
     null_random_state=0,  # reproducible surrogates
 )
 ```
@@ -108,8 +108,8 @@ icc = ICanClean(
     sfreq=250.0,
     ref_channels=noise_ch,
     mode="sliding",
-    segment_len=2.0,        # corrected span
-    stats_segment_len=32.0, # estimation span
+    segment_len=2.0,  # corrected span
+    stats_segment_len=32.0,  # estimation span
     threshold="null",
 )
 ```
