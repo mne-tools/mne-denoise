@@ -135,20 +135,6 @@ def _check_selection(
     return None, rho_threshold
 
 
-def _check_reject(reject: str) -> str:
-    """Validate which end of the autocorrelation spectrum is artifactual."""
-    if reject not in ("low", "high"):
-        raise ValueError(f"reject must be 'low' or 'high', got {reject!r}")
-    return reject
-
-
-def _check_threshold_on(threshold_on: str) -> str:
-    """Validate the scale ``rho_threshold`` is expressed on."""
-    if threshold_on not in ("rho", "rsq"):
-        raise ValueError(f"threshold_on must be 'rho' or 'rsq', got {threshold_on!r}")
-    return threshold_on
-
-
 def _lagged_pairs(X: np.ndarray, lag_samples: int) -> tuple[np.ndarray, np.ndarray]:
     """Return current/past CCA views without wrap or epoch-boundary pairs.
 
@@ -200,9 +186,8 @@ def _select_components(
         [1]_ target and the package's original behaviour.
     ``'high'``
         Drop the head. Strongly autocorrelated sources -- slow drift and
-        movement artifact -- sit at the top of the spectrum. This is the
-        ``rejHiLo='Hi'`` branch of ``autoLagCCA.m`` in ds004784, whose own
-        parameter sweep selects it for the clean, eye and motion conditions.
+        movement artifact -- sit at the top of the spectrum, the opposite end
+        from muscle.
 
     ``n_remove`` drops that many components from the chosen end.
     """
@@ -220,10 +205,9 @@ def _select_components(
                 keep[:n_remove] = False
         return keep
 
-    # ``rsq`` compares against the SQUARED correlation, which is the scale the
-    # ds004784 reference implementation and its published sweep use
-    # (``find(R.^2 > rsq_thres)``). Squaring the data rather than
-    # square-rooting the threshold keeps the comparison exact at the endpoints.
+    # ``rsq`` compares against the SQUARED correlation. Squaring the data
+    # rather than square-rooting the threshold keeps the comparison exact at
+    # the endpoints.
     metric = correlations if threshold_on == "rho" else correlations**2
     keep = metric >= rho_threshold if reject == "low" else metric <= rho_threshold
     if not keep.any():
@@ -435,13 +419,10 @@ def compute_bss_cca(
         Which end of the autocorrelation spectrum is artifactual. ``'low'``
         drops the least autocorrelated components, where muscle concentrates
         [1]_. ``'high'`` drops the most autocorrelated components, where slow
-        drift and movement artifact concentrate; this is the ``rejHiLo='Hi'``
-        branch of the reference implementation shipped with ds004784.
+        drift and movement artifact concentrate.
     threshold_on : {'rho', 'rsq'}, default='rho'
         Scale on which ``rho_threshold`` is expressed: the canonical correlation
-        itself, or its square. ``'rsq'`` matches the ``rsq_thres`` convention of
-        the ds004784 reference implementation, so its published sweep values
-        transfer without conversion. Ignored when ``n_remove`` is used.
+        itself, or its square. Ignored when ``n_remove`` is used.
     segment_len : float | None, default=None
         Block length in seconds. ``None`` learns one operator for all data.
         A value fits an independent operator per block, as in the contiguous
@@ -515,8 +496,10 @@ def compute_bss_cca(
     if not isinstance(preserve_mean, bool):
         raise TypeError("preserve_mean must be a bool")
     n_remove, rho_threshold = _check_selection(n_remove, rho_threshold)
-    reject = _check_reject(reject)
-    threshold_on = _check_threshold_on(threshold_on)
+    if reject not in ("low", "high"):
+        raise ValueError(f"reject must be 'low' or 'high', got {reject!r}")
+    if threshold_on not in ("rho", "rsq"):
+        raise ValueError(f"threshold_on must be 'rho' or 'rsq', got {threshold_on!r}")
     lag = _resolve_lag_samples(
         lag_samples=lag_samples,
         lag_seconds=lag_seconds,
@@ -720,13 +703,10 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         Which end of the autocorrelation spectrum is artifactual. ``'low'``
         drops the least autocorrelated components, where muscle concentrates
         [1]_. ``'high'`` drops the most autocorrelated components, where slow
-        drift and movement artifact concentrate; this is the ``rejHiLo='Hi'``
-        branch of the reference implementation shipped with ds004784.
+        drift and movement artifact concentrate.
     threshold_on : {'rho', 'rsq'}, default='rho'
         Scale on which ``rho_threshold`` is expressed: the canonical correlation
-        itself, or its square. ``'rsq'`` matches the ``rsq_thres`` convention of
-        the ds004784 reference implementation, so its published sweep values
-        transfer without conversion. Ignored when ``n_remove`` is used.
+        itself, or its square. Ignored when ``n_remove`` is used.
     segment_len : float | None, default=None
         Block length in seconds. ``None`` learns one operator for all data.
     overlap : float, default=0.0

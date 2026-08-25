@@ -904,12 +904,7 @@ def _drift_and_muscle(rng, n_times=4000, sfreq=200.0):
 
 
 def test_reject_high_drops_the_autocorrelated_end():
-    """``reject='high'`` removes drift; ``reject='low'`` removes muscle.
-
-    This is the ``rejHiLo`` switch of ``autoLagCCA.m`` in ds004784, whose own
-    parameter sweep selects the high branch for the clean, eye and motion
-    conditions and the low branch for the muscle conditions.
-    """
+    """``reject='high'`` removes drift; ``reject='low'`` removes muscle."""
     rng = np.random.default_rng(0)
     observed, drift, muscle = _drift_and_muscle(rng)
 
@@ -957,7 +952,7 @@ def test_reject_rejects_unknown_value():
 
 
 def test_threshold_on_rsq_matches_squared_rho():
-    """``rsq`` thresholds the squared correlation, as ``autoLagCCA.m`` does."""
+    """``rsq`` thresholds the squared correlation, not the correlation itself."""
     rng = np.random.default_rng(4)
     observed, _drift, _muscle = _drift_and_muscle(rng)
     # rho >= sqrt(0.36) == 0.6 selects the same set as rho**2 >= 0.36.
@@ -990,10 +985,8 @@ def test_estimator_forwards_reject_and_threshold_on():
 
     Regression: ``BSSCCA.__init__`` stored ``reject``/``threshold_on`` but
     ``fit`` did not pass them to ``compute_bss_cca``, so the estimator silently
-    used the defaults. It surfaced as a parity failure against the ds004784
-    reference implementation -- identical canonical correlations, but 8
-    components removed where MATLAB removed 107, because a threshold meant as
-    r-squared was applied to rho.
+    used the defaults -- a threshold meant as r-squared was applied to rho
+    instead, removing far fewer components than intended.
     """
     rng = np.random.default_rng(11)
     observed, _drift, _muscle = _drift_and_muscle(rng)
