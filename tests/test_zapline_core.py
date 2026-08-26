@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from unittest.mock import patch
 
 import mne
@@ -1087,19 +1088,6 @@ def test_adaptive_is_inherited_from_dss():
     assert "adaptive" in DSS(bias=lambda x: x).get_params()
     assert "segmented" not in ZapLine(sfreq=500.0).get_params()
     assert ZapLine(sfreq=500.0, adaptive=True).adaptive is True
-
-
-def test_adaptive_is_settable_through_sklearn_api():
-    """adaptive/segmenter/min_select are real params, so clone() works."""
-    from sklearn.base import clone
-
-    zap = ZapLine(sfreq=500.0, line_freq=60.0, adaptive=True, min_select=2)
-    params = zap.get_params()
-    assert {"adaptive", "segmenter", "min_select", "max_prop_remove"} <= set(params)
-    assert clone(zap).min_select == 2
-
-    zap.set_params(adaptive=False)
-    assert zap.adaptive is False
 
 
 def test_process_segment_without_target_frequency_raises():

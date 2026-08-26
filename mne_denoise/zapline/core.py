@@ -188,7 +188,12 @@ class ZapLine(DSS):
     - ``max_harmonics`` : int - Maximum number of harmonics to process
     - ``hybrid_fallback`` : bool (default False) - Use notch filter fallback
     - ``min_chunk_len`` : float (default 30.0) - Minimum segment length in seconds
-    - ``n_remove_params`` : dict - Parameters for component selection
+    - ``n_remove_params`` : dict
+      Adaptive per-segment component-selection settings:
+      ``sigma`` is the selection threshold (defaults to ``threshold``),
+      ``min_remove`` is the minimum number of components removed when an
+      artifact is present (defaults to 1), and ``max_prop`` is the maximum
+      proportion of channels removed (defaults to 0.2)
     - ``qa_params`` : dict - Parameters for QA (max_sigma, min_sigma)
 
     Examples
@@ -209,7 +214,12 @@ class ZapLine(DSS):
 
     Adaptive mode (ZapLine-plus):
 
-    >>> zapline = ZapLine(sfreq=1000, line_freq=None, adaptive=True)
+    >>> zapline = ZapLine(
+    ...     sfreq=1000,
+    ...     line_freq=None,
+    ...     adaptive=True,
+    ...     adaptive_params={"n_remove_params": {"min_remove": 1, "max_prop": 0.2}},
+    ... )
     >>> cleaned = zapline.fit_transform(epochs)  # Auto-detects noise frequencies
 
     References
@@ -238,8 +248,6 @@ class ZapLine(DSS):
         adaptive_params: dict | None = None,
         segmenter=None,
         crossfade: float = 0.0,
-        max_prop_remove: float | None = 0.2,
-        min_select: int = 1,
         whiten: bool = False,
         noise_cov=None,
         verbose: bool | str | int | None = None,
@@ -281,8 +289,8 @@ class ZapLine(DSS):
             adaptive=adaptive,
             segmenter=segmenter,
             crossfade=crossfade,
-            max_prop_remove=max_prop_remove,
-            min_select=min_select,
+            max_prop_remove=0.2,
+            min_select=1,
             component_action="subtract",
             n_select=n_select,
             selection_threshold=threshold,

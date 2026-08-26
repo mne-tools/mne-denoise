@@ -1,0 +1,6 @@
+Removed ``min_select`` and ``max_prop_remove`` from the public ``ZapLine``
+constructor because these bounds apply only to adaptive per-segment processing.
+Adaptive ``ZapLine`` continues to use a minimum removal of 1 and a maximum
+removal proportion of 0.2 by default; custom adaptive values can be configured
+through ``adaptive_params["n_remove_params"]``. The corresponding parameters
+remain available on the generic ``DSS`` estimator (Issue #63).
