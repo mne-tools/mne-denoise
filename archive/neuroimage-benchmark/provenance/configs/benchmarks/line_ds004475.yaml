@@ -1,0 +1,25 @@
+arm: line_ds004475
+runner: line
+status: active
+dataset:
+  id: ds004475
+  project_relative_path: openneuro/ds004475
+  channel_types: [eeg]
+  n_subjects: 30
+  line_freq_hz: 50
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise: {preferred: cleanline, accepted_substitutes: [sinusoid_regression]}
+metrics: {primary_target: held_out_Rf0, line_freq_hz: 50}
+unit_of_inference: subject
+seeds: {global: 42}
+baseline_preprocessing:
+  source: "OpenNeuro ds004475 mobile EEG"
+  mains_hz: 50
+  steps: {resample_hz: 250}
+  branch_point: scalp_eeg_pre_line_removal
+  excluded_from_baseline: [average_reference, notch, zapline]
+sweep: {zapline: {param: n_remove, grid: [1, 2, 4, 8]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

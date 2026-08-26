@@ -1,0 +1,64 @@
+arm: icanclean_reference_ground_truth
+runner: icanclean_reference_ground_truth
+status: protocol_frozen_v1
+dataset:
+  id: ds004784
+  project_relative_path: openneuro/ds004784/derivatives/Data/Imported
+  version: openneuro_ds004784_v1.0.4_derivative_imported
+  doi: 10.18112/openneuro.ds004784.v1.0.4
+  license: CC0
+  conditions: [Clean, Eyes, Jaw, Motion, Neck, All]
+  development_repeat: 1
+  locked_repeat: 2
+  filename_template: NMM10_{condition}_{repeat}.set
+  ground_truth_path: stimuli/GTdata_croppedToRisingEdge.mat
+  manifest: configs/manifests/ds004784_repeat2.json
+  alignment: synchronization_cropped_by_dataset_authors
+  channel_roles:
+    scalp: BioSemi_A1_through_D32
+    external_reference: EXG1_through_EXG8
+    ground_truth: condition_matched_stimulus_sources_distributed_with_dataset
+  development_policy: repeat_1_only_for_parameter_selection
+  locked_policy: repeat_2_loaded_only_after_config_and_manifest_freeze
+simulation:
+  sfreq_hz: 250
+  duration_s: 30
+  n_primary_channels: 32
+  reference_snr_db: [-10, 0, 10]
+  reference_count: [1, 2, 4, 8]
+  neural_leakage_fraction: [0.0, 0.05, 0.10, 0.20]
+  coupling: [stationary, drifting]
+  replicates_per_cell: 30
+  seeds: {global: 240714, generation: sha256_arm_cell_and_replicate}
+tiers:
+  reference_free: [none, autocca, icanclean_pseudoreference]
+  reference_aware: [icanclean_dual_layer, reference_bias_dss, tspca, regression, mwf]
+method_parameters:
+  icanclean: {mode: sliding, clean_with: X, segment_len_s: 2.0, overlap: 0.5, r_squared_threshold: 0.7, max_reject_fraction: 0.5}
+  pseudoreference: {highpass_hz: 20.0, pca_components: 4}
+  reference_bias_dss: {max_components: 4, ridge: 1.0e-8}
+  tspca: {n_shifts_each_direction: 3}
+  autocca: {rho_threshold: 0.9}
+  mwf: {reference_envelope_quantile: 0.6, regularization: 1.0e-6}
+comparators: {required: [none, oracle]}
+metrics:
+  primary_target: ground_truth_data_quality_score
+  primary_preservation: known_clean_waveform_relative_rmse
+  secondary: [clean_correlation, neural_band_retention, disjoint_reference_coupling, rank_change, removed_components, runtime, failure]
+metric_definitions:
+  ground_truth_data_quality_score: 100_times_one_minus_cleaning_error_over_uncleaned_artifact_error
+  neural_band_retention: cleaned_over_clean_power_in_8_to_30_hz
+preservation_reference: {source: released_phantom_ground_truth_and_known_simulated_neural_signal, independent_from_method_fit: true}
+unit_of_inference: technical_repeat_for_phantom_and_simulation_seed_for_factorial
+analysis_policy:
+  phantom_fit_fraction: 0.4
+  phantom_score_fraction: 0.6
+  disjoint_scoring_reference: EXG1_through_EXG8_never_used_for_fit
+  comparisons_are_within_condition_and_repeat: true
+  resample_hz: 256
+  separate_average_reference_by_layer: true
+  global_reference_pca_components: 16
+  fit_transform_scope:
+    global_methods: fit_first_40_percent_transform_last_60_percent
+    adaptive_methods: local_fit_transform_within_last_60_percent
+storage: {always_save: [metrics, model_json, terminal_status, provenance], save_cleaned: {mode: locked_repeat_and_selected_seeds}}

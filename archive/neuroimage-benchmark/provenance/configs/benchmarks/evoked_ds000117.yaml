@@ -1,0 +1,66 @@
+# Arm: evoked_ds000117 — DSS evoked enhancement, MEG (ds000117 faces vs scrambled, M170). Skeleton (P0).
+arm: evoked_ds000117
+runner: evoked
+status: protocol_frozen_v1
+
+dataset:
+  id: ds000117
+  project_relative_path: openneuro/ds000117
+  version: openneuro_snapshot_manifest
+  expected_subjects: 19
+  subjects: manifest_subjects
+  excluded_subjects: []
+  channel_types: [mag, grad]   # denoised SEPARATELY by sensor type; EEG is a separate simultaneous arm
+
+preprocessing:
+  input: sss_recomputed_without_notch     # evoked arm may use SSS; identical across methods
+  preprocessing_identical_across_methods: true
+  reference: na_meg
+  hp_hz: 0.1
+  lp_hz: 40.0
+  resample_hz: 250
+
+m170_outcome:                  # frozen so signed MEG fields are not cancelled by pooling
+  conditions: [faces, scrambled]
+  window_ms: [150, 200]        # M170 peak ~170 ms
+  baseline_ms: [-100, 0]
+  roi_selection: literature_or_training_runs_only
+  magnetometers: {outcome: roi_mean_or_gfp}
+  planar_gradiometers: {combine_pairs: rms, outcome: roi_rms}
+  polarity_convention: sign_aligned_to_training_roi_then_frozen_on_test
+  topographic_similarity: absolute_spatial_correlation_on_held_out_evoked
+
+methods_under_test: [dss_average_bias]
+comparators:
+  required: [none, rank_matched_pca]
+  secondary: [ica_rank_matched]
+  null_condition: event_destroyed_dss
+sweep: {dss: {param: n_components, grid: [2, 4, 6, 8]}}
+
+splits: {fit: train_runs, selection: validation, evaluation: held_out_runs}
+
+metrics:
+  primary_target: held_out_face_minus_scrambled_M170_effect
+  primary_preservation: M170_amplitude_topography_equivalence
+  secondary: [SME, split_half_reliability, rank_change, runtime]
+preservation_reference:
+  source: held_out_low_artifact_trials_common_meg_preproc
+  independent_from_method_fit: true
+equivalence_margin: {value: 0.5, scale: within_subject_raw_split_sd, direction: two_sided_equivalence, justification: half_split_half_measurement_sd_estimated_on_development_runs_before_evaluation}
+
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays, evoked_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-08, sub-16]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Wakeman & Henson 2015 (10.1038/sdata.2015.1)"
+  mains_hz: 50
+  online_reference: nose
+  steps:
+    use_sss: true
+    epoch_ms: [-100, 800]            # authors epoch -500/+1200 then trim
+    baseline_ms: [-100, 0]
+    mag_grad_endpoints_separate: true   # M170: mags ROI/GFP, grads RMS-of-pair
+  branch_point: common_epoched_evoked_sss
+  excluded_from_baseline: [the_comparator_methods]

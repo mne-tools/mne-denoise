@@ -1,0 +1,10 @@
+# Requirements for mne-denoise batch pipeline on Narval
+# Install with: pip install -r requirements_narval.txt
+#
+# NOTE: On Narval, load scipy-stack/2024a first (provides numpy, scipy,
+# matplotlib, pandas, scikit-learn). This file lists non-overlap packages.
+
+mne>=1.8
+openneuro-py>=2024.2.0
+asrpy
+mne-icalabel

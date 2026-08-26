@@ -1,0 +1,16 @@
+# Direct benchmark environment audited on 2026-07-15.
+# Transitive wheels and hashes are captured in the release archive/container build.
+mne==1.11.0
+numpy==2.4.4
+scipy==1.17.1
+matplotlib==3.10.8
+scikit-learn==1.8.0
+pandas==3.0.1
+seaborn==0.13.2
+PyYAML==6.0.3
+PyWavelets==1.9.0
+EMD-signal==1.10.0
+python-picard==0.8.2
+amica==0.0.1
+pytest==9.0.2
+build==1.5.1

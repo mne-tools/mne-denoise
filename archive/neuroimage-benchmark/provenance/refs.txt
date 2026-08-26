@@ -1,0 +1,15 @@
+NeuroImage archival reference record
+
+Source branch: codex/neuroimage-rerun-fix
+Source remote in this checkout: mne-tools (https://github.com/mne-tools/mne-denoise)
+Archived source tip: c6c197f982b27fbf0b7d10045e21f5d50609f34f
+
+Archive branch before history merge: e970e0d8fb7bb0de71a2e9808803a7c8fb799b73
+Current target main ref at inspection: 858225a2112e8bace2843847c45b81ef0406afab
+History-preserving ours merge: 302efea033894db3ee7a17039bc09989e833bcda
+Source commits ahead of archive branch before merge: 213
+
+The source tip is the second parent of the history-preserving merge and is an
+ancestor of archive/sandbox. The local checkout's origin remote is a fork and
+does not advertise codex/neuroimage-rerun-fix; mne-tools is the target remote
+used for the source and archive branch operations.

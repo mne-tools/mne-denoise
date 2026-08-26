@@ -1,0 +1,11 @@
+{
+  "dataset_id": "mne-denoise-synthetic-v1",
+  "generator_modules": [
+    "mne_denoise.benchmarks.simulation",
+    "mne_denoise.benchmarks.intended"
+  ],
+  "license": "Generated data; package BSD-3-Clause",
+  "manifest_schema_version": 1,
+  "randomness": "SHA-256 cell-derived NumPy Generator seeds",
+  "source": "Deterministic local simulation; implementation pinned by Git commit"
+}

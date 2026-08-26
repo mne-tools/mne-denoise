@@ -1,0 +1,14 @@
+# Arm: robustness_cap — long-duration ASR streaming robustness (CAP PSG, 5 bipolar EEG).
+# Generalization/regime-eligibility: does ASR stream stably over long real recordings?
+arm: robustness_cap
+runner: robustness
+status: active
+dataset: {id: capslpdb, project_relative_path: physionet/capslpdb, channel_types: [eeg],
+          subjects: ["brux1","brux2","ins1","ins2","ins3","ins4"]}
+methods_under_test: [asr, rasr]
+comparators: {required: [none]}
+metrics: {primary_target: throughput_x_realtime, secondary: [rejected_window_frac, effective_rank_change, neural_band_retained]}
+unit_of_inference: recording
+seeds: {global: 42}
+baseline_preprocessing: {source: "CAP Sleep DB; bipolar EEG", steps: {highpass_hz: 1.0, lowpass_hz: 40.0}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

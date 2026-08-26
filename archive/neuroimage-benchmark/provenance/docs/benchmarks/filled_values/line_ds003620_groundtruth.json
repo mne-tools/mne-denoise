@@ -1,0 +1,11 @@
+{
+ "line_ds003620.rf0.c0": 2.35,
+ "line_ds003620.rf0.zlp": 1.32,
+ "line_ds003620.rf0.notch": 0.015,
+ "line_ds003620.rf0.wilcoxon_z": -4.2,
+ "line_ds003620.rf0.p_fdr": 2.7e-05,
+ "line_ds003620.overclean.zlp": 0.02,
+ "ground_truth_generic.rrmse.pca": 0.746,
+ "ground_truth_generic.rrmse.idss": 0.5,
+ "ground_truth_generic.rrmse.picard": 0.542
+}

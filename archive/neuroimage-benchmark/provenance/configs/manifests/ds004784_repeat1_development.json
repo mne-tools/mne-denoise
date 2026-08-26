@@ -1,0 +1,94 @@
+{
+  "content_sha256": "f61cc74e00fab028a4c3452ee853bde2c72f27a60d858d79993a3d5eab0634b1",
+  "dataset_id": "ds004784-repeat1-development",
+  "doi": "10.18112/openneuro.ds004784.v1.0.4",
+  "file_count": 14,
+  "files": [
+    {
+      "path": "dataset_description.json",
+      "sha256": "9c1f40baa868ac7d283e26d2e5d3a5034b076da0d50751094e61a48646828358",
+      "size_bytes": 583
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_All_1.fdt",
+      "sha256": "490653405b39063b9ee081311305468a9278f0a4e7aceb730d4a5e1358ba0eed",
+      "size_bytes": 168148992
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_All_1.set",
+      "sha256": "a6a41a83cca92984ec8f8005be086bfb9c4cf0d4950ce9650094a4097fb3646c",
+      "size_bytes": 1775137
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Clean_1.fdt",
+      "sha256": "76855adefa1bac626b4e443624b94576fc49a6124c3b186333e528bfe684b1d9",
+      "size_bytes": 193019904
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Clean_1.set",
+      "sha256": "e2661e476d353da9461edeca0e81c07ccb357b056a10c849ca8344db65b8b8e9",
+      "size_bytes": 1833009
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Eyes_1.fdt",
+      "sha256": "528f57f343450180ed2611a32f67b75f2018cf7d8ea976d7e85e21f8af5948e5",
+      "size_bytes": 171393024
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Eyes_1.set",
+      "sha256": "88924edf0545ab12e6f7333117b1f2363adaeca0600b2c0fd2d909e1ea4b7914",
+      "size_bytes": 1782787
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Jaw_1.fdt",
+      "sha256": "295f1e89b07acd091708e61573b06ea6d2faa91137055b59bb502a89ba281e3a",
+      "size_bytes": 169230336
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Jaw_1.set",
+      "sha256": "ea2d72f8b66703af88e3716ab9c08f178ec4075f027d7d4a77a86856ea75d657",
+      "size_bytes": 1777560
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Motion_1.fdt",
+      "sha256": "cd820e1e87a0cb22324d994417f2dd4820976795a651c984162340e2e40457ec",
+      "size_bytes": 177881088
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Motion_1.set",
+      "sha256": "a6f034eb3e7745133558f2a976b82de221741b8db43a5cd61c90e19cc77608fb",
+      "size_bytes": 1797669
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Neck_1.fdt",
+      "sha256": "9eafb04491f4c0f17b9bd3a347de928f65ad60fc68d74de5d1dd370989aae519",
+      "size_bytes": 173015040
+    },
+    {
+      "path": "derivatives/Data/Imported/NMM10_Neck_1.set",
+      "sha256": "40c1d505faf7950fd1f144d05c448e13caf73ad0c23e2889f8eaeca9efe29813",
+      "size_bytes": 1784408
+    },
+    {
+      "path": "stimuli/GTdata_croppedToRisingEdge.mat",
+      "sha256": "0899f604df81262c8844664b04d9e8a38a819af2b9328caff6bb8cd52c3979e4",
+      "size_bytes": 22256497
+    }
+  ],
+  "generated_at_utc": "2026-07-15T04:11:09.163270Z",
+  "hash_mode": "all",
+  "include_patterns": [
+    "derivatives/Data/Imported/NMM10_*_1.set",
+    "derivatives/Data/Imported/NMM10_*_1.fdt",
+    "stimuli/GTdata_croppedToRisingEdge.mat",
+    "dataset_description.json"
+  ],
+  "license": "CC0",
+  "root_at_manifest_creation": "D:\\datasets\\ds004784",
+  "schema_version": 1,
+  "subjects": [
+    "sub-001"
+  ],
+  "total_bytes": 1085696034,
+  "version": "1.0.4"
+}

@@ -1,0 +1,25 @@
+arm: ssvep_beta
+runner: ssvep
+status: protocol_frozen_v1
+dataset:
+  id: beta_ssvep
+  project_relative_path: ssvep/beta
+  subdir: beta
+  version: portal_snapshot_manifest
+  subjects: [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70]
+  target_mapping: read_frequency_vector_from_each_official_subject_mat
+  channel_types: [eeg]
+methods_under_test: [dss_comb_bias]
+comparators:
+  required: [best_raw_occipital, cca, fbcca]
+  secondary: [trca]
+splits: {fit: leave_one_block_out_training, evaluation: held_out_block}
+metrics:
+  primary_target: extracted_component_harmonic_snr
+  primary_preservation: out_of_band_power
+  n_harmonics: 3
+  secondary: [decoding_accuracy_subject_safe_cv, runtime, failures]
+unit_of_inference: subject
+seeds: {global: 42}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
+

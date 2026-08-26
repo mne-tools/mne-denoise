@@ -1,0 +1,37 @@
+arm: temporal_ground_truth
+runner: temporal_ground_truth
+status: protocol_frozen_v1
+simulation:
+  clean_source: colored_eeg_plus_alpha_beta_and_erp
+  artifact_types: [quasiperiodic, chirp, drift, transient, broadband_muscle]
+  artifact_to_signal_db: [-6, 0, 6]
+  replicates_per_cell: 50
+  sfreq_hz: 250
+  duration_s: 60
+  n_channels: 8
+  seeds: {global: 240714, generation: sha256_arm_cell_and_replicate}
+methods_under_test: [ssa, quasiperiodic_denoiser, wavelet_threshold, wica, emd, eemd, eemd_cca]
+method_parameters:
+  ssa: {window_length_samples: 100, drop_frequency_max_hz: 3.0, checked_eigentriples: 20}
+  quasiperiodic_denoiser: {minimum_peak_distance_samples: 100, peak_height_percentile: 75}
+  wavelet_threshold: {wavelet: sym5}
+  wica: {wavelet: coif5, max_iterations: 500}
+  emd: {frequency_cutoff_hz: 30, maximum_imfs: 8}
+  eemd: {frequency_cutoff_hz: 30, maximum_imfs: 8, ensemble_trials: 8, execution_tier: fir_array_per_seed}
+  eemd_cca: {canonical_correlation_threshold: 0.9, maximum_imfs: 8, ensemble_trials: 8, execution_tier: fir_array_per_seed}
+execution_policy: {run_only_declared_intended_regimes: true, off_regime_status: skipped_outside_intended_regime}
+comparators: {required: [none], secondary: [notch, autocca]}
+intended_regime:
+  ssa: quasiperiodic
+  quasiperiodic_denoiser: quasiperiodic
+  wavelet_threshold: transient
+  wica: transient
+  emd: [chirp, drift]
+  eemd: [chirp, drift]
+  eemd_cca: broadband_muscle
+metrics:
+  primary_target: known_artifact_residual_energy
+  primary_preservation: known_clean_waveform_relative_rmse
+  secondary: [clean_correlation, spectral_distortion, erp_amplitude_error, runtime, failure]
+unit_of_inference: simulation_seed_nested_in_artifact_type_and_severity
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

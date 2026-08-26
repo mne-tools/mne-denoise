@@ -1,0 +1,69 @@
+# Arm: line_ds000117 — real LAB MEG line noise (50 Hz, UK). Skeleton (P0).
+# CRITICAL: use the RAW unprocessed FIF. Supplied MaxFilter/SSS files already had 50 Hz + harmonics + HPI
+# removed and are FORBIDDEN for the line-noise arm.
+arm: line_ds000117
+runner: line_noise
+status: protocol_frozen_v1
+
+dataset:
+  id: ds000117
+  project_relative_path: openneuro/ds000117
+  version: openneuro_snapshot_manifest
+  expected_subjects: 19         # 16 = published subset; use 19 unless raw-QC excludes
+  subjects: manifest_subjects   # exact usable subject list is frozen in the dataset manifest
+  excluded_subjects: []
+  channel_types: [mag, grad]    # denoise mag and grad SEPARATELY; EEG is a separate arm
+  raw_or_processed: raw
+  supplied_sss_file: forbidden  # already notch+harmonic+HPI removed
+  line_freq_hz: 50
+  harmonics_hz: [50, 100, 150, 200, 250]
+  hpi_exclusion: from_raw_metadata   # ~300 Hz; derive bands from sidecars, not hard-coded
+
+meg_line_noise:
+  cleaning_order: clean_raw_then_optional_sss   # PRIMARY: operate on raw (full rank), report rank
+  sss_applied: false                            # primary arm; sensitivity branch below
+  sensitivity_branch: {sss_applied: true, line_frequency_removal_in_sss: false}
+  rank_before: recorded_per_subject
+  rank_after: recorded_per_subject
+  sensor_types_fit_separately: true
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch, spectrum_interp, sss, tsss]   # spectrum_interp = DFT-bin interpolation (Leske & Dalal 2019). sss/tsss = Maxwell filter run on the RAW as a scored comparator (MF4); Neuromag-only (HCP/KIT arms cannot use it -- a point in ZapLine's favour). SSS line attenuation is incidental, reported as such.
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression, spectrum_interpolation]
+sweep: {zapline: {param: n_remove, grid: [1, 2, 3, 4, 6, 8]}}
+
+psd_spec:
+  estimator: welch
+  nperseg: 4400
+  sideband_hz: [1.0, 3.0]
+  channel_aggregation: [per_sensor_type, per_channel_distribution]
+
+metrics:
+  primary_target: held_out_line_harmonic_residual
+  primary_preservation: m170_and_off_target_spectral_equivalence
+  secondary: [harmonic_attenuation_db, rank_change, runtime]
+preservation_reference:
+  source: held_out_low_artifact_trials
+  independent_from_method_fit: true
+equivalence_margin: {value: 0.10, scale: neighboring_band_relative_power, direction: non_inferiority, justification: ten_percent_off_target_power_change_fixed_before_rerun}
+
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-08, sub-16]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Wakeman & Henson 2015 (10.1038/sdata.2015.1)"
+  mains_hz: 50                       # UK (explicit)
+  online_reference: nose
+  steps:
+    use_raw_fif: true                # NOT MaxFilter/SSS (already removed 50 Hz + HPI)
+    keep_native_sfreq: 1100
+    mag_grad_separate: true
+    exclude_hpi_bands_hz: [293, 307, 314, 321, 328]
+  branch_point: raw_fif_full_rank_pre_line_removal
+  excluded_from_baseline: [sss_maxfilter, resample]

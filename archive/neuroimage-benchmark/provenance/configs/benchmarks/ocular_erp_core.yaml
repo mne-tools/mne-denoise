@@ -1,0 +1,66 @@
+# Arm: ocular_erp_core — ocular artifact correction, EEG (ERP CORE N170). Skeleton (P0).
+# EOG-DSS is a single FROZEN definition (no per-subject drift, no alternative operator).
+arm: ocular_erp_core
+runner: ocular
+status: protocol_frozen_v1
+
+dataset:
+  id: erp_core_n170
+  project_relative_path: osf/erp-core/n170
+  version: osf_thsqg_snapshot_manifest
+  subjects: manifest_subjects
+  channel_types: [eeg]
+  eog_channels: {veog: [VEOG_lower], heog: [HEOG_left, HEOG_right]}
+
+eog_dss:                        # frozen definition
+  bias: cycle_average
+  event_source: {blink: VEOG, saccade: HEOG}
+  blink_window_ms: [-200, 400]
+  saccade_window_ms: [-200, 400]
+  n_components: 2
+  component_selection: top_two_by_train_only_eog_bias_score
+  fit_split: train_blocks
+  evaluation_split: held_out_blocks
+
+methods_under_test: [eog_dss]
+comparators:
+  required: [none, eog_regression, ica_iclabel_rejection, adjust, mara, ssp_eog, ssa, wica, wavelet_threshold]
+  # mara = MARA six-feature linear-discriminant artifact IC classifier (Winkler, Haufe & Tangermann 2011; GPL-3.0-isolated module);
+  # adjust = ADJUST feature-based ocular IC classifier (Mognon 2011, the classic ICLabel predecessor);
+  # ssa = singular spectrum analysis; wica = wavelet-enhanced ICA (Castellanos-Makarov 2006, canonical ocular);
+  # wavelet_threshold = per-channel universal soft-thresholding. Literature-standard ocular methods from the wearable review.
+  ablations: [veog_only, heog_only, joint, one_vs_many_components, blink_free_vs_artifact_rich]
+sweep: {eog_dss: {param: n_components, grid: [1, 2, 3, 4]}}
+
+splits: {fit: train_blocks, selection: validation, evaluation: held_out_blocks}
+trial_handling: {match_trial_counts: true, report_native_and_matched: true}
+
+metrics:
+  primary_target: held_out_blink_locked_residual_amplitude   # measured on SCALP EEG frontal ROI, not the EOG channel
+  primary_preservation: N170_mean_amplitude_equivalence
+  attenuation_measurement: {space: scalp_eeg, roi: frontal, baseline: [-200, -100], statistic: mean, overlapping_blink_handling: exclude_events_within_600_ms, blink_and_saccade_separate: true}
+  secondary: [eog_coupling_residual, SME, trial_retention, rank_components, runtime]
+preservation_reference:
+  source: blink_free_held_out_trials
+  independent_from_method_fit: true
+equivalence_margin: {value: 0.5, scale: within_subject_raw_split_sd, direction: two_sided_equivalence, justification: half_split_half_N170_measurement_sd_fixed_before_held_out_blocks}
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+storage:
+  always_save: [metrics, model_json, qc_arrays, evoked_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: [sub-001, sub-020, sub-040]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Kappenman et al. 2021 (10.1016/j.neuroimage.2020.117465)"
+  mains_hz: 60
+  online_reference: CMS_DRL
+  steps:
+    resample_hz: 256
+    offline_reference: average_all_33
+    highpass_hz: 0.1
+    bipolar_eog: true
+    epoch_ms: [-200, 800]
+    baseline_ms: [-200, 0]
+  branch_point: common_epoched_erp_blink_contaminated
+  excluded_from_baseline: [ica_iclabel, eog_regression, ssp_eog]   # these ARE the comparators

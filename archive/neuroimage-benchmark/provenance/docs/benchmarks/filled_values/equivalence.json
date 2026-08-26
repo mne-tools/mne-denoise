@@ -1,0 +1,12 @@
+{
+ "evoked_erp_core.margin": "0.30",
+ "evoked_erp_core.bound": "0.26",
+ "evoked_ds000117.margin": "0.30",
+ "evoked_ds000117.bound": "0.41",
+ "ocular_erp_core.margin": "0.30",
+ "ocular_erp_core.bound": "0.26",
+ "muscle_ds004505.margin": "0.30",
+ "muscle_ds004505.bound": "0.33",
+ "line_ds000117.margin": "0.30",
+ "line_ds000117.bound": "0.42"
+}

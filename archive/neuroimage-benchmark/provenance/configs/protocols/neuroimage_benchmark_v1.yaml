@@ -1,0 +1,61 @@
+protocol_id: neuroimage-benchmark-v1
+authored_utc: 2026-07-14T00:00:00Z
+submission_policy:
+  main_figure_arms_rerun: true
+  existing_real_data_role: prespecified_reanalysis
+  locked_evidence: [new_simulation_seeds, beta_ssvep, ds004784_repeat_2]
+  synthetic_fallback_for_missing_real_data: forbidden
+  terminal_record_per_attempt: required
+  dirty_git_worktree: forbidden
+
+primary_configs:
+  architecture: []
+  line_periodic:
+    - configs/benchmarks/line_noise_injection.yaml
+    - configs/benchmarks/line_noise_ds003620.yaml
+    - configs/benchmarks/line_noise_ds000117.yaml
+  target_aware:
+    - configs/benchmarks/evoked_erp_core.yaml
+    - configs/benchmarks/evoked_ds000117.yaml
+    - configs/benchmarks/ssvep_tsinghua.yaml
+    - configs/benchmarks/ssvep_beta.yaml
+  physiological_artifacts:
+    - configs/benchmarks/ocular_erp_core.yaml
+    - configs/benchmarks/muscle_ds004505.yaml
+    - configs/benchmarks/cardiac_cap.yaml
+  known_target_recovery:
+    - configs/benchmarks/asr_transient_ground_truth.yaml
+    - configs/benchmarks/icanclean_reference_ground_truth.yaml
+    - configs/benchmarks/ground_truth_generic.yaml
+    - configs/benchmarks/ground_truth_forward.yaml
+  deployment:
+    - configs/benchmarks/lowdensity_ocular.yaml
+    - configs/benchmarks/lowdensity_muscle.yaml
+    - configs/benchmarks/sensor_forward_ground_truth.yaml
+    - configs/benchmarks/streaming_replay.yaml
+
+supplementary_configs:
+  - configs/benchmarks/temporal_ground_truth.yaml
+  - configs/benchmarks/robustness_sleep.yaml
+  - configs/benchmarks/robustness_chbmit.yaml
+  - configs/benchmarks/robustness_cap.yaml
+  - configs/benchmarks/mi_eegmmidb.yaml
+  - configs/benchmarks/p300_brain_invaders.yaml
+  - configs/benchmarks/p300_vr.yaml
+  - configs/benchmarks/line_lemon.yaml
+  - configs/benchmarks/line_meg_masc.yaml
+  - configs/benchmarks/line_hcp_meg.yaml
+
+statistical_policy:
+  primary_endpoints_per_arm: {attenuation: 1, preservation: 1}
+  real_data_interval: paired_participant_bootstrap_95pct
+  simulation_model: crossed_random_effects_source_set_and_mixing_matrix
+  secondary_multiplicity: false_discovery_rate_within_family
+  equivalence_sensitivity_sd: [0.25, 0.5]
+  pseudoreplication: forbidden
+
+release_gates:
+  icanclean_patent_and_authorization_review: external_institutional_confirmation_required
+  zenodo_doi: required_before_submission
+  exact_release: mne-denoise-0.1.0
+  sample_data_for_every_public_estimator: required

@@ -1,0 +1,70 @@
+# Arm: line_injection — controlled 50/60-Hz injection with a KNOWN clean target.
+# Skeleton (P0). Fields marked pending_feasibility/pending are rejected by the submission validator
+# until frozen. See docs/benchmarks/BENCHMARK_PLAN.md and ANALYSIS_PLAN.md.
+arm: line_injection
+runner: line_noise
+status: protocol_frozen_v1
+
+source:
+  base: forward_model            # synthetic / forward-model line-FREE base (clean target = X_base)
+  inject: L_known                # X_test = X_base + L_known
+  line_freq_hz: [50, 60]
+  harmonics_hz: {50: [50, 100], 60: [60, 120]}  # only < Nyquist; exclude any HPI region
+  conditions: [stationary, freq_drift, amp_drift, low_rank, high_rank, near_oscillation, intermittent]
+  snr_levels_db: [-6, 0, 6]
+  seeds: {global: 42, n_replicates: 50}
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch, spectrum_interp]   # spectrum_interp = DFT-bin interpolation (Leske & Dalal 2019), distinct from non_spatial_line (multitaper sinusoid-fit)
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression, spectrum_interpolation]
+  optional: []
+
+sweep:                            # aggressiveness param → attenuation–preservation curve
+  zapline: {param: n_remove, grid: [1, 2, 3, 4, 6, 8]}
+
+psd_spec:                         # frozen so spectral metrics are reproducible
+  estimator: welch
+  window: hann
+  nperseg: 2000
+  noverlap: 1000
+  resolution_hz: 0.25
+  center_bin_hz: 0.5
+  sideband_hz: [1.0, 3.0]
+  harmonic_aggregation: geometric_mean
+  channel_aggregation: [geometric_mean, per_channel_distribution]
+  drift_handling: four_second_windows_with_50_percent_overlap
+
+guards:                           # programmatic (enforced by runner)
+  no_lowpass_below_highest_harmonic: true
+  no_resample_before_line_eval: true
+  no_cleaner_before_branch: true
+  identical_input_across_methods: true
+
+metrics:
+  primary_target: residual_projection_onto_L_known
+  primary_preservation: off_target_waveform_spectral_equivalence
+  secondary: [removed_signal_similarity_to_L_known, sideband_distortion, phase_distortion, ringing, rank_change, tf_recovery]
+preservation_reference:
+  source: known_pre_injection_base
+  construction: X_base (line-free synthetic / forward-model)
+  independent_from_method_fit: true
+equivalence_margin: {value: 0.10, scale: relative_clean_signal_error, direction: non_inferiority, justification: maximum_ten_percent_off_target_error_fixed_before_locked_seeds}
+
+unit_of_inference: simulation_seed_nested_in_topology_snr_and_line_frequency
+
+storage:
+  always_save: [metrics, model_json, qc_arrays, removed_signal]
+  save_cleaned: {mode: selected_replicates, ids: [seed-000, seed-024, seed-049]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "synthetic forward-model base + known L_known"
+  mains_hz: [50, 60]                 # both injected
+  steps:
+    clean_forward_base: true         # known pre-injection signal is the reference
+    inject_L_known: true
+  branch_point: "X_test = X_base + L_known"
+  excluded_from_baseline: [any_cleaning_before_branch]

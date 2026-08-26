@@ -1,0 +1,81 @@
+# Amendment arm: muscle_nonlinear_dss — exploratory eleven-contrast screen on ds004505.
+#
+# WHY THIS IS EXPLORATORY AND NOT CONFIRMATORY
+#
+# The DSS literature prescribes nothing for muscle or movement artifact. Sarela & Valpola
+# contain no EMG treatment at all; their biomedical worked examples are rhythmic MEG and
+# cardiac MEG. Nothing is nominated in advance and the reporting rule is the full
+# eleven-way profile, never a winner.
+# Pre-registration: documents/nonlinear_dss_screen_preregistration_20260727.json
+#
+# WHY THIS ARM IS THE FIRST OF ITS KIND HERE
+#
+# muscle_ds004505 currently carries no DSS operator of any kind, linear or nonlinear. Any
+# result from this arm is the first DSS evidence for muscle in the campaign.
+#
+# THE PREDICTION THIS ARM CAN FALSIFY
+#
+# The cardiac screen predicts, from section 4.2.1, that kurtosis performs well on sparse
+# QRS and poorly on broadband EMG, because kurtosis overfits toward spiky estimates. That
+# is a two-arm prediction, and this is the arm where it can fail: if kurtosis performs well
+# on neck EMG, the reading of 4.2.1 that motivated the cardiac prior is wrong.
+#
+# ONE CONTRAST RUNS WITHOUT ITS PRESCRIBED TUNING
+#
+# variance_mask is the contrast whose source gives concrete tuning -- a sharpness parameter
+# mu annealed from 1.3 downward by 0.1 at each convergence. The implementation exposes no
+# such schedule, so variance_mask runs unannealed. A weak result for it is a statement
+# about this implementation, not about the method, and must be reported that way.
+
+arm: muscle_nonlinear_dss
+runner: muscle
+status: amendment
+amends: muscle_ds004505
+amends_config_sha256: 2593e3b9804215a11a2234a0c300002e8088c7db34360a7329109ed1f23d08e5
+confirmatory: false
+
+dataset:
+  id: ds004505
+  project_relative_path: openneuro/ds004505
+  channel_types: [eeg]
+
+methods_under_test: [iterative_dss]
+comparators:
+  required: [none]
+
+sweep:
+  iterative_dss:
+    param: contrast
+    grid: [tanh, robust_tanh, gauss, skew, smooth_tanh, kurtosis, wiener_mask,
+           variance_mask, dct, quasi_periodic, spectrogram]
+
+iterative_dss:
+  n_components: 3
+  polarity: subtract
+  method: symmetric
+  max_iter: 100
+  min_converged_fraction: 0.5
+  random_state: 0
+
+# iterative_dss is blind: it reads neither the auxiliary noise layer nor the neck-EMG
+# channels. That is the informative contrast against this arm's reference-aware operators
+# (dual_layer_regression, reference_regression, icanclean), which do read them.
+information_access: blind
+
+metrics:
+  primary_target: independent_neck_emg_contamination_metric
+  primary_preservation: frozen_task_band_contrast
+  secondary: [alpha_power, beta_power, erd_ers, effective_rank_change, converged_component_fraction]
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
+
+# Inherited unchanged from muscle_ds004505.
+baseline_preprocessing:
+  source: "Studnicki & Ferris 2022 (ds004505, dual-layer mobile EEG, table tennis)"
+  steps:
+    highpass_hz: 1.0
+    lowpass_hz: 100.0
+  branch_point: scalp_eeg_pre_artifact_removal
+  excluded_from_baseline: [dss, ica]

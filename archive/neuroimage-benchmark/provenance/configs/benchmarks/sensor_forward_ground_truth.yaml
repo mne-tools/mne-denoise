@@ -1,0 +1,30 @@
+arm: sensor_forward_ground_truth
+runner: sensor_forward_ground_truth
+status: protocol_frozen_v1
+simulation:
+  sfreq_hz: 250
+  duration_s: 20
+  cortical_sources_per_replicate: 12
+  max_channels_per_modality: 64
+  modalities: [eeg, meg]
+  forward: {source: mne_sample, spacing: ico4, orientation: fixed, eeg_montage: standard_1020, meg_system: vectorview}
+  artifact_types: [sensor_local, spatially_correlated_environmental, masked_broadband, tms_pulse]
+  severity_db: [-6, 0, 6]
+  leadfield_mismatch: [none, five_mm, ten_mm]
+  source_displacement_mm: {none: 0, five_mm: 5, ten_mm: 10}
+  replicates_per_primary_cell: 50
+  seeds: {global: 240714, generation: sha256_arm_cell_and_replicate}
+methods_under_test: [sns, sound, mwf, ssp_sir]
+comparators: {required: [none, pca_rank_matched], secondary: [ssp]}
+intended_regime:
+  sns: sensor_local
+  sound: [sensor_local, spatially_correlated_environmental]
+  mwf: masked_broadband
+  ssp_sir: tms_pulse
+  ssp: tms_pulse
+metrics:
+  primary_target: known_artifact_residual_energy
+  primary_preservation: known_cortical_source_relative_rmse
+  secondary: [sensor_rmse, source_correlation, topographic_correlation, spectral_distortion, rank_change, runtime, failure]
+unit_of_inference: simulation_seed_nested_in_modality_artifact_and_severity
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

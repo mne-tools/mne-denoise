@@ -1,0 +1,41 @@
+# Arm: phantom_ds004784 — reference-aware artifact removal on a conductive head phantom.
+# Independent RE-ANALYSIS of author-created data, reported SEPARATELY from the BSS arms.
+# Known clean brain (task-Brain) + injected artifacts (task-All); reference-aware methods
+# (iCanClean, TSPCA) decouple the EEG from the EXG external electrodes that pick up the
+# artifacts. Unit = technical repeat (single phantom, n=1). Runs on the muscle runner.
+arm: phantom_ds004784
+runner: muscle
+status: active
+
+dataset:
+  id: phantom_ds004784
+  project_relative_path: openneuro/ds004784
+  description: iCanClean phantom (known brain + artifact sources)
+  contaminated_task: All                 # brain + eye + jaw + neck + motion artifacts
+  trials_are: technical_repeats          # NOT independent human subjects
+  channel_types: [eeg, eog]
+  n_subjects: 1
+
+tiers:                                   # TSPCA stands in for the C1 Auto-CCA slot
+  reference_free: [none]
+  reference_aware: [icanclean, tspca]
+
+metrics:
+  primary_target: reference_coupling_to_EXG_artifact   # lower = more artifact removed
+  primary_preservation: brain_band_power
+  secondary: [hf_power, runtime]
+preservation_reference: {source: known_phantom_brain_sources, independent_from_method_fit: true}
+
+independence_note: "Independent re-analysis of the publicly released iCanClean phantom (author-created); reported separately, paired with muscle_ds004505 + own simulation."
+
+unit_of_inference: phantom_trial_technical_repeat
+storage:
+  always_save: [metrics, model_json]
+
+baseline_preprocessing:
+  source: "Downey & Ferris (ds004784 conductive phantom); 128-ch BioSemi ABCD, 512 Hz"
+  steps:
+    highpass_hz: 1.0
+    resample_hz: 256
+  branch_point: phantom_scalp_pre_artifact_removal
+  excluded_from_baseline: [icanclean, tspca, asr]

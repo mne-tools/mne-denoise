@@ -1,0 +1,22 @@
+{
+ "fail.zlp.success": "98\\%",
+ "fail.zlp.mode": "out-of-memory",
+ "fail.zlp.cond": "sideband-safe",
+ "fail.dss.success": "100\\%",
+ "fail.dss.mode": "none",
+ "fail.dss.cond": "reliability-enhancing",
+ "fail.asr.success": "100\\%",
+ "fail.asr.mode": "none",
+ "fail.asr.cond": "cutoff-sensitive",
+ "fail.idss.success": "100\\%",
+ "fail.idss.mode": "none",
+ "fail.idss.cond": "source-recovering",
+ "fail.icc.success": "100\\%",
+ "fail.icc.mode": "none",
+ "fail.icc.cond": "reference-coupled",
+ "freeze.ds003620.test": "44",
+ "freeze.ds000117.test": "16",
+ "freeze.erpcore.test": "40",
+ "freeze.ds004505.test": "25",
+ "freeze.tag": "benchmark-v1.0"
+}

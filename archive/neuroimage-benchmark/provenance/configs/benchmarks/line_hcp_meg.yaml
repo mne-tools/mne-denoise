@@ -1,0 +1,29 @@
+# Arm: line_hcp_meg — 3rd MEG system line attenuation (HCP Young-Adult, 4D/BTi 248-mag, 60 Hz).
+# Tier-B MEG-scaling: extends the meg_scaling story to a 3rd system (after Elekta + KIT).
+arm: line_hcp_meg
+runner: line
+status: active
+dataset:
+  id: hcp_meg
+  project_relative_path: meg/hcp
+  channel_types: [mag]
+  n_subjects: 20
+  subjects: ["100307","102816","104012","105923","106521","108323","109123","111514","112920","113922","116524","116726","125525","133019","140117","146129","149741","151526","153732","154532"]
+  line_freq_hz: 60
+  harmonics_hz: [60, 120, 180]
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise: {preferred: cleanline, accepted_substitutes: [sinusoid_regression]}
+metrics: {primary_target: held_out_line_peak_attenuation_db, line_freq_hz: 60}
+unit_of_inference: subject
+seeds: {global: 42}
+baseline_preprocessing:
+  source: "Larson-Prior et al. 2013 (HCP MEG); 248-ch 4D/BTi, WashU (60 Hz)"
+  mains_hz: 60
+  steps: {resample_hz: 500}
+  branch_point: meg_mag_full_rank_pre_line_removal
+  excluded_from_baseline: [sss_maxfilter, notch, zapline]
+sweep: {zapline: {param: n_remove, grid: [1, 2, 4, 8, 16]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

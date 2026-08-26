@@ -1,0 +1,92 @@
+# Amendment arm: cardiac_nonlinear_dss — the eleven-contrast nonlinear DSS screen on
+# real cardiac recordings, with a literature prior to test.
+#
+# WHY THIS ARM IS CONFIRMATORY WHERE THE OTHER TWO ARE NOT
+#
+# Sarela & Valpola section 5.3.1 prescribes a sparse contrast -- kurtosis or tanh -- to
+# extract the QRS complex, exploiting its sparse nature. That is a prior fixed before any
+# attempt, so a confirmatory statement is available here. Ocular and muscle have no such
+# prescription anywhere in the paper or thesis, and their screens are exploratory.
+# Pre-registration: documents/nonlinear_dss_screen_preregistration_20260727.json
+#
+# All eleven contrasts still run. Running only kurtosis and tanh would make the prior
+# untestable: a prior is informative only if the alternatives it predicts against are also
+# measured.
+#
+# WHY THIS ARM MATTERS BEYOND THE SCREEN
+#
+# Cardiac currently has no valid DSS evidence at all. Its only DSS operator, cardiac_dss,
+# was withdrawn after producing identically zero output in all 37 recordings across both
+# cardiac arms (documents/method_defect_correction_20260726_cardiac_dss.json). This arm is
+# the first cardiac DSS result that is not degenerate.
+#
+# NOT INCLUDED
+#
+# Section 5.3.1's full recipe is a two-stage pipeline: the nonlinear stage supplies the
+# beat locations that a linear cycle-averaging stage then uses, with periodic
+# re-estimation. That would be a reference-free cardiac DSS needing no ECG channel, and it
+# is the most interesting cell in the campaign -- but it is new estimator code, not a
+# config, so it stays out of an amendment. What runs here is the single-stage nonlinear
+# contrast, which is stage 1 of that recipe evaluated on its own.
+
+arm: cardiac_nonlinear_dss
+runner: cardiac
+status: amendment
+amends: [cardiac_cap, cardiac_ds007554]
+amends_config_sha256:
+  cardiac_cap: 999e0e154dbeead89afbd2cb4dc3b7e13b8ec1c06ab87ed91900642ebf1a4aec
+  cardiac_ds007554: 3f57e3d1a9017cb52d596f94661d138e4bd27d434fac18d1195d902c2db488c7
+
+# Hosted on the CAP recordings. ds007554 is the negligible-contamination contrast arm and
+# is run as a separate invocation of this same config so the two cohorts are never pooled.
+dataset:
+  id: capslpdb
+  project_relative_path: physionet/capslpdb
+  channel_types: [eeg]
+  subjects: [brux1, brux2, ins1, ins2, ins3, ins4, ins5, ins6]
+
+methods_under_test: [iterative_dss]
+comparators:
+  required: [none]
+
+# The screen. Eleven contrasts at one fixed operating point -- not a rank sweep, which
+# would turn a contrast comparison into an operating-point search.
+sweep:
+  iterative_dss:
+    param: contrast
+    grid: [tanh, robust_tanh, gauss, skew, smooth_tanh, kurtosis, wiener_mask,
+           variance_mask, dct, quasi_periodic, spectrogram]
+
+# Fixed in advance and identical across all eleven contrasts and all three screen arms.
+# Any contrast given individual tuning would be compared against ten that were not.
+iterative_dss:
+  n_components: 3
+  polarity: subtract
+  method: symmetric
+  max_iter: 100
+  min_converged_fraction: 0.5
+  random_state: 0
+
+prespecified_contrasts_of_interest: [kurtosis, tanh]
+directional_prediction: "kurtosis performs well here and poorly on muscle. Section 4.2.1 is
+  explicit that kurtosis overfits toward spiky estimates, an asset for QRS and a liability
+  for broadband EMG. The prediction spans two arms so it can fail visibly."
+
+metrics:
+  primary_target: qrs_locked_residual
+  primary_preservation: neural_band_power
+  secondary: [effective_rank_change, converged_component_fraction]
+
+unit_of_inference: recording
+seeds: {global: 42, ica: 42}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
+
+# Inherited unchanged from cardiac_cap. The branch point must match or the screen is
+# measured against a differently preprocessed baseline than the arm it extends.
+baseline_preprocessing:
+  source: "Terzano et al. 2001 (CAP Sleep Database); bipolar montage"
+  steps:
+    highpass_hz: 1.0
+    lowpass_hz: 40.0
+  branch_point: scalp_eeg_pre_artifact_removal
+  excluded_from_baseline: [dss, ica]

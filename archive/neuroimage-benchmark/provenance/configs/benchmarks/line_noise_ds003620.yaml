@@ -1,0 +1,71 @@
+# Arm: line_ds003620 — real mobile EEG line noise (50 Hz). Skeleton (P0).
+arm: line_ds003620
+runner: line_noise
+status: protocol_frozen_v1
+
+dataset:
+  id: ds003620
+  project_relative_path: openneuro/ds003620
+  version: 1.1.1
+  subjects: manifest_subjects  # all available unless raw-QC excludes (blind to method)
+  excluded_subjects: []
+  channel_types: [eeg]
+  raw_or_processed: raw        # raw sample rate; do NOT use a 40-Hz-LP file
+  line_freq_hz: 50
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch, spectrum_interp]   # spectrum_interp = DFT-bin interpolation (Leske & Dalal 2019), distinct from non_spatial_line (multitaper sinusoid-fit)
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression, spectrum_interpolation]
+  optional: []
+
+sweep:
+  zapline: {param: n_remove, grid: [1, 2, 3, 4, 5, 6, 8, 10]}
+
+psd_spec:
+  estimator: welch
+  window: hann
+  nperseg: 2000
+  noverlap: 1000
+  resolution_hz: 0.25
+  center_bin_hz: 0.5
+  sideband_hz: [1.0, 3.0]
+  harmonics_hz: [50, 100, 150, 200]  # only < Nyquist
+  channel_aggregation: [geometric_mean, per_channel_distribution]
+
+guards:
+  no_lowpass_below_highest_harmonic: true
+  no_resample_before_line_eval: true
+  no_cleaner_before_branch: true
+  identical_input_across_methods: true
+
+splits: {selection: validation_subjects_or_runs, evaluation: held_out, note: "R(f0) primary only if not test-tuned"}
+
+metrics:
+  primary_target: held_out_R_f0
+  primary_preservation: sideband_continuity
+  secondary: [harmonic_attenuation_db, out_of_band_power, rank_change, n_components, overclean, underclean, runtime]
+preservation_reference:
+  source: sideband_continuity_and_task_response
+  construction: proxy (no clean ground truth on real data)
+  independent_from_method_fit: true
+equivalence_margin: {value: 0.10, scale: neighboring_band_relative_power, direction: non_inferiority, justification: ten_percent_off_target_power_change_fixed_before_rerun}
+
+unit_of_inference: subject
+storage:
+  always_save: [metrics, model_json, qc_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: [sub-01, sub-02]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Liebherr et al. 2021 (10.1038/s41598-021-01772-8)"
+  mains_hz: 50                       # Adelaide AU (inferred)
+  online_reference: FCz
+  steps:                             # identical input to ZapLine/ZapLine+ AND notch/CleanLine
+    keep_native_sfreq: 500           # no resample before line eval
+    highpass_hz: 0.5                 # drift only, zero-phase FIR
+    reference: as_recorded
+  branch_point: raw_500hz_pre_line_removal
+  excluded_from_baseline: [resample_250, lowpass_40, asr, ica]   # would alter line content / under test

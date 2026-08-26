@@ -1,0 +1,70 @@
+# Arm: evoked_erp_core — DSS evoked enhancement, EEG (ERP CORE N170, faces vs cars). Skeleton (P0).
+arm: evoked_erp_core
+runner: evoked
+status: protocol_frozen_v1
+
+dataset:
+  id: erp_core_n170
+  project_relative_path: osf/erp-core/n170
+  version: osf_thsqg_snapshot_manifest
+  subjects: manifest_subjects  # 40 available; exact list is frozen in the dataset manifest
+  excluded_subjects: []
+  channel_types: [eeg]
+  eog_channels: [HEOG_left, HEOG_right, VEOG_lower]
+
+generalization:                # ds003620 is OPTIONAL external generalization, not required for done
+  datasets: [ds003620]
+  required_for_track_done: false
+
+preprocessing:
+  reference: average_all_33
+  hp_hz: 0.1
+  lp_hz: 30.0
+  resample_hz: 256
+  shared_line_noise_step: identical_across_methods_before_branch
+  roi_window_source: erp_core_resource    # adopt ROI + window from ERP CORE, not post-hoc
+
+methods_under_test: [dss_average_bias]
+comparators:
+  required: [none, rank_matched_pca]
+  secondary: [ica_rank_matched]
+  # xdawn (adapter + test retained): a single-class evoked-DETECTION filter; on this between-condition
+  # N170 CONTRAST it enhances the shared evoked response and shrinks the face-car difference (|g| 0.68 vs
+  # 0.96 uncorrected) + skipped 22/40 subjects. Its proper home is the single-class P300 arm (future work).
+  null_condition: event_destroyed_dss     # independent per-trial circular time-shift; stored as NULL, not a comparator
+sweep: {dss: {param: n_components, grid: [2, 4, 6, 8]}}
+
+splits: {fit: train_runs_or_trials, selection: validation, evaluation: held_out_trials}
+trial_handling: {match_trial_counts: true, report_native_and_matched: true}
+
+metrics:
+  primary_target: held_out_face_minus_car_N170_effect_size   # enhancement (independent of DSS objective)
+  primary_preservation: N170_mean_amplitude_topography_equivalence
+  roi_channels: [PO7, PO8]            # ERP-CORE N170 canonical electrodes (Kappenman 2021)
+  secondary: [SME, split_half_reliability, latency, across_subject_variance, off_target_windows, rank_change]
+preservation_reference:
+  source: high_trial_count_low_contamination_held_out_ERP
+  independent_from_method_fit: true
+equivalence_margin: {value: 0.5, scale: within_subject_raw_split_sd, direction: two_sided_equivalence, justification: half_split_half_measurement_sd_estimated_on_development_trials_before_evaluation}
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+storage:
+  always_save: [metrics, model_json, qc_arrays, evoked_arrays]
+  save_cleaned: {mode: selected_subjects, subjects: [sub-001, sub-020, sub-040]}
+
+baseline_preprocessing:   # paper-grounded; see docs/benchmarks/PREPROCESSING.md
+  source: "Kappenman et al. 2021 (10.1016/j.neuroimage.2020.117465)"
+  mains_hz: 60                       # UC Davis US
+  online_reference: CMS_DRL
+  steps:
+    resample_hz: 256
+    offline_reference: average_all_33   # N170 convention
+    n170_window_ms: [110, 150]          # ERP-CORE N170 measurement window (Kappenman 2021)
+    highpass_hz: 0.1                 # non-causal Butterworth
+    bipolar_eog: true
+    epoch_ms: [-200, 800]
+    baseline_ms: [-200, 0]
+  branch_point: common_epoched_erp
+  excluded_from_baseline: [ica_ocular]   # ICA correction is a comparator (under test)
+  gap: "per-paradigm N170 window in paper table; confirm vs BIDS sidecars on Fir"

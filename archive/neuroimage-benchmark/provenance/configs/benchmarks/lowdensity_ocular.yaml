@@ -1,0 +1,26 @@
+# Low-density robustness arm (real data): subsample the ERP-CORE N170 ocular recording to
+# decreasing channel counts and re-score the blink-coupling endpoint. The posterior N170 ROI
+# (PO7/PO8) is force-kept at every density so the preservation metric stays defined.
+arm: lowdensity_ocular
+runner: lowdensity
+base_arm: ocular
+status: protocol_frozen_v1
+channel_grid: [28, 16, 8, 4]
+curve_metric: blink_coupling
+dataset:
+  id: erp_core_n170
+  project_relative_path: osf/erp-core/n170
+  subjects: [sub-001, sub-005, sub-010, sub-015, sub-020, sub-025]
+methods_under_test: [eog_dss]
+comparators:
+  required: [none, eog_regression, ica_iclabel_rejection, ssa, wavelet_threshold]
+metrics:
+  primary_target: blink_coupling
+  primary_preservation: N170_mean_amplitude
+  roi_channels: [PO7, PO8]
+unit_of_inference: subject
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}
+baseline_preprocessing:
+  steps:
+    highpass_hz: 0.1
+    n170_window_ms: [110, 150]

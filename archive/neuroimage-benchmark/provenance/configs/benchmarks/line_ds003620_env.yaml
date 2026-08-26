@@ -1,0 +1,41 @@
+# Arm: line_ds003620_env — mobile-EEG line attenuation broken down by mobility environment.
+# Env-segmented re-run of the ds003620 line arm: the continuous recording is split into 6
+# stimulus-index blocks = 3 environments (lab / oval / campus) x 2 task conditions, mapped per
+# subject via participants.tsv counterbalancing (no block markers exist). Fills Table res_line.
+arm: line_ds003620_env
+runner: line
+status: active
+env_segment: true
+
+dataset:
+  id: ds003620
+  project_relative_path: openneuro/ds003620
+  channel_types: [eeg]
+  n_subjects: 44
+  line_freq_hz: 50
+
+methods_under_test: [zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression]
+
+metrics:
+  primary_target: held_out_Rf0_by_environment
+  primary_preservation: overclean_proportion
+  line_freq_hz: 50
+
+unit_of_inference: subject
+seeds: {global: 42}
+
+baseline_preprocessing:
+  source: "Liebherr et al. 2021 (ds003620, Runabout); 32-ch mobile EEG, 500 Hz"
+  mains_hz: 50
+  steps: {}                        # operate on referential data at native 500 Hz: average-
+                                   # referencing would remove the common-mode line before
+                                   # ZapLine, leaving only a weak spatial residual to act on.
+  branch_point: scalp_eeg_pre_line_removal
+  excluded_from_baseline: [average_reference, notch, zapline]
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

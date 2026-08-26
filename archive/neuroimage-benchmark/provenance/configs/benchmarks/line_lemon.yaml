@@ -1,0 +1,38 @@
+# Arm: line_lemon — resting-EEG line-noise replication (LEMON, generalization).
+# Tier-B: replicates the ZapLine+ line-attenuation finding on a large resting-state cohort.
+arm: line_lemon
+runner: line
+status: active
+
+dataset:
+  id: lemon
+  project_relative_path: s3/lemon-eeg
+  channel_types: [eeg]
+  n_subjects: 40                       # subset of 215 for the replication
+  line_freq_hz: 50
+
+methods_under_test: [zapline, zapline_plus]
+comparators:
+  required: [none, notch]
+  required_comparator_group:
+    non_spatial_line_noise:
+      preferred: cleanline
+      accepted_substitutes: [sinusoid_regression]
+
+metrics:
+  primary_target: held_out_Rf0
+  line_freq_hz: 50
+
+unit_of_inference: subject
+seeds: {global: 42}
+
+baseline_preprocessing:
+  source: "Babayan et al. 2019 (LEMON resting EEG); 62-ch BrainVision, Leipzig (50 Hz)"
+  mains_hz: 50
+  steps:
+    resample_hz: 250                   # native 2500 Hz -> 250 for the line analysis
+  branch_point: scalp_eeg_pre_line_removal
+  excluded_from_baseline: [average_reference, notch, zapline]
+
+sweep: {zapline: {param: n_remove, grid: [1, 2, 4, 8]}}
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

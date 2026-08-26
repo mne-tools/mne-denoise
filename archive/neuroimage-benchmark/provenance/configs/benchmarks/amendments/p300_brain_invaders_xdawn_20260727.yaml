@@ -1,0 +1,75 @@
+# Amendment arm: p300_brain_invaders_xdawn — xDAWN on a single-class P300.
+#
+# WHY THIS EXISTS AS A SEPARATE CONFIG
+#
+# evoked_erp_core.yaml excludes xdawn from the N170 comparator set and records the
+# reason in its own comments: xDAWN is a single-class evoked-DETECTION filter, so on a
+# between-condition contrast it enhances the response the two conditions SHARE and
+# shrinks the difference of interest (|g| 0.68 with xDAWN versus 0.96 uncorrected),
+# and it failed to fit 22 of 40 subjects. That config states its proper home is a
+# single-class P300 arm and defers it to future work.
+#
+# That arm now exists. Rather than edit the frozen p300_brain_invaders.yaml -- which
+# would change its config_hash from
+# 8a03382b360074680b02516aa5949f6c2be0c838f958e141962437d236aabd9c and orphan the 75
+# attempts already hashed against it -- this amendment declares the xDAWN comparison
+# as its own arm with its own hash. The frozen config stays byte-identical and the
+# original arm's results are untouched.
+#
+# WHAT IT DOES AND DOES NOT TEST
+#
+# This is a method-appropriateness check, not a competitive claim. The question is
+# whether xDAWN behaves as its design predicts when the target is a single class to be
+# detected rather than two conditions to be discriminated. A fit failure is a result:
+# the fraction of subjects xDAWN cannot fit at 16 channels is a method-availability
+# boundary and belongs in the denominator, exactly as ica_fixed's unfittability at
+# 4 channels does in the low-density arm.
+#
+# Not pooled with the parent arm, and not a substitute for its DSS conclusion.
+
+arm: p300_brain_invaders_xdawn
+runner: evoked
+status: amendment
+amends: p300_brain_invaders
+amends_config_sha256: 8a03382b360074680b02516aa5949f6c2be0c838f958e141962437d236aabd9c
+
+dataset:
+  id: brain_invaders
+  project_relative_path: zenodo/brain-invaders-2012
+  channel_types: [eeg]
+  n_subjects: 25
+
+# xdawn is the method under test here; none is retained as the reference level so the
+# contrast is interpretable without reading the parent arm's table.
+methods_under_test: [xdawn]
+comparators:
+  required: [none]
+
+metrics:
+  primary_target: held_out_target_minus_nontarget_P300_effect_size
+  primary_preservation: P300_amplitude_equivalence
+  roi_channels: [PZ]                 # centro-parietal P300 maximum
+  secondary: [split_half_reliability, SME]
+
+unit_of_inference: subject
+seeds: {global: 42, ica: 42}
+
+# Identical to the parent arm. The branch point and exclusions must match or the
+# comparison is against a differently preprocessed baseline.
+baseline_preprocessing:
+  source: "Van Veen, Congedo et al. 2012 (BrainInvaders P300, GIPSA-lab); 16-ch"
+  online_reference: nose
+  steps:
+    highpass_hz: 1.0
+    resample_hz: 128
+    offline_reference: average
+    window_ms: [250, 450]            # P300 measurement window
+  branch_point: scalp_eeg_pre_artifact_removal
+  excluded_from_baseline: [dss, pca, ica]
+
+# xDAWN's own component count, fixed in advance at the value scripts/config.py has
+# always used (XDAWN_N_COMPONENTS = 3). No sweep: a sweep here would turn a
+# method-appropriateness check into an operating-point search on 25 participants.
+xdawn: {n_components: 3, reg: ledoit_wolf}
+
+storage: {always_save: [metrics, model_json, terminal_status, provenance]}

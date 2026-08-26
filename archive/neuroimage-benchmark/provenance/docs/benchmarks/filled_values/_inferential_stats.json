@@ -1,0 +1,348 @@
+{
+ "evoked_erp_core": {
+  "n": 40,
+  "g_none": 0.96,
+  "g_dss": 0.7,
+  "g_pca": 1.03,
+  "delta_g": 0.25,
+  "delta_g_ci": [
+   0.45,
+   0.07
+  ],
+  "wilcoxon_p": 0.002392230499026482,
+  "split_half_none": 0.98,
+  "split_half_dss": 0.98,
+  "equiv": {
+   "dz": -0.239,
+   "ci90": [
+    -0.538,
+    0.022
+   ],
+   "equivalent": false,
+   "margin": 0.3
+  }
+ },
+ "evoked_ds000117": {
+  "n": 16,
+  "g_none": 0.41,
+  "g_dss": 0.29,
+  "g_pca": 0.42,
+  "delta_g": 0.12,
+  "delta_g_ci": [
+   0.81,
+   0.96
+  ],
+  "wilcoxon_p": null,
+  "split_half_none": 0.2,
+  "split_half_dss": 0.99,
+  "equiv": {
+   "dz": 0.294,
+   "ci90": [
+    -0.108,
+    1.172
+   ],
+   "equivalent": false,
+   "margin": 0.3
+  }
+ },
+ "p300_brain_invaders": {
+  "n": 25,
+  "g_none": 0.85,
+  "g_dss": 0.8,
+  "g_pca": 0.75,
+  "delta_g": 0.04,
+  "delta_g_ci": [
+   0.27,
+   0.27
+  ],
+  "wilcoxon_p": 0.13533220456024594,
+  "split_half_none": 0.8,
+  "split_half_dss": 0.76,
+  "equiv": {
+   "dz": 0.049,
+   "ci90": [
+    -0.443,
+    0.313
+   ],
+   "equivalent": false,
+   "margin": 0.3
+  }
+ },
+ "line_ds003620_env": {
+  "lab": {
+   "wilcoxon_none_vs_zlp_p": 0.0009815397525216685,
+   "n": 41,
+   "notch": {
+    "med": 0.24,
+    "ci": [
+     0.11,
+     0.4
+    ]
+   },
+   "none": {
+    "med": 1.65,
+    "ci": [
+     1.29,
+     2.04
+    ]
+   },
+   "zapline_plus": {
+    "med": 1.16,
+    "ci": [
+     1.08,
+     1.2
+    ]
+   },
+   "non_spatial_line": {
+    "med": 0.61,
+    "ci": [
+     0.48,
+     0.68
+    ]
+   }
+  },
+  "field": {
+   "wilcoxon_none_vs_zlp_p": 0.043114446783075355,
+   "n": 41,
+   "zapline_plus": {
+    "med": 1.17,
+    "ci": [
+     1.11,
+     1.27
+    ]
+   },
+   "notch": {
+    "med": 0.25,
+    "ci": [
+     0.16,
+     0.31
+    ]
+   },
+   "none": {
+    "med": 1.27,
+    "ci": [
+     1.16,
+     1.44
+    ]
+   },
+   "non_spatial_line": {
+    "med": 0.56,
+    "ci": [
+     0.5,
+     0.6
+    ]
+   }
+  },
+  "campus": {
+   "wilcoxon_none_vs_zlp_p": 8.29809930635731e-06,
+   "n": 41,
+   "notch": {
+    "med": 0.18,
+    "ci": [
+     0.07,
+     0.28
+    ]
+   },
+   "non_spatial_line": {
+    "med": 0.7,
+    "ci": [
+     0.64,
+     0.76
+    ]
+   },
+   "zapline_plus": {
+    "med": 1.08,
+    "ci": [
+     1.05,
+     1.12
+    ]
+   },
+   "none": {
+    "med": 2.4,
+    "ci": [
+     2.01,
+     3.01
+    ]
+   }
+  }
+ },
+ "line_meg_masc": {
+  "none": {
+   "db": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ]
+  },
+  "notch": {
+   "db": 24.0,
+   "ci": [
+    23.7,
+    24.6
+   ]
+  },
+  "non_spatial_line": {
+   "db": 12.2,
+   "ci": [
+    11.7,
+    12.9
+   ]
+  },
+  "zapline_plus": {
+   "db": 7.9,
+   "ci": [
+    7.0,
+    9.1
+   ]
+  }
+ },
+ "line_ds000117": {
+  "none": {
+   "db": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ]
+  },
+  "notch": {
+   "db": 47.9,
+   "ci": [
+    47.4,
+    48.2
+   ]
+  },
+  "non_spatial_line": {
+   "db": 19.9,
+   "ci": [
+    18.5,
+    21.4
+   ]
+  },
+  "zapline_plus": {
+   "db": 34.5,
+   "ci": [
+    31.5,
+    35.7
+   ]
+  }
+ },
+ "ocular_erp_core": {
+  "wilcoxon_none_vs_eogdss_p": 1.8189894035458565e-12,
+  "equiv_n170": {
+   "dz": -1.193,
+   "ci90": [
+    -1.603,
+    -0.99
+   ],
+   "equivalent": false,
+   "margin": 0.3
+  },
+  "none": {
+   "med": 0.766,
+   "ci": [
+    0.711,
+    0.814
+   ]
+  },
+  "ssp_eog": {
+   "med": 0.481,
+   "ci": [
+    0.444,
+    0.499
+   ]
+  },
+  "eog_dss": {
+   "med": 0.49,
+   "ci": [
+    0.427,
+    0.523
+   ]
+  },
+  "eog_regression": {
+   "med": 0.082,
+   "ci": [
+    0.072,
+    0.09
+   ]
+  },
+  "ica_iclabel_rejection": {
+   "med": 0.509,
+   "ci": [
+    0.446,
+    0.619
+   ]
+  }
+ },
+ "muscle_ds004505": {
+  "icanclean": {
+   "med": 0.052,
+   "ci": [
+    0.046,
+    0.056
+   ]
+  },
+  "none": {
+   "med": 0.052,
+   "ci": [
+    0.046,
+    0.057
+   ]
+  },
+  "rasr_windowed": {
+   "med": 0.049,
+   "ci": [
+    0.045,
+    0.057
+   ]
+  },
+  "tspca": {
+   "med": 0.052,
+   "ci": [
+    0.046,
+    0.057
+   ]
+  },
+  "reference_regression": {
+   "med": 0.052,
+   "ci": [
+    0.046,
+    0.057
+   ]
+  },
+  "asr__cutoff-30": {
+   "med": 0.05,
+   "ci": [
+    0.046,
+    0.058
+   ]
+  },
+  "asr__cutoff-20": {
+   "med": 0.048,
+   "ci": [
+    0.042,
+    0.056
+   ]
+  },
+  "asr__cutoff-10": {
+   "med": 0.049,
+   "ci": [
+    0.043,
+    0.053
+   ]
+  },
+  "dual_layer_regression": {
+   "med": 0.052,
+   "ci": [
+    0.046,
+    0.057
+   ]
+  },
+  "ica_fixed": {
+   "med": 0.052,
+   "ci": [
+    0.046,
+    0.057
+   ]
+  }
+ }
+}

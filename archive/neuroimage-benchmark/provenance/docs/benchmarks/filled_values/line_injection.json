@@ -1,0 +1,5 @@
+{
+ "line_injection.residual.c0": 1.0,
+ "line_injection.residual.zlp": 0.06,
+ "line_injection.residual.nonspatial": 0.14
+}
