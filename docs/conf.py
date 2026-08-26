@@ -55,7 +55,7 @@ sphinx_gallery_conf = {
     "examples_dirs": "../examples",
     "gallery_dirs": "auto_examples",
     "filename_pattern": r"plot_",
-    "ignore_pattern": r"tutorials|_legacy",
+    "ignore_pattern": r"_legacy",
     "subsection_order": ExplicitOrder(
         [
             "../examples/sns",

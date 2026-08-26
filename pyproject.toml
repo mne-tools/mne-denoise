@@ -133,8 +133,6 @@ convention = "numpy"
 "__init__.py" = ["F401"]
 "tests/**" = ["D", "B", "SIM", "E402"]
 "examples/**" = ["D", "E402", "B", "F404"]
-"scripts/**" = ["D", "E402"]
-"run_erp_benchmark.py" = ["D", "E402"]
 
 [tool.ruff.format]
 docstring-code-format = true

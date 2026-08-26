@@ -90,8 +90,7 @@ the same monotone way as standard ASR:
    clean = asr.fit_transform(data)
 
 Its processing is byte-identical to standard ASR given the same calibration
-state, and a direct ``clean_rawdata/asr_process`` MATLAB cross-check matches it
-to ``relerr < 1e-13`` (see ``tests/parity/test_riemannian_windowed_parity.py``).
+state, while retaining the robust Riemannian calibration covariance.
 
 ``method="riemannian"`` is the MATLAB-``rASRMatlab``-faithful backend and stays
 behind an explicit experimental opt-in. It computes one covariance and one
@@ -106,23 +105,10 @@ on real EEG** — use it only for MATLAB parity, not for cutoff tuning:
 Reference cross-checks
 ----------------------
 
-MATLAB parity fixtures under ``tests/parity`` remain the authoritative
-pass/fail validation for the standard and experimental backends.
-
-For additional local source comparison, ``scripts/run_asr_reference_benchmark.py``
-can benchmark against optional checkouts that are not shipped with this
-repository:
-
-- standard ASR against an optional ``refs/asr/repos/python-meegkit`` checkout
-- experimental Riemannian ASR against an optional
-  ``refs/asr/repos/timeflux_rasr`` checkout, as a qualitative comparison only
-
-The ``timeflux_rasr`` comparison is intentionally not a parity test because
-that implementation is epoched/trial-based and currently depends on older
-``pyriemann`` internals. Current local source comparisons can diverge
-substantially for the experimental Riemannian backend on synthetic continuous
-data, so the MATLAB-backed parity fixtures remain the only supported oracle for
-that path.
+The specialized backends are research-oriented and should be independently
+validated on data representative of the intended use before being adopted in a
+scientific pipeline. The standard backend is covered by the package test suite;
+its assumptions and diagnostics are described above.
 
 Adaptive ASR
 ------------
@@ -164,15 +150,8 @@ A moving-window variant is available via ``variant="mw"``. Its
 recommended MW configuration; the default ``mw_mode="final_state"`` mirrors the
 MATLAB ``AASR_demo`` Cell 4 semantics.
 
-The adaptive variants are specialized research paths validated against the
-MATLAB fixture files stored under ``tests/parity``. Those fixtures were
-generated from an AASR reference checkout for both:
-
-- ``variant="psp"``
-- ``variant="psw"``
-
-across first-update and repeated-update cases. The reference checkout itself is
-not required to use or test the package.
+The adaptive variants are specialized research paths. Validate their behavior
+on data representative of the intended application before scientific use.
 
 JugglerASR
 ----------
@@ -251,32 +230,6 @@ topographies, reuse the generic helpers
 :func:`~mne_denoise.viz.plot_power_ratio_map` (they accept MNE objects or NumPy
 arrays). The ``plot_05_asr_visualization.py`` gallery example exercises the
 full set end-to-end.
-
-Real-data validation
---------------------
-
-Use ``scripts/run_asr_real_data_validation.py`` for local, reproducible
-smoke validation on cached real EEG data. The script discovers files under
-``.cache/asr_datasets`` and ``data`` by default, injects known burst artifacts
-into a copy of the recording, runs the requested ASR variants, and writes JSON,
-CSV, and Markdown reports with:
-
-- wall time, process CPU time, sampled RSS peak, and Python allocation peak
-- ASR calibration and processing memory modes
-- shape, finite-output, channel-order, sampling-frequency, bad-channel, and
-  annotation preservation checks
-- injected-burst attenuation and non-burst distortion metrics
-
-Example:
-
-.. code-block:: console
-
-   py -3.12 scripts/run_asr_real_data_validation.py \
-       --max-duration 120 \
-       --max-mem-mb 512 \
-       --low-mem-mb 0.1 \
-       --output reports/asr_real_data_validation.json \
-       --fail-on-error
 
 Important assumptions
 ---------------------

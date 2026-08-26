@@ -4,8 +4,7 @@ BSS-CCA algorithm properties
 
 A deterministic, synthetic demonstration of what BSS-CCA does and where it
 breaks. This is **not** a replication of any published experiment — every
-signal here is simulated, and the numbers depend on the simulation. For the
-paper-oriented experiments see ``scripts/replicate_declercq_paper.py``.
+signal here is simulated, and the numbers depend on the simulation.
 
 Four properties are shown:
 

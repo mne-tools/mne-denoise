@@ -200,21 +200,9 @@ cardiac-locked component can contain neural signal as well as artifact, so
 `n_select=1` above is an explicit scientific choice, not an automatic safety
 guarantee. See the cardiac composition gallery example for executable metrics.
 
-The standalone validation can be run with:
-
-```bash
-python scripts/validate_cardiac_dss.py --output cardiac_dss_validation.json
-```
-
-For its deterministic synthetic positive control, the current run reports
-22.74 dB isolated cardiac RMS attenuation, 99.87% target-neural retained
-power, 0.999998 target waveform correlation, and 20.93 dB held-out SNR
-improvement. These figures establish behavior for that declared simulation,
-not superiority or clinical validity. The JSON also records shuffled,
-time-reversed, circularly shifted, pure-noise, neural-only, wrong-origin,
-resampling, and parameter-sensitivity controls. An optional local FIF pathway
-compares unchanged data, the composition, and MNE ECG SSP on one recording;
-one recording demonstrates plausibility and failure modes only.
+Validate attenuation and neural preservation on held-out data before accepting
+cardiac component subtraction. A single reproducible component or recording
+demonstrates behavior and failure modes, not clinical validity or superiority.
 
 ### Nonlinear Biases
 

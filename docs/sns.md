@@ -110,9 +110,7 @@ full sample-weight vector.
   of the intended analysis before adopting SNS in a pipeline.
 
 See the {ref}`sphx_glr_auto_examples_sns` gallery for basic usage and a
-deterministic exploration of the algorithm's assumptions and diagnostics. The
-standalone [`scripts/replicate_sns_paper.py`](../scripts/replicate_sns_paper.py)
-runs the larger synthetic experiments used for paper-oriented reproducibility.
+deterministic exploration of the algorithm's assumptions and diagnostics.
 
 ## References
 

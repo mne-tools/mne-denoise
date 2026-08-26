@@ -161,11 +161,9 @@ For MNE Epochs, use the same splitter and replace `data[:, :, indices]` with
 `epochs[indices]`. Means, weights, covariances, filters, and optional CCA must
 be fitted on the training fold only.
 
-The repository's checked scientific QA additionally calibrates one predeclared
-model against circularly shifted trials. This procedure lives in
-`scripts/validate_time_shift_dss.py`, not in the installed denoising API. It
-shifts every complete multichannel epoch independently by more than the lag
-span, preserving its within-epoch structure while destroying trial locking.
+One useful null calibration is to shift every complete multichannel epoch
+independently by more than the lag span, preserving its within-epoch structure
+while destroying trial locking.
 
 If lags, rank, or subspace size are tuned from the same data, use sklearn nested
 cross-validation and repeat that exact search inside every surrogate; otherwise
@@ -186,32 +184,6 @@ most correlated with undelayed training sensors. The rotation, component mean,
 and sensor mean are frozen before held-out transformation. It can reduce FIR
 latency and waveform distortion, but it trades repeatability for similarity and
 adds another fitted operation that must stay inside validation folds.
-
-## Scientific validation
-
-Paper parity, efficacy, and null-calibration checks belong in the scientific
-validation workflow rather than the package unit tests. Run it with:
-
-```bash
-python scripts/validate_time_shift_dss.py
-```
-
-It records seeds and dependency versions and writes JSON, CSV, and PNG evidence
-under `reports/time_shift_dss/` by default. The script includes:
-
-- the 2010 Simulation 2 dimensions: 10 channels, 1000 samples, 100 trials, and
-  input SNRs of -20, -40, and -60 dB;
-- held-out static-DSS versus TimeShiftDSS output SNR, gain, correlation, latency,
-  distortion, and noise attenuation;
-- rank and lag-grid sensitivity;
-- 100 whole-training-set bootstrap refits with a fixed held-out test set;
-- 1000 full-pipeline pure-noise surrogates; and
-- the Figure 6 shifted-waveform failure with and without CCA step 7.
-
-`--quick` reduces the repetitions for a local smoke run. It is marked as such
-and is not parity evidence. The default run applies predeclared acceptance
-gates and exits unsuccessfully if any gate fails. Generated reports are review
-artifacts and are intentionally not embedded in the API documentation.
 
 ## Interpretation and limitations
 

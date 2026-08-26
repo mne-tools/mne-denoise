@@ -16,11 +16,6 @@ coverage.xml
 .vscode/
 .venv*/
 
-# External reference directories (not part of package)
-matlab_repos/
-zapline-plus/
-refs/
-
 # Generated files (allow docs images)
 *.png
 *.jpg
@@ -28,6 +23,7 @@ refs/
 !docs/**/*.jpg
 
 # Documentation
+.mne-data/
 docs/_build/
 docs/auto_examples/
 docs/generated/
@@ -44,9 +40,6 @@ htmlcov/
 /scratch/
 
 # Local datasets / heavy artifacts (do not commit)
-examples/tutorials/data/
-examples/tutorials/mne_denoise.pdf
-condescending-liskov/data/
 *_nb_temp.json
 *_code_cells.txt
 *_out.txt
@@ -62,13 +55,3 @@ cov_report.txt
 
 # Local validation outputs
 reports/
-
-# Paper full-text mirrors (do not redistribute; convert locally as needed)
-docs/asr/papers_md/
-
-# User-specific dev utilities (require local paths or cluster account)
-scripts/convert_asr_papers.py
-scripts/fir_run_asr_paper_validation.sbatch
-
-# Tutorial WIPs being staged on other branches
-examples/tutorials/Paper10_*.ipynb
