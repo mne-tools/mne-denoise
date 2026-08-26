@@ -19,7 +19,6 @@ Files
 - ``plot_07_spectrogram_dss.py``: Time-frequency masking with spectrogram-based DSS.
 - ``plot_08_blind_source_separation.py``: Blind source separation and FastICA equivalence.
 - ``plot_09_custom_bias.py``: Defining custom DSS biases.
-- ``plot_10_benchmarking.py``: Efficiency benchmarking against PCA, ICA, and averaging.
 - ``plot_11_wiener_masking.py``: Adaptive Wiener masking for bursty signals.
 - ``plot_12_joint_dss.py``: Joint DSS for multi-dataset repeatability.
 - ``plot_13_cardiac_composition.py``: Explicit, held-out cardiac DSS composition with attenuation and preservation checks.
