@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 from unittest.mock import patch
 
 import mne
