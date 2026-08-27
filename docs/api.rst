@@ -27,6 +27,18 @@ Package utilities
 
    mne_denoise.compute_covariance
 
+Progress callbacks
+------------------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.progress.ProgressEvent
+
+Logging and ``verbose`` provide human-readable diagnostics. Structured
+progress callbacks are a separate machine-readable mechanism. Individual
+methods will document callback support when algorithm integrations are added.
+
 ASR
 ---
 .. autosummary::

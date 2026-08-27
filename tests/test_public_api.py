@@ -14,6 +14,7 @@ PUBLIC_FACADES = (
     "mne_denoise.dss.selection",
     "mne_denoise.icanclean",
     "mne_denoise.overcorrection",
+    "mne_denoise.progress",
     "mne_denoise.qa",
     "mne_denoise.sns",
     "mne_denoise.sound",
@@ -76,6 +77,7 @@ def test_flattened_method_modules_expose_canonical_api():
 def test_public_root_module_namespaces_and_facades():
     """Root imports expose the documented modules and utility facades."""
     from mne_denoise import compute_covariance, quantify_overcorrection
+    from mne_denoise.progress import ProgressEvent
     from mne_denoise.qa import (
         compute_all_qa_metrics,
         peak_attenuation_db,
@@ -84,6 +86,7 @@ def test_public_root_module_namespaces_and_facades():
     from mne_denoise.viz import plot_psd_comparison, set_theme
 
     assert mne_denoise.qa is not None
+    assert mne_denoise.progress.ProgressEvent is ProgressEvent
     assert mne_denoise.viz is not None
     assert all(
         callable(item)
