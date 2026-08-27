@@ -38,14 +38,15 @@ __all__ = [
     "NonlinearDenoiser",
     # Linear biases
     "AverageBias",
-    "BandpassBias",
+    "CycleAverageBias",
     "BandpassBias",
     "LineNoiseBias",
     "PeakFilterBias",
     "CombFilterBias",
-    "CycleAverageBias",
     "LagAverageBias",
-    # Nonlinear denoisers (paper-faithful)
+    "SmoothingBias",
+    "SpectrogramBias",
+    # Nonlinear denoisers
     "VarianceMaskDenoiser",
     "WienerMaskDenoiser",
     "TanhMaskDenoiser",
@@ -53,7 +54,6 @@ __all__ = [
     "GaussDenoiser",
     "SkewDenoiser",
     "DCTDenoiser",
-    "SpectrogramBias",
     "SpectrogramDenoiser",
     "QuasiPeriodicDenoiser",
     "KurtosisDenoiser",
@@ -62,5 +62,4 @@ __all__ = [
     "beta_tanh",
     "beta_pow3",
     "beta_gauss",
-    "SmoothingBias",
 ]
