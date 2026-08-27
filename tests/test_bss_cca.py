@@ -9,9 +9,8 @@ import pytest
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 
-from mne_denoise.bss_cca import BSSCCA, compute_bss_cca
-from mne_denoise.bss_cca import core as bss_cca_core
-from mne_denoise.bss_cca.core import _lagged_pairs, _segment_bounds
+import mne_denoise.bss_cca as bss_cca_core
+from mne_denoise.bss_cca import BSSCCA, _lagged_pairs, _segment_bounds, compute_bss_cca
 
 SFREQ = 250.0
 

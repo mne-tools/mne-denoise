@@ -41,11 +41,11 @@ from scipy.special import expit
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from .. import _mne
-from .._data import extract_data_from_mne, reconstruct_mne_object
-from .._leadfield import _validate_leadfield, resolve_leadfield
-from .._logging import logger, verbose
-from .._validation import (
+from . import _mne
+from ._data import extract_data_from_mne, reconstruct_mne_object
+from ._leadfield import _validate_leadfield, resolve_leadfield
+from ._logging import logger, verbose
+from ._validation import (
     check_channel_layout,
     check_matching_sfreq,
     check_option,

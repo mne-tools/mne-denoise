@@ -30,14 +30,16 @@ from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from .. import _mne
-from .._data import extract_data_from_mne, reconstruct_mne_object
-from .._logging import logger, verbose
-from .._validation import (
+from . import _mne
+from ._data import extract_data_from_mne, reconstruct_mne_object
+from ._logging import logger, verbose
+from ._validation import (
     check_matching_sfreq,
     check_positive_real,
     resolve_sfreq,
 )
+
+__all__ = ["SpectrumInterpolation", "interpolate_spectrum"]
 
 
 def interpolate_spectrum(

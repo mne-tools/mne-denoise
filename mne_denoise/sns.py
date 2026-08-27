@@ -26,22 +26,24 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from .._covariance import compute_covariance
-from .._data import (
+from ._covariance import compute_covariance
+from ._data import (
     continuous_to_epochs,
     epochs_to_continuous,
     extract_data_from_mne,
     reconstruct_mne_object,
 )
-from .._logging import logger, verbose
-from .._spatial import apply_spatial_transform
-from .._validation import (
+from ._logging import logger, verbose
+from ._spatial import apply_spatial_transform
+from ._validation import (
     check_channel_first_data,
     check_channel_layout,
     check_chunk_size,
 )
 
 _DEFAULT_RCOND = 1e-12
+
+__all__ = ["SNS", "compute_sns", "compute_sns_weights"]
 
 
 def _automatic_sample_mask(

@@ -7,8 +7,7 @@ import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 
-from mne_denoise.sspsir import SSPSIR, compute_sir, compute_sspsir
-from mne_denoise.sspsir.core import _artifact_subspace
+from mne_denoise.sspsir import SSPSIR, _artifact_subspace, compute_sir, compute_sspsir
 
 
 @pytest.fixture(scope="module")
@@ -344,7 +343,7 @@ def test_compute_sspsir_channel_mismatch_raises():
 
 
 def test_compute_sir_uses_shared_leadfield_validator(monkeypatch):
-    import mne_denoise.sspsir.core as sspsir_core
+    import mne_denoise.sspsir as sspsir_core
 
     leadfield = np.random.default_rng(12).standard_normal((5, 8))
     seen = []

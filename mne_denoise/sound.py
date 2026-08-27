@@ -37,10 +37,12 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from .._data import epochs_to_continuous, extract_data_from_mne, reconstruct_mne_object
-from .._leadfield import _validate_leadfield, resolve_leadfield
-from .._logging import logger, verbose
-from .._validation import check_channel_layout, check_option, check_positive_real
+from ._data import epochs_to_continuous, extract_data_from_mne, reconstruct_mne_object
+from ._leadfield import _validate_leadfield, resolve_leadfield
+from ._logging import logger, verbose
+from ._validation import check_channel_layout, check_option, check_positive_real
+
+__all__ = ["SOUND", "compute_sound", "compute_sound_ref_best"]
 
 
 def _noise_level(noise_filter: np.ndarray, cov: np.ndarray, n_times: int) -> float:

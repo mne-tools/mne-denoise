@@ -10,6 +10,46 @@ import pytest
 import mne_denoise._mne as mne_compat
 
 
+def test_flattened_method_modules_expose_canonical_api():
+    """The single-module denoisers remain available through public paths."""
+    import mne_denoise
+    from mne_denoise.bss_cca import BSSCCA, compute_bss_cca
+    from mne_denoise.icanclean import ICanClean, compute_icanclean
+    from mne_denoise.sns import SNS, compute_sns, compute_sns_weights
+    from mne_denoise.sound import SOUND, compute_sound
+    from mne_denoise.spectrum_interpolation import (
+        SpectrumInterpolation,
+        interpolate_spectrum,
+    )
+    from mne_denoise.sspsir import SSPSIR, compute_sir, compute_sspsir
+
+    assert mne_denoise.bss_cca is not None
+    assert mne_denoise.icanclean is not None
+    assert mne_denoise.sns is not None
+    assert mne_denoise.sound is not None
+    assert mne_denoise.spectrum_interpolation is not None
+    assert mne_denoise.sspsir is not None
+    assert all(
+        callable(item)
+        for item in (
+            BSSCCA,
+            compute_bss_cca,
+            ICanClean,
+            compute_icanclean,
+            SNS,
+            compute_sns,
+            compute_sns_weights,
+            SOUND,
+            compute_sound,
+            SpectrumInterpolation,
+            interpolate_spectrum,
+            SSPSIR,
+            compute_sir,
+            compute_sspsir,
+        )
+    )
+
+
 def test_mne_availability_and_require_when_available():
     """The availability flag and requirement helper handle available MNE."""
     assert mne_compat.HAS_MNE is (mne_compat.mne is not None)

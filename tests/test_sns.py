@@ -324,7 +324,7 @@ def test_compute_sns_constant_channel_is_finite(rng):
 
 def test_sns_estimator_uses_public_compute_sns(monkeypatch, rng):
     """The estimator delegates fitting to the public array algorithm."""
-    import mne_denoise.sns.core as sns_core
+    import mne_denoise.sns as sns_core
 
     original = sns_core.compute_sns
     calls = []

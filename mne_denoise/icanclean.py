@@ -59,11 +59,13 @@ from scipy import linalg as la
 from scipy.signal import sosfiltfilt
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from .. import _mne
-from .._cca import canonical_correlation
-from .._data import extract_data_from_mne, reconstruct_mne_object
-from .._filtering import design_butter_sos
-from .._logging import logger, verbose
+from . import _mne
+from ._cca import canonical_correlation
+from ._data import extract_data_from_mne, reconstruct_mne_object
+from ._filtering import design_butter_sos
+from ._logging import logger, verbose
+
+__all__ = ["ICanClean", "compute_icanclean"]
 
 #: Default number of circular-shift surrogates for ``threshold='null'``. 20 is
 #: the floor at which the default alpha's quantile is even defined; 100 gives

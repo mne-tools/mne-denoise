@@ -982,7 +982,7 @@ def test_compute_icanclean_stats_window_clamping():
 
 def test_compute_icanclean_cca_failure_mock(monkeypatch):
     """Verify RuntimeError when CCA fails."""
-    import mne_denoise.icanclean.core as icc_core
+    import mne_denoise.icanclean as icc_core
 
     def mock_cca_fail(*args, **kwargs):
         raise ValueError("Linear Algebra is hard")
@@ -999,7 +999,7 @@ def test_compute_icanclean_cca_failure_mock(monkeypatch):
 
 def test_compute_icanclean_zero_components_mock(monkeypatch):
     """Verify ValueError when CCA returns nothing."""
-    import mne_denoise.icanclean.core as icc_core
+    import mne_denoise.icanclean as icc_core
 
     def mock_cca_empty(*args, **kwargs):
         return (
@@ -1044,7 +1044,7 @@ def test_icanclean_reset_qc(synthetic_dual_layer):
 
 def test_icanclean_select_basis_both():
     """Detailed coverage for _select_basis 'both' variant."""
-    from mne_denoise.icanclean.core import _select_basis
+    from mne_denoise.icanclean import _select_basis
 
     U = np.ones((10, 2))
     V = np.ones((10, 2))
@@ -1061,7 +1061,7 @@ def test_icanclean_config_validation_bad_types():
 
 def test_icanclean_apply_reref_variants():
     """Detailed coverage for _apply_reref."""
-    from mne_denoise.icanclean.core import _apply_reref
+    from mne_denoise.icanclean import _apply_reref
 
     data = np.ones((10, 2))
     # Fullrank
@@ -1077,7 +1077,7 @@ def test_icanclean_apply_reref_variants():
 
 def test_pad_ragged_empty():
     """Detailed coverage for _pad_ragged with empty input."""
-    from mne_denoise.icanclean.core import _pad_ragged
+    from mne_denoise.icanclean import _pad_ragged
 
     assert _pad_ragged([]).shape == (0, 0)
     assert _pad_ragged([np.array([])]).shape == (1, 0)
@@ -1085,7 +1085,7 @@ def test_pad_ragged_empty():
 
 def test_compute_icanclean_calibrated_zero_components_mock(monkeypatch):
     """Verify ValueError when CCA returns nothing in calibrated mode."""
-    import mne_denoise.icanclean.core as icc_core
+    import mne_denoise.icanclean as icc_core
 
     def mock_cca_empty(*args, **kwargs):
         return (
@@ -1117,7 +1117,7 @@ def _ar1(rng, n_ch, n_times, rho=0.95):
 
 def test_null_threshold_accepts_and_validates():
     """'null' is a legal threshold; out-of-range floats and strings are not."""
-    from mne_denoise.icanclean.core import _validate_threshold
+    from mne_denoise.icanclean import _validate_threshold
 
     for good in ("auto", "null", 0.0, 0.5, 1.0):
         _validate_threshold(good, "threshold")
@@ -1184,7 +1184,7 @@ def test_null_threshold_handles_short_windows():
     """A window short enough to collapse the min-shift guard band still
     returns a valid threshold instead of degenerating to one fixed shift.
     """
-    from mne_denoise.icanclean.core import null_r2_threshold
+    from mne_denoise.icanclean import null_r2_threshold
 
     rng = np.random.default_rng(0)
     X = rng.standard_normal((3, 2))

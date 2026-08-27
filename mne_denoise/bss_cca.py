@@ -43,26 +43,28 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from .._cca import canonical_correlation
-from .._data import (
+from ._cca import canonical_correlation
+from ._data import (
     continuous_to_epochs,
     epochs_to_continuous,
     extract_data_from_mne,
     reconstruct_mne_object,
 )
-from .._logging import logger, verbose
-from .._spatial import (
+from ._logging import logger, verbose
+from ._spatial import (
     apply_spatial_transform,
     fit_mixing_matrix,
 )
-from .._validation import (
+from ._validation import (
     check_channel_first_data,
     check_channel_layout,
     check_matching_sfreq,
     check_positive_real,
     resolve_sfreq,
 )
-from ..blending import overlap_add_combine
+from .blending import overlap_add_combine
+
+__all__ = ["BSSCCA", "compute_bss_cca"]
 
 #: Warn when the number of lagged pairs falls below this multiple of the
 #: channel count; canonical correlations saturate toward 1 as the ratio drops.

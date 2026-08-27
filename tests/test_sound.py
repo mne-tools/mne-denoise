@@ -9,8 +9,7 @@ import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 
-from mne_denoise.sound import SOUND, compute_sound, compute_sound_ref_best
-from mne_denoise.sound.core import _ddwiener
+from mne_denoise.sound import SOUND, _ddwiener, compute_sound, compute_sound_ref_best
 
 
 @pytest.fixture(scope="module")
@@ -242,7 +241,7 @@ def test_compute_sound_channel_mismatch_raises():
 
 
 def test_compute_sound_uses_shared_leadfield_validator(monkeypatch):
-    import mne_denoise.sound.core as sound_core
+    import mne_denoise.sound as sound_core
 
     data = np.random.default_rng(52).standard_normal((6, 50))
     leadfield = np.random.default_rng(53).standard_normal((6, 4))
