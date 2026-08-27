@@ -49,7 +49,7 @@ def raised_cosine_ramp(width: int) -> np.ndarray:
     Examples
     --------
     >>> import numpy as np
-    >>> from mne_denoise.blending import raised_cosine_ramp
+    >>> from mne_denoise._blending import raised_cosine_ramp
     >>> w = raised_cosine_ramp(4)
     >>> np.round(w, 3)
     array([0.146, 0.5  , 0.854, 1.   ])

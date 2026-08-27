@@ -14,8 +14,8 @@ from typing import Any
 
 import numpy as np
 
+from .._blending import raised_cosine_ramp
 from .._logging import logger, verbose
-from ..blending import raised_cosine_ramp
 from ._covariance import (
     _ChunkedMovingCovariances,
     _covariance_chunk_blocks,

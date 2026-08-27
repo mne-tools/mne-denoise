@@ -54,6 +54,12 @@ overcorrection : Forward-Model Overcorrection Metrics
     Quantifies how much a linear spatial filter attenuates or distorts
     hypothetical cortical sources through a forward model (Mutanen et al., 2022).
 
+qa : Quality Assurance
+    Denoising evaluation metrics for suppression and signal preservation.
+
+viz : Visualization
+    Diagnostic, comparison, component, summary, and theme utilities.
+
 """
 
 from . import (
@@ -62,11 +68,13 @@ from . import (
     dss,
     icanclean,
     overcorrection,
+    qa,
     sns,
     sound,
     spectrum_interpolation,
     ssa,
     sspsir,
+    viz,
     zapline,
 )
 from ._covariance import compute_covariance
@@ -82,10 +90,12 @@ __all__ = [
     "icanclean",
     "overcorrection",
     "quantify_overcorrection",
+    "qa",
     "sound",
     "spectrum_interpolation",
     "ssa",
     "sns",
     "sspsir",
+    "viz",
     "zapline",
 ]

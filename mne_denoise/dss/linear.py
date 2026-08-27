@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from mne.io import BaseRaw
 
 from .. import _mne
+from .._blending import overlap_add_combine
 from .._covariance import compute_covariance, compute_mean
 from .._data import (
     _mne_instance_types,
@@ -37,7 +38,6 @@ from .._data import (
 )
 from .._logging import logger, verbose
 from .._spatial import apply_spatial_transform
-from ..blending import overlap_add_combine
 from ._whitening import (
     apply_covariance_transform,
     compute_data_covariance_whitener,

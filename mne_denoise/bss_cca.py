@@ -43,6 +43,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
+from ._blending import overlap_add_combine
 from ._cca import canonical_correlation
 from ._data import (
     continuous_to_epochs,
@@ -62,7 +63,6 @@ from ._validation import (
     check_positive_real,
     resolve_sfreq,
 )
-from .blending import overlap_add_combine
 
 __all__ = ["BSSCCA", "compute_bss_cca"]
 

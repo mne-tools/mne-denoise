@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from mne_denoise.blending import overlap_add_combine, raised_cosine_ramp
+from mne_denoise._blending import overlap_add_combine, raised_cosine_ramp
 
 # ---------------------------------------------------------------------------
 # raised_cosine_ramp

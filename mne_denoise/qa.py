@@ -20,6 +20,22 @@ import numpy as np
 
 from . import _mne
 
+__all__ = [
+    "peak_attenuation_db",
+    "suppression_ratio",
+    "noise_surround_ratio",
+    "below_noise_distortion_db",
+    "spectral_distortion",
+    "overclean_proportion",
+    "underclean_proportion",
+    "geometric_mean_psd_ratio",
+    "variance_removed",
+    "compute_all_qa_metrics",
+    "rms_change",
+    "max_abs_change",
+    "channel_variance_ratio",
+]
+
 if TYPE_CHECKING:
     import mne
 

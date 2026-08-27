@@ -50,6 +50,30 @@ def test_flattened_method_modules_expose_canonical_api():
     )
 
 
+def test_public_root_module_namespaces_and_facades():
+    """Root imports expose the documented QA and visualization namespaces."""
+    import mne_denoise
+    from mne_denoise.qa import (
+        compute_all_qa_metrics,
+        peak_attenuation_db,
+        suppression_ratio,
+    )
+    from mne_denoise.viz import plot_psd_comparison, set_theme
+
+    assert mne_denoise.qa is not None
+    assert mne_denoise.viz is not None
+    assert all(
+        callable(item)
+        for item in (
+            peak_attenuation_db,
+            suppression_ratio,
+            compute_all_qa_metrics,
+            plot_psd_comparison,
+            set_theme,
+        )
+    )
+
+
 def test_mne_availability_and_require_when_available():
     """The availability flag and requirement helper handle available MNE."""
     assert mne_compat.HAS_MNE is (mne_compat.mne is not None)
