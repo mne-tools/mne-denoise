@@ -1,6 +1,32 @@
 API reference
 =============
 
+API stability
+-------------
+
+MNE-Denoise is under active development. Before version 1.0, public APIs may
+change without a mandatory formal deprecation cycle or advance warning. Such
+changes should still be deliberate, avoid gratuitous breakage, and be recorded
+in release notes.
+
+Names or modules beginning with ``_`` are private and may change at any time.
+APIs explicitly marked experimental or research prototypes have weaker
+stability guarantees. Starting with version 1.0, stable public API changes
+should normally follow a documented deprecation process.
+
+The supported public API is the set of user-facing names and namespaces
+intentionally documented in this reference or as canonical imports in
+user-facing documentation; an arbitrary importable non-private submodule is
+not automatically a stability promise.
+
+Package utilities
+-----------------
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.compute_covariance
+
 ASR
 ---
 .. autosummary::
@@ -35,7 +61,28 @@ DSS
    mne_denoise.dss.DSS
    mne_denoise.dss.TimeShiftDSS
    mne_denoise.dss.iterative_dss
+   mne_denoise.dss.iterative_dss_one
    mne_denoise.dss.IterativeDSS
+
+DSS segmentation
+~~~~~~~~~~~~~~~~~
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.dss.segmentation.CovarianceSegmenter
+   mne_denoise.dss.segmentation.FixedWindowSegmenter
+
+DSS component selection
+~~~~~~~~~~~~~~~~~~~~~~~~
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.dss.selection.auto_select_components
+   mne_denoise.dss.selection.auto_select_components_robust
+   mne_denoise.dss.selection.detect_eigenvalue_knee
+   mne_denoise.dss.selection.iterative_outlier_removal
 
 ZapLine
 -------
@@ -142,6 +189,7 @@ Denoisers
    mne_denoise.dss.denoisers.LagAverageBias
    mne_denoise.dss.denoisers.SmoothingBias
    mne_denoise.dss.denoisers.SpectrogramBias
+   mne_denoise.dss.denoisers.VarianceMaskDenoiser
    mne_denoise.dss.denoisers.NonlinearDenoiser
    mne_denoise.dss.denoisers.TanhMaskDenoiser
    mne_denoise.dss.denoisers.RobustTanhDenoiser
@@ -152,6 +200,10 @@ Denoisers
    mne_denoise.dss.denoisers.SpectrogramDenoiser
    mne_denoise.dss.denoisers.DCTDenoiser
    mne_denoise.dss.denoisers.QuasiPeriodicDenoiser
+   mne_denoise.dss.denoisers.SmoothTanhDenoiser
+   mne_denoise.dss.denoisers.beta_tanh
+   mne_denoise.dss.denoisers.beta_pow3
+   mne_denoise.dss.denoisers.beta_gauss
 
 Variants
 --------
@@ -203,6 +255,9 @@ Visualization
    mne_denoise.viz.plot_component_patterns
    mne_denoise.viz.plot_component_epochs_image
    mne_denoise.viz.plot_psd_comparison
+   mne_denoise.viz.plot_psd_gallery
+   mne_denoise.viz.plot_psd_overlay
+   mne_denoise.viz.plot_psd_zoom_comparison
    mne_denoise.viz.plot_evoked_gfp_comparison
    mne_denoise.viz.plot_channel_time_course_comparison
    mne_denoise.viz.plot_power_ratio_map
@@ -229,6 +284,27 @@ Visualization
    mne_denoise.viz.plot_condition_interaction_summary
    mne_denoise.viz.plot_group_condition_interaction_summary
    mne_denoise.viz.plot_endpoint_metrics_summary
+
+Visualization theme
+~~~~~~~~~~~~~~~~~~~
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.viz.set_theme
+   mne_denoise.viz.use_theme
+   mne_denoise.viz.get_theme_rc
+   mne_denoise.viz.get_color
+   mne_denoise.viz.get_series_color
+   mne_denoise.viz.style_axes
+   mne_denoise.viz.themed_figure
+   mne_denoise.viz.themed_legend
+
+The public theme constants are ``mne_denoise.viz.COLORS``,
+``mne_denoise.viz.FONTS``, ``mne_denoise.viz.METHOD_COLORS``,
+``mne_denoise.viz.SERIES_COLORS``, ``mne_denoise.viz.SEQUENTIAL_CMAP``,
+``mne_denoise.viz.DIVERGING_CMAP``, ``mne_denoise.viz.DEFAULT_FIGSIZE``, and
+``mne_denoise.viz.DEFAULT_DPI``.
 
 ``plot_component_selector`` return object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

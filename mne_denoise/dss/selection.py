@@ -24,9 +24,10 @@ def iterative_outlier_removal(scores: np.ndarray, sigma: float = 3.0) -> int:
 
     This algorithm iteratively identifies values that exceed `mean + sigma * std`,
     removes them from consideration, and repeats until no more outliers are found.
-    It follows NoiseTools' ``nt_dss``-style outlier rule, which ZapLine-plus
-    (Klug & Kloosterman, 2022, §2.4 "Detection of noise components") adopts to
-    automatically choose how many spatial components to remove: outliers in the
+    It follows NoiseTools' ``nt_dss``-style outlier rule [2]_, which
+    ZapLine-plus (Klug & Kloosterman, 2022, §2.4 "Detection of noise
+    components") [1]_ adopts to automatically choose how many spatial
+    components to remove: outliers in the
     component scores are flagged with a ``mean + sigma * SD`` threshold and
     removed, the mean/SD are recomputed across the remaining components, and the
     loop repeats until none are left; the count of removed outliers is taken as

@@ -11,6 +11,7 @@ Thank you for your interest in contributing to `mne-denoise`! This guide will he
 - [Code Style](#code-style)
 - [Testing](#testing)
 - [Documentation](#documentation)
+- [Public API and compatibility](#public-api-and-compatibility)
 - [Submitting Changes](#submitting-changes)
 - [Issue Guidelines](#issue-guidelines)
 
@@ -325,6 +326,34 @@ import mne_denoise
 
 # Your code here...
 ```
+
+## Public API and compatibility
+
+### Public API
+
+The public API is defined by intentional documentation and canonical public
+namespaces, not by every Python name that happens to be importable.
+
+### Before 1.0
+
+Before version 1.0, a formal warning or deprecation cycle is not required.
+Contributors changing public API should still:
+
+- explain the reason for the change;
+- update tests;
+- update documentation;
+- add a changelog fragment;
+- provide the replacement path or API where relevant.
+
+### Private and experimental names
+
+Names or modules beginning with `_` have no compatibility guarantee.
+Experimental or research-prototype APIs may evolve more rapidly.
+
+### Starting at 1.0
+
+Backward-incompatible changes to stable public API should normally go through
+a documented deprecation process.
 
 ## Submitting Changes
 
