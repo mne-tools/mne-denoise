@@ -58,16 +58,11 @@ from joblib import Parallel, delayed
 from scipy import linalg as la
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .. import _mne
 from .._cca import canonical_correlation
 from .._data import extract_data_from_mne, reconstruct_mne_object
 from .._filtering import _filter_channels
 from .._logging import logger, verbose
-
-# Optional MNE support
-try:
-    import mne
-except ImportError:
-    mne = None
 
 #: Default number of circular-shift surrogates for ``threshold='null'``. 20 is
 #: the floor at which the default alpha's quantile is even defined; 100 gives
@@ -1286,7 +1281,8 @@ class ICanClean(BaseEstimator, TransformerMixin):
         """
         n_channels = data.shape[0]
         ch_names = None
-        if mne is not None and orig_inst is not None and hasattr(orig_inst, "ch_names"):
+        if orig_inst is not None and hasattr(orig_inst, "ch_names"):
+            _mne.require_mne("iCanClean MNE channel handling")
             ch_names = list(orig_inst.ch_names)
 
         if self.ref_channels is None:

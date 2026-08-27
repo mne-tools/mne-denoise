@@ -23,7 +23,7 @@ This module exposes three distinct adaptive tracking variants:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -55,15 +55,10 @@ from ._windowing import (
 )
 from .core import ASR
 
-try:
+if TYPE_CHECKING:
     from mne.epochs import BaseEpochs
     from mne.evoked import Evoked
     from mne.io import BaseRaw
-except ImportError:  # pragma: no cover
-    mne = None
-    BaseEpochs = Any
-    Evoked = Any
-    BaseRaw = Any
 
 
 class AdaptiveASR(ASR):

@@ -33,11 +33,6 @@ try:
 except ImportError:
     plt = None
 
-try:
-    import mne
-except ImportError:
-    mne = None
-
 __all__ = [
     "plot_asr_repair_timeline",
     "plot_asr_calibration_fraction",

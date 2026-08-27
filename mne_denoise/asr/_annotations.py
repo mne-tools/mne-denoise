@@ -8,11 +8,7 @@ from typing import Any
 
 import numpy as np
 
-try:
-    import mne
-except ImportError:
-    mne = None
-
+from .. import _mne
 from ._windowing import _mask_to_sample_spans, _merge_sample_spans
 
 
@@ -38,6 +34,7 @@ def _repair_annotations(
     mne.Annotations
         An MNE Annotations object containing the repair spans.
     """
+    _mne.require_mne("ASR repair annotations")
     starts = diagnostics["window_starts"]
     stops = diagnostics["window_stops"]
     counts = diagnostics["n_components_reconstructed"]
@@ -49,7 +46,7 @@ def _repair_annotations(
     spans = _merge_sample_spans(spans)
     onsets = [s / sfreq for s, _ in spans]
     durations = [(e - s) / sfreq for s, e in spans]
-    return mne.Annotations(onsets, durations, [description] * len(spans))
+    return _mne.mne.Annotations(onsets, durations, [description] * len(spans))
 
 
 def _rejection_annotations(
@@ -71,6 +68,7 @@ def _rejection_annotations(
     mne.Annotations
         An MNE Annotations object containing the rejected spans.
     """
+    _mne.require_mne("ASR rejection annotations")
     mask = np.asarray(rejection_sample_mask, dtype=bool)
     if mask.ndim != 1:
         raise RuntimeError(
@@ -78,11 +76,11 @@ def _rejection_annotations(
         )
     rejected = ~mask
     if not np.any(rejected):
-        return mne.Annotations([], [], [])
+        return _mne.mne.Annotations([], [], [])
     spans = _mask_to_sample_spans(rejected)
     onsets = [s / sfreq for s, _ in spans]
     durations = [(e - s) / sfreq for s, e in spans]
-    return mne.Annotations(onsets, durations, [description] * len(spans))
+    return _mne.mne.Annotations(onsets, durations, [description] * len(spans))
 
 
 def _calibration_annotations(
@@ -109,6 +107,7 @@ def _calibration_annotations(
     mne.Annotations
         An MNE Annotations object containing the reference spans.
     """
+    _mne.require_mne("ASR calibration annotations")
     if calibration_mask_kind != "sample":
         raise RuntimeError(
             "Calibration annotations are only available for sample-based "
@@ -119,4 +118,4 @@ def _calibration_annotations(
     spans = _mask_to_sample_spans(mask)
     onsets = [start / sfreq for start, _ in spans]
     durations = [(stop - start) / sfreq for start, stop in spans]
-    return mne.Annotations(onsets, durations, [description] * len(spans))
+    return _mne.mne.Annotations(onsets, durations, [description] * len(spans))

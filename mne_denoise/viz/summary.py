@@ -17,9 +17,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-import mne
 import numpy as np
 
+from .. import _mne
+from .._data import extract_data_from_mne
 from ._summary_panels import (
     _draw_summary_table,
     _new_summary_figure,
@@ -46,6 +47,15 @@ from .theme import (
     themed_figure,
     themed_legend,
 )
+
+
+def _extract_summary_signal(data):
+    """Extract an MNE signal through the shared data boundary when needed."""
+    if hasattr(data, "get_data"):
+        _mne.require_mne("MNE signal diagnostics summary")
+        extracted, _, _, _, _, _ = extract_data_from_mne(data, auto_pick=False)
+        return extracted
+    return np.asarray(data)
 
 
 def plot_denoising_summary(
@@ -553,10 +563,7 @@ def plot_signal_diagnostics_summary(
     n_times = None
     for name in group_order:
         data_in = signals[name]
-        if isinstance(data_in, mne.io.BaseRaw | mne.Evoked | mne.BaseEpochs):
-            arr = np.asarray(data_in.get_data(), dtype=float)
-        else:
-            arr = np.asarray(data_in, dtype=float)
+        arr = np.asarray(_extract_summary_signal(data_in), dtype=float)
         if arr.ndim == 3:
             arr = arr.mean(axis=0)
         if arr.ndim != 2:

@@ -15,11 +15,11 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 
 from __future__ import annotations
 
-import mne
 import numpy as np
 from scipy import signal
 
-from .._data import _get_homogeneous_picks
+from .. import _mne
+from .._data import _get_homogeneous_picks, extract_data_from_mne
 from .theme import (
     COLORS,
     DIVERGING_CMAP,
@@ -31,6 +31,14 @@ from .theme import (
     themed_figure,
     themed_legend,
 )
+
+
+def _extract_spectral_input(inst, feature):
+    """Extract an MNE input through the shared data boundary when needed."""
+    if hasattr(inst, "get_data"):
+        _mne.require_mne(feature)
+        return extract_data_from_mne(inst, auto_pick=False)
+    return np.asarray(inst), None, "array", None, None, None
 
 
 def _compute_array_psd(data, sfreq, fmin, fmax):
@@ -49,7 +57,8 @@ def _compute_array_psd(data, sfreq, fmin, fmax):
 
 def _compute_psd_matrix(inst, sfreq, fmin, fmax, picks=None):
     """Return PSD matrix with shape ``(n_series, n_freqs)``."""
-    if isinstance(inst, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)):
+    data, _, mne_type, _, _, _ = _extract_spectral_input(inst, "MNE PSD visualization")
+    if mne_type != "array":
         if picks is None:
             picks = _get_homogeneous_picks(inst)
             if picks is None:
@@ -60,7 +69,7 @@ def _compute_psd_matrix(inst, sfreq, fmin, fmax, picks=None):
     else:
         if sfreq is None:
             raise ValueError("sfreq must be provided when plotting PSDs from arrays.")
-        freqs, psd = _compute_array_psd(inst, sfreq=sfreq, fmin=fmin, fmax=fmax)
+        freqs, psd = _compute_array_psd(data, sfreq=sfreq, fmin=fmin, fmax=fmax)
         freqs = np.asarray(freqs, dtype=float)
         psd = np.asarray(psd, dtype=float)
 
@@ -69,10 +78,10 @@ def _compute_psd_matrix(inst, sfreq, fmin, fmax, picks=None):
 
 def _as_component_data(components):
     """Normalize component inputs to canonical 2D shape ``(n_components, n_times)``."""
-    if isinstance(components, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)):
-        data = np.asarray(components.get_data(), dtype=float)
-    else:
-        data = np.asarray(components, dtype=float)
+    data, _, _, _, _, _ = _extract_spectral_input(
+        components, "MNE component visualization"
+    )
+    data = np.asarray(data, dtype=float)
 
     if data.ndim == 1:
         return data[np.newaxis, :]
@@ -970,10 +979,10 @@ def plot_component_psd_comparison(
         raise ValueError(f"Component indices out of range: {invalid}")
 
     component_sfreq = sfreq
-    if component_sfreq is None and isinstance(
-        components, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)
-    ):
-        component_sfreq = float(components.info["sfreq"])
+    if component_sfreq is None:
+        _, component_sfreq, component_mne_type, _, _, _ = _extract_spectral_input(
+            components, "MNE component visualization"
+        )
     if component_sfreq is None:
         raise ValueError("sfreq must be provided when components are arrays.")
 
@@ -1082,10 +1091,14 @@ def plot_spectrogram_comparison(
     if len(picks) == 0:
         raise ValueError("picks cannot be empty.")
 
-    is_mne_before = isinstance(
-        inst_before, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked)
+    _, _, mne_type_before, _, _, _ = _extract_spectral_input(
+        inst_before, "MNE spectrogram visualization"
     )
-    is_mne_after = isinstance(inst_after, (mne.io.BaseRaw, mne.BaseEpochs, mne.Evoked))
+    _, _, mne_type_after, _, _, _ = _extract_spectral_input(
+        inst_after, "MNE spectrogram visualization"
+    )
+    is_mne_before = mne_type_before != "array"
+    is_mne_after = mne_type_after != "array"
     if is_mne_before != is_mne_after:
         raise ValueError("inst_before and inst_after must be both MNE or both arrays.")
 

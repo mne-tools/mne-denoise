@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from mne_denoise import _mne
 from mne_denoise.asr import (
     ASR,
 )
@@ -374,7 +375,7 @@ def test_riemannian_low_memory_runs():
     assert np.all(np.isfinite(cleaned))
 
 
-def test_core_edge_cases(synthetic_burst_data):
+def test_core_edge_cases(synthetic_burst_data, monkeypatch):
     mne = pytest.importorskip("mne")
     data, _, _, sfreq = synthetic_burst_data
 
@@ -453,16 +454,6 @@ def test_core_edge_cases(synthetic_burst_data):
     cleaned_raw_rej = asr_rej_annot.transform(raw_annot)
     assert isinstance(cleaned_raw_rej, mne.io.RawArray)
 
-    import sys
-
-    orig_mne = sys.modules.get("mne")
-    sys.modules["mne"] = None
-    try:
-        import mne_denoise.asr.core as core_mod
-
-        core_mod.mne = None
-        with pytest.raises(RuntimeError, match="MNE is required"):
-            asr.to_annotations("repair")
-    finally:
-        sys.modules["mne"] = orig_mne
-        core_mod.mne = orig_mne
+    monkeypatch.setattr(_mne, "mne", None)
+    with pytest.raises(ImportError, match="ASR annotations.*MNE-Python"):
+        asr.to_annotations("repair")

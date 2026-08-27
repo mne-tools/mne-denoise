@@ -30,18 +30,7 @@ from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-# Optional MNE support
-try:
-    import mne
-    from mne.epochs import BaseEpochs
-    from mne.evoked import Evoked
-    from mne.io import BaseRaw
-
-    _HAS_MNE = True
-except ImportError:
-    mne = None
-    _HAS_MNE = False
-
+from .. import _mne
 from .._data import extract_data_from_mne, reconstruct_mne_object
 from .._logging import logger, verbose
 from .._validation import (
@@ -294,10 +283,11 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         self : SpectrumInterpolation
             The fitted estimator.
         """
-        is_mne = _HAS_MNE and isinstance(X, BaseRaw | BaseEpochs | Evoked)
+        _, mne_sfreq, mne_type, _, _, _ = extract_data_from_mne(X, auto_pick=False)
+        is_mne = mne_type != "array"
         sfreq = resolve_sfreq(
             self.sfreq,
-            float(X.info["sfreq"]) if is_mne else None,
+            mne_sfreq,
             context="a NumPy array input",
         )
         if not is_mne:
@@ -338,8 +328,10 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         """
         check_is_fitted(self, attributes=["sfreq_", "freqs_"])
 
-        if _HAS_MNE and isinstance(X, BaseRaw | BaseEpochs | Evoked):
-            data_picks = mne.pick_types(
+        _, _, mne_type, _, _, _ = extract_data_from_mne(X, auto_pick=False)
+        if mne_type != "array":
+            _mne.require_mne("SpectrumInterpolation MNE input support")
+            data_picks = _mne.mne.pick_types(
                 X.info,
                 meg=True,
                 ref_meg=False,

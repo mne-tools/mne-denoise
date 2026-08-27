@@ -16,11 +16,7 @@ def _mne_instance_types() -> tuple[type, ...]:
     if _mne.mne is None:
         return ()
 
-    from mne.epochs import BaseEpochs
-    from mne.evoked import Evoked
-    from mne.io import BaseRaw
-
-    return BaseRaw, BaseEpochs, Evoked
+    return _mne.mne.io.BaseRaw, _mne.mne.BaseEpochs, _mne.mne.Evoked
 
 
 def _get_homogeneous_picks(
@@ -327,6 +323,8 @@ def extract_data_from_mne(
             data = X.get_data(picks=picks)
             extracted_ch_names = [X.ch_names[p] for p in picks]
     else:
+        if _mne.mne is None and hasattr(X, "get_data") and hasattr(X, "info"):
+            _mne.require_mne("MNE data input support")
         # Assume array
         data = np.asarray(X)
 
@@ -374,7 +372,7 @@ def reconstruct_mne_object(
         return data
 
     if _mne.mne is None:
-        return data
+        _mne.require_mne("MNE object reconstruction")
 
     if mne_type == "evoked":
         out = orig_inst.copy()

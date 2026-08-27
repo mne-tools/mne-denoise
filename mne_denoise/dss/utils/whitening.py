@@ -16,14 +16,9 @@ from typing import Any
 import numpy as np
 from numpy.linalg import LinAlgError
 
+from ... import _mne
 from ..._covariance import compute_covariance
 from ..._spatial import apply_spatial_transform
-
-try:
-    import mne
-    from mne.cov import compute_whitener as compute_mne_whitener
-except ImportError:  # pragma: no cover
-    mne = None  # pragma: no cover
 
 
 def apply_covariance_transform(
@@ -272,16 +267,19 @@ def compute_mne_sensor_whitener(
 
     n_channels = data.shape[0]
     if noise_cov is not None:
-        if mne is None or info is None or ch_names is None:
+        _mne.require_mne("DSS MNE noise-covariance whitening")
+        if info is None or ch_names is None:
             raise ValueError("noise_cov requires an MNE input with named channels")
-        if not isinstance(noise_cov, mne.Covariance):
+        if not isinstance(noise_cov, _mne.mne.Covariance):
             raise TypeError("noise_cov must be an mne.Covariance")
         missing = [name for name in ch_names if name not in noise_cov.ch_names]
         if missing:
             raise ValueError(
                 f"noise_cov is missing required channels: {', '.join(missing)}"
             )
-        whitener, names, colorer = compute_mne_whitener(
+        from mne.cov import compute_whitener
+
+        whitener, names, colorer = compute_whitener(
             noise_cov,
             info,
             picks=ch_names,
@@ -297,10 +295,11 @@ def compute_mne_sensor_whitener(
 
     flat = data.reshape(n_channels, -1)
     scales = np.ones(n_channels, dtype=float)
-    if mne is not None and info is not None and ch_names is not None:
+    if info is not None and ch_names is not None:
+        _mne.require_mne("DSS MNE sensor whitening")
         indices = [info["ch_names"].index(name) for name in ch_names]
-        picked_info = mne.pick_info(info, indices)
-        for picks in mne.channel_indices_by_type(picked_info, exclude=()).values():
+        picked_info = _mne.mne.pick_info(info, indices)
+        for picks in _mne.mne.channel_indices_by_type(picked_info, exclude=()).values():
             if len(picks):
                 scales[picks] = np.std(flat[picks])
     else:

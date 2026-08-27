@@ -21,6 +21,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .. import _mne
 from .theme import (
     COLORS,
     DEFAULT_DPI,
@@ -273,7 +274,7 @@ def _plot_patterns_panel(
         raise ValueError("patterns must be 2D with shape (n_channels, n_components).")
 
     if info is not None:
-        import mne
+        _mne.require_mne("summary pattern topomap visualization")
 
         n_show = min(patterns.shape[1], max_components)
         gs_inner = GridSpecFromSubplotSpec(
@@ -281,7 +282,7 @@ def _plot_patterns_panel(
         )
         for comp_idx in range(n_show):
             ax = fig.add_subplot(gs_inner[0, comp_idx])
-            mne.viz.plot_topomap(
+            _mne.mne.viz.plot_topomap(
                 patterns[:, comp_idx], info, axes=ax, show=False, contours=4
             )
             ax.set_title(f"C{comp_idx + 1}", fontsize=FONTS["tick"], pad=2)
@@ -387,9 +388,11 @@ def _plot_removed_power_panel(
 
     removed_rms = np.sqrt(np.mean(removed**2, axis=1))
     if info is not None:
-        import mne
+        _mne.require_mne("summary removed-power topomap visualization")
 
-        im, _ = mne.viz.plot_topomap(removed_rms, info, axes=ax, show=False, contours=4)
+        im, _ = _mne.mne.viz.plot_topomap(
+            removed_rms, info, axes=ax, show=False, contours=4
+        )
         cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         cbar.set_label("RMS", fontsize=FONTS["tick"])
     else:

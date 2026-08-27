@@ -13,16 +13,14 @@ from __future__ import annotations
 import warnings
 from collections.abc import Sequence
 from numbers import Integral, Real
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-try:
+if TYPE_CHECKING:
     from mne.epochs import BaseEpochs
-except ImportError:  # pragma: no cover - MNE is a required dependency
-    BaseEpochs = ()
 
 from ..._cca import canonical_correlation
 from ..._data import extract_data_from_mne, reconstruct_mne_object
@@ -266,17 +264,17 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         fitting: bool,
     ) -> tuple[np.ndarray, float | None, str, Any, np.ndarray | None]:
         """Use shared extraction while enforcing the fitted epoch contract."""
-        is_mne = isinstance(X, BaseEpochs)
-        if not is_mne and not isinstance(X, np.ndarray):
-            raise TypeError("TimeShiftDSS supports MNE Epochs or NumPy arrays")
-        if not fitting and is_mne != self._fit_was_mne_:
-            raise TypeError("Transform input must use the container family used in fit")
         data, data_sfreq, mne_type, orig, picks, ch_names = extract_data_from_mne(
             X,
             ch_names=None if fitting else self._mne_ch_names_,
             channel_first_epochs=True,
             exclude_bads=fitting,
         )
+        is_mne = mne_type == "epochs"
+        if not is_mne and not isinstance(X, np.ndarray):
+            raise TypeError("TimeShiftDSS supports MNE Epochs or NumPy arrays")
+        if not fitting and is_mne != self._fit_was_mne_:
+            raise TypeError("Transform input must use the container family used in fit")
         data = _validate_epoched_array(data)
         if fitting:
             self._fit_was_mne_ = is_mne

@@ -15,11 +15,10 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 
 from __future__ import annotations
 
-import mne
 import numpy as np
 from matplotlib.gridspec import GridSpec
-from mne.time_frequency import tfr_array_multitaper
 
+from .. import _mne
 from ._utils import _get_components, _get_info, _get_patterns, _get_scores
 from .theme import (
     COLORS,
@@ -319,12 +318,13 @@ def plot_component_patterns(
     if picks is not None and info is None:
         raise ValueError("info is required when picks is provided.")
     if picks is not None:
-        topo_info = mne.pick_info(info, picks)
+        _mne.require_mne("component pattern topomap visualization")
+        topo_info = _mne.mne.pick_info(info, picks)
         if ax is not None:
             if len(indices) != 1:
                 raise ValueError("ax can only be used when plotting a single topomap.")
             fig = ax.figure
-            mne.viz.plot_topomap(
+            _mne.mne.viz.plot_topomap(
                 patterns[picks, indices[0]],
                 topo_info,
                 axes=ax,
@@ -346,7 +346,7 @@ def plot_component_patterns(
         flat_axes = axes.ravel()
 
         for i, (plot_ax, comp_idx) in enumerate(zip(flat_axes, indices)):
-            mne.viz.plot_topomap(
+            _mne.mne.viz.plot_topomap(
                 patterns[picks, comp_idx],
                 topo_info,
                 axes=plot_ax,
@@ -518,14 +518,15 @@ def plot_component_summary(
     for row_idx, comp_idx in enumerate(indices):
         ax_topo = fig.add_subplot(gs[row_idx, 0])
         if picks is not None:
-            topo_info = mne.pick_info(info, picks)
+            _mne.require_mne("component pattern topomap visualization")
+            topo_info = _mne.mne.pick_info(info, picks)
             # If the estimator was fitted on the exact subset of channels specified by picks,
             # patterns is already the correct size.
             if patterns.shape[0] == len(picks):
                 topo_data = patterns[:, comp_idx]
             else:
                 topo_data = patterns[picks, comp_idx]
-            mne.viz.plot_topomap(topo_data, topo_info, axes=ax_topo, show=False)
+            _mne.mne.viz.plot_topomap(topo_data, topo_info, axes=ax_topo, show=False)
             ax_topo.set_title(f"Comp {comp_idx} Pattern")
         else:
             ax_topo.text(0.5, 0.5, "No topomap info", ha="center", va="center")
@@ -562,7 +563,10 @@ def plot_component_summary(
         else:
             d_flat = sources[comp_idx][np.newaxis, :]
 
-        psd_spec, freqs = mne.time_frequency.psd_array_welch(
+        _mne.require_mne("component PSD visualization")
+        from mne.time_frequency import psd_array_welch
+
+        psd_spec, freqs = psd_array_welch(
             d_flat,
             sfreq=sfreq_eff,
             fmin=0,
@@ -836,6 +840,7 @@ def plot_component_spectrogram(
     ...     component_data, sfreq=250.0, fmax=80, show=False
     ... )
     """
+    _mne.require_mne("component spectrogram visualization")
     component_data = np.asarray(component_data)
     if component_data.ndim == 1:
         data = component_data[np.newaxis, np.newaxis, :]
@@ -857,6 +862,8 @@ def plot_component_spectrogram(
         freqs = np.asarray(freqs, dtype=float)
     if n_cycles is None:
         n_cycles = freqs / 4.0
+
+    from mne.time_frequency import tfr_array_multitaper
 
     tfr = tfr_array_multitaper(
         data,

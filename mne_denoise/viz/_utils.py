@@ -4,8 +4,10 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
          Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
 """
 
-import mne
 import numpy as np
+
+from .. import _mne
+from .._data import extract_data_from_mne
 
 
 def _compute_gfp(inst_or_data):
@@ -124,8 +126,9 @@ def _get_components(estimator, data=None):
     # LinearDSS with MNE Epochs input returns (n_epochs, n_components, n_times)
     # We want dimension 0 to be components for easier plotting.
 
+    _, _, mne_type, _, _, _ = extract_data_from_mne(data, auto_pick=False)
     if (
-        isinstance(data, mne.BaseEpochs)
+        mne_type == "epochs"
         and sources.ndim == 3
         and sources.shape[1] == _get_filters(estimator).shape[0]
     ):
@@ -137,8 +140,9 @@ def _get_components(estimator, data=None):
 
 def _handle_picks(info, picks=None):
     """Wrap mne.pick_types/pick_channels using public API."""
+    _mne.require_mne("visualization channel picking")
     if picks is None:
-        return mne.pick_types(
+        return _mne.mne.pick_types(
             info, meg=True, eeg=True, seeg=True, ecog=True, fnirs=True, exclude="bads"
         )
     # Use public API for picking
@@ -146,11 +150,11 @@ def _handle_picks(info, picks=None):
         if picks == "all":
             return np.arange(len(info["ch_names"]))
         # Use pick_types for string type specifiers
-        return mne.pick_types(info, **{picks: True}, exclude="bads")
+        return _mne.mne.pick_types(info, **{picks: True}, exclude="bads")
     elif isinstance(picks, list | np.ndarray):
         # Could be channel names or indices
         if len(picks) > 0 and isinstance(picks[0], str):
-            return mne.pick_channels(info["ch_names"], include=picks)
+            return _mne.mne.pick_channels(info["ch_names"], include=picks)
         else:
             return np.asarray(picks)
     return np.asarray(picks)

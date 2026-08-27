@@ -19,11 +19,12 @@ like calibration, spatial filtering, and reconstruction to focused internal subm
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .. import _mne
 from .._data import extract_data_from_mne, reconstruct_mne_object
 from .._logging import logger, verbose
 from .._validation import check_channel_layout
@@ -40,13 +41,10 @@ from ._validation import (
 )
 from ._windowing import _create_good_sample_mask_from_mne, compute_clean_window_mask
 
-try:
-    import mne
+if TYPE_CHECKING:
     from mne.epochs import BaseEpochs
     from mne.evoked import Evoked
     from mne.io import BaseRaw
-except ImportError:  # pragma: no cover
-    mne = None  # pragma: no cover
 
 
 class ASR(BaseEstimator, TransformerMixin):
@@ -773,8 +771,7 @@ class ASR(BaseEstimator, TransformerMixin):
         >>> clean_raw.set_annotations(clean_raw.annotations + repair_annots)
         """
         self._check_is_fitted()
-        if mne is None:
-            raise RuntimeError("MNE is required to create annotations")
+        _mne.require_mne("ASR annotations")
         if kind == "repair":
             return _repair_annotations(
                 diagnostics=self.diagnostics_,

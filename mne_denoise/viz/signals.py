@@ -16,9 +16,10 @@ Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
 
 from __future__ import annotations
 
-import mne
 import numpy as np
 
+from .. import _mne
+from .._data import extract_data_from_mne
 from ._utils import _compute_gfp
 from .theme import (
     COLORS,
@@ -32,12 +33,19 @@ from .theme import (
 )
 
 
+def _extract_signal_input(inst):
+    """Extract an MNE signal through the shared data boundary when needed."""
+    if hasattr(inst, "get_data"):
+        _mne.require_mne("MNE signal visualization")
+        data, _, mne_type, _, _, _ = extract_data_from_mne(inst, auto_pick=False)
+        return data, mne_type
+    return np.asarray(inst), "array"
+
+
 def _as_signal_array(inst):
     """Return signal data as a float array with shape (C, T) or (E, C, T)."""
-    if isinstance(inst, mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked):
-        data = np.asarray(inst.get_data(), dtype=float)
-    else:
-        data = np.asarray(inst, dtype=float)
+    data, _ = _extract_signal_input(inst)
+    data = np.asarray(data, dtype=float)
 
     if data.ndim not in (2, 3):
         raise ValueError(
@@ -72,10 +80,8 @@ def _variance_per_channel(data):
 
 def _as_channel_variance(inst_or_var):
     """Return a per-channel variance vector."""
-    if isinstance(inst_or_var, mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked):
-        return _variance_per_channel(_as_signal_array(inst_or_var))
-
-    arr = np.asarray(inst_or_var, dtype=float)
+    arr, _ = _extract_signal_input(inst_or_var)
+    arr = np.asarray(arr, dtype=float)
     if arr.ndim == 1:
         return arr
     if arr.ndim in (2, 3):
@@ -87,17 +93,15 @@ def _as_channel_variance(inst_or_var):
 
 def _extract_overlay_trace(inst, pick):
     """Extract a single trace for overlay plotting from 2D/3D inputs."""
-    if isinstance(inst, mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked):
-        data = _as_signal_array(inst)
-    else:
-        data = np.asarray(inst, dtype=float)
-        if data.ndim == 1:
-            return data
-        if data.ndim not in (2, 3):
-            raise ValueError(
-                "Input must be 1D, 2D (n_channels, n_times), or 3D "
-                "(n_epochs, n_channels, n_times)."
-            )
+    data, _ = _extract_signal_input(inst)
+    data = np.asarray(data, dtype=float)
+    if data.ndim == 1:
+        return data
+    if data.ndim not in (2, 3):
+        raise ValueError(
+            "Input must be 1D, 2D (n_channels, n_times), or 3D "
+            "(n_epochs, n_channels, n_times)."
+        )
 
     if data.ndim == 3:
         data = data.mean(axis=0)
@@ -459,6 +463,7 @@ def plot_power_ratio_map(
     """
     if info is None:
         raise ValueError("info must be provided explicitly.")
+    _mne.require_mne("power-ratio topography visualization")
 
     var_before = _as_channel_variance(inst_before)
     var_after = _as_channel_variance(inst_after)
@@ -479,7 +484,7 @@ def plot_power_ratio_map(
     else:
         fig = ax.figure
 
-    im, _ = mne.viz.plot_topomap(
+    im, _ = _mne.mne.viz.plot_topomap(
         ratio,
         info,
         axes=ax,

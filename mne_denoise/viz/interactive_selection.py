@@ -10,14 +10,13 @@ import warnings
 from collections import OrderedDict
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import mne
 import numpy as np
 from matplotlib.colors import to_rgba
 from matplotlib.gridspec import GridSpec
-from mne.time_frequency import psd_array_welch
 
+from .. import _mne
 from .._data import (
     continuous_to_epochs,
     epochs_to_continuous,
@@ -30,6 +29,17 @@ from ..zapline.core import ZapLine
 from ._utils import _compute_gfp, _get_info, _get_patterns
 from .components import _resolve_component_indices
 from .theme import COLORS, _finalize_fig, style_axes, themed_figure
+
+if TYPE_CHECKING:
+    import mne
+
+
+def psd_array_welch(*args: Any, **kwargs: Any) -> Any:
+    """Call MNE's Welch PSD implementation without an eager MNE import."""
+    _mne.require_mne("interactive component selection")
+    from mne.time_frequency import psd_array_welch as _psd_array_welch
+
+    return _psd_array_welch(*args, **kwargs)
 
 
 def _require_fitted(estimator: Any, name: str, *attrs: str) -> None:
@@ -702,6 +712,7 @@ class ComponentSelector:
     def _update_preview(self) -> None:
         if self._preview is None:
             return
+        _mne.require_mne("interactive component selection")
         preview = self._preview
         key = frozenset(self._excluded)
         cached = self._preview_cache.get(key)
@@ -854,6 +865,7 @@ def plot_component_selector(
     ... )
     >>> cleaned = selector.apply()
     """
+    _mne.require_mne("interactive component selection")
     if picks is not None and info is None:
         raise ValueError("info is required when picks is provided.")
 
@@ -1045,7 +1057,8 @@ def _draw_topomap(ax: Any, topo_data: np.ndarray | None, topo_info: Any) -> None
             va="center",
         )
     else:
-        mne.viz.plot_topomap(topo_data, topo_info, axes=ax, show=False)
+        _mne.require_mne("interactive component topomap visualization")
+        _mne.mne.viz.plot_topomap(topo_data, topo_info, axes=ax, show=False)
     ax.set_axis_off()
     ax.set_title(title, fontweight="bold", color=color)
 
@@ -1087,6 +1100,7 @@ def _compute_panels(
     None of this depends on the exclusion set, so computing it once keeps
     paging free of PSD recomputation.
     """
+    _mne.require_mne("interactive component selection")
     indices = list(indices)
     sources = state.plot_sources[indices]
     # Epoched sources are (n_sel, n_times, n_epochs): average epochs for the
@@ -1111,7 +1125,7 @@ def _compute_panels(
     topo_info = None
     topo_data: list[np.ndarray | None] = [None] * len(indices)
     if topo_picks is not None:
-        topo_info = mne.pick_info(info, topo_picks)
+        topo_info = _mne.mne.pick_info(info, topo_picks)
         rows = topo_picks if state.n_channels == len(info["ch_names"]) else slice(None)
         topo_data = [state.patterns[rows, comp_idx] for comp_idx in indices]
 
@@ -1135,6 +1149,7 @@ def _build_preview(
     psd_fmax: float,
 ) -> None:
     """Add the reference/selection GFP and PSD preview panels."""
+    _mne.require_mne("interactive component selection")
     state = selector._state
     # The reference is the no-exclusion reconstruction, not the raw input. For a
     # rank-reduced DSS fit the raw input also carries the discarded subspace, so

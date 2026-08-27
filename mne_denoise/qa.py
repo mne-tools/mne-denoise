@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from . import _mne
+
 if TYPE_CHECKING:
     import mne
 
@@ -582,6 +584,7 @@ def compute_all_qa_metrics(
     >>> # metrics = compute_all_qa_metrics(raw_before, raw_after, line_freq=50.0)
     >>> # float(metrics["peak_attenuation_db"])
     """
+    _mne.require_mne("MNE QA metrics")
     freqs, psd_b, psd_a = _compute_psd_pair(raw_before, raw_after, fmax=fmax)
 
     harmonics = [line_freq * h for h in range(1, n_harmonics + 2)]

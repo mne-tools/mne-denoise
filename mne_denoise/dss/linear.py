@@ -16,21 +16,20 @@ References
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 
-# Optional MNE support
-try:
-    import mne
+if TYPE_CHECKING:
     from mne.epochs import BaseEpochs
     from mne.evoked import Evoked
     from mne.io import BaseRaw
-except ImportError:
-    mne = None
 
+from .. import _mne
 from .._covariance import compute_covariance, compute_mean
 from .._data import (
+    _mne_instance_types,
     continuous_to_epochs,
     epochs_to_continuous,
     extract_data_from_mne,
@@ -627,7 +626,7 @@ class DSS(BaseEstimator, TransformerMixin):
             data_residual = data - self._smoother.apply(data)
             # Fit DSS on residual (always numpy path)
             self._fit_numpy(data_residual, weights=weights)
-        elif mne is not None and isinstance(X_norm, BaseRaw | BaseEpochs | Evoked):
+        elif isinstance(X_norm, _mne_instance_types()):
             self._fit_mne(X_norm, weights=weights)
         elif isinstance(X_norm, np.ndarray):
             self._fit_numpy(X_norm, weights=weights)
@@ -779,7 +778,6 @@ class DSS(BaseEstimator, TransformerMixin):
         This mimics MNE's Scaling capabilities, ensuring channels with different
         units (e.g. MAG vs GRAD) contribute equally.
         """
-        is_mne = mne is not None and isinstance(X, BaseRaw | BaseEpochs | Evoked)
         fitted_ch_names = None if fit else self._mne_ch_names_
         data, _, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
             X,
@@ -787,6 +785,7 @@ class DSS(BaseEstimator, TransformerMixin):
             exclude_bads=fit,
             channel_first_epochs=True,
         )
+        is_mne = mne_type != "array"
         if fit and is_mne:
             self._mne_ch_names_ = ch_names
 
@@ -849,6 +848,7 @@ class DSS(BaseEstimator, TransformerMixin):
         weights: np.ndarray | None = None,
     ) -> None:
         """Fit using MNE objects."""
+        _mne.require_mne("DSS MNE covariance estimation")
         method = self.cov_method
         kws = self.cov_kws.copy() if self.cov_kws else {}
         # Set defaults if not in kws
@@ -870,7 +870,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.info_ = inst.info
         self._mne_info = self.info_
 
-        if weights is not None or not self.center or isinstance(inst, Evoked):
+        if weights is not None or not self.center or mne_type == "evoked":
             # Weighted or explicitly uncentered MNE input uses the canonical
             # channel-first NumPy path.
             self._fit_numpy(data, weights=weights)
@@ -879,7 +879,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self._fit_mean(data)
         biased_data = self._apply_bias(data)
 
-        if isinstance(inst, BaseEpochs):
+        if mne_type == "epochs":
             biased_data = np.transpose(biased_data, (2, 0, 1))
 
         biased_inst = reconstruct_mne_object(
@@ -889,14 +889,16 @@ class DSS(BaseEstimator, TransformerMixin):
             verbose=False,
         )
 
-        if isinstance(inst, BaseRaw):
+        if mne_type == "raw":
             kws.setdefault("tstep", 2.0)
-            baseline_cov = mne.compute_raw_covariance(inst, method=method, **kws)
-            biased_cov = mne.compute_raw_covariance(biased_inst, method=method, **kws)
+            baseline_cov = _mne.mne.compute_raw_covariance(inst, method=method, **kws)
+            biased_cov = _mne.mne.compute_raw_covariance(
+                biased_inst, method=method, **kws
+            )
 
-        elif isinstance(inst, BaseEpochs):
-            baseline_cov = mne.compute_covariance(inst, method=method, **kws)
-            biased_cov = mne.compute_covariance(biased_inst, method=method, **kws)
+        elif mne_type == "epochs":
+            baseline_cov = _mne.mne.compute_covariance(inst, method=method, **kws)
+            biased_cov = _mne.mne.compute_covariance(biased_inst, method=method, **kws)
 
         else:  # Evoked - use numpy path since MNE doesn't support Evoked covariance
             self._fit_numpy(data, weights=weights)

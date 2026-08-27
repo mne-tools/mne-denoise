@@ -41,6 +41,7 @@ from scipy.special import expit
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
+from .. import _mne
 from .._data import extract_data_from_mne, reconstruct_mne_object
 from .._leadfield import _validate_leadfield, resolve_leadfield
 from .._logging import logger, verbose
@@ -222,10 +223,10 @@ def _as_mne_projections(topographies: np.ndarray, ch_names: list[str]) -> list:
     ``mne.viz.plot_projs_topomap(ssp.projs_, raw.info)`` -- worth doing for a
     method whose main failure mode is removing too much.
     """
-    import mne
+    _mne.require_mne("SSP-SIR artifact projections")
 
     return [
-        mne.Projection(
+        _mne.mne.Projection(
             data={
                 "data": topographies[:, i : i + 1].T,
                 "col_names": list(ch_names),

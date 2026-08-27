@@ -18,7 +18,7 @@ This module exposes the following core components:
 from __future__ import annotations
 
 import itertools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy import spatial, stats
@@ -36,14 +36,9 @@ from ._validation import (
 from ._windowing import _create_good_sample_mask_from_mne
 from .core import ASR
 
-try:
-    import mne
+if TYPE_CHECKING:
     from mne.epochs import BaseEpochs
     from mne.io import BaseRaw
-except ImportError:  # pragma: no cover
-    mne = None
-    BaseEpochs = Any
-    BaseRaw = Any
 
 
 @verbose
