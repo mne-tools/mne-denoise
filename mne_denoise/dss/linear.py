@@ -823,7 +823,6 @@ class DSS(BaseEstimator, TransformerMixin):
             orig_inst,
             mne_type,
             picks=picks,
-            verbose=False,
         )
 
     def _apply_bias(self, data: np.ndarray) -> np.ndarray:
@@ -886,7 +885,6 @@ class DSS(BaseEstimator, TransformerMixin):
             biased_data,
             inst,
             mne_type,
-            verbose=False,
         )
 
         if mne_type == "raw":
@@ -1160,7 +1158,6 @@ class DSS(BaseEstimator, TransformerMixin):
             X if mne_type != "array" else None,
             mne_type,
             picks=picks,
-            verbose=False,
         )
 
     @verbose
@@ -1372,7 +1369,6 @@ class DSS(BaseEstimator, TransformerMixin):
             orig_inst,
             mne_type,
             picks=picks,
-            verbose=False,
         )
         logger.info(
             "DSS: adaptive fit, %d segment(s), max %d component(s) selected, "

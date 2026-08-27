@@ -533,7 +533,6 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
             orig,
             mne_type,
             picks=picks,
-            verbose=False,
         )
 
 

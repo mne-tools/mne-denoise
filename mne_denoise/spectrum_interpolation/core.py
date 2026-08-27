@@ -353,9 +353,7 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
             )
             check_matching_sfreq(sfreq, self.sfreq_, name="SpectrumInterpolation")
             cleaned = self._apply(data)
-            return reconstruct_mne_object(
-                cleaned, orig_inst, mne_type, picks=picks, verbose=False
-            )
+            return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
         return self._apply(np.asarray(X, dtype=float))
 

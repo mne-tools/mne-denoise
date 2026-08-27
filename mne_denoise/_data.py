@@ -345,7 +345,6 @@ def reconstruct_mne_object(
     orig_inst: Any,
     mne_type: str,
     picks: np.ndarray | None = None,
-    verbose: bool = False,
 ) -> Any:
     """Insert processed data into a copy of an MNE object.
 
@@ -359,9 +358,6 @@ def reconstruct_mne_object(
         Type string returned by extract_data_from_mne ('raw', 'epochs', 'evoked', 'array').
     picks : array of int | None
         If provided, `data` is re-inserted into a copy of `orig_inst` only at these channel indices.
-    verbose : bool
-        Retained for API compatibility. Copy-based reconstruction does not
-        create a new MNE object.
 
     Returns
     -------

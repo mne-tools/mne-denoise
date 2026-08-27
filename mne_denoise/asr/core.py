@@ -595,9 +595,7 @@ class ASR(BaseEstimator, TransformerMixin):
             100.0 * diagnostics["fraction_reconstructed_samples"],
             diagnostics["max_components_reconstructed"],
         )
-        cleaned = reconstruct_mne_object(
-            cleaned_data, orig_inst, mne_type, picks=picks, verbose=False
-        )
+        cleaned = reconstruct_mne_object(cleaned_data, orig_inst, mne_type, picks=picks)
         if return_diagnostics:
             return cleaned, diagnostics
         return cleaned

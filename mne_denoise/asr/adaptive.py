@@ -607,9 +607,7 @@ class AdaptiveASR(ASR):
             100.0 * diagnostics["fraction_reconstructed_samples"],
             diagnostics["max_components_reconstructed"],
         )
-        cleaned = reconstruct_mne_object(
-            cleaned_data, orig_inst, mne_type, picks=picks, verbose=False
-        )
+        cleaned = reconstruct_mne_object(cleaned_data, orig_inst, mne_type, picks=picks)
         if return_diagnostics:
             return cleaned, diagnostics
         return cleaned
@@ -899,7 +897,7 @@ class AdaptiveASR(ASR):
             )
         else:
             full[idx, :] = cleaned
-        result = reconstruct_mne_object(full, orig_inst, mne_type, verbose=False)
+        result = reconstruct_mne_object(full, orig_inst, mne_type)
         n_passed = sum(entry.get("status") == "passed" for entry in mw_diagnostics)
         logger.info(
             "AdaptiveASR: variant=mw, mode=sliding, %d window(s), "

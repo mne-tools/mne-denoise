@@ -56,12 +56,13 @@ from typing import Any
 import numpy as np
 from joblib import Parallel, delayed
 from scipy import linalg as la
+from scipy.signal import sosfiltfilt
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .. import _mne
 from .._cca import canonical_correlation
 from .._data import extract_data_from_mne, reconstruct_mne_object
-from .._filtering import _filter_channels
+from .._filtering import design_butter_sos
 from .._logging import logger, verbose
 
 #: Default number of circular-shift surrogates for ``threshold='null'``. 20 is
@@ -73,6 +74,19 @@ _NULL_ALPHA = 0.05
 #: Smallest circular shift, as a fraction of the window, when building the null.
 #: Shifts near zero leave the blocks nearly aligned and inflate the threshold.
 _NULL_MIN_SHIFT = 0.1
+
+
+def _filter_channels(
+    data: np.ndarray,
+    filter_spec: tuple[str, float | tuple[float, float]] | None,
+    sfreq: float,
+) -> np.ndarray:
+    """Filter along the last axis with a zero-phase 4th-order Butterworth."""
+    if filter_spec is None:
+        return data
+    btype, freqs = filter_spec
+    sos = design_butter_sos(4, freqs, btype, sfreq)
+    return sosfiltfilt(sos, data, axis=-1)
 
 
 def _r2_from_projections(U: np.ndarray, V: np.ndarray) -> np.ndarray:
@@ -1019,9 +1033,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
             # the same channel set as the input.
             cleaned = cleaned[..., :n_orig, :]
 
-        return reconstruct_mne_object(
-            cleaned, orig_inst, mne_type, picks=picks, verbose=False
-        )
+        return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
     def _build_reference_block(
         self,

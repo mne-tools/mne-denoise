@@ -282,7 +282,6 @@ class _SelectionState:
             self.orig_inst,
             self.mne_type,
             picks=self.data_picks,
-            verbose=False,
         )
 
 

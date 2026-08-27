@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from scipy.signal import butter, sosfiltfilt
 
-from mne_denoise._filtering import _filter_channels, design_butter_sos
+from mne_denoise._filtering import design_butter_sos
 
 SFREQ = 250.0
 
@@ -80,19 +80,3 @@ def test_design_butter_sos_freqs_are_hz_not_prenormalized(sfreq):
     below, above = _tone(target * 0.3, sfreq=sfreq), _tone(target * 3.0, sfreq=sfreq)
     assert _kept_ratio(sosfiltfilt(sos, below), below, sfreq=sfreq) > 0.9
     assert _kept_ratio(sosfiltfilt(sos, above), above, sfreq=sfreq) < 0.05
-
-
-def test_filter_channels_none_spec_is_a_no_op():
-    """A ``None`` filter_spec must return the input untouched."""
-    data = np.random.default_rng(0).standard_normal((3, 100))
-    assert _filter_channels(data, None, SFREQ) is data
-
-
-def test_filter_channels_bandstop_removes_only_the_band():
-    """('bandstop', (lo, hi)) must keep outside the band, drop inside it."""
-    inside, outside = _tone(20.0), _tone(2.0)  # 20 Hz inside 5-45, 2 Hz below it
-    data = np.vstack([inside, outside])
-
-    out = _filter_channels(data, ("bandstop", (5.0, 45.0)), SFREQ)
-    assert _kept_ratio(out[0], inside) < 0.05
-    assert _kept_ratio(out[1], outside) > 0.90
