@@ -9,6 +9,7 @@ import pytest
 from mne_denoise._leadfield import (
     REFERENCE_HEAD,
     SphericalHeadModel,
+    _validate_leadfield,
     fibonacci_sphere,
     make_spherical_leadfield,
     resolve_leadfield,
@@ -159,6 +160,27 @@ def test_head_model_changes_the_lead_field(eeg_info):
     assert not np.allclose(default, conductive_skull)
 
 
+def test_validate_leadfield_coerces_to_float():
+    leadfield = _validate_leadfield(np.ones((2, 3), dtype=np.float32))
+    assert leadfield.dtype == np.dtype(float)
+
+
+@pytest.mark.parametrize(
+    ("leadfield", "message"),
+    [
+        (np.ones(4), "leadfield must be 2D"),
+        (np.ones((2, 3, 4)), "leadfield must be 2D"),
+        (np.empty((0, 3)), "at least one channel"),
+        (np.empty((2, 0)), "at least one channel and one source"),
+        (np.full((2, 3), np.nan), "finite"),
+        (np.full((2, 3), np.inf), "finite"),
+    ],
+)
+def test_validate_leadfield_rejects_invalid_matrices(leadfield, message):
+    with pytest.raises(ValueError, match=message):
+        _validate_leadfield(leadfield)
+
+
 def _raw(info):
     """A real Raw, so the copy().pick().info chain is genuinely exercised."""
     return mne.io.RawArray(np.zeros((len(info["ch_names"]), 10)), info, verbose=False)
@@ -259,7 +281,7 @@ def test_forward_gain_is_validated(eeg_info):
     bad_forward = {
         "sol": {"data": np.ones(24), "row_names": list(eeg_info["ch_names"])}
     }
-    with pytest.raises(ValueError, match="finite 2D gain"):
+    with pytest.raises(ValueError, match="supplied forward gain matrix"):
         resolve_leadfield(
             inst=_raw(eeg_info),
             ch_names=eeg_info["ch_names"],
@@ -274,7 +296,7 @@ def test_forward_gain_is_validated(eeg_info):
             "row_names": list(eeg_info["ch_names"]),
         }
     }
-    with pytest.raises(ValueError, match="finite 2D gain"):
+    with pytest.raises(ValueError, match="supplied forward gain matrix"):
         resolve_leadfield(
             inst=None,
             ch_names=None,

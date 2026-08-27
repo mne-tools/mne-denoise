@@ -38,7 +38,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from .._data import epochs_to_continuous, extract_data_from_mne, reconstruct_mne_object
-from .._leadfield import resolve_leadfield
+from .._leadfield import _validate_leadfield, resolve_leadfield
 from .._logging import logger, verbose
 from .._validation import check_channel_layout, check_option, check_positive_real
 
@@ -112,15 +112,11 @@ def _validate_sound_inputs(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Validate and coerce the inputs shared by both public SOUND solvers."""
     data = np.asarray(data, dtype=float)
-    leadfield = np.asarray(leadfield, dtype=float)
     if data.ndim != 2:
         raise ValueError(f"data must be 2D, got shape {data.shape}.")
-    if leadfield.ndim != 2:
-        raise ValueError(f"leadfield must be 2D, got shape {leadfield.shape}.")
     if not np.isfinite(data).all():
         raise ValueError("data must contain only finite values.")
-    if not np.isfinite(leadfield).all():
-        raise ValueError("leadfield must contain only finite values.")
+    leadfield = _validate_leadfield(leadfield)
     if (
         isinstance(lambda_, (bool, np.bool_))
         or not isinstance(lambda_, Real)
@@ -147,8 +143,6 @@ def _validate_sound_inputs(
         raise ValueError(f"SOUND requires at least {min_channels} channels{suffix}.")
     if n_times == 0:
         raise ValueError("data must contain at least one sample.")
-    if leadfield.shape[1] == 0:
-        raise ValueError("leadfield must contain at least one source column.")
     if not np.any(data):
         raise ValueError(
             "All channels have a zero noise estimate because the data are "

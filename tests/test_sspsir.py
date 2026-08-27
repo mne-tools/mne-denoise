@@ -343,6 +343,24 @@ def test_compute_sspsir_channel_mismatch_raises():
         compute_sspsir(leadfield, bad, M=10)
 
 
+def test_compute_sir_uses_shared_leadfield_validator(monkeypatch):
+    import mne_denoise.sspsir.core as sspsir_core
+
+    leadfield = np.random.default_rng(12).standard_normal((5, 8))
+    seen = []
+    original = sspsir_core._validate_leadfield
+
+    def wrapped(value, **kwargs):
+        seen.append(value)
+        return original(value, **kwargs)
+
+    monkeypatch.setattr(sspsir_core, "_validate_leadfield", wrapped)
+    compute_sir(leadfield, M=3)
+
+    assert len(seen) == 1
+    assert seen[0] is leadfield
+
+
 def test_compute_sspsir_rejects_nonorthonormal_subspace():
     leadfield = np.random.default_rng(11).standard_normal((5, 10))
     with pytest.raises(ValueError, match="orthonormal"):
@@ -352,10 +370,8 @@ def test_compute_sspsir_rejects_nonorthonormal_subspace():
 @pytest.mark.parametrize(
     ("leadfield", "topographies", "M", "message"),
     [
-        (np.ones(4), np.ones((4, 1)), 2, "leadfield must be 2D"),
         (np.ones((4, 3)), np.ones(4), 2, "artifact_topographies must be 2D"),
         (np.ones((4, 3)), np.full((4, 1), np.nan), 2, "finite"),
-        (np.empty((4, 0)), np.eye(4)[:, :1], 2, "at least one channel"),
         (np.ones((4, 3)), np.empty((4, 0)), 2, "between 1"),
         (np.ones((4, 3)), np.eye(4)[:, :1], 0, "positive integer"),
     ],
@@ -374,15 +390,11 @@ def test_compute_sir_is_rank_m_not_identity():
     assert not np.allclose(operator, np.eye(24))
 
 
-def test_compute_sir_rejects_invalid_or_zero_rank():
+def test_compute_sir_rejects_invalid_m_or_zero_rank():
     with pytest.raises(ValueError, match="positive integer"):
         compute_sir(np.eye(3), M=1.5)
     with pytest.raises(ValueError, match="rank is zero"):
         compute_sir(np.zeros((3, 4)), M=1)
-    with pytest.raises(ValueError, match="leadfield must be 2D"):
-        compute_sir(np.ones(3), M=1)
-    with pytest.raises(ValueError, match="finite"):
-        compute_sir(np.full((3, 4), np.nan), M=1)
 
 
 def test_sspsir_warns_when_m_exceeds_rank():

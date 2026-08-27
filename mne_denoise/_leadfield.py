@@ -148,14 +148,27 @@ def _average_reference(leadfield: np.ndarray) -> np.ndarray:
     return leadfield - leadfield.mean(axis=0, keepdims=True)
 
 
+def _validate_leadfield(
+    leadfield: np.ndarray, *, what: str = "leadfield"
+) -> np.ndarray:
+    """Return a finite, non-empty two-dimensional leadfield matrix."""
+    leadfield = np.asarray(leadfield, dtype=float)
+    if leadfield.ndim != 2:
+        raise ValueError(f"{what} must be 2D, got shape {leadfield.shape}.")
+    if 0 in leadfield.shape:
+        raise ValueError(
+            f"{what} must contain at least one channel and one source column."
+        )
+    if not np.isfinite(leadfield).all():
+        raise ValueError(f"{what} must contain only finite values.")
+    return leadfield
+
+
 def _forward_gain(forward: mne.Forward) -> np.ndarray:
     """Extract and validate the gain matrix of a forward solution."""
-    gain = np.asarray(forward["sol"]["data"], dtype=float)
-    if gain.ndim != 2 or 0 in gain.shape or not np.isfinite(gain).all():
-        raise ValueError(
-            "The supplied forward must contain a non-empty, finite 2D gain matrix."
-        )
-    return gain
+    return _validate_leadfield(
+        forward["sol"]["data"], what="The supplied forward gain matrix"
+    )
 
 
 def _leadfield_from_forward(forward: mne.Forward, info: mne.Info) -> np.ndarray:

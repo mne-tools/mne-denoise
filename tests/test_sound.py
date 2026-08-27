@@ -241,6 +241,25 @@ def test_compute_sound_channel_mismatch_raises():
         compute_sound(np.zeros((10, 50)), np.zeros((8, 30)))
 
 
+def test_compute_sound_uses_shared_leadfield_validator(monkeypatch):
+    import mne_denoise.sound.core as sound_core
+
+    data = np.random.default_rng(52).standard_normal((6, 50))
+    leadfield = np.random.default_rng(53).standard_normal((6, 4))
+    seen = []
+    original = sound_core._validate_leadfield
+
+    def wrapped(value, **kwargs):
+        seen.append(value)
+        return original(value, **kwargs)
+
+    monkeypatch.setattr(sound_core, "_validate_leadfield", wrapped)
+    compute_sound(data, leadfield, n_iter=1, random_state=0)
+
+    assert len(seen) == 1
+    assert seen[0] is leadfield
+
+
 def test_compute_sound_too_few_channels_raises():
     with pytest.raises(ValueError, match="at least 3 channels"):
         compute_sound(np.zeros((2, 50)), np.zeros((2, 30)))
@@ -461,11 +480,8 @@ def test_compute_sound_validates_parameters(kwargs, match):
     ("data", "leadfield", "message"),
     [
         (np.ones(20), np.ones((4, 3)), "data must be 2D"),
-        (np.ones((4, 20)), np.ones(4), "leadfield must be 2D"),
         (np.full((4, 20), np.nan), np.ones((4, 3)), "data.*finite"),
-        (np.ones((4, 20)), np.full((4, 3), np.nan), "leadfield.*finite"),
         (np.empty((4, 0)), np.ones((4, 3)), "at least one sample"),
-        (np.ones((4, 20)), np.empty((4, 0)), "at least one source"),
         (np.zeros((4, 20)), np.ones((4, 3)), "all-zero"),
     ],
 )
