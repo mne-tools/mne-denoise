@@ -1070,7 +1070,7 @@ def test_zapline_has_only_n_select():
 
 def test_auto_matches_shared_robust_selector():
     """n_select='auto' produces exactly auto_select_components_robust's count."""
-    from mne_denoise.dss.utils.selection import auto_select_components_robust
+    from mne_denoise.dss.selection import auto_select_components_robust
 
     data = _line_noise_data()
     zap = ZapLine(sfreq=500.0, line_freq=60.0, n_select="auto").fit(data)

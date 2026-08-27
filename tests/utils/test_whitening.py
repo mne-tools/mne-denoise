@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from mne_denoise._spatial import apply_spatial_transform, fit_mixing_matrix
-from mne_denoise.dss.utils.whitening import (
+from mne_denoise.dss._whitening import (
     apply_covariance_transform,
     compute_data_covariance_whitener,
     compute_mne_sensor_whitener,

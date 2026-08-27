@@ -50,13 +50,13 @@ from .._logging import logger, verbose
 from .._spatial import apply_spatial_transform
 
 # Inherit from DSS
+from ..dss._whitening import (
+    map_spatial_matrices_to_sensor_space,
+)
 from ..dss.denoisers.spectral import LineNoiseBias
 from ..dss.denoisers.temporal import SmoothingBias
 from ..dss.linear import DSS, _as_smoother
-from ..dss.utils.segmentation import CovarianceSegmenter
-from ..dss.utils.whitening import (
-    map_spatial_matrices_to_sensor_space,
-)
+from ..dss.segmentation import CovarianceSegmenter
 from .adaptive import (
     apply_hybrid_cleanup,
     check_artifact_presence,
@@ -120,7 +120,7 @@ class ZapLine(DSS):
         Relative-to-max anchor for the knee-detection fallback used when
         ``n_select='auto'``. Eigenvalues below this fraction of the largest
         are excluded from knee selection. See
-        :func:`mne_denoise.dss.utils.detect_eigenvalue_knee`.
+        :func:`mne_denoise.dss.selection.detect_eigenvalue_knee`.
     knee_min_ratio : float, default=3.0
         Minimum linear-scale drop between consecutive eigenvalues required to
         qualify as a knee. Defaults to a factor-of-3 drop. Lower values make

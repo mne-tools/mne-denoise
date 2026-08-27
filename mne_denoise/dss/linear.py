@@ -38,19 +38,19 @@ from .._data import (
 from .._logging import logger, verbose
 from .._spatial import apply_spatial_transform
 from ..blending import overlap_add_combine
-from .denoisers import LinearDenoiser
-from .denoisers.averaging import AverageBias
-from .denoisers.periodic import CombFilterBias, PeakFilterBias
-from .denoisers.spectral import BandpassBias, LineNoiseBias
-from .denoisers.temporal import LagAverageBias, SmoothingBias
-from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
-from .utils.selection import auto_select_components_robust
-from .utils.whitening import (
+from ._whitening import (
     apply_covariance_transform,
     compute_data_covariance_whitener,
     compute_mne_sensor_whitener,
     map_spatial_matrices_to_sensor_space,
 )
+from .denoisers import LinearDenoiser
+from .denoisers.averaging import AverageBias
+from .denoisers.periodic import CombFilterBias, PeakFilterBias
+from .denoisers.spectral import BandpassBias, LineNoiseBias
+from .denoisers.temporal import LagAverageBias, SmoothingBias
+from .segmentation import CovarianceSegmenter, FixedWindowSegmenter
+from .selection import auto_select_components_robust
 
 _COMPONENT_ACTIONS = frozenset({"extract", "retain", "subtract"})
 
@@ -322,7 +322,7 @@ class DSS(BaseEstimator, TransformerMixin):
     n_select : int | 'auto' | None, default=None
         Number of significant components to auto-select after fitting.
         If ``'auto'``, :meth:`auto_select` determines the count via
-        :func:`~mne_denoise.dss.utils.selection.auto_select_components_robust`
+        :func:`~mne_denoise.dss.selection.auto_select_components_robust`
         and stores it in :attr:`n_selected_`.
         If ``int``, uses that exact number.
         If ``None`` (default), no automatic selection is performed — except
@@ -708,14 +708,14 @@ class DSS(BaseEstimator, TransformerMixin):
     def auto_select(self, threshold: float | None = None) -> int:
         """Automatically determine how many DSS components are significant.
 
-        Delegates to :func:`~mne_denoise.dss.utils.selection.auto_select_components_robust`,
+        Delegates to :func:`~mne_denoise.dss.selection.auto_select_components_robust`,
         which layers two complementary detectors and takes the larger count:
 
-        - :func:`~mne_denoise.dss.utils.selection.iterative_outlier_removal`
+        - :func:`~mne_denoise.dss.selection.iterative_outlier_removal`
           catches the case where a few components stand out as statistical
           outliers (typical EEG, and any spectrum with high contrast such as
           DSS after ``smooth``).
-        - :func:`~mne_denoise.dss.utils.selection.detect_eigenvalue_knee`
+        - :func:`~mne_denoise.dss.selection.detect_eigenvalue_knee`
           catches the case where many co-equal strong components sit above a
           noise floor, where the outlier test returns 0 (typical
           high-channel-count MEG with coherent line noise; see Issue #34).

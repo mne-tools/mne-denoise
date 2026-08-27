@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-from mne_denoise.dss.utils.selection import (
+from mne_denoise.dss.selection import (
     auto_select_components_robust,
     detect_eigenvalue_knee,
     iterative_outlier_removal,

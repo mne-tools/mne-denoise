@@ -20,7 +20,7 @@ import numpy as np
 
 from .._data import continuous_to_epochs, epochs_to_continuous, extract_data_from_mne
 from .._logging import logger, verbose
-from .utils.whitening import whiten_from_data_covariance
+from ._whitening import whiten_from_data_covariance
 
 
 def _resolve_callable(param, x, default=None):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from mne_denoise.dss.utils.segmentation import (
+from mne_denoise.dss.segmentation import (
     CovarianceSegmenter,
     FixedWindowSegmenter,
 )

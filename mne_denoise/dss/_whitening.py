@@ -16,9 +16,9 @@ from typing import Any
 import numpy as np
 from numpy.linalg import LinAlgError
 
-from ... import _mne
-from ..._covariance import compute_covariance
-from ..._spatial import apply_spatial_transform
+from .. import _mne
+from .._covariance import compute_covariance
+from .._spatial import apply_spatial_transform
 
 
 def apply_covariance_transform(
@@ -106,7 +106,7 @@ def compute_data_covariance_whitener(
     Examples
     --------
     >>> import numpy as np
-    >>> from mne_denoise.dss.utils import compute_data_covariance_whitener
+    >>> from mne_denoise.dss._whitening import compute_data_covariance_whitener
     >>> rng = np.random.default_rng(0)
     >>> data = rng.standard_normal((4, 1000))
     >>> cov = data @ data.T / data.shape[1]

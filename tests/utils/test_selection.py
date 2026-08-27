@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from mne_denoise.dss.utils.selection import (
+from mne_denoise.dss.selection import (
     auto_select_components,
     auto_select_components_robust,
     detect_eigenvalue_knee,

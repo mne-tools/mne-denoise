@@ -11,6 +11,13 @@ from __future__ import annotations
 
 import numpy as np
 
+__all__ = [
+    "auto_select_components",
+    "auto_select_components_robust",
+    "detect_eigenvalue_knee",
+    "iterative_outlier_removal",
+]
+
 
 def iterative_outlier_removal(scores: np.ndarray, sigma: float = 3.0) -> int:
     """Detect outliers iteratively using mean + sigma threshold.
@@ -51,7 +58,7 @@ def iterative_outlier_removal(scores: np.ndarray, sigma: float = 3.0) -> int:
 
     Examples
     --------
-    >>> from mne_denoise.dss.utils import iterative_outlier_removal
+    >>> from mne_denoise.dss.selection import iterative_outlier_removal
     >>> scores = np.array([0.9, 0.8, 0.2, 0.15, 0.1, 0.08])
     >>> n_significant = iterative_outlier_removal(scores, sigma=2.0)
     >>> print(f"Found {n_significant} significant components")

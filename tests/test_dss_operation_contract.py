@@ -9,7 +9,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 from sklearn.base import clone
 
 from mne_denoise.dss import DSS
-from mne_denoise.dss.utils.segmentation import FixedWindowSegmenter
+from mne_denoise.dss.segmentation import FixedWindowSegmenter
 
 
 def _ranked_bias(data):

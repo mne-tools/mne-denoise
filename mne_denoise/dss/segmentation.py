@@ -25,8 +25,10 @@ import numpy as np
 from scipy import signal
 from scipy.signal import find_peaks
 
-from ..._covariance import compute_covariance
-from ..._filtering import design_butter_sos
+from .._covariance import compute_covariance
+from .._filtering import design_butter_sos
+
+__all__ = ["CovarianceSegmenter", "FixedWindowSegmenter"]
 
 # ---------------------------------------------------------------------------
 # Covariance-based segmenter (generalised from ZapLine-plus)

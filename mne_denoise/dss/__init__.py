@@ -38,10 +38,9 @@ from .denoisers import (
 from .linear import DSS, compute_dss
 from .nonlinear import IterativeDSS, iterative_dss, iterative_dss_one
 
-# Utils (exposed for convenience if needed)
-from .utils import convergence, whitening
-from .utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
-from .utils.selection import (
+# Segmentation and selection utilities (exposed for convenience)
+from .segmentation import CovarianceSegmenter, FixedWindowSegmenter
+from .selection import (
     auto_select_components,
     auto_select_components_robust,
     detect_eigenvalue_knee,
@@ -73,9 +72,6 @@ __all__ = [
     "ssvep_dss",
     "narrowband_scan",
     "narrowband_dss",
-    # Utils
-    "whitening",
-    "convergence",
     # Denoisers (from .denoisers)
     "LinearDenoiser",
     "NonlinearDenoiser",

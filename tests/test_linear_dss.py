@@ -20,7 +20,7 @@ from mne_denoise.dss.denoisers import (
     SmoothingBias,
 )
 from mne_denoise.dss.linear import _bias_name
-from mne_denoise.dss.utils.segmentation import CovarianceSegmenter, FixedWindowSegmenter
+from mne_denoise.dss.segmentation import CovarianceSegmenter, FixedWindowSegmenter
 
 # =============================================================================
 # compute_dss - Core Algorithm Tests
@@ -1856,7 +1856,7 @@ class TestAutoSelect:
 
     def test_auto_matches_robust_selector(self):
         """auto_select delegates to auto_select_components_robust."""
-        from mne_denoise.dss.utils.selection import auto_select_components_robust
+        from mne_denoise.dss.selection import auto_select_components_robust
 
         data, sfreq = _make_nonstationary_line_noise()
         info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")

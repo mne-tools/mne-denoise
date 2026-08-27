@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from mne_denoise.dss.utils.convergence import Gamma179, GammaPredictive
+from mne_denoise.dss._convergence import Gamma179, GammaPredictive
 
 
 def test_gamma179():

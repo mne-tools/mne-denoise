@@ -7,7 +7,7 @@ from numpy.testing import assert_allclose
 from scipy import signal
 
 from mne_denoise.dss.linear import DSS
-from mne_denoise.dss.utils.segmentation import CovarianceSegmenter
+from mne_denoise.dss.segmentation import CovarianceSegmenter
 from mne_denoise.zapline import ZapLine
 from mne_denoise.zapline.adaptive import (
     apply_cleanline_notch,

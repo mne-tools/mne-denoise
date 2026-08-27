@@ -17,7 +17,7 @@ import numpy as np
 from matplotlib.gridspec import GridSpec
 from scipy import signal
 
-from mne_denoise.dss.utils.segmentation import CovarianceSegmenter
+from mne_denoise.dss.segmentation import CovarianceSegmenter
 from mne_denoise.viz import plot_psd_comparison
 from mne_denoise.zapline.adaptive import (
     check_artifact_presence,

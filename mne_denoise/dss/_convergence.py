@@ -25,7 +25,7 @@ class Gamma179:
 
     Usage
     -----
-    >>> from mne_denoise.dss.convergence import Gamma179
+    >>> from mne_denoise.dss._convergence import Gamma179
     >>> gamma_fn = Gamma179()
     >>> # idss = IterativeDSS(..., gamma=gamma_fn) (Illustrative)
 
@@ -71,7 +71,7 @@ class GammaPredictive:
 
     Usage
     -----
-    >>> from mne_denoise.dss.convergence import GammaPredictive
+    >>> from mne_denoise.dss._convergence import GammaPredictive
     >>> gamma_fn = GammaPredictive()
     >>> # idss = IterativeDSS(..., gamma=gamma_fn)
 
