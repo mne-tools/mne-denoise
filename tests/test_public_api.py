@@ -1,8 +1,8 @@
-"""Tests for the intentional public API facades."""
+"""Tests for the intentional public API facades and import paths."""
 
 import importlib
 
-import mne_denoise
+import pytest
 
 PUBLIC_FACADES = (
     "mne_denoise",
@@ -27,6 +27,53 @@ PUBLIC_FACADES = (
 )
 
 
+CANONICAL_PUBLIC_PATHS = (
+    ("mne_denoise", "compute_covariance"),
+    ("mne_denoise", "quantify_overcorrection"),
+    ("mne_denoise.asr", "ASR"),
+    ("mne_denoise.asr", "AdaptiveASR"),
+    ("mne_denoise.asr", "GuidedASR"),
+    ("mne_denoise.asr", "JugglerASR"),
+    ("mne_denoise.asr", "calibrate_asr"),
+    ("mne_denoise.asr", "process_asr"),
+    ("mne_denoise.bss_cca", "BSSCCA"),
+    ("mne_denoise.bss_cca", "compute_bss_cca"),
+    ("mne_denoise.dss", "DSS"),
+    ("mne_denoise.dss", "IterativeDSS"),
+    ("mne_denoise.dss", "TimeShiftDSS"),
+    ("mne_denoise.dss", "CovarianceSegmenter"),
+    ("mne_denoise.dss", "VarianceMaskDenoiser"),
+    ("mne_denoise.dss", "compute_dss"),
+    ("mne_denoise.dss", "iterative_dss"),
+    ("mne_denoise.dss", "iterative_dss_one"),
+    ("mne_denoise.dss.selection", "detect_eigenvalue_knee"),
+    ("mne_denoise.icanclean", "ICanClean"),
+    ("mne_denoise.icanclean", "compute_icanclean"),
+    ("mne_denoise.icanclean", "null_r2_threshold"),
+    ("mne_denoise.progress", "ProgressEvent"),
+    ("mne_denoise.progress", "TqdmProgress"),
+    ("mne_denoise.qa", "compute_all_qa_metrics"),
+    ("mne_denoise.qa", "peak_attenuation_db"),
+    ("mne_denoise.qa", "suppression_ratio"),
+    ("mne_denoise.sns", "SNS"),
+    ("mne_denoise.sns", "compute_sns"),
+    ("mne_denoise.sns", "compute_sns_weights"),
+    ("mne_denoise.sound", "SOUND"),
+    ("mne_denoise.sound", "compute_sound"),
+    ("mne_denoise.sound", "compute_sound_ref_best"),
+    ("mne_denoise.spectrum_interpolation", "SpectrumInterpolation"),
+    ("mne_denoise.spectrum_interpolation", "interpolate_spectrum"),
+    ("mne_denoise.ssa", "LocalSingularSpectrumAnalysis"),
+    ("mne_denoise.ssa", "SingularSpectrumAnalysis"),
+    ("mne_denoise.sspsir", "SSPSIR"),
+    ("mne_denoise.sspsir", "compute_sir"),
+    ("mne_denoise.sspsir", "compute_sspsir"),
+    ("mne_denoise.viz", "plot_psd_comparison"),
+    ("mne_denoise.viz", "set_theme"),
+    ("mne_denoise.zapline", "ZapLine"),
+)
+
+
 def test_public_facades_have_unique_existing_all():
     """Every declared public facade has a unique, existing ``__all__``."""
     for module_name in PUBLIC_FACADES:
@@ -40,121 +87,13 @@ def test_public_facades_have_unique_existing_all():
             assert hasattr(module, name), f"{module_name}.{name} is missing"
 
 
-def test_flattened_method_modules_expose_canonical_api():
-    """The single-module denoisers expose their canonical public paths."""
-    from mne_denoise.bss_cca import BSSCCA, compute_bss_cca
-    from mne_denoise.icanclean import ICanClean, compute_icanclean
-    from mne_denoise.sns import SNS, compute_sns, compute_sns_weights
-    from mne_denoise.sound import SOUND, compute_sound, compute_sound_ref_best
-    from mne_denoise.spectrum_interpolation import (
-        SpectrumInterpolation,
-        interpolate_spectrum,
-    )
-    from mne_denoise.sspsir import SSPSIR, compute_sir, compute_sspsir
-
-    assert all(
-        callable(item)
-        for item in (
-            BSSCCA,
-            compute_bss_cca,
-            ICanClean,
-            compute_icanclean,
-            SNS,
-            compute_sns,
-            compute_sns_weights,
-            SOUND,
-            compute_sound,
-            compute_sound_ref_best,
-            SpectrumInterpolation,
-            interpolate_spectrum,
-            SSPSIR,
-            compute_sir,
-            compute_sspsir,
-        )
-    )
-
-
-def test_public_root_module_namespaces_and_facades():
-    """Root imports expose the documented modules and utility facades."""
-    from mne_denoise import compute_covariance, quantify_overcorrection
-    from mne_denoise.progress import ProgressEvent
-    from mne_denoise.qa import (
-        compute_all_qa_metrics,
-        peak_attenuation_db,
-        suppression_ratio,
-    )
-    from mne_denoise.viz import plot_psd_comparison, set_theme
-
-    assert mne_denoise.qa is not None
-    assert mne_denoise.progress.ProgressEvent is ProgressEvent
-    assert mne_denoise.viz is not None
-    assert all(
-        callable(item)
-        for item in (
-            compute_covariance,
-            quantify_overcorrection,
-            peak_attenuation_db,
-            suppression_ratio,
-            compute_all_qa_metrics,
-            plot_psd_comparison,
-            set_theme,
-        )
-    )
-
-
-def test_canonical_imports_cover_public_method_families():
-    """Representative imports cover each documented method namespace."""
-    from mne_denoise.asr import ASR, AdaptiveASR
-    from mne_denoise.bss_cca import BSSCCA
-    from mne_denoise.dss import (
-        DSS,
-        CovarianceSegmenter,
-        IterativeDSS,
-        TimeShiftDSS,
-        VarianceMaskDenoiser,
-        compute_dss,
-        iterative_dss,
-        iterative_dss_one,
-    )
-    from mne_denoise.dss.selection import detect_eigenvalue_knee
-    from mne_denoise.icanclean import ICanClean
-    from mne_denoise.qa import peak_attenuation_db
-    from mne_denoise.sns import SNS
-    from mne_denoise.sound import SOUND
-    from mne_denoise.spectrum_interpolation import SpectrumInterpolation
-    from mne_denoise.ssa import (
-        LocalSingularSpectrumAnalysis,
-        SingularSpectrumAnalysis,
-    )
-    from mne_denoise.sspsir import SSPSIR
-    from mne_denoise.viz import plot_psd_comparison, set_theme
-    from mne_denoise.zapline import ZapLine
-
-    assert all(
-        callable(item)
-        for item in (
-            ASR,
-            AdaptiveASR,
-            BSSCCA,
-            CovarianceSegmenter,
-            DSS,
-            IterativeDSS,
-            TimeShiftDSS,
-            VarianceMaskDenoiser,
-            compute_dss,
-            iterative_dss,
-            iterative_dss_one,
-            detect_eigenvalue_knee,
-            ICanClean,
-            peak_attenuation_db,
-            SNS,
-            SOUND,
-            SpectrumInterpolation,
-            LocalSingularSpectrumAnalysis,
-            SingularSpectrumAnalysis,
-            SSPSIR,
-            plot_psd_comparison,
-            set_theme,
-            ZapLine,
-        )
-    )
+@pytest.mark.parametrize(
+    "module_name, name",
+    CANONICAL_PUBLIC_PATHS,
+    ids=lambda path: ".".join(path),
+)
+def test_canonical_public_paths_are_importable(module_name, name):
+    """Documented public classes and functions remain importable canonically."""
+    module = importlib.import_module(module_name)
+    public_object = getattr(module, name, None)
+    assert callable(public_object), f"{module_name}.{name} is not callable"

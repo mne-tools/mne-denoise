@@ -7,8 +7,6 @@ import logging
 
 import numpy as np
 import pytest
-from sklearn.base import clone
-from sklearn.exceptions import NotFittedError
 
 import mne_denoise.bss_cca as bss_cca_core
 from mne_denoise.bss_cca import BSSCCA, _lagged_pairs, _segment_bounds, compute_bss_cca
@@ -524,17 +522,6 @@ def test_estimator_delegates_to_the_public_function(monkeypatch, rng):
     assert calls["kwargs"]["preserve_mean"] is False
 
 
-def test_estimator_is_cloneable_and_fit_transform_composes(rng):
-    """Standard scikit-learn cloning and fit_transform semantics hold."""
-    data = rng.standard_normal((5, 1000))
-    estimator = BSSCCA(n_remove=2, lag_samples=2)
-    copy = clone(estimator)
-    assert copy.get_params() == estimator.get_params()
-    np.testing.assert_allclose(
-        estimator.fit_transform(data), copy.fit(data).transform(data), atol=1e-12
-    )
-
-
 def test_fitted_attributes(muscle_data):
     """The documented fitted attributes are present and consistent."""
     observed, _clean, sfreq = muscle_data
@@ -552,19 +539,6 @@ def test_fitted_attributes(muscle_data):
     assert estimator.n_kept_ + estimator.n_removed_ == n_components
     assert estimator.n_removed_ == 3
     assert estimator.feature_names_in_ is None
-
-
-def test_transform_before_fit_raises(rng):
-    """An unfitted estimator refuses to transform."""
-    with pytest.raises(NotFittedError):
-        BSSCCA(n_remove=1).transform(rng.standard_normal((5, 100)))
-
-
-def test_transform_rejects_a_channel_count_mismatch(rng):
-    """Channel counts must match the fitted layout."""
-    estimator = BSSCCA(n_remove=1).fit(rng.standard_normal((5, 1000)))
-    with pytest.raises(ValueError, match="channels; fitted data had"):
-        estimator.transform(rng.standard_normal((4, 1000)))
 
 
 def test_transform_rejects_non_finite_evaluation_data(rng):
@@ -927,100 +901,6 @@ def test_waveform_is_recovered(muscle_data):
 # ---------------------------------------------------------------------------
 
 
-def test_mne_raw_round_trip_preserves_metadata_and_other_channels(muscle_data):
-    """Raw output keeps timing, annotations, bads, and unselected channels."""
-    mne = pytest.importorskip("mne")
-    observed, _clean, sfreq = muscle_data
-    stim = np.zeros((1, observed.shape[1]))
-    info = mne.create_info(
-        [*(f"EEG{i:02d}" for i in range(observed.shape[0])), "STI 014"],
-        sfreq,
-        [*("eeg" for _ in range(observed.shape[0])), "stim"],
-    )
-    raw = mne.io.RawArray(
-        np.vstack([observed, stim]), info, first_samp=123, verbose=False
-    )
-    raw.set_annotations(mne.Annotations([0.1], [0.2], ["test"]))
-    raw.info["bads"] = ["EEG02"]
-    before = raw.get_data()
-
-    cleaned = BSSCCA(n_remove=3).fit_transform(raw)
-
-    assert isinstance(cleaned, mne.io.BaseRaw)
-    assert cleaned.first_samp == raw.first_samp
-    assert cleaned.annotations == raw.annotations
-    assert cleaned.ch_names == raw.ch_names
-    assert cleaned.info["bads"] == ["EEG02"]
-    np.testing.assert_array_equal(cleaned.get_data(picks=["STI 014"]), stim)
-    np.testing.assert_array_equal(raw.get_data(), before)
-    assert not np.allclose(cleaned.get_data(picks="eeg"), observed)
-
-
-def test_mne_epochs_round_trip_preserves_events_and_metadata(rng):
-    """Epochs output keeps events, event_id, metadata, and timing."""
-    mne = pytest.importorskip("mne")
-    pd = pytest.importorskip("pandas")
-    data = rng.standard_normal((4, 5, 300))
-    info = mne.create_info([f"EEG{i}" for i in range(5)], 200.0, "eeg")
-    events = np.column_stack((np.arange(4) * 400, np.zeros(4, int), np.ones(4, int)))
-    metadata = pd.DataFrame({"trial": np.arange(4)})
-    epochs = mne.EpochsArray(
-        data,
-        info,
-        events=events,
-        event_id={"event": 1},
-        tmin=-0.1,
-        metadata=metadata,
-        verbose=False,
-    )
-    cleaned = BSSCCA(n_remove=2).fit_transform(epochs)
-
-    assert isinstance(cleaned, mne.BaseEpochs)
-    np.testing.assert_array_equal(cleaned.events, epochs.events)
-    assert cleaned.event_id == epochs.event_id
-    assert cleaned.tmin == epochs.tmin
-    pd.testing.assert_frame_equal(cleaned.metadata, epochs.metadata)
-    assert cleaned.get_data(copy=False).shape == data.shape
-
-
-def test_mne_evoked_round_trip_preserves_identity_fields(rng):
-    """Evoked output keeps comment, nave, and timing."""
-    mne = pytest.importorskip("mne")
-    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 200.0, "eeg")
-    evoked = mne.EvokedArray(
-        rng.standard_normal((4, 400)),
-        info,
-        tmin=-0.1,
-        comment="condition",
-        nave=12,
-        verbose=False,
-    )
-    cleaned = BSSCCA(n_remove=1).fit_transform(evoked)
-    assert isinstance(cleaned, mne.Evoked)
-    assert cleaned.comment == evoked.comment
-    assert cleaned.nave == evoked.nave
-    assert cleaned.first == evoked.first
-    assert cleaned.data.shape == evoked.data.shape
-
-
-def test_mne_channel_names_must_match_fit(muscle_data):
-    """Transforming a different channel layout fails loudly."""
-    mne = pytest.importorskip("mne")
-    observed, _clean, sfreq = muscle_data
-    names = [f"EEG{i:02d}" for i in range(observed.shape[0])]
-    train = mne.io.RawArray(
-        observed, mne.create_info(names, sfreq, "eeg"), verbose=False
-    )
-    renamed = mne.io.RawArray(
-        observed,
-        mne.create_info([f"X{i:02d}" for i in range(observed.shape[0])], sfreq, "eeg"),
-        verbose=False,
-    )
-    estimator = BSSCCA(n_remove=3).fit(train)
-    with pytest.raises(ValueError, match="missing required channels"):
-        estimator.transform(renamed)
-
-
 def test_mne_feature_names_are_recorded(muscle_data):
     """Fitting on an MNE object records the selected channel names."""
     mne = pytest.importorskip("mne")
@@ -1042,22 +922,6 @@ def test_mne_sfreq_conflict_is_rejected(muscle_data):
     )
     with pytest.raises(ValueError, match="disagrees"):
         BSSCCA(lag_seconds=0.004, sfreq=100.0, n_remove=1).fit(raw)
-
-
-def test_transform_sfreq_must_match_the_fitted_rate(muscle_data):
-    """Evaluation data recorded at another rate is rejected."""
-    mne = pytest.importorskip("mne")
-    observed, _clean, sfreq = muscle_data
-    names = [f"EEG{i}" for i in range(observed.shape[0])]
-    train = mne.io.RawArray(
-        observed, mne.create_info(names, sfreq, "eeg"), verbose=False
-    )
-    other = mne.io.RawArray(
-        observed, mne.create_info(names, sfreq * 2, "eeg"), verbose=False
-    )
-    estimator = BSSCCA(n_remove=3).fit(train)
-    with pytest.raises(ValueError, match="transform sfreq"):
-        estimator.transform(other)
 
 
 def test_mne_lag_seconds_uses_container_sfreq(muscle_data):

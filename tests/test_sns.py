@@ -7,7 +7,6 @@ import logging
 
 import numpy as np
 import pytest
-from sklearn.base import clone
 
 from mne_denoise.sns import SNS, compute_sns, compute_sns_weights
 
@@ -479,14 +478,6 @@ def test_sns_suppresses_independent_sensor_noise(sensor_noise_data):
     assert err_after < 0.9 * err_before  # closer to the clean shared signal
 
 
-def test_sns_fit_transform_numpy_shape(rng):
-    """fit_transform on a NumPy array returns an array of the same shape."""
-    X = rng.standard_normal((16, 4000))
-    cleaned = SNS(n_neighbors=8).fit_transform(X)
-    assert isinstance(cleaned, np.ndarray)
-    assert cleaned.shape == X.shape
-
-
 def test_sns_fitted_attributes(rng):
     """Fitted attributes are populated with correct shapes."""
     X = rng.standard_normal((14, 3000))
@@ -550,16 +541,6 @@ def test_sns_preserve_mean_restores_training_mean(rng):
     np.testing.assert_allclose(est.transform(evalu), expected)
 
 
-def test_sns_fit_transform_composes_and_clones(rng):
-    """The sklearn composition is exact and all operating parameters clone."""
-    X = rng.standard_normal((8, 500))
-    estimator = SNS(n_neighbors=4, rcond=1e-10, preserve_mean=True)
-    direct = estimator.fit_transform(X)
-    separate = clone(estimator).fit(X).transform(X)
-    np.testing.assert_allclose(direct, separate)
-    assert clone(estimator).get_params() == estimator.get_params()
-
-
 def test_sns_numpy_epochs_and_channel_count(rng):
     """Three-dimensional arrays concatenate only during fit and retain shape."""
     epochs = rng.standard_normal((3, 6, 100))
@@ -598,14 +579,6 @@ def test_sns_rejects_invalid_data(X):
         SNS().fit(X)
 
 
-def test_sns_transform_before_fit_raises(rng):
-    """transform before fit raises NotFittedError."""
-    from sklearn.exceptions import NotFittedError
-
-    with pytest.raises(NotFittedError):
-        SNS().transform(rng.standard_normal((8, 100)))
-
-
 # ---------------------------------------------------------------------------
 # MNE round-trip
 # ---------------------------------------------------------------------------
@@ -624,29 +597,6 @@ def test_sns_mne_raw_roundtrip(sensor_noise_data):
     assert not np.allclose(cleaned.get_data(), X)
 
 
-def test_sns_mne_preserves_metadata_and_unpicked_channel(sensor_noise_data):
-    """SNS updates a copy without rebuilding Raw or touching excluded channels."""
-    mne = pytest.importorskip("mne")
-    X, _shared = sensor_noise_data
-    sfreq = 250.0
-    stim = np.arange(X.shape[1], dtype=float) % 2
-    data = np.vstack((X, stim))
-    info = mne.create_info(
-        [*[f"EEG{i:02d}" for i in range(X.shape[0])], "STI 014"],
-        sfreq,
-        [*(["eeg"] * X.shape[0]), "stim"],
-    )
-    raw = mne.io.RawArray(data, info, first_samp=29, verbose=False)
-    raw.set_annotations(mne.Annotations([0.5], [0.1], ["marker"]))
-
-    cleaned = SNS(n_neighbors=8).fit_transform(raw)
-
-    assert cleaned.first_samp == raw.first_samp
-    assert cleaned.annotations == raw.annotations
-    np.testing.assert_array_equal(cleaned.get_data(picks=["STI 014"])[0], stim)
-    np.testing.assert_array_equal(raw.get_data(), data)
-
-
 def test_sns_mne_mixed_types_uses_shared_channel_policy(rng):
     """Shared MNE selection cleans one type and preserves every other channel."""
     mne = pytest.importorskip("mne")
@@ -661,73 +611,6 @@ def test_sns_mne_mixed_types_uses_shared_channel_policy(rng):
         cleaned = SNS(n_neighbors=1).fit_transform(raw)
     np.testing.assert_array_equal(cleaned.get_data()[2:], data[2:])
     assert not np.allclose(cleaned.get_data()[:2], data[:2])
-
-
-def test_sns_mne_channel_order_must_match_fit(sensor_noise_data):
-    """A learned spatial operator cannot be applied to reordered named channels."""
-    mne = pytest.importorskip("mne")
-    X, _shared = sensor_noise_data
-    names = [f"EEG{i:02d}" for i in range(X.shape[0])]
-    raw = mne.io.RawArray(X, mne.create_info(names, 250.0, "eeg"), verbose=False)
-    estimator = SNS(n_neighbors=8).fit(raw)
-    reordered = raw.copy().reorder_channels(names[::-1])
-    with pytest.raises(ValueError, match="names/order"):
-        estimator.transform(reordered)
-
-
-def test_sns_mne_epochs_preserves_events_and_metadata(sensor_noise_data):
-    """Epoch identities survive fit/apply and are not reconstructed from scratch."""
-    pd = pytest.importorskip("pandas")
-    mne = pytest.importorskip("mne")
-    X, _shared = sensor_noise_data
-    data = np.stack((X[:, :400], X[:, 400:800]))
-    names = [f"EEG{i:02d}" for i in range(X.shape[0])]
-    info = mne.create_info(names, 250.0, "eeg")
-    events = np.array([[100, 0, 1], [700, 0, 2]])
-    metadata = pd.DataFrame({"trial": ["a", "b"]})
-    epochs = mne.EpochsArray(
-        data,
-        info,
-        events=events,
-        event_id={"a": 1, "b": 2},
-        tmin=-0.1,
-        metadata=metadata,
-        verbose=False,
-    )
-
-    cleaned = SNS(n_neighbors=8).fit_transform(epochs)
-
-    np.testing.assert_array_equal(cleaned.events, epochs.events)
-    assert cleaned.event_id == epochs.event_id
-    assert cleaned.metadata.equals(metadata)
-    assert cleaned.tmin == epochs.tmin
-
-
-def test_sns_mne_evoked_preserves_identity_fields(sensor_noise_data):
-    """Evoked timing, averaging count, comment, and excluded channels survive."""
-    mne = pytest.importorskip("mne")
-    X, _shared = sensor_noise_data
-    stim = np.arange(X.shape[1], dtype=float) % 2
-    data = np.vstack((X, stim))
-    names = [*[f"EEG{i:02d}" for i in range(X.shape[0])], "STI 014"]
-    types = [*(["eeg"] * X.shape[0]), "stim"]
-    evoked = mne.EvokedArray(
-        data,
-        mne.create_info(names, 250.0, types),
-        tmin=-0.2,
-        nave=17,
-        comment="condition-a",
-        verbose=False,
-    )
-
-    cleaned = SNS(n_neighbors=8).fit_transform(evoked)
-
-    assert isinstance(cleaned, mne.Evoked)
-    assert cleaned.nave == 17
-    assert cleaned.comment == "condition-a"
-    assert cleaned.tmin == evoked.tmin
-    np.testing.assert_array_equal(cleaned.get_data(picks=["STI 014"])[0], stim)
-    np.testing.assert_array_equal(evoked.data, data)
 
 
 def test_sns_verbose_uses_package_logging(rng):

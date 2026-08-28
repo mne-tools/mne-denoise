@@ -7,8 +7,6 @@ import logging
 
 import numpy as np
 import pytest
-from sklearn.base import clone
-from sklearn.exceptions import NotFittedError
 
 from mne_denoise.ssa import (
     LocalSingularSpectrumAnalysis,
@@ -63,13 +61,6 @@ def test_sample_and_second_windows_are_equivalent(rng):
     by_time, time_info = ssa_decompose(x, window_seconds=0.2, sfreq=100.0)
     np.testing.assert_allclose(by_sample, by_time)
     assert sample_info["window_length"] == time_info["window_length"] == 20
-
-
-def test_transform_before_fit_is_rejected(drift_data):
-    """The transductive estimator still follows the sklearn fitted-state contract."""
-    X, sfreq = drift_data
-    with pytest.raises(NotFittedError):
-        SingularSpectrumAnalysis(sfreq=sfreq).transform(X)
 
 
 @pytest.mark.parametrize(
@@ -352,16 +343,6 @@ def test_ssa_positional_sfreq(drift_data):
     assert cleaned.shape == X.shape
 
 
-def test_ssa_fit_transform_composes_and_clones(drift_data):
-    """fit_transform is exactly fit followed by transform and clones cleanly."""
-    X, sfreq = drift_data
-    estimator = SingularSpectrumAnalysis(sfreq=sfreq, n_check=5)
-    direct = estimator.fit_transform(X)
-    separate = clone(estimator).fit(X).transform(X)
-    np.testing.assert_allclose(direct, separate)
-    assert clone(estimator).get_params() == estimator.get_params()
-
-
 def test_ssa_numpy_epochs_retain_all_diagnostics(drift_data):
     """Three-dimensional arrays are cleaned without overwriting epoch diagnostics."""
     X, sfreq = drift_data
@@ -435,29 +416,6 @@ def test_ssa_mne_raw_roundtrip_infers_sfreq(drift_data):
     assert low_after < low_before
 
 
-def test_ssa_mne_raw_preserves_container_and_unpicked_channel(drift_data):
-    """Cleaning copies Raw metadata and leaves auto-excluded channels untouched."""
-    mne = pytest.importorskip("mne")
-    X, sfreq = drift_data
-    stim = np.arange(X.shape[1], dtype=float) % 2
-    data = np.vstack((X, stim))
-    info = mne.create_info(
-        [*[f"EEG{i:02d}" for i in range(X.shape[0])], "STI 014"],
-        sfreq,
-        [*["eeg"] * X.shape[0], "stim"],
-    )
-    raw = mne.io.RawArray(data, info, first_samp=37, verbose=False)
-    raw.set_annotations(mne.Annotations([0.5], [0.1], ["marker"]))
-
-    cleaned = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(raw)
-
-    assert cleaned is not raw
-    assert cleaned.first_samp == raw.first_samp
-    assert cleaned.annotations == raw.annotations
-    np.testing.assert_array_equal(cleaned.get_data(picks=["STI 014"])[0], stim)
-    np.testing.assert_array_equal(raw.get_data(), data)
-
-
 def test_ssa_mne_epochs_preserves_events_metadata_and_diagnostics(drift_data):
     """Epoch cleaning preserves identities and records every epoch/channel."""
     pd = pytest.importorskip("pandas")
@@ -498,18 +456,6 @@ def test_ssa_rejects_conflicting_mne_sfreq(drift_data):
     )
     with pytest.raises(ValueError, match="disagrees"):
         SingularSpectrumAnalysis(sfreq=sfreq / 2).fit(raw)
-
-
-def test_ssa_rejects_changed_mne_channel_order(drift_data):
-    """Transform requires the exact fitted MNE channel names and order."""
-    mne = pytest.importorskip("mne")
-    X, sfreq = drift_data
-    names = [f"EEG{i:02d}" for i in range(X.shape[0])]
-    raw = mne.io.RawArray(X, mne.create_info(names, sfreq, "eeg"), verbose=False)
-    estimator = SingularSpectrumAnalysis(window_length=40).fit(raw)
-    reordered = raw.copy().reorder_channels(names[::-1])
-    with pytest.raises(ValueError, match="names/order"):
-        estimator.transform(reordered)
 
 
 @pytest.mark.parametrize(
@@ -557,28 +503,6 @@ def test_empty_channels_and_fit_input_validation():
     nonfinite[0, 0] = np.inf
     with pytest.raises(ValueError, match="finite"):
         SingularSpectrumAnalysis(sfreq=100.0).fit(nonfinite)
-
-
-def test_ssa_mne_evoked_preserves_metadata_and_stim_channel(drift_data):
-    """Evoked cleaning copies metadata and leaves auto-excluded channels untouched."""
-    mne = pytest.importorskip("mne")
-    X, sfreq = drift_data
-    stim = np.arange(X.shape[1], dtype=float) % 2
-    data = np.vstack((X[:3], stim))
-    info = mne.create_info(
-        ["EEG0", "EEG1", "EEG2", "STI 014"],
-        sfreq,
-        ["eeg", "eeg", "eeg", "stim"],
-    )
-    evoked = mne.EvokedArray(
-        data, info, tmin=-0.2, nave=14, comment="condition", verbose=False
-    )
-    cleaned = SingularSpectrumAnalysis(drop_freq_max=3.0).fit_transform(evoked)
-    assert isinstance(cleaned, mne.Evoked)
-    assert cleaned.comment == evoked.comment
-    assert cleaned.nave == evoked.nave
-    assert cleaned.first == evoked.first
-    np.testing.assert_array_equal(cleaned.data[-1], stim)
 
 
 def test_ssa_verbose_reports_dropped_component_summary(drift_data, caplog):

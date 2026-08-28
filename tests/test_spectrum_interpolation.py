@@ -7,7 +7,6 @@ import logging
 import mne
 import numpy as np
 import pytest
-from sklearn.exceptions import NotFittedError
 
 from mne_denoise.spectrum_interpolation import (
     SpectrumInterpolation,
@@ -220,14 +219,6 @@ def test_spectrum_interpolation_array_requires_sfreq():
         SpectrumInterpolation(line_freq=60.0).fit_transform(data)
 
 
-def test_spectrum_interpolation_transform_before_fit_raises():
-    """Transforming before fitting raises."""
-    data, sfreq = _synth()
-    si = SpectrumInterpolation(sfreq=sfreq, line_freq=60.0)
-    with pytest.raises(NotFittedError):
-        si.transform(data)
-
-
 def test_interpolate_spectrum_skips_out_of_range_frequency():
     """Frequencies at or beyond Nyquist are ignored."""
     data, sfreq = _synth()
@@ -312,19 +303,6 @@ def test_spectrum_interpolation_rejects_frequency_at_nyquist():
         SpectrumInterpolation(sfreq=1000.0, line_freq=[60.0, 500.0]).fit(
             np.zeros((1, 1000))
         )
-
-
-def test_spectrum_interpolation_rejects_mismatched_mne_sfreq():
-    """Transform must not silently use a sampling rate fitted elsewhere."""
-    data, sfreq = _synth(n_ch=2)
-    si = SpectrumInterpolation(line_freq=60.0).fit(
-        mne.io.RawArray(data, mne.create_info(2, sfreq, "eeg"), verbose=False)
-    )
-    other = mne.io.RawArray(
-        data[:, ::2], mne.create_info(2, sfreq / 2, "eeg"), verbose=False
-    )
-    with pytest.raises(ValueError, match="sampling frequency"):
-        si.transform(other)
 
 
 def test_spectrum_interpolation_3d_matches_epochwise_processing():

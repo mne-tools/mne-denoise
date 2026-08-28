@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 
+import numpy as np
 import pytest
 
 from mne_denoise.asr import (
@@ -20,6 +21,7 @@ from mne_denoise.bss_cca import BSSCCA, compute_bss_cca
 from mne_denoise.dss import DSS, IterativeDSS, iterative_dss, iterative_dss_one
 from mne_denoise.dss.variants import narrowband_scan
 from mne_denoise.icanclean import ICanClean, compute_icanclean, null_r2_threshold
+from mne_denoise.progress import ProgressEvent
 from mne_denoise.sns import SNS, compute_sns, compute_sns_weights
 from mne_denoise.sound import SOUND, compute_sound, compute_sound_ref_best
 from mne_denoise.ssa import (
@@ -33,6 +35,7 @@ from mne_denoise.ssa import (
     ssa_w_correlation,
 )
 from mne_denoise.zapline import ZapLine
+from tests._contract_cases import CALLBACK_CASES
 
 CALLBACK_APIS = (
     ("compute_sound", compute_sound),
@@ -158,3 +161,43 @@ def test_modern_callback_parameters_are_keyword_only(name, operation):
     """Modern callback APIs expose callback after their keyword-only boundary."""
     parameter = inspect.signature(operation).parameters["callback"]
     assert parameter.kind is inspect.Parameter.KEYWORD_ONLY, name
+
+
+@pytest.mark.parametrize("case", CALLBACK_CASES, ids=lambda case: case.name)
+def test_representative_public_callbacks_are_numerically_transparent(case):
+    """Representative public callbacks observe work without changing results."""
+    factory = case.callback_factory
+    assert factory is not None
+    data = case.make_array()
+    expected = factory().fit_transform(data)
+    events = []
+    actual = factory().fit_transform(data, callback=events.append)
+
+    np.testing.assert_allclose(actual, expected)
+    assert events
+    assert all(isinstance(event, ProgressEvent) for event in events)
+
+
+@pytest.mark.parametrize("case", CALLBACK_CASES, ids=lambda case: case.name)
+def test_representative_public_callback_exceptions_propagate(case):
+    """Representative public operations preserve the callback exception object."""
+    factory = case.callback_factory
+    assert factory is not None
+    error = RuntimeError(f"{case.name} callback failed")
+
+    def callback(_event):
+        raise error
+
+    with pytest.raises(RuntimeError) as caught:
+        factory().fit_transform(case.make_array(), callback=callback)
+
+    assert caught.value is error
+
+
+@pytest.mark.parametrize("case", CALLBACK_CASES, ids=lambda case: case.name)
+def test_representative_public_callbacks_validate_noncallables(case):
+    """Representative callback-aware APIs reject invalid callback values."""
+    factory = case.callback_factory
+    assert factory is not None
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        factory().fit_transform(case.make_array(), callback=1)
