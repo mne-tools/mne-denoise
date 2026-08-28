@@ -147,6 +147,120 @@ def test_sound_tol_none_matches_reference_iteration_count(eeg_info):
     assert convergence.shape == (7,)
 
 
+def test_compute_sound_progress_events():
+    """SOUND emits one event per completed sigma iteration."""
+    rng = np.random.default_rng(101)
+    data = rng.standard_normal((6, 300))
+    leadfield = rng.standard_normal((6, 8))
+    events = []
+
+    _, _, convergence = compute_sound(
+        data,
+        leadfield,
+        n_iter=3,
+        tol=None,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert len(events) == 3
+    assert [event.current for event in events] == [1, 2, 3]
+    assert all(event.method == "sound" for event in events)
+    assert all(event.stage == "iteration" for event in events)
+    assert all(event.component is None for event in events)
+    assert all(event.total == 3 for event in events)
+    assert all(isinstance(event.metric, float) for event in events)
+    assert all(np.isfinite(event.metric) and event.metric >= 0 for event in events)
+    np.testing.assert_allclose([event.metric for event in events], convergence)
+
+
+def test_compute_sound_progress_event_on_early_convergence():
+    """SOUND includes the iteration that satisfies the stopping tolerance."""
+    rng = np.random.default_rng(102)
+    data = rng.standard_normal((6, 300))
+    leadfield = rng.standard_normal((6, 8))
+    events = []
+
+    _, _, convergence = compute_sound(
+        data,
+        leadfield,
+        n_iter=7,
+        tol=1e6,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert len(events) == convergence.size
+    assert len(events) == 1
+    assert events[-1].current == len(convergence)
+    assert events[-1].total == 7
+
+
+def test_compute_sound_callback_is_numerically_transparent():
+    """A SOUND callback does not change the numerical result."""
+    rng = np.random.default_rng(103)
+    data = rng.standard_normal((6, 300))
+    leadfield = rng.standard_normal((6, 8))
+
+    without = compute_sound(data, leadfield, n_iter=3, random_state=0)
+    with_callback = compute_sound(
+        data,
+        leadfield,
+        n_iter=3,
+        random_state=0,
+        callback=lambda event: None,
+    )
+
+    for expected, actual in zip(without, with_callback, strict=True):
+        np.testing.assert_allclose(expected, actual)
+
+
+def test_compute_sound_callback_validation_and_exceptions():
+    """SOUND validates callbacks and propagates their exceptions."""
+    rng = np.random.default_rng(104)
+    data = rng.standard_normal((6, 300))
+    leadfield = rng.standard_normal((6, 8))
+
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        compute_sound(data, leadfield, callback=1)
+
+    class SentinelError(Exception):
+        pass
+
+    error = SentinelError("stop")
+
+    def callback(event):
+        raise error
+
+    with pytest.raises(SentinelError) as caught:
+        compute_sound(data, leadfield, n_iter=3, callback=callback)
+    assert caught.value is error
+
+
+def test_compute_sound_ref_best_progress_is_one_stream():
+    """Reference-best SOUND emits the shared SOUND iteration stream once."""
+    rng = np.random.default_rng(105)
+    data = rng.standard_normal((6, 300))
+    leadfield = rng.standard_normal((6, 8))
+    events = []
+
+    without = compute_sound_ref_best(data, leadfield, n_iter=3, random_state=0)
+    with_callback = compute_sound_ref_best(
+        data, leadfield, n_iter=3, random_state=0, callback=events.append
+    )
+
+    assert len(events) == without[2].size == 3
+    assert [event.current for event in events] == [1, 2, 3]
+    assert all(
+        event.method == "sound"
+        and event.stage == "iteration"
+        and event.component is None
+        for event in events
+    )
+    for expected, actual in zip(without, with_callback, strict=True):
+        np.testing.assert_allclose(expected, actual)
+
+
 def test_sound_rejects_bad_tol(eeg_info):
     with pytest.raises(ValueError, match="tol must be positive"):
         compute_sound(np.eye(6), np.eye(6), tol=0.0)
@@ -295,6 +409,25 @@ def test_sound_array_with_forward(forward):
     arr = np.random.default_rng(5).standard_normal((24, 600))
     sound = SOUND(n_iter=2, forward=forward, random_state=0).fit(arr)
     assert sound.transform(arr).shape == (24, 600)
+
+
+def test_sound_fit_progress_callback(noisy_raw, forward):
+    """SOUND.fit forwards runtime callbacks without estimator state."""
+    raw, _ = noisy_raw
+    events = []
+    sound = SOUND(
+        n_iter=2,
+        reference="average",
+        forward=forward,
+        random_state=0,
+    )
+
+    sound.fit(raw, callback=events.append)
+
+    assert [event.current for event in events] == [1, 2]
+    assert all(event.method == "sound" for event in events)
+    assert all(event.stage == "iteration" for event in events)
+    assert "callback" not in sound.get_params()
 
 
 def test_sound_transform_checks_fitted_channel_count(forward):

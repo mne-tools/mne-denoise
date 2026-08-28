@@ -41,6 +41,7 @@ from ._data import epochs_to_continuous, extract_data_from_mne, reconstruct_mne_
 from ._leadfield import _validate_leadfield, resolve_leadfield
 from ._logging import logger, verbose
 from ._validation import check_channel_layout, check_option, check_positive_real
+from .progress import _emit_progress, _ProgressCallback, _validate_callback
 
 __all__ = ["SOUND", "compute_sound", "compute_sound_ref_best"]
 
@@ -161,6 +162,7 @@ def _estimate_sigmas(
     n_iter: int,
     tol: float | None,
     random_state,
+    callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Run SOUND's iteration and return ``(sigmas, convergence, llt)``.
 
@@ -214,6 +216,14 @@ def _estimate_sigmas(
             sigmas[i] = _noise_level(noise_filter, cov, n_times)
         relative_change = np.max(np.abs(sigmas_old - sigmas) / sigmas_old)
         convergence.append(relative_change)
+        _emit_progress(
+            callback,
+            method="sound",
+            stage="iteration",
+            current=len(convergence),
+            total=n_iter,
+            metric=float(relative_change),
+        )
         logger.debug(
             "SOUND sigma iteration %d/%d: max relative change %.2e.",
             len(convergence),
@@ -234,6 +244,7 @@ def compute_sound(
     n_iter: int = 5,
     tol: float | None = None,
     random_state=None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the SOUND cleaning operator from data and a lead field.
@@ -265,6 +276,11 @@ def compute_sound(
         statement in Mutanen et al. (2022) [2]_ combines both criteria.
     random_state : int | np.random.Generator | None
         Seed/generator controlling the random channel-update order.
+    callback : callable | None
+        Called synchronously after each completed SOUND sigma iteration with a
+        progress event having ``method="sound"`` and ``stage="iteration"``.
+        Callback return values are ignored and callback exceptions propagate
+        unchanged. The event metric is the maximum relative sigma change.
     verbose : bool | str | int | None
         MNE-style logging level. The final convergence report is emitted at
         INFO and sigma iterations at DEBUG.
@@ -289,6 +305,29 @@ def compute_sound(
            techniques for TMS-EEG. Journal of Neuroscience Methods, 382,
            109693.
     """
+    callback = _validate_callback(callback)
+    return _compute_sound(
+        data,
+        leadfield,
+        lambda_=lambda_,
+        n_iter=n_iter,
+        tol=tol,
+        random_state=random_state,
+        callback=callback,
+    )
+
+
+def _compute_sound(
+    data: np.ndarray,
+    leadfield: np.ndarray,
+    *,
+    lambda_: float,
+    n_iter: int,
+    tol: float | None,
+    random_state,
+    callback: _ProgressCallback | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute SOUND after the callback has been validated."""
     data, leadfield = _validate_sound_inputs(
         data, leadfield, lambda_=lambda_, n_iter=n_iter, min_channels=3
     )
@@ -301,6 +340,7 @@ def compute_sound(
         n_iter=n_iter,
         tol=tol,
         random_state=random_state,
+        callback=callback,
     )
 
     # Final cleaning operator from the converged noise estimate.
@@ -335,6 +375,7 @@ def compute_sound_ref_best(
     n_iter: int = 5,
     tol: float | None = None,
     random_state=None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
     """SOUND with the reference bookkeeping of ``tesa_sound`` [1]_.
@@ -357,6 +398,11 @@ def compute_sound_ref_best(
         Convergence tolerance; see :func:`compute_sound`.
     random_state : int | np.random.Generator | None
         Seed/generator controlling the random channel-update order.
+    callback : callable | None
+        Called synchronously after each completed SOUND sigma iteration with a
+        progress event having ``method="sound"`` and ``stage="iteration"``.
+        Callback return values are ignored and callback exceptions propagate
+        unchanged. The event metric is the maximum relative sigma change.
     verbose : bool | str | int | None
         MNE-style logging level. The final convergence report is emitted at
         INFO and sigma iterations at DEBUG.
@@ -421,6 +467,29 @@ def compute_sound_ref_best(
            (2018). Automatic and robust noise suppression in EEG and MEG: The
            SOUND algorithm. NeuroImage, 166, 135-151.
     """
+    callback = _validate_callback(callback)
+    return _compute_sound_ref_best(
+        data,
+        leadfield,
+        lambda_=lambda_,
+        n_iter=n_iter,
+        tol=tol,
+        random_state=random_state,
+        callback=callback,
+    )
+
+
+def _compute_sound_ref_best(
+    data: np.ndarray,
+    leadfield: np.ndarray,
+    *,
+    lambda_: float,
+    n_iter: int,
+    tol: float | None,
+    random_state,
+    callback: _ProgressCallback | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
+    """Compute reference-best SOUND after callback validation."""
     data, leadfield = _validate_sound_inputs(
         data, leadfield, lambda_=lambda_, n_iter=n_iter, min_channels=4
     )
@@ -439,6 +508,7 @@ def compute_sound_ref_best(
         n_iter=n_iter,
         tol=tol,
         random_state=random_state,
+        callback=callback,
     )
 
     # Fold ref_best + drop + MNE + average-referenced reconstruction into one
@@ -612,9 +682,21 @@ class SOUND(BaseEstimator, TransformerMixin):
         X,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ):
-        """Estimate the SOUND cleaning operator from ``X``."""
+        """Estimate the SOUND cleaning operator from ``X``.
+
+        Parameters
+        ----------
+        callback : callable | None
+            Called synchronously after each completed SOUND sigma iteration
+            with a progress event whose ``method`` is ``"sound"`` and whose
+            ``stage`` is ``"iteration"``. Callback return values are ignored
+            and callback exceptions propagate unchanged. The event metric is
+            the maximum relative sigma change.
+        """
+        callback = _validate_callback(callback)
         check_option(self.reference, name="reference", allowed=("best", "average"))
         check_option(
             self.sigma_source, name="sigma_source", allowed=("evoked", "trials")
@@ -640,22 +722,24 @@ class SOUND(BaseEstimator, TransformerMixin):
                 self.sigmas_,
                 self.convergence_,
                 self.best_channel_,
-            ) = compute_sound_ref_best(
+            ) = _compute_sound_ref_best(
                 fit_data,
                 self.leadfield_,
                 lambda_=self.lambda_,
                 n_iter=self.n_iter,
                 tol=self.tol,
                 random_state=self.random_state,
+                callback=callback,
             )
         else:
-            self.operator_, self.sigmas_, self.convergence_ = compute_sound(
+            self.operator_, self.sigmas_, self.convergence_ = _compute_sound(
                 fit_data,
                 self.leadfield_,
                 lambda_=self.lambda_,
                 n_iter=self.n_iter,
                 tol=self.tol,
                 random_state=self.random_state,
+                callback=callback,
             )
             self.best_channel_ = None
         return self

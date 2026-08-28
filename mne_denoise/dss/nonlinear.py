@@ -20,6 +20,7 @@ import numpy as np
 
 from .._data import continuous_to_epochs, epochs_to_continuous, extract_data_from_mne
 from .._logging import logger, verbose
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._whitening import whiten_from_data_covariance
 
 
@@ -45,6 +46,7 @@ def iterative_dss_one(
     beta: float | Callable[[np.ndarray], float] | None = None,
     gamma: float | Callable[[np.ndarray, np.ndarray, int], float] | None = None,
     random_state: int | np.random.Generator | None = None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, int, bool]:
     """Fixed-point iteration for extracting a single DSS component.
@@ -97,6 +99,12 @@ def iterative_dss_one(
         Learning rate / relaxation parameter. Controls step size:
         ``w = w_old + gamma · (w_new - w_old)``.
         Default None (gamma=1, full step).
+    callback : callable | None
+        Called synchronously after each completed fixed-point iteration with a
+        progress event having ``method="iterative_dss"`` and
+        ``stage="iteration"``. Callback return values are ignored and callback
+        exceptions propagate unchanged. The event metric is the convergence
+        change; it is ``None`` for a degenerate reinitialization iteration.
     verbose : bool | str | int | None
         MNE-style logging level. Iteration state is emitted at DEBUG.
 
@@ -115,6 +123,37 @@ def iterative_dss_one(
     ----------
     .. [1] Särelä & Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.
     """
+    callback = _validate_callback(callback)
+    return _iterative_dss_one(
+        X_whitened,
+        denoiser,
+        w_init=w_init,
+        max_iter=max_iter,
+        tol=tol,
+        alpha=alpha,
+        beta=beta,
+        gamma=gamma,
+        random_state=random_state,
+        callback=callback,
+        component=None,
+    )
+
+
+def _iterative_dss_one(
+    X_whitened: np.ndarray,
+    denoiser: Callable[[np.ndarray], np.ndarray],
+    *,
+    w_init: np.ndarray | None,
+    max_iter: int,
+    tol: float,
+    alpha: float | Callable[[np.ndarray], float] | None,
+    beta: float | Callable[[np.ndarray], float] | None,
+    gamma: float | Callable[[np.ndarray, np.ndarray, int], float] | None,
+    random_state: int | np.random.Generator | None,
+    callback: _ProgressCallback | None,
+    component: int | None,
+) -> tuple[np.ndarray, np.ndarray, int, bool]:
+    """Run one fixed-point DSS solve with validated progress state."""
     n_components, n_times = X_whitened.shape
 
     # Initialize RNG (handle both int and Generator)
@@ -182,6 +221,15 @@ def iterative_dss_one(
             )
             w = rng.standard_normal(n_components)
             w = w / np.linalg.norm(w)
+            _emit_progress(
+                callback,
+                method="iterative_dss",
+                stage="iteration",
+                current=iteration + 1,
+                total=max_iter,
+                component=component,
+                metric=None,
+            )
             continue
 
         w_normalized = w_new / norm
@@ -204,6 +252,15 @@ def iterative_dss_one(
             iteration + 1,
             max_iter,
             change,
+        )
+        _emit_progress(
+            callback,
+            method="iterative_dss",
+            stage="iteration",
+            current=iteration + 1,
+            total=max_iter,
+            component=component,
+            metric=float(change),
         )
         if change < tol:
             converged = True
@@ -241,6 +298,7 @@ def iterative_dss(
     beta: float | Callable | None = None,
     gamma: float | Callable | None = None,
     random_state: int | np.random.Generator | None = None,
+    callback=None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Extract multiple DSS components using iterative (nonlinear) algorithm.
 
@@ -305,6 +363,13 @@ def iterative_dss(
         Newton step parameter (see ``iterative_dss_one``).
     gamma : float or callable, optional
         Learning rate / relaxation (see ``iterative_dss_one``).
+    callback : callable | None
+        Called synchronously after each completed fixed-point iteration with a
+        progress event having ``method="iterative_dss"`` and
+        ``stage="iteration"``. The event metric is the convergence change.
+        For deflationary extraction, ``component`` is the 1-based component
+        being extracted; it is ``None`` for symmetric extraction. Callback
+        return values are ignored and callback exceptions propagate unchanged.
 
     Returns
     -------
@@ -342,6 +407,45 @@ def iterative_dss(
     ----------
     .. [1] Särelä & Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.
     """
+    callback = _validate_callback(callback)
+    return _iterative_dss(
+        data,
+        denoiser,
+        n_components,
+        method=method,
+        rank=rank,
+        reg=reg,
+        max_iter=max_iter,
+        tol=tol,
+        w_init=w_init,
+        verbose=verbose,
+        alpha=alpha,
+        beta=beta,
+        gamma=gamma,
+        random_state=random_state,
+        callback=callback,
+    )
+
+
+def _iterative_dss(
+    data: np.ndarray,
+    denoiser: Callable[[np.ndarray], np.ndarray],
+    n_components: int,
+    *,
+    method: str,
+    rank: int | None,
+    reg: float,
+    max_iter: int,
+    tol: float,
+    w_init: np.ndarray | None,
+    verbose: bool | str | int | None,
+    alpha: float | Callable | None,
+    beta: float | Callable | None,
+    gamma: float | Callable | None,
+    random_state: int | np.random.Generator | None,
+    callback: _ProgressCallback | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Run iterative DSS after the callback has been validated."""
     data_2d, _, _, _, _, _ = extract_data_from_mne(
         data,
         concatenate_epochs=True,
@@ -377,6 +481,7 @@ def iterative_dss(
             beta=beta,
             gamma=gamma,
             random_state=random_state,
+            callback=callback,
         )
     elif method == "symmetric":
         filters_whitened, sources, convergence_info = _iterative_dss_symmetric(
@@ -391,6 +496,7 @@ def iterative_dss(
             beta=beta,
             gamma=gamma,
             random_state=random_state,
+            callback=callback,
         )
     else:
         raise ValueError(f"Unknown method: {method}. Use 'deflation' or 'symmetric'")
@@ -433,6 +539,7 @@ def _iterative_dss_deflation(
     beta: float | Callable | None = None,
     gamma: float | Callable | None = None,
     random_state: int | np.random.Generator | None = None,
+    callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Extract components one-by-one using deflation.
 
@@ -494,7 +601,7 @@ def _iterative_dss_deflation(
             w_i = None
 
         # Run single-component iteration
-        w, source, n_iter, converged = iterative_dss_one(
+        w, source, n_iter, converged = _iterative_dss_one(
             X_deflated,
             denoiser,
             w_init=w_i,
@@ -504,6 +611,8 @@ def _iterative_dss_deflation(
             beta=beta,
             gamma=gamma,
             random_state=rng,
+            callback=callback,
+            component=i + 1,
         )
 
         status = "converged" if converged else "max_iter"
@@ -557,6 +666,7 @@ def _iterative_dss_symmetric(
     beta: float | Callable | None = None,
     gamma: float | Callable | None = None,
     random_state: int | np.random.Generator | None = None,
+    callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Extract components simultaneously with symmetric orthogonalization.
 
@@ -662,6 +772,15 @@ def _iterative_dss_symmetric(
             iteration + 1,
             max_iter,
             max_change,
+        )
+        _emit_progress(
+            callback,
+            method="iterative_dss",
+            stage="iteration",
+            current=iteration + 1,
+            total=max_iter,
+            component=None,
+            metric=float(max_change),
         )
         if max_change < tol:
             logger.debug(
@@ -820,6 +939,7 @@ class IterativeDSS:
         self,
         X,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> IterativeDSS:
         """Compute Iterative DSS spatial filters.
@@ -832,12 +952,24 @@ class IterativeDSS:
             - ``mne.io.Raw``: Continuous data
             - ``mne.Epochs``: Epoched data
             - ``ndarray``: Shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+        callback : callable | None
+            Called synchronously after each completed fixed-point iteration
+            with a progress event whose ``method`` is ``"iterative_dss"`` and
+            whose ``stage`` is ``"iteration"``. Callback return values are
+            ignored and callback exceptions propagate unchanged. The event
+            metric is the convergence change; ``component`` is the 1-based
+            component for deflation and ``None`` for symmetric extraction.
 
         Returns
         -------
         self : IterativeDSS
             The fitted transformer.
         """
+        callback = _validate_callback(callback)
+        return self._fit(X, callback=callback)
+
+    def _fit(self, X, *, callback: _ProgressCallback | None) -> IterativeDSS:
+        """Fit the estimator after the callback has been validated."""
         # Validate and extract data using shared helper
         data, _, mne_type, mne_info, picks, ch_names = extract_data_from_mne(
             X,
@@ -860,19 +992,22 @@ class IterativeDSS:
             )
             data = data / self.channel_norms_[:, np.newaxis]
 
-        filters, sources, patterns, conv_info = iterative_dss(
+        filters, sources, patterns, conv_info = _iterative_dss(
             data,
             self.denoiser,
             self.n_components,
             method=self.method,
             rank=self.rank,
             reg=self.reg,
+            w_init=None,
+            verbose=None,
             max_iter=self.max_iter,
             tol=self.tol,
             alpha=self.alpha,
             beta=self.beta,
             gamma=self.gamma,
             random_state=self.random_state,
+            callback=callback,
         )
 
         self.filters_ = filters
@@ -1003,6 +1138,7 @@ class IterativeDSS:
         self,
         X,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> np.ndarray:
         """Fit and transform in one step.
@@ -1011,10 +1147,17 @@ class IterativeDSS:
         ----------
         X : Raw | Epochs | ndarray
             Data to fit and transform.
+        callback : callable | None
+            Called synchronously after each completed fixed-point iteration
+            during fitting. Callback return values are ignored and callback
+            exceptions propagate unchanged. Deflation events include the
+            1-based component; symmetric events use ``component=None``.
 
         Returns
         -------
         sources : ndarray
             Extracted sources.
         """
-        return self.fit(X).transform(X)
+        callback = _validate_callback(callback)
+        self._fit(X, callback=callback)
+        return self.transform(X)

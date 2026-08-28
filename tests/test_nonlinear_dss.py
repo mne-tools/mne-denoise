@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 from unittest.mock import patch
 
@@ -131,6 +132,77 @@ def test_iterative_dss_one_convergence():
     assert n_iter <= 100
 
 
+def test_iterative_dss_one_progress_events():
+    """The single-component solver emits completed iteration events."""
+    rng = np.random.default_rng(101)
+    X_whitened = rng.standard_normal((5, 500))
+    events = []
+
+    _, _, n_iter, _ = iterative_dss_one(
+        X_whitened,
+        np.tanh,
+        max_iter=5,
+        tol=-1.0,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert len(events) == n_iter == 5
+    assert [event.current for event in events] == list(range(1, n_iter + 1))
+    assert all(event.method == "iterative_dss" for event in events)
+    assert all(event.stage == "iteration" for event in events)
+    assert all(event.component is None for event in events)
+    assert all(event.total == 5 for event in events)
+    assert all(
+        isinstance(event.metric, float)
+        and np.isfinite(event.metric)
+        and event.metric >= 0
+        for event in events
+    )
+
+
+def test_iterative_dss_one_progress_event_on_early_convergence():
+    """The single-component converged iteration is included in the stream."""
+    rng = np.random.default_rng(102)
+    X_whitened = rng.standard_normal((5, 500))
+    events = []
+
+    _, _, n_iter, converged = iterative_dss_one(
+        X_whitened,
+        np.tanh,
+        max_iter=8,
+        tol=1e6,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert converged
+    assert n_iter == len(events) == 1
+    assert events[-1].current == n_iter
+    assert events[-1].total == 8
+
+
+def test_iterative_dss_one_degenerate_progress_event():
+    """Degenerate reinitialization iterations emit without a fake metric."""
+    rng = np.random.default_rng(103)
+    X_whitened = rng.standard_normal((5, 500))
+    events = []
+
+    _, _, n_iter, converged = iterative_dss_one(
+        X_whitened,
+        lambda source: np.zeros_like(source),
+        max_iter=3,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert not converged
+    assert n_iter == len(events) == 3
+    assert [event.current for event in events] == [1, 2, 3]
+    assert all(event.total == 3 for event in events)
+    assert all(event.metric is None for event in events)
+
+
 # =============================================================================
 # iterative_dss - Multi-Component Extraction
 # =============================================================================
@@ -150,6 +222,123 @@ def test_iterative_dss_shape():
     assert sources.shape == (3, 2000)
     assert patterns.shape == (8, 3)
     assert conv.shape == (3, 2)
+
+
+def test_iterative_dss_deflation_progress_component_context():
+    """Deflation events carry one-based component context and reset current."""
+    rng = np.random.default_rng(104)
+    data = rng.standard_normal((6, 500))
+    events = []
+
+    _, _, _, convergence_info = iterative_dss(
+        data,
+        np.tanh,
+        n_components=2,
+        method="deflation",
+        max_iter=6,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert all(event.method == "iterative_dss" for event in events)
+    assert all(event.stage == "iteration" for event in events)
+    assert {event.component for event in events} == {1, 2}
+    for component in (1, 2):
+        component_events = [event for event in events if event.component == component]
+        n_iterations = int(convergence_info[component - 1, 0])
+        assert len(component_events) == n_iterations
+        assert [event.current for event in component_events] == list(
+            range(1, n_iterations + 1)
+        )
+        assert all(event.total == 6 for event in component_events)
+
+
+def test_iterative_dss_symmetric_progress_events():
+    """Symmetric DSS emits one joint event per completed iteration."""
+    rng = np.random.default_rng(105)
+    data = rng.standard_normal((6, 500))
+    events = []
+
+    _, _, _, convergence_info = iterative_dss(
+        data,
+        np.tanh,
+        n_components=2,
+        method="symmetric",
+        max_iter=6,
+        random_state=0,
+        callback=events.append,
+    )
+
+    n_iterations = int(convergence_info[0, 0])
+    assert len(events) == n_iterations
+    assert [event.current for event in events] == list(range(1, n_iterations + 1))
+    assert all(event.method == "iterative_dss" for event in events)
+    assert all(event.stage == "iteration" for event in events)
+    assert all(event.component is None for event in events)
+    assert all(event.total == 6 for event in events)
+    assert all(
+        isinstance(event.metric, float)
+        and np.isfinite(event.metric)
+        and event.metric >= 0
+        for event in events
+    )
+
+
+def test_iterative_dss_callback_is_numerically_transparent():
+    """Callbacks do not change deflationary or symmetric DSS results."""
+    rng = np.random.default_rng(106)
+    data = rng.standard_normal((6, 500))
+
+    for method in ("deflation", "symmetric"):
+        without = iterative_dss(
+            data,
+            np.tanh,
+            n_components=2,
+            method=method,
+            max_iter=5,
+            tol=-1.0,
+            random_state=0,
+        )
+        with_callback = iterative_dss(
+            data,
+            np.tanh,
+            n_components=2,
+            method=method,
+            max_iter=5,
+            tol=-1.0,
+            random_state=0,
+            callback=lambda event: None,
+        )
+
+        for expected, actual in zip(without, with_callback, strict=True):
+            np.testing.assert_allclose(expected, actual)
+
+
+def test_iterative_dss_callback_validation_and_exceptions():
+    """Iterative DSS validates callbacks and propagates their exceptions."""
+    rng = np.random.default_rng(107)
+    data = rng.standard_normal((6, 500))
+
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        iterative_dss(data, np.tanh, n_components=2, callback=1)
+
+    class SentinelError(Exception):
+        pass
+
+    error = SentinelError("stop")
+
+    def callback(event):
+        raise error
+
+    with pytest.raises(SentinelError) as caught:
+        iterative_dss(
+            data,
+            np.tanh,
+            n_components=2,
+            max_iter=3,
+            callback=callback,
+        )
+    assert caught.value is error
 
 
 def test_iterative_dss_3d_data():
@@ -349,6 +538,46 @@ def test_iterative_dss_class_fit():
     assert it_dss.patterns_ is not None
     assert it_dss.sources_ is not None
     assert it_dss.convergence_info_ is not None
+
+
+def test_iterative_dss_class_fit_progress_callback():
+    """IterativeDSS.fit forwards callbacks without storing them."""
+    rng = np.random.default_rng(108)
+    data = rng.standard_normal((6, 500))
+    events = []
+    it_dss = IterativeDSS(
+        np.tanh,
+        n_components=2,
+        max_iter=4,
+        random_state=0,
+        normalize_input=False,
+    )
+
+    it_dss.fit(data, callback=events.append)
+
+    assert {event.component for event in events} == {1, 2}
+    assert len(events) == int(np.sum(it_dss.convergence_info_[:, 0]))
+    assert "callback" not in vars(it_dss)
+    assert "callback" not in inspect.signature(IterativeDSS.__init__).parameters
+
+
+def test_iterative_dss_class_fit_transform_progress_callback():
+    """IterativeDSS.fit_transform emits the fitting stream exactly once."""
+    rng = np.random.default_rng(109)
+    data = rng.standard_normal((6, 500))
+    events = []
+    it_dss = IterativeDSS(
+        np.tanh,
+        n_components=2,
+        max_iter=4,
+        random_state=0,
+        normalize_input=False,
+    )
+
+    sources = it_dss.fit_transform(data, callback=events.append)
+
+    assert sources.shape == (2, 500)
+    assert len(events) == int(np.sum(it_dss.convergence_info_[:, 0]))
 
 
 def test_iterative_dss_class_fit_transform():
