@@ -166,38 +166,6 @@ def _validate_leadfield(
     return leadfield
 
 
-def _forward_gain(forward: mne.Forward) -> np.ndarray:
-    """Extract and validate the gain matrix of a forward solution."""
-    return _validate_leadfield(
-        forward["sol"]["data"], what="The supplied forward gain matrix"
-    )
-
-
-def _leadfield_from_forward(forward: mne.Forward, info: mne.Info) -> np.ndarray:
-    """Extract an average-referenced lead field from a user forward solution.
-
-    The forward's rows are reordered to match ``info``'s channel order, so a
-    forward computed elsewhere (with its own channel ordering) lines up with
-    the data being cleaned.
-    """
-    gain = _forward_gain(forward)
-    row_names = list(forward["sol"]["row_names"])
-    if len(row_names) != gain.shape[0]:
-        raise ValueError(
-            "The supplied forward has a different number of row names and "
-            "gain-matrix rows."
-        )
-    wanted = list(info["ch_names"])
-    missing = [ch for ch in wanted if ch not in row_names]
-    if missing:
-        raise ValueError(
-            "The supplied forward model is missing channels present in the data: "
-            f"{missing[:5]}{'...' if len(missing) > 5 else ''}."
-        )
-    idx = [row_names.index(ch) for ch in wanted]
-    return _average_reference(gain[idx])
-
-
 def fibonacci_sphere(n_points: int) -> np.ndarray:
     """Generate unit vectors quasi-uniformly covering the sphere.
 
@@ -411,12 +379,27 @@ def resolve_leadfield(
         _mne.require_mne("MNE lead-field resolution")
         info = inst.copy().pick(ch_names).info
         if forward is not None:
-            return _leadfield_from_forward(forward, info)
+            _validate_leadfield(
+                forward["sol"]["data"], what="The supplied forward gain matrix"
+            )
+            picked_forward = _mne.mne.pick_channels_forward(
+                forward,
+                include=info["ch_names"],
+                ordered=True,
+                copy=True,
+            )
+            gain = _validate_leadfield(
+                picked_forward["sol"]["data"],
+                what="The supplied forward gain matrix",
+            )
+            return _average_reference(gain)
         return make_spherical_leadfield(
             info, n_dipoles=n_dipoles, head_model=head_model
         )
     if forward is not None:
-        gain = _forward_gain(forward)
+        gain = _validate_leadfield(
+            forward["sol"]["data"], what="The supplied forward gain matrix"
+        )
         if gain.shape[0] != n_channels:
             raise ValueError(
                 "For array input, the forward must have the same number of "

@@ -200,6 +200,8 @@ def test_resolve_leadfield_builds_sphere_without_forward(eeg_info):
 
 def test_resolve_leadfield_from_forward(eeg_info, forward):
     """An MNE object plus a forward takes the forward, channel-aligned."""
+    gain_before = forward["sol"]["data"].copy()
+    row_names_before = forward["sol"]["row_names"].copy()
     leadfield = resolve_leadfield(
         inst=_raw(eeg_info),
         ch_names=eeg_info["ch_names"],
@@ -209,6 +211,10 @@ def test_resolve_leadfield_from_forward(eeg_info, forward):
     )
     assert leadfield.shape[0] == 24
     assert np.allclose(leadfield.mean(axis=0), 0.0, atol=1e-9)
+    expected = gain_before - gain_before.mean(axis=0, keepdims=True)
+    np.testing.assert_allclose(leadfield, expected)
+    np.testing.assert_array_equal(forward["sol"]["data"], gain_before)
+    assert forward["sol"]["row_names"] == row_names_before
 
 
 def test_resolve_leadfield_aligns_forward_channels(eeg_info, forward):
@@ -218,28 +224,25 @@ def test_resolve_leadfield_aligns_forward_channels(eeg_info, forward):
     flipped_info = mne.create_info(shuffled, 1000.0, "eeg")
     flipped_info.set_montage("standard_1020")
 
-    straight = resolve_leadfield(
-        inst=_raw(eeg_info),
-        ch_names=names,
-        n_channels=24,
-        method="SOUND",
-        forward=forward,
-    )
-    reversed_ = resolve_leadfield(
+    leadfield = resolve_leadfield(
         inst=_raw(flipped_info),
         ch_names=shuffled,
         n_channels=24,
         method="SOUND",
         forward=forward,
     )
-    np.testing.assert_allclose(reversed_, straight[::-1], atol=1e-12)
+    row_names = list(forward["sol"]["row_names"])
+    indices = [row_names.index(ch) for ch in shuffled]
+    expected = forward["sol"]["data"][indices]
+    expected -= expected.mean(axis=0, keepdims=True)
+    np.testing.assert_allclose(leadfield, expected, atol=1e-12)
 
 
 def test_resolve_leadfield_forward_missing_channels_raises(forward):
     ch = mne.channels.make_standard_montage("standard_1020").ch_names[:26]
     info = mne.create_info(ch, 1000.0, "eeg")
     info.set_montage("standard_1020")
-    with pytest.raises(ValueError, match="missing channels"):
+    with pytest.raises(ValueError, match="Missing channels"):
         resolve_leadfield(
             inst=_raw(info),
             ch_names=info["ch_names"],
