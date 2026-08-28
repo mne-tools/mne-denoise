@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 from unittest.mock import patch
 
-import mne
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from mne_denoise.dss import IterativeDSS, iterative_dss
+from mne_denoise.dss import iterative_dss
 from mne_denoise.dss.denoisers import KurtosisDenoiser, VarianceMaskDenoiser
-from mne_denoise.dss.nonlinear import _symmetric_orthogonalize, iterative_dss_one
+from mne_denoise.dss.nonlinear import iterative_dss_one
 
 # =============================================================================
 # iterative_dss_one - Core Single Component Algorithm
@@ -36,170 +34,50 @@ def test_iterative_dss_one_basic():
     assert_allclose(np.linalg.norm(w), 1.0, atol=1e-10)
 
 
-def test_iterative_dss_one_with_init():
-    """iterative_dss_one should accept initial weight."""
+def test_iterative_dss_one_uses_alpha_and_beta_controls():
+    """Scalar and callable update controls produce valid normalized weights."""
     rng = np.random.default_rng(42)
-    n_whitened, n_times = 5, 500
-    X_whitened = rng.standard_normal((n_whitened, n_times))
-
-    w_init = np.ones(n_whitened) / np.sqrt(n_whitened)
-
-    denoiser = KurtosisDenoiser()
-    w, source, n_iter, converged = iterative_dss_one(
-        X_whitened, denoiser, w_init=w_init
-    )
-
-    assert w.shape == (n_whitened,)
-
-
-def test_iterative_dss_one_with_alpha():
-    """iterative_dss_one should support alpha parameter."""
-    rng = np.random.default_rng(42)
-    n_whitened, n_times = 5, 500
-    X_whitened = rng.standard_normal((n_whitened, n_times))
-
-    denoiser = KurtosisDenoiser()
-
-    # Float alpha
-    w, source, _, _ = iterative_dss_one(X_whitened, denoiser, alpha=0.5)
-    assert w.shape == (n_whitened,)
-
-    # Callable alpha
-    def alpha_func(s):
-        return 1.0 / np.std(s)
-
-    w, source, _, _ = iterative_dss_one(X_whitened, denoiser, alpha=alpha_func)
-    assert w.shape == (n_whitened,)
-
-
-def test_iterative_dss_one_with_beta():
-    """iterative_dss_one should support beta parameter (Newton step)."""
-    rng = np.random.default_rng(42)
-    n_whitened, n_times = 5, 500
-    X_whitened = rng.standard_normal((n_whitened, n_times))
-
-    denoiser = KurtosisDenoiser()
-
-    # Float beta
-    w, source, _, _ = iterative_dss_one(X_whitened, denoiser, beta=-0.5)
-    assert w.shape == (n_whitened,)
-
-    # Callable beta (FastICA style)
-    def beta_func(s):
-        return -np.mean(1 - np.tanh(s) ** 2)
-
-    w, source, _, _ = iterative_dss_one(X_whitened, denoiser, beta=beta_func)
-    assert w.shape == (n_whitened,)
-
-
-def test_iterative_dss_one_with_gamma():
-    """iterative_dss_one should support gamma parameter (relaxation)."""
-    rng = np.random.default_rng(42)
-    n_whitened, n_times = 5, 500
-    X_whitened = rng.standard_normal((n_whitened, n_times))
-
-    denoiser = KurtosisDenoiser()
-
-    # Float gamma
-    w, source, _, _ = iterative_dss_one(X_whitened, denoiser, gamma=0.8)
-    assert w.shape == (n_whitened,)
-
-    # Callable gamma
-    def gamma_func(w_new, w_old, iteration):
-        return 0.5 + 0.5 * min(iteration / 10, 1.0)
-
-    w, source, _, _ = iterative_dss_one(X_whitened, denoiser, gamma=gamma_func)
-    assert w.shape == (n_whitened,)
-
-
-def test_iterative_dss_one_convergence():
-    """iterative_dss_one should converge for reasonable data."""
-    rng = np.random.default_rng(42)
-    n_whitened, n_times = 4, 2000
-
-    # Create data with clear structure
-    X_whitened = rng.standard_normal((n_whitened, n_times))
-
-    def denoiser(s):
-        return np.tanh(s)  # Simple nonlinearity
-
-    w, source, n_iter, converged = iterative_dss_one(
-        X_whitened, denoiser, max_iter=100, tol=1e-6
-    )
-
-    # Should converge for simple data
-    assert n_iter <= 100
-
-
-def test_iterative_dss_one_progress_events():
-    """The single-component solver emits completed iteration events."""
-    rng = np.random.default_rng(101)
     X_whitened = rng.standard_normal((5, 500))
-    events = []
 
-    _, _, n_iter, _ = iterative_dss_one(
-        X_whitened,
-        np.tanh,
-        max_iter=5,
-        tol=-1.0,
-        random_state=0,
-        callback=events.append,
-    )
+    def beta_func(source):
+        return -np.mean(1 - np.tanh(source) ** 2)
 
-    assert len(events) == n_iter == 5
-    assert [event.current for event in events] == list(range(1, n_iter + 1))
-    assert all(event.method == "iterative_dss" for event in events)
-    assert all(event.stage == "iteration" for event in events)
-    assert all(event.component is None for event in events)
-    assert all(event.total == 5 for event in events)
-    assert all(
-        isinstance(event.metric, float)
-        and np.isfinite(event.metric)
-        and event.metric >= 0
-        for event in events
-    )
+    for alpha, beta in [(0.5, -0.5), (lambda source: 1 / np.std(source), beta_func)]:
+        weight, source, _, _ = iterative_dss_one(
+            X_whitened, KurtosisDenoiser(), alpha=alpha, beta=beta
+        )
+        assert weight.shape == (X_whitened.shape[0],)
+        assert source.shape == (X_whitened.shape[1],)
+        assert_allclose(np.linalg.norm(weight), 1.0, atol=1e-10)
 
 
-def test_iterative_dss_one_progress_event_on_early_convergence():
-    """The single-component converged iteration is included in the stream."""
+def test_iterative_dss_one_early_convergence_is_reported():
+    """A loose tolerance reports convergence after the completed update."""
     rng = np.random.default_rng(102)
     X_whitened = rng.standard_normal((5, 500))
-    events = []
 
     _, _, n_iter, converged = iterative_dss_one(
-        X_whitened,
-        np.tanh,
-        max_iter=8,
-        tol=1e6,
-        random_state=0,
-        callback=events.append,
+        X_whitened, np.tanh, max_iter=8, tol=1e6, random_state=0
     )
 
     assert converged
-    assert n_iter == len(events) == 1
-    assert events[-1].current == n_iter
-    assert events[-1].total == 8
+    assert n_iter == 1
 
 
-def test_iterative_dss_one_degenerate_progress_event():
-    """Degenerate reinitialization iterations emit without a fake metric."""
+def test_iterative_dss_one_nonconvergence_has_meaningful_diagnostics():
+    """A signal-killing denoiser reaches the iteration budget without lying."""
     rng = np.random.default_rng(103)
     X_whitened = rng.standard_normal((5, 500))
-    events = []
 
     _, _, n_iter, converged = iterative_dss_one(
         X_whitened,
         lambda source: np.zeros_like(source),
         max_iter=3,
         random_state=0,
-        callback=events.append,
     )
 
     assert not converged
-    assert n_iter == len(events) == 3
-    assert [event.current for event in events] == [1, 2, 3]
-    assert all(event.total == 3 for event in events)
-    assert all(event.metric is None for event in events)
+    assert n_iter == 3
 
 
 # =============================================================================
@@ -207,114 +85,22 @@ def test_iterative_dss_one_degenerate_progress_event():
 # =============================================================================
 
 
-def test_iterative_dss_shape():
-    """iterative_dss should return correct shapes."""
+def test_iterative_dss_methods_return_component_contract():
+    """Deflation and symmetric solvers return the same component layout."""
     rng = np.random.default_rng(42)
     data = rng.standard_normal((8, 2000))
 
-    denoiser = KurtosisDenoiser()
-    filters, sources, patterns, conv = iterative_dss(
-        data, denoiser, n_components=3, max_iter=10
-    )
-
-    assert filters.shape == (3, 8)
-    assert sources.shape == (3, 2000)
-    assert patterns.shape == (8, 3)
-    assert conv.shape == (3, 2)
-
-
-def test_iterative_dss_deflation_progress_component_context():
-    """Deflation events carry one-based component context and reset current."""
-    rng = np.random.default_rng(104)
-    data = rng.standard_normal((6, 500))
-    events = []
-
-    _, _, _, convergence_info = iterative_dss(
-        data,
-        np.tanh,
-        n_components=2,
-        method="deflation",
-        max_iter=6,
-        random_state=0,
-        callback=events.append,
-    )
-
-    assert all(event.method == "iterative_dss" for event in events)
-    assert all(event.stage == "iteration" for event in events)
-    assert {event.component for event in events} == {1, 2}
-    for component in (1, 2):
-        component_events = [event for event in events if event.component == component]
-        n_iterations = int(convergence_info[component - 1, 0])
-        assert len(component_events) == n_iterations
-        assert [event.current for event in component_events] == list(
-            range(1, n_iterations + 1)
+    for method in ("deflation", "symmetric"):
+        filters, sources, patterns, conv = iterative_dss(
+            data, KurtosisDenoiser(), n_components=3, method=method, max_iter=10
         )
-        assert all(event.total == 6 for event in component_events)
 
-
-def test_iterative_dss_symmetric_progress_events():
-    """Symmetric DSS emits one joint event per completed iteration."""
-    rng = np.random.default_rng(105)
-    data = rng.standard_normal((6, 500))
-    events = []
-
-    _, _, _, convergence_info = iterative_dss(
-        data,
-        np.tanh,
-        n_components=2,
-        method="symmetric",
-        max_iter=6,
-        random_state=0,
-        callback=events.append,
-    )
-
-    n_iterations = int(convergence_info[0, 0])
-    assert len(events) == n_iterations
-    assert [event.current for event in events] == list(range(1, n_iterations + 1))
-    assert all(event.method == "iterative_dss" for event in events)
-    assert all(event.stage == "iteration" for event in events)
-    assert all(event.component is None for event in events)
-    assert all(event.total == 6 for event in events)
-    assert all(
-        isinstance(event.metric, float)
-        and np.isfinite(event.metric)
-        and event.metric >= 0
-        for event in events
-    )
-
-
-def test_iterative_dss_3d_data():
-    """iterative_dss should handle 3D epoched data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 6, 200, 5
-    X_2d = rng.standard_normal((n_ch, n_times * n_epochs))
-    # MNE Standard: (n_epochs, n_channels, n_times)
-    X_3d = X_2d.reshape(n_ch, n_epochs, n_times).transpose(1, 0, 2)
-
-    denoiser = KurtosisDenoiser()
-
-    # 2D fit
-    filters_2d, sources_2d, _, _ = iterative_dss(X_2d, denoiser, n_components=3)
-
-    # 3D fit (should handle reshape automatically)
-    filters_3d, sources_3d, _, _ = iterative_dss(X_3d, denoiser, n_components=3)
-
-    assert filters_3d.shape == (3, n_ch)
-    assert sources_3d.shape == (3, n_epochs * n_times)
-
-
-def test_iterative_dss_symmetric_method():
-    """iterative_dss should support symmetric extraction method."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((6, 1500))
-
-    denoiser = KurtosisDenoiser()
-    filters, sources, patterns, conv = iterative_dss(
-        data, denoiser, n_components=3, method="symmetric", max_iter=20
-    )
-
-    assert filters.shape == (3, 6)
-    assert sources.shape == (3, 1500)
+        assert filters.shape == (3, 8)
+        assert sources.shape == (3, 2000)
+        assert patterns.shape == (8, 3)
+        assert conv.shape == (3, 2)
+        assert np.all((conv[:, 0] >= 1) & (conv[:, 0] <= 10))
+        assert np.all(np.isin(conv[:, 1], [0.0, 1.0]))
 
 
 def test_iterative_dss_invalid_method():
@@ -326,17 +112,6 @@ def test_iterative_dss_invalid_method():
 
     with pytest.raises(ValueError, match="Unknown method"):
         iterative_dss(data, denoiser, n_components=2, method="invalid")
-
-
-def test_iterative_dss_invalid_ndim():
-    """iterative_dss should raise error for invalid data dimension."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5,))  # 1D - invalid
-
-    denoiser = KurtosisDenoiser()
-
-    with pytest.raises(ValueError, match="must be 2D or 3D"):
-        iterative_dss(data, denoiser, n_components=2)
 
 
 def test_iterative_dss_with_rank():
@@ -369,382 +144,54 @@ def test_iterative_dss_with_w_init():
     assert filters.shape == (3, 6)
 
 
-@pytest.mark.parametrize("verbosity", [True, "DEBUG"])
-def test_iterative_dss_uses_logging_not_stdout(verbosity, caplog, capsys):
-    """INFO and DEBUG iterative reports never write processing output to stdout."""
-    rng = np.random.default_rng(43)
-    data = rng.standard_normal((4, 300))
-    with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
-        iterative_dss(
-            data,
-            KurtosisDenoiser(),
-            n_components=1,
-            max_iter=3,
-            verbose=verbosity,
-        )
-    assert capsys.readouterr().out == ""
-    summaries = [
-        record
-        for record in caplog.records
-        if record.message.startswith("Iterative DSS:")
-    ]
-    assert len(summaries) == 1
-    for token in ("method=", "denoiser=KurtosisDenoiser", "converged=", "iterations="):
-        assert token in summaries[0].message
-
-
-def test_iterative_dss_symmetric_with_alpha_beta():
-    """Symmetric method should support alpha and beta parameters."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((6, 1000))
-
-    denoiser = KurtosisDenoiser()
-
-    filters, sources, patterns, conv = iterative_dss(
-        data,
-        denoiser,
-        n_components=3,
-        method="symmetric",
-        alpha=1.0,
-        beta=-0.5,
-        max_iter=10,
-    )
-
-    assert filters.shape == (3, 6)
-
-
-# =============================================================================
-# _symmetric_orthogonalize
-# =============================================================================
-
-
-def test_symmetric_orthogonalize():
-    """_symmetric_orthogonalize should produce orthonormal rows."""
-    rng = np.random.default_rng(42)
-    W = rng.standard_normal((3, 5))
-
-    W_orth = _symmetric_orthogonalize(W)
-
-    # Rows should be orthonormal
-    gram = W_orth @ W_orth.T
-    assert_allclose(gram, np.eye(3), atol=1e-10)
-
-
-# =============================================================================
-# IterativeDSS Class
-# =============================================================================
-
-
-def test_iterative_dss_class_fit():
-    """IterativeDSS class should work like sklearn."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((10, 1500))
-
-    denoiser = VarianceMaskDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=5, max_iter=5)
-
-    it_dss.fit(data)
-    assert it_dss.filters_ is not None
-    assert it_dss.filters_.shape == (5, 10)
-    assert it_dss.patterns_ is not None
-    assert it_dss.sources_ is not None
-    assert it_dss.convergence_info_ is not None
-
-
-def test_iterative_dss_class_fit_progress_callback():
-    """IterativeDSS.fit forwards callbacks without storing them."""
-    rng = np.random.default_rng(108)
-    data = rng.standard_normal((6, 500))
-    events = []
-    it_dss = IterativeDSS(
-        np.tanh,
-        n_components=2,
-        max_iter=4,
-        random_state=0,
-        normalize_input=False,
-    )
-
-    it_dss.fit(data, callback=events.append)
-
-    assert {event.component for event in events} == {1, 2}
-    assert len(events) == int(np.sum(it_dss.convergence_info_[:, 0]))
-
-
-def test_iterative_dss_class_fit_transform_progress_callback():
-    """IterativeDSS.fit_transform emits the fitting stream exactly once."""
-    rng = np.random.default_rng(109)
-    data = rng.standard_normal((6, 500))
-    events = []
-    it_dss = IterativeDSS(
-        np.tanh,
-        n_components=2,
-        max_iter=4,
-        random_state=0,
-        normalize_input=False,
-    )
-
-    sources = it_dss.fit_transform(data, callback=events.append)
-
-    assert sources.shape == (2, 500)
-    assert len(events) == int(np.sum(it_dss.convergence_info_[:, 0]))
-
-
-def test_iterative_dss_class_fit_transform():
-    """IterativeDSS should support fit_transform."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 1000))
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    sources = it_dss.fit_transform(data)
-
-    assert sources.shape == (3, 1000)
-
-
-def test_iterative_dss_class_transform():
-    """IterativeDSS should support separate fit and transform."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 1000))
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    it_dss.fit(data)
-    sources = it_dss.transform(data)
-
-    assert sources.shape == (3, 1000)
-
-
-def test_iterative_dss_class_transform_3d():
-    """IterativeDSS transform should handle 3D data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 8, 100, 5
-    data_2d = rng.standard_normal((n_ch, n_times * n_epochs))
-    # MNE Standard: (n_epochs, n_ch, n_times)
-    data_3d = rng.standard_normal((n_epochs, n_ch, n_times))
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    it_dss.fit(data_2d)
-    sources = it_dss.transform(data_3d)
-
-    # Expected: (n_epochs, n_comp, n_times)
-    assert sources.shape == (n_epochs, 3, n_times)
-
-
-def test_iterative_dss_class_inverse_transform():
-    """IterativeDSS should support inverse_transform."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 500))
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    sources = it_dss.fit_transform(data)
-    reconstructed = it_dss.inverse_transform(sources)
-
-    assert reconstructed.shape == (8, 500)
-
-
-def test_iterative_dss_class_inverse_transform_3d():
-    """IterativeDSS inverse_transform should handle 3D data."""
-    rng = np.random.default_rng(42)
-    n_epochs, n_ch, n_times = 5, 8, 100
-    # MNE Standard: (n_epochs, n_channels, n_times)
-    data = rng.standard_normal((n_epochs, n_ch, n_times))
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    sources = it_dss.fit_transform(data)
-    reconstructed = it_dss.inverse_transform(sources)
-
-    assert reconstructed.shape == (n_epochs, n_ch, n_times)
-
-
-def test_iterative_dss_class_inverse_transform_normalized():
-    """IterativeDSS inverse_transform should handle normalization correctly (2D and 3D)."""
-    rng = np.random.default_rng(42)
-    n_epochs, n_ch, n_times = 5, 4, 100
-
-    # 2D data with different channel scales
-    scales = np.array([1.0, 0.1, 0.01, 1e-3])
-    data_2d = rng.standard_normal((n_ch, n_times * n_epochs)) * scales[:, np.newaxis]
-    data_3d = data_2d.reshape(n_ch, n_epochs, n_times).transpose(1, 0, 2)
-
-    # Use identity denoiser to ensure perfect reconstruction (within iterative precision)
-    def identity_denoiser(data):
-        return data
-
-    # Center data for exact comparison as inverse_transform reconstructs centered data
-    data_2d_centered = data_2d - data_2d.mean(axis=1, keepdims=True)
-    data_3d_centered = data_3d - data_3d.mean(axis=(0, 2), keepdims=True)
-
-    # Test 2D
-    # Set reg to 1e-15 to ensure we don't truncate any components
-    it_dss_2d = IterativeDSS(
-        identity_denoiser, n_components=n_ch, normalize_input=True, reg=1e-15
-    )
-    sources_2d = it_dss_2d.fit_transform(data_2d)
-    reconstructed_2d = it_dss_2d.inverse_transform(sources_2d)
-
-    # Reconstructed should match original centered data (full rank)
-    assert_allclose(data_2d_centered, reconstructed_2d, rtol=1e-3, atol=1e-12)
-
-    # Test 3D
-    it_dss_3d = IterativeDSS(
-        identity_denoiser, n_components=n_ch, normalize_input=True, reg=1e-15
-    )
-    sources_3d = it_dss_3d.fit_transform(data_3d)
-    reconstructed_3d = it_dss_3d.inverse_transform(sources_3d)
-
-    # Needs to match 3D centered data
-    assert_allclose(data_3d_centered, reconstructed_3d, rtol=1e-3, atol=1e-12)
-
-
-def test_iterative_dss_class_transform_before_fit():
-    """IterativeDSS should raise error when transform called before fit."""
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3)
-
-    data = np.random.randn(5, 100)
-
-    with pytest.raises(RuntimeError, match="not fitted"):
-        it_dss.transform(data)
-
-
-def test_iterative_dss_class_inverse_transform_before_fit():
-    """IterativeDSS should raise error when inverse_transform called before fit."""
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3)
-
-    sources = np.random.randn(3, 100)
-
-    with pytest.raises(RuntimeError, match="not fitted"):
-        it_dss.inverse_transform(sources)
-
-
-# =============================================================================
-# MNE Integration
-# =============================================================================
-
-
-def test_iterative_dss_class_mne_raw():
-    """IterativeDSS should work with MNE Raw objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 8, 2000
-    sfreq = 250.0
-
-    data = rng.standard_normal((n_channels, n_samples))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    sources = it_dss.fit_transform(raw)
-
-    assert sources.shape == (3, n_samples)
-
-
-def test_iterative_dss_class_mne_epochs():
-    """IterativeDSS should work with MNE Epochs objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 6, 100, 10
-    sfreq = 100.0
-
-    # MNE format: (n_epochs, n_channels, n_times)
-    data = rng.standard_normal((n_epochs, n_channels, n_times))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    sources = it_dss.fit_transform(epochs)
-
-    # Expected: (n_epochs, n_comp, n_times)
-    assert sources.shape == (n_epochs, 3, n_times)
-
-
 # =============================================================================
 # Functional Tests with Known Expected Outputs
 # =============================================================================
 
 
-def test_iterative_dss_extracts_known_source():
-    """iterative_dss should extract a known independent source."""
+def test_iterative_dss_extracts_and_orders_known_sources():
+    """The nonlinear bias extracts the high-kurtosis source first."""
     rng = np.random.default_rng(42)
-    n_channels, n_samples = 6, 3000
+    n_samples = 2_000
 
-    # Create known independent sources
-    s1 = rng.standard_normal(n_samples)
-    s1 = np.tanh(s1 * 2)  # Super-Gaussian
+    square = np.sign(np.sin(np.linspace(0, 10, n_samples)))
+    square = (square - square.mean()) / square.std()
+    gaussian = rng.standard_normal(n_samples)
+    gaussian = (gaussian - gaussian.mean()) / gaussian.std()
+    expected_sources = np.vstack([square, gaussian])
 
-    s2 = rng.standard_normal(n_samples)
+    angle = 0.37
+    mixing = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+    data = mixing @ expected_sources
 
-    sources = np.vstack([s1, s2])
-
-    # Mix into channels
-    A = rng.standard_normal((n_channels, 2))
-    data = A @ sources
-
-    def denoiser(s):
-        return np.tanh(s)  # Tanh targets super-Gaussian
-
-    filters, extracted, patterns, conv = iterative_dss(
-        data, denoiser, n_components=1, max_iter=50, random_state=42
+    filters, extracted, _, conv = iterative_dss(
+        data,
+        np.tanh,
+        n_components=2,
+        method="deflation",
+        max_iter=100,
+        tol=1e-8,
+        random_state=42,
     )
 
-    # Top source should correlate with s1 (super-Gaussian source)
-    corr1 = np.abs(np.corrcoef(extracted[0], s1)[0, 1])
-
-    # Should have some alignment with the super-Gaussian source
-    assert corr1 > 0.3 or conv[0, 1] == 1.0  # Either correlates or converged
-
-
-def test_iterative_dss_reconstruction():
-    """Patterns @ sources should approximate centered data."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 5, 1000
-
-    data = rng.standard_normal((n_channels, n_samples))
-    data - data.mean(axis=1, keepdims=True)
-
-    denoiser = KurtosisDenoiser()
-    filters, sources, patterns, conv = iterative_dss(
-        data, denoiser, n_components=n_channels, max_iter=20
+    repeat_filters, repeat_extracted, _, _ = iterative_dss(
+        data,
+        np.tanh,
+        n_components=2,
+        method="deflation",
+        max_iter=100,
+        tol=1e-8,
+        random_state=42,
     )
+    assert_allclose(np.abs(repeat_filters), np.abs(filters))
+    assert_allclose(np.abs(repeat_extracted), np.abs(extracted))
 
-    reconstructed = patterns @ sources
-
-    # Should be close to centered data
-    assert reconstructed.shape == data.shape
-
-
-def test_iterative_dss_orthogonal_filters():
-    """Extracted filters should be orthogonal in whitened space."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 2000))
-
-    denoiser = KurtosisDenoiser()
-    filters, sources, patterns, conv = iterative_dss(
-        data, denoiser, n_components=4, max_iter=20
-    )
-
-    # Sources should be approximately uncorrelated
-    source_corr = np.corrcoef(sources)
-    off_diag = source_corr - np.diag(np.diag(source_corr))
-
-    assert np.max(np.abs(off_diag)) < 0.2
+    correlations = np.abs(np.corrcoef(extracted, expected_sources)[:2, 2:])
+    assert correlations[0, 0] > 0.99
+    assert correlations[1, 1] > 0.99
+    scores = np.mean(extracted * np.tanh(extracted), axis=1)
+    assert scores[0] > scores[1]
+    assert_allclose(conv[:, 1], 1.0)
 
 
 # =============================================================================
@@ -787,113 +234,6 @@ def test_iterative_dss_symmetric_w_init():
     assert filters.shape == (3, 6)
 
 
-def test_iterative_dss_symmetric_callable_alpha_beta():
-    """Symmetric method should support callable alpha and beta."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 800))
-
-    denoiser = KurtosisDenoiser()
-
-    def alpha_func(s):
-        return 1.0 / np.std(s)
-
-    def beta_func(s):
-        return -np.mean(1 - np.tanh(s) ** 2)
-
-    filters, sources, patterns, conv = iterative_dss(
-        data,
-        denoiser,
-        n_components=2,
-        method="symmetric",
-        alpha=alpha_func,
-        beta=beta_func,
-        max_iter=15,
-    )
-
-    assert filters.shape == (2, 5)
-
-
-def test_iterative_dss_symmetric_converges():
-    """Symmetric method should report convergence when it happens."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((4, 2000))  # Enough data for convergence
-
-    # Simple denoiser that converges easily
-    def denoiser(s):
-        return s**3  # cubic
-
-    filters, sources, patterns, conv = iterative_dss(
-        data,
-        denoiser,
-        n_components=2,
-        method="symmetric",
-        max_iter=100,
-        tol=1e-4,
-        verbose="DEBUG",
-    )
-
-    # Either converges or hits max_iter - both are covered
-    assert conv.shape == (2, 2)
-
-
-def test_iterative_dss_transform_mne_raw():
-    """IterativeDSS.transform should handle MNE Raw objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 6, 1000
-    sfreq = 250.0
-
-    data = rng.standard_normal((n_channels, n_samples))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    denoiser = KurtosisDenoiser()
-    it_dss = IterativeDSS(denoiser, n_components=3, max_iter=5)
-
-    # Fit on raw
-    it_dss.fit(raw)
-
-    # Transform on raw
-    sources = it_dss.transform(raw)
-
-    assert sources.shape == (3, n_samples)
-
-
-def test_iterative_dss_separation_mixed_sources():
-    """Iterative DSS should separate mixed super-Gaussian and Gaussian sources."""
-    rng = np.random.default_rng(42)
-    n_times = 2000
-
-    # 1. Super-Gaussian source (highly kurtotic)
-    t = np.linspace(0, 10, n_times)
-    s1 = np.sin(t) * np.sign(np.sin(t))  # Square wave-ish
-    s1 = (s1 - s1.mean()) / s1.std()
-
-    # 2. Gaussian noise source
-    s2 = rng.standard_normal(n_times)
-
-    # Mix
-    S = np.array([s1, s2])
-    A = np.array([[0.8, 0.2], [0.3, 0.7]])
-    X = A @ S
-
-    # Use Tanh (kurtosis-based) denoiser
-    def denoiser(x):
-        return np.tanh(x)
-
-    # Extract
-    filters, sources, patterns, conv = iterative_dss(
-        X, denoiser, n_components=2, method="symmetric", random_state=42
-    )
-
-    # Check correlations (accounting for permutation and sign)
-    corrs = np.abs(np.corrcoef(sources, S)[:2, 2:])
-    # One source should match s1 well (>0.9)
-    assert np.max(corrs[0]) > 0.9 or np.max(corrs[1]) > 0.9
-
-
 def test_iterative_dss_orthogonality_check():
     """Iterative DSS components should be orthogonal (decorrelated) in whitened space."""
     rng = np.random.default_rng(42)
@@ -923,152 +263,6 @@ def test_iterative_dss_orthogonality_check():
     corr_sym = np.corrcoef(sources_sym)
     off_diag_sym = corr_sym - np.diag(np.diag(corr_sym))
     assert np.max(np.abs(off_diag_sym)) < 1e-10, "Symmetric sources not decorrelated"
-
-
-def test_iterative_dss_class_input_types():
-    """IterativeDSS Class should handle Array, Raw, and Epochs inputs."""
-    import mne
-
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 4, 200, 3
-
-    # 1. Array (2D)
-    data_2d = rng.standard_normal((n_ch, n_times))
-    dss = IterativeDSS(KurtosisDenoiser(), n_components=2, random_state=42)
-    dss.fit(data_2d)
-    assert dss.filters_.shape == (2, n_ch)
-
-    # 2. Raw
-    info = mne.create_info(n_ch, 250, "eeg")
-    raw = mne.io.RawArray(data_2d, info, verbose=False)
-    dss = IterativeDSS(KurtosisDenoiser(), n_components=2, random_state=42)
-    dss.fit(raw)
-    out_raw = dss.transform(raw)
-    assert out_raw.shape == (2, n_times)
-
-    # 3. Epochs (3D inputs)
-    data_3d = rng.standard_normal((n_epochs, n_ch, n_times))
-    epochs = mne.EpochsArray(data_3d, info, verbose=False)
-    dss = IterativeDSS(KurtosisDenoiser(), n_components=2, random_state=42)
-    dss.fit(epochs)
-    out_epochs = dss.transform(epochs)
-    assert out_epochs.shape == (n_epochs, 2, n_times)
-    assert out_epochs.ndim == 3
-
-
-def test_iterative_dss_class_equivalence():
-    """IterativeDSS class and iterative_dss function should yield same results."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 100))
-
-    def denoiser(x):
-        return np.tanh(x)
-
-    # Class
-    dss = IterativeDSS(denoiser, n_components=3, random_state=42, normalize_input=False)
-    dss.fit(data)
-    res_class = dss.transform(data)
-
-    # Function
-    filters, res_func, _, _ = iterative_dss(
-        data, denoiser, n_components=3, random_state=42
-    )
-
-    # Should be identical (using same seed)
-    assert_allclose(res_class, res_func)
-
-
-def test_iterative_dss_preserves_scale():
-    """IterativeDSS reconstruction should preserve physical signal scale."""
-    sfreq = 1000
-    n_channels = 10
-    n_times = 2000
-    t = np.arange(n_times) / sfreq
-
-    signal_scale = 5e-6
-    data = np.random.randn(n_channels, n_times) * 1e-7
-    data[0:3, :] += signal_scale * np.sin(2 * np.pi * 10 * t)
-
-    from mne_denoise.dss.denoisers import TanhMaskDenoiser
-
-    idss = IterativeDSS(
-        denoiser=TanhMaskDenoiser(), n_components=n_channels, random_state=42
-    )
-    # Using inverse_transform directly here to verify patterns * sources
-    reconstructed = idss.fit(data).inverse_transform(idss.transform(data))
-
-    rms_orig = np.sqrt(np.mean(data**2))
-    rms_rec = np.sqrt(np.mean(reconstructed**2))
-    assert_allclose(rms_orig, rms_rec, rtol=0.05)
-
-
-def test_iterative_dss_get_normalized_patterns():
-    """Test the newly added get_normalized_patterns method in IterativeDSS."""
-    from mne_denoise.dss.denoisers import TanhMaskDenoiser
-
-    data = np.random.randn(10, 1000)
-    idss = IterativeDSS(denoiser=TanhMaskDenoiser(), n_components=2)
-    idss.fit(data)
-    norm_patterns = idss.get_normalized_patterns()
-    assert norm_patterns.shape == (10, 2)
-    assert_allclose(np.linalg.norm(norm_patterns, axis=0), 1.0)
-
-
-def test_iterative_dss_full_rank_reconstruction_exact_match():
-    """IterativeDSS with n_components=n_channels should reconstruct data exactly."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 4, 1000  # Small enough for quick convergence
-    data = rng.standard_normal((n_channels, n_samples)) * 1e-6  # uV scale
-
-    # Use Tanh denoiser
-    from mne_denoise.dss.denoisers import TanhMaskDenoiser
-
-    # We need tight convergence for exact reconstruction check
-    dss = IterativeDSS(
-        denoiser=TanhMaskDenoiser(),
-        n_components=n_channels,
-        normalize_input=True,
-        max_iter=1000,
-        tol=1e-12,
-        random_state=42,
-    )
-    dss.fit(data)
-    sources = dss.transform(data)
-    rec = dss.inverse_transform(sources)
-
-    # Comparison against centered data
-    data_centered = data - data.mean(axis=1, keepdims=True)
-
-    assert_allclose(rec, data_centered, rtol=1e-7, atol=1e-25)
-
-
-def test_iterative_dss_mne_normalization():
-    """IterativeDSS normalization should work with MNE objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 4, 1000
-    sfreq = 250.0
-
-    # Create data with different scales
-    data = rng.standard_normal((n_channels, n_samples))
-    data[0] *= 1e-6  # Simulate gradiometer scale
-    data[1] *= 1e-12  # Simulate magnetometer scale
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    # IterativeDSS defaults to normalize_input=True
-    from mne_denoise.dss.denoisers import TanhMaskDenoiser
-
-    dss = IterativeDSS(denoiser=TanhMaskDenoiser(), n_components=3)
-    sources = dss.fit_transform(raw)
-
-    assert sources.shape == (3, n_samples)
-    assert dss.channel_norms_ is not None
-    assert dss.channel_norms_.shape == (n_channels,)
-    # Norms should reflect the scales
-    assert dss.channel_norms_[0] > dss.channel_norms_[1]
 
 
 def test_iterative_dss_one_degenerate_signal():

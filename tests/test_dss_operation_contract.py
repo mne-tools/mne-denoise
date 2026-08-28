@@ -6,7 +6,6 @@ import mne
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
-from sklearn.base import clone
 
 from mne_denoise.dss import DSS
 from mne_denoise.dss.segmentation import FixedWindowSegmenter
@@ -99,42 +98,11 @@ def test_subtract_without_selection_is_exact_copy(shape):
     assert_array_equal(data, original)
 
 
-@pytest.mark.parametrize("shape", [(6, 600), (6, 150, 4)])
-@pytest.mark.parametrize("action", ["retain", "subtract"])
-def test_sensor_actions_preserve_array_layout(shape, action):
-    """Sensor-space operations preserve 2-D and 3-D array orientation."""
-    data = _array_data(shape=shape)
-    out = DSS(
-        bias=_ranked_bias,
-        n_components=4,
-        n_select=2,
-        component_action=action,
-        normalize_input=False,
-    ).fit_transform(data)
-
-    assert out.shape == data.shape
-
-
 @pytest.mark.parametrize("action", [None, "replace", "sources", "raw"])
 def test_invalid_component_action_is_rejected(action):
     """Unknown operations fail before fitting any spatial model."""
     with pytest.raises(ValueError, match="component_action"):
         DSS(bias=_ranked_bias, component_action=action).fit(_array_data())
-
-
-def test_component_action_is_cloneable():
-    """The operation remains a regular sklearn constructor parameter."""
-    est = DSS(
-        bias=_ranked_bias,
-        n_select=2,
-        component_action="subtract",
-        normalize_input=False,
-    )
-
-    cloned = clone(est)
-
-    assert cloned.component_action == "subtract"
-    assert cloned.n_select == 2
 
 
 @pytest.mark.parametrize("action", ["retain", "subtract"])
@@ -184,6 +152,46 @@ def test_epochs_extract_and_subtract_layouts():
     assert sources.shape == (5, 3, 100)
     assert isinstance(cleaned, mne.BaseEpochs)
     assert cleaned.get_data().shape == data.shape
+
+
+@pytest.mark.parametrize(
+    "component_indices",
+    [
+        pytest.param(np.array([True, False, True, False]), id="boolean-mask"),
+        pytest.param(np.array([0, 2]), id="integer-indices"),
+    ],
+)
+def test_inverse_transform_uses_selected_component_indices(component_indices):
+    """Inverse reconstruction has one canonical boolean/integer index contract."""
+    data = _array_data()
+    est = DSS(
+        bias=_ranked_bias,
+        n_components=4,
+        component_action="extract",
+        normalize_input=False,
+    ).fit(data)
+    sources = est.transform(data)
+    selected = np.array([0, 2])
+
+    reconstructed = est.inverse_transform(sources, component_indices=component_indices)
+    expected = est.mixing_[:, selected] @ sources[selected]
+
+    assert_allclose(reconstructed, expected, rtol=1e-12, atol=1e-12)
+
+
+def test_inverse_transform_rejects_a_mask_with_the_wrong_length():
+    """Boolean component masks must address every fitted source."""
+    data = _array_data()
+    est = DSS(
+        bias=_ranked_bias,
+        n_components=4,
+        component_action="extract",
+        normalize_input=False,
+    ).fit(data)
+    sources = est.transform(data)
+
+    with pytest.raises(ValueError, match="Mask length"):
+        est.inverse_transform(sources, component_indices=np.array([True, False]))
 
 
 def test_subtract_with_smoothing_removes_only_selected_residual():

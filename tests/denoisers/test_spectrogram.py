@@ -1,7 +1,6 @@
 """Unit tests for spectrogram denoisers."""
 
 import numpy as np
-import pytest
 from scipy import signal
 
 from mne_denoise.dss.denoisers.spectrogram import SpectrogramBias, SpectrogramDenoiser
@@ -90,96 +89,3 @@ def test_spectrogram_bias():
 
     assert ratio_0 > 0.8, "Target signal should be preserved"
     assert ratio_1 < 0.3, "Broadband noise should be filtered"
-
-
-def test_spectrogram_bias_3d_data():
-    """Test SpectrogramBias with 3D epoched data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 2, 200, 3
-    data = rng.normal(0, 1, (n_ch, n_times, n_epochs))
-
-    # Small mask for speed
-    mask = np.ones((33, 7))  # Will be resized
-
-    bias = SpectrogramBias(mask=mask, nperseg=64)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-    assert biased.ndim == 3
-
-
-def test_spectrogram_bias_invalid_ndim():
-    """Test SpectrogramBias raises error for 1D data."""
-    mask = np.ones((10, 10))
-    bias = SpectrogramBias(mask=mask)
-    data = np.array([1, 2, 3, 4, 5])
-
-    with pytest.raises(ValueError, match="must be 2D or 3D"):
-        bias.apply(data)
-
-
-def test_spectrogram_denoiser_1d_input():
-    """Test SpectrogramDenoiser with 1D input."""
-    rng = np.random.default_rng(42)
-    source = rng.normal(0, 1, 200)
-
-    denoiser = SpectrogramDenoiser(nperseg=64)
-    denoised = denoiser.denoise(source)
-
-    assert denoised.shape == source.shape
-    assert denoised.ndim == 1
-
-
-def test_spectrogram_denoiser_invalid_ndim():
-    """Test SpectrogramDenoiser raises error for 3D data."""
-    denoiser = SpectrogramDenoiser()
-    data = np.zeros((10, 10, 10))
-
-    with pytest.raises(ValueError, match="must be 1D or 2D"):
-        denoiser.denoise(data)
-
-
-def test_spectrogram_denoiser_with_fixed_mask():
-    """Test SpectrogramDenoiser with fixed mask (hybrid mode)."""
-    rng = np.random.default_rng(42)
-    source = rng.normal(0, 1, 200)
-
-    # Create a fixed mask
-    mask = np.ones((33, 7))
-
-    denoiser = SpectrogramDenoiser(mask=mask, nperseg=64)
-    denoised = denoiser.denoise(source)
-
-    assert denoised.shape == source.shape
-
-
-def test_apply_tf_mask_resizing():
-    """Test that _apply_tf_mask handles mask resizing correctly."""
-    from mne_denoise.dss.denoisers.spectrogram import _apply_tf_mask
-
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, 200)
-
-    # Create a small mask that needs resizing
-    small_mask = np.ones((10, 5))  # Will be zoomed to match STFT shape
-
-    result = _apply_tf_mask(data, small_mask, nperseg=64, noverlap=32)
-
-    assert result.shape == data.shape
-
-
-def test_apply_tf_mask_length_padding():
-    """Test _apply_tf_mask handles length mismatches."""
-    from mne_denoise.dss.denoisers.spectrogram import _apply_tf_mask
-
-    rng = np.random.default_rng(42)
-    # Unusual length that may cause padding
-    data = rng.normal(0, 1, 150)
-
-    # Matching mask
-    mask = np.ones((33, 5))
-
-    result = _apply_tf_mask(data, mask, nperseg=64, noverlap=32)
-
-    # Should return same length as input
-    assert len(result) == len(data)

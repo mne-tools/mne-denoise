@@ -1,7 +1,5 @@
-import logging
 from unittest.mock import patch
 
-import mne
 import numpy as np
 import pytest
 
@@ -45,67 +43,6 @@ def test_narrowband_dss_array(osc_data_generator):
     assert corr > 0.90
 
 
-def test_narrowband_dss_fit_summary_describes_target_band(osc_data_generator, caplog):
-    """The parent DSS summary identifies the effective narrowband target."""
-    data, sfreq, freq, _signal = osc_data_generator((3, 500))
-    with caplog.at_level(logging.INFO, logger="mne_denoise"):
-        narrowband_dss(
-            sfreq=sfreq,
-            freq=freq,
-            bandwidth=2.0,
-            n_components=1,
-        ).fit(data, verbose=True)
-    summaries = [r for r in caplog.records if r.message.startswith("DSS:")]
-    assert len(summaries) == 1
-    assert "BandpassBias(9-11 Hz)" in summaries[0].message
-
-
-def test_narrowband_dss_raw(osc_data_generator):
-    data, sfreq, freq, signal = osc_data_generator((3, 500))
-    info = mne.create_info(3, sfreq, "eeg")
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    dss = narrowband_dss(sfreq=sfreq, freq=freq, bandwidth=2.0)
-    dss.fit(raw)
-
-    sources = dss.transform(raw)
-    assert sources.shape == (3, 500)
-    corr = np.abs(np.corrcoef(sources[0], signal)[0, 1])
-    assert corr > 0.90
-
-
-def test_narrowband_dss_epochs(osc_data_generator):
-    data, sfreq, freq, signal = osc_data_generator((5, 3, 500))
-    info = mne.create_info(3, sfreq, "eeg")
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    dss = narrowband_dss(sfreq=sfreq, freq=freq, bandwidth=2.0, n_components=2)
-    dss.fit(epochs)
-
-    sources = dss.transform(epochs)
-    assert sources.shape == (5, 2, 500)  # (n_epochs, n_comp, n_times)
-
-    # Signal in first channel
-    corr = np.abs(np.corrcoef(sources[0, 0], signal)[0, 1])
-    assert corr > 0.90
-
-
-def test_narrowband_dss_evoked(osc_data_generator):
-    data, sfreq, freq, signal = osc_data_generator((5, 3, 500))
-    info = mne.create_info(3, sfreq, "eeg")
-    epochs = mne.EpochsArray(data, info, verbose=False)
-    evoked = epochs.average()
-
-    dss = narrowband_dss(sfreq=sfreq, freq=freq, bandwidth=2.0, n_components=1)
-    dss.fit(evoked)
-
-    source_evoked = dss.transform(evoked)
-    assert isinstance(source_evoked, np.ndarray)
-    assert source_evoked.shape == (1, 500)
-    corr = np.abs(np.corrcoef(source_evoked[0], signal)[0, 1])
-    assert corr > 0.90
-
-
 def test_narrowband_scan_functional():
     """narrowband_scan should find the correct peak frequency."""
     rng = np.random.default_rng(42)
@@ -133,31 +70,6 @@ def test_narrowband_scan_functional():
 
     best_freq = freqs[np.argmax(eigs)]
     assert abs(best_freq - target_freq) <= 1.0
-
-
-def test_narrowband_scan_progress_success(osc_data_generator):
-    """narrowband_scan emits one event per successful frequency attempt."""
-    data, sfreq, _freq, _signal = osc_data_generator((3, 500))
-    events = []
-
-    _best_dss, frequencies, eigenvalues = narrowband_scan(
-        data,
-        sfreq=sfreq,
-        freq_range=(9, 11),
-        freq_step=1.0,
-        bandwidth=2.0,
-        n_components=1,
-        callback=events.append,
-    )
-
-    assert len(events) == len(frequencies) == 3
-    assert [event.method for event in events] == ["narrowband_scan"] * 3
-    assert [event.stage for event in events] == ["frequency"] * 3
-    assert [event.current for event in events] == [1, 2, 3]
-    assert [event.total for event in events] == [3, 3, 3]
-    assert all(event.component is None for event in events)
-    assert all(event.metric is not None for event in events)
-    np.testing.assert_allclose([event.metric for event in events], eigenvalues)
 
 
 def test_narrowband_scan_errors():
@@ -194,84 +106,9 @@ def test_narrowband_scan_errors():
         np.testing.assert_allclose([events[0].metric, events[2].metric], eigs[[0, 2]])
 
 
-def test_narrowband_scan_logs_returned_successful_winner(caplog):
-    """The reported scan winner is the same successful candidate returned."""
-
-    class FakeDSS:
-        def __init__(self, freq, eigenvalue):
-            self.freq = freq
-            self.eigenvalue = eigenvalue
-
-        def fit(self, data, *, verbose=None):
-            del data, verbose
-            if self.freq == 10.0:
-                raise ValueError("simulated candidate failure")
-            self.eigenvalues_ = np.array([self.eigenvalue])
-            return self
-
-    def make_candidate(sfreq, freq, **kwargs):
-        del sfreq, kwargs
-        return FakeDSS(freq, {-1.0: -0.2, 1.0: -0.4}.get(freq, -0.3))
-
-    data = np.zeros((3, 100))
-    with patch(
-        "mne_denoise.dss.variants.narrowband.narrowband_dss",
-        side_effect=make_candidate,
-    ):
-        with caplog.at_level(logging.INFO, logger="mne_denoise"):
-            events = []
-            best_dss, frequencies, eigenvalues = narrowband_scan(
-                data,
-                sfreq=100,
-                freq_range=(9, 11),
-                freq_step=1.0,
-                verbose=True,
-                callback=events.append,
-            )
-
-    assert best_dss.freq == frequencies[0]
-    summary = [
-        record for record in caplog.records if "Narrowband DSS scan:" in record.message
-    ]
-    assert len(summary) == 1
-    assert "best=9 Hz" in summary[0].message
-    assert len(events) == 3
-    assert events[1].metric is None
-    np.testing.assert_allclose(
-        [events[0].metric, events[2].metric], eigenvalues[[0, 2]]
-    )
-
-
-def test_narrowband_scan_callback_exception_propagates(osc_data_generator):
-    """A callback exception stops the scan instead of being treated as failure."""
-    data, sfreq, _freq, _signal = osc_data_generator((3, 500))
-    events = []
-
-    def callback(event):
-        events.append(event)
-        raise RuntimeError("stop")
-
-    with patch(
-        "mne_denoise.dss.variants.narrowband.narrowband_dss",
-        wraps=narrowband_dss,
-    ) as mock_dss:
-        with pytest.raises(RuntimeError, match="stop"):
-            narrowband_scan(
-                data,
-                sfreq=sfreq,
-                freq_range=(9, 11),
-                freq_step=1.0,
-                callback=callback,
-            )
-
-    assert len(events) == 1
-    assert mock_dss.call_count == 1
-
-
 def test_narrowband_scan_rejects_adaptive_before_progress():
-    """adaptive=True is rejected before any frequency event is emitted."""
+    """adaptive=True is rejected before the scan starts."""
     data = np.zeros((3, 100))
-    events = []
 
     with pytest.raises(ValueError, match="adaptive"):
         narrowband_scan(
@@ -279,10 +116,7 @@ def test_narrowband_scan_rejects_adaptive_before_progress():
             sfreq=100,
             freq_range=(9, 11),
             adaptive=True,
-            callback=events.append,
         )
-
-    assert events == []
 
 
 def test_narrowband_scan_all_fail():

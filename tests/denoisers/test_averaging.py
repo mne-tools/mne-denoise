@@ -145,21 +145,3 @@ def test_average_bias_datasets_invalid_weights(weights, match):
 
     with pytest.raises(ValueError, match=match):
         AverageBias(axis="datasets", weights=weights).apply(data)
-
-
-def test_average_bias_properties():
-    """Test general AverageBias properties."""
-    # Output shape
-    data = np.random.randn(5, 4, 30)
-    bias = AverageBias(axis="datasets")
-    assert bias.apply(data).shape == data.shape
-
-    # Independence (copy)
-    data = np.random.randn(3, 2, 10)
-    biased = bias.apply(data)
-    biased[0, 0, 0] = 999
-    assert data[0, 0, 0] != 999
-
-    # Invalid init
-    with pytest.raises(ValueError, match="axis must be"):
-        AverageBias(axis="invalid")

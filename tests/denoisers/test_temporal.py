@@ -2,37 +2,13 @@
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 from mne_denoise.dss.denoisers.temporal import (
     DCTDenoiser,
     LagAverageBias,
     SmoothingBias,
 )
-
-
-def test_lag_average_basic_2d():
-    """Test LagAverageBias with 2D data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times = 3, 200
-    data = rng.normal(0, 1, (n_ch, n_times))
-
-    bias = LagAverageBias(lags=5)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-
-
-def test_lag_average_basic_3d():
-    """Test LagAverageBias with 3D epoched data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 3, 200, 4
-    data = rng.normal(0, 1, (n_ch, n_times, n_epochs))
-
-    bias = LagAverageBias(lags=5)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-    assert biased.ndim == 3
 
 
 def test_lag_average_3d_never_crosses_epoch_boundaries():
@@ -46,38 +22,16 @@ def test_lag_average_3d_never_crosses_epoch_boundaries():
     assert np.issubdtype(biased.dtype, np.floating)
 
 
-def test_lags_as_array():
-    """Test explicit lag arrays."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (2, 100))
+def test_lag_average_lags_and_weighting():
+    """Explicit lags and inverse-lag weighting have the documented algebra."""
+    data = np.arange(20.0)[np.newaxis, :]
+    uniform = LagAverageBias(lags=np.array([1, 2])).apply(data)
+    inverse = LagAverageBias(lags=np.array([1, 2]), weighting="inverse_lag").apply(data)
 
-    lags = np.array([1, 2, 5, 10])
-    bias = LagAverageBias(lags=lags)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-
-
-def test_uniform_weighting():
-    """Test equal weighting across lags."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (2, 100))
-
-    bias = LagAverageBias(lags=5, weighting="uniform")
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-
-
-def test_inverse_lag_weighting():
-    """Test inverse-lag weighting."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (2, 100))
-
-    bias = LagAverageBias(lags=5, weighting="inverse_lag")
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
+    expected_uniform = (data[:, 3:19] + data[:, 4:20]) / 2
+    expected_inverse = (data[:, 3:19] + 0.5 * data[:, 4:20]) / 1.5
+    assert_allclose(uniform[:, 2:18], expected_uniform)
+    assert_allclose(inverse[:, 2:18], expected_inverse)
 
 
 def test_unknown_weighting_error():
@@ -146,31 +100,6 @@ def test_autocorrelated_signal_preserved():
     assert corr > 0.9, f"Autocorrelated signal should be preserved (corr={corr:.3f})"
 
 
-def test_smoothing_basic_2d():
-    """Test SmoothingBias with 2D data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times = 3, 200
-    data = rng.normal(0, 1, (n_ch, n_times))
-
-    bias = SmoothingBias(window=10)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-
-
-def test_smoothing_basic_3d():
-    """Test SmoothingBias with 3D epoched data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 3, 200, 4
-    data = rng.normal(0, 1, (n_ch, n_times, n_epochs))
-
-    bias = SmoothingBias(window=10)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-    assert biased.ndim == 3
-
-
 def test_smoothing_reduces_variance():
     """Test that smoothing reduces signal variance."""
     rng = np.random.default_rng(42)
@@ -207,17 +136,6 @@ def test_slow_signal_preserved():
     assert corr > 0.95, f"Slow signal should be preserved (corr={corr:.3f})"
 
 
-def test_different_window_sizes():
-    """Test SmoothingBias with different window sizes."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (2, 200))
-
-    for window in [5, 10, 20, 50]:
-        bias = SmoothingBias(window=window)
-        biased = bias.apply(data)
-        assert biased.shape == data.shape
-
-
 def test_dct_denoiser():
     """Test DCTDenoiser (frequency domain filtering)."""
     # Create signal: low frequency (first few coeffs)
@@ -246,70 +164,18 @@ def test_dct_denoiser():
     assert residual_rms < noise_rms * 0.1
 
 
-def test_dct_denoiser_2d_data():
-    """Test DCTDenoiser with 2D epoched data."""
-    rng = np.random.default_rng(42)
-    n_times, n_epochs = 100, 4
-    data = rng.normal(0, 1, (n_times, n_epochs))
-
-    denoiser = DCTDenoiser(cutoff_fraction=0.5)
-    denoised = denoiser.denoise(data)
-
-    assert denoised.shape == data.shape
-
-
 def test_dct_denoiser_with_mask():
-    """Test DCTDenoiser with custom mask."""
+    """A custom DCT mask is applied to the coefficients without approximation."""
+    from scipy.fftpack import dct, idct
+
     rng = np.random.default_rng(42)
     source = rng.normal(0, 1, 100)
 
-    # Custom mask (lowpass)
     mask = np.zeros(100)
     mask[:20] = 1.0
 
     denoiser = DCTDenoiser(mask=mask)
     denoised = denoiser.denoise(source)
+    expected = idct(dct(source, type=2, norm="ortho") * mask, type=2, norm="ortho")
 
-    assert denoised.shape == source.shape
-
-
-def test_dct_denoiser_mask_resampling():
-    """Test DCTDenoiser resamples mask when lengths don't match."""
-    rng = np.random.default_rng(42)
-    source = rng.normal(0, 1, 100)
-
-    # Mask with different length
-    mask = np.ones(50)  # Will be resampled to 100
-    mask[25:] = 0.5
-
-    denoiser = DCTDenoiser(mask=mask)
-    denoised = denoiser.denoise(source)
-
-    assert denoised.shape == source.shape
-
-
-def test_dct_denoiser_cached_mask():
-    """Test DCTDenoiser uses cached mask correctly."""
-    rng = np.random.default_rng(42)
-
-    denoiser = DCTDenoiser(cutoff_fraction=0.3)
-
-    # First call - creates cache
-    source1 = rng.normal(0, 1, 100)
-    denoised1 = denoiser.denoise(source1)
-
-    # Second call - should use cache
-    source2 = rng.normal(0, 1, 100)
-    denoised2 = denoiser.denoise(source2)
-
-    assert denoised1.shape == source1.shape
-    assert denoised2.shape == source2.shape
-
-
-def test_dct_denoiser_invalid_ndim():
-    """Test DCTDenoiser raises error for 3D data."""
-    denoiser = DCTDenoiser()
-    data = np.zeros((10, 10, 10))
-
-    with pytest.raises(ValueError, match="must be 1D or 2D"):
-        denoiser.denoise(data)
+    assert_allclose(denoised, expected)

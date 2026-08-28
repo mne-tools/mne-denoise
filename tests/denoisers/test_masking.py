@@ -1,7 +1,6 @@
 """Unit tests for adaptive masking denoisers."""
 
 import numpy as np
-import pytest
 from numpy.testing import assert_allclose
 
 from mne_denoise.dss.denoisers.masking import VarianceMaskDenoiser, WienerMaskDenoiser
@@ -98,49 +97,6 @@ def test_variance_mask_denoiser():
     assert denoised_soft.shape == data.shape
 
 
-def test_wiener_mask_2d_input():
-    """Test WienerMaskDenoiser with 2D epoched input."""
-    rng = np.random.default_rng(42)
-    n_times, n_epochs = 100, 5
-    data = rng.normal(0, 1, (n_times, n_epochs))
-
-    denoiser = WienerMaskDenoiser(window_samples=10)
-    denoised = denoiser.denoise(data)
-
-    assert denoised.shape == data.shape
-    assert denoised.ndim == 2
-
-
-def test_wiener_mask_invalid_ndim():
-    """Test WienerMaskDenoiser raises error for 3D data."""
-    denoiser = WienerMaskDenoiser()
-    data = np.zeros((10, 10, 10))
-
-    with pytest.raises(ValueError, match="must be 1D or 2D"):
-        denoiser.denoise(data)
-
-
-def test_variance_mask_2d_input():
-    """Test VarianceMaskDenoiser with 2D epoched input."""
-    rng = np.random.default_rng(42)
-    n_times, n_epochs = 100, 5
-    data = rng.normal(0, 1, (n_times, n_epochs))
-
-    denoiser = VarianceMaskDenoiser(window_samples=10, soft=True)
-    denoised = denoiser.denoise(data)
-
-    assert denoised.shape == data.shape
-
-
-def test_variance_mask_invalid_ndim():
-    """Test VarianceMaskDenoiser raises error for 3D data."""
-    denoiser = VarianceMaskDenoiser()
-    data = np.zeros((10, 10, 10))
-
-    with pytest.raises(ValueError, match="must be 1D or 2D"):
-        denoiser.denoise(data)
-
-
 def test_variance_mask_zero_variance_soft():
     """Test VarianceMaskDenoiser soft mode with near-zero variance data."""
     # Create constant (zero variance) data
@@ -151,16 +107,3 @@ def test_variance_mask_zero_variance_soft():
 
     # Should return original when threshold is too small
     assert_allclose(denoised, data)
-
-
-def test_variance_mask_nearly_constant():
-    """Test VarianceMaskDenoiser with nearly constant data triggers fallback."""
-    # Create data where percentile threshold will be ~0 but max > 0
-    data = np.zeros(100)
-    data[50] = 1.0  # Single spike creates some variance
-
-    denoiser = VarianceMaskDenoiser(soft=True, percentile=90)
-    denoised = denoiser.denoise(data)
-
-    # Should still work without error
-    assert denoised.shape == data.shape

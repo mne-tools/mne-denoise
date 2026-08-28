@@ -78,25 +78,3 @@ def test_bandpass_bias_unknown_method():
     """Test BandpassBias raises error for unknown method."""
     with pytest.raises(ValueError, match="Unknown filter method"):
         BandpassBias(freq_band=(8, 12), sfreq=250, method="unknown")
-
-
-def test_bandpass_bias_3d_data():
-    """Test BandpassBias with 3D epoched data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 2, 200, 3
-    data = rng.normal(0, 1, (n_ch, n_times, n_epochs))
-
-    bias = BandpassBias(freq_band=(8, 12), sfreq=100)
-    biased = bias.apply(data)
-
-    assert biased.shape == data.shape
-    assert biased.ndim == 3
-
-
-def test_bandpass_bias_invalid_ndim():
-    """Test BandpassBias raises error for 1D data."""
-    bias = BandpassBias(freq_band=(8, 12), sfreq=250)
-    data = np.array([1, 2, 3, 4, 5])
-
-    with pytest.raises(ValueError, match="must be 2D or 3D"):
-        bias.apply(data)

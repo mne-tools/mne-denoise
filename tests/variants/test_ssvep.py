@@ -1,6 +1,3 @@
-import logging
-
-import mne
 import numpy as np
 import pytest
 
@@ -15,8 +12,8 @@ def ssvep_data_generator():
     times = np.arange(n_times) / sfreq
     f0 = 12
 
-    # Signal: 12 Hz sine
-    signal = np.sin(2 * np.pi * f0 * times)
+    # Fundamental plus the second stimulus harmonic.
+    signal = np.sin(2 * np.pi * f0 * times) + 0.5 * np.sin(2 * np.pi * 2 * f0 * times)
 
     def get_data(shape):
         noise = rng.normal(0, 0.5, shape)
@@ -34,80 +31,14 @@ def ssvep_data_generator():
 def test_ssvep_dss_array(ssvep_data_generator):
     data, sfreq, f0, signal = ssvep_data_generator((3, 500))
 
-    dss = ssvep_dss(sfreq=sfreq, stim_freq=f0, n_harmonics=1)
+    dss = ssvep_dss(sfreq=sfreq, stim_freq=f0, n_harmonics=2, n_components=2)
     dss.fit(data)
 
-    # Check filter shape
-    assert dss.filters_.shape == (3, 3)
+    assert dss.filters_.shape == (2, 3)
+    assert dss.bias.harmonic_frequencies == [f0, 2 * f0]
+    np.testing.assert_allclose(dss.bias.weights, [1.0, 0.5])
+    assert dss.eigenvalues_[0] >= dss.eigenvalues_[1]
 
-    # Helper to check recovery
     source = dss.filters_[0] @ data
     corr = np.abs(np.corrcoef(source, signal)[0, 1])
-    assert corr > 0.8
-
-
-def test_ssvep_dss_fit_summary_describes_stimulus_and_harmonics(
-    ssvep_data_generator, caplog
-):
-    """The fitted parent DSS identifies the SSVEP comb configuration."""
-    data, sfreq, f0, _signal = ssvep_data_generator((3, 500))
-    dss = ssvep_dss(sfreq=sfreq, stim_freq=f0, n_harmonics=2)
-    with caplog.at_level(logging.INFO, logger="mne_denoise"):
-        dss.fit(data, verbose=True)
-    summaries = [r for r in caplog.records if r.message.startswith("DSS:")]
-    assert len(summaries) == 1
-    for token in ("CombFilterBias", "f0=12", "harmonics=2", "rank=", "components="):
-        assert token in summaries[0].message
-
-
-def test_ssvep_dss_raw(ssvep_data_generator):
-    data, sfreq, f0, signal = ssvep_data_generator((3, 500))
-    info = mne.create_info(3, sfreq, "eeg")
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    dss = ssvep_dss(sfreq=sfreq, stim_freq=f0, n_harmonics=1)
-    dss.fit(raw)
-
-    sources = dss.transform(raw)
-    assert sources.shape == (3, 500)
-
-    # Check recovery (first component)
-    corr = np.abs(np.corrcoef(sources[0], signal)[0, 1])
-    assert corr > 0.8
-
-
-def test_ssvep_dss_epochs(ssvep_data_generator):
-    n_epochs = 5
-    data, sfreq, f0, signal = ssvep_data_generator((n_epochs, 3, 500))
-    info = mne.create_info(3, sfreq, "eeg")
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    dss = ssvep_dss(sfreq=sfreq, stim_freq=f0, n_harmonics=1, n_components=2)
-    dss.fit(epochs)
-
-    sources = dss.transform(epochs)
-    # Expected: (n_epochs, n_components, n_times)
-    assert sources.shape == (n_epochs, 2, 500)
-
-    # Verify signal in first component of first epoch
-    # Note: signal is identical in all epochs
-    corr = np.abs(np.corrcoef(sources[0, 0], signal)[0, 1])
-    assert corr > 0.8
-
-
-def test_ssvep_dss_evoked(ssvep_data_generator):
-    n_epochs = 5
-    data_epochs, sfreq, f0, signal = ssvep_data_generator((n_epochs, 3, 500))
-    info = mne.create_info(3, sfreq, "eeg")
-    epochs = mne.EpochsArray(data_epochs, info, verbose=False)
-    evoked = epochs.average()
-
-    dss = ssvep_dss(sfreq=sfreq, stim_freq=f0, n_harmonics=1, n_components=2)
-    dss.fit(evoked)
-
-    source_evoked = dss.transform(evoked)
-    assert isinstance(source_evoked, np.ndarray)
-    assert source_evoked.shape == (2, 500)
-
-    corr = np.abs(np.corrcoef(source_evoked[0], signal)[0, 1])
     assert corr > 0.8

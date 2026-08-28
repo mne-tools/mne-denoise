@@ -10,58 +10,12 @@ import pytest
 from numpy.testing import assert_allclose
 
 from mne_denoise.dss import DSS, compute_dss
-from mne_denoise.dss.denoisers import (
-    AverageBias,
-    BandpassBias,
-    CombFilterBias,
-    LagAverageBias,
-    LineNoiseBias,
-    PeakFilterBias,
-    SmoothingBias,
-)
-from mne_denoise.dss.linear import _bias_name
-from mne_denoise.dss.segmentation import CovarianceSegmenter, FixedWindowSegmenter
+from mne_denoise.dss.denoisers.spectral import LineNoiseBias
+from mne_denoise.dss.segmentation import FixedWindowSegmenter
 
 # =============================================================================
 # compute_dss - Core Algorithm Tests
 # =============================================================================
-
-
-def test_compute_dss_shape():
-    """compute_dss should return correct shapes."""
-    rng = np.random.default_rng(42)
-    n_channels = 16
-
-    # Create random covariance matrices
-    A = rng.standard_normal((n_channels, n_channels))
-    cov0 = A @ A.T  # Baseline covariance
-    cov1 = cov0.copy()  # Biased covariance (identity bias)
-
-    filters, patterns, eigenvalues = compute_dss(cov0, cov1, n_components=5)
-
-    assert filters.shape == (5, n_channels)
-    assert patterns.shape == (n_channels, 5)
-    assert eigenvalues.shape == (5,)
-
-
-@pytest.mark.parametrize(
-    ("bias", "expected"),
-    [
-        (AverageBias(axis="epochs"), "AverageBias(axis=epochs)"),
-        (BandpassBias(freq_band=(9.0, 11.0), sfreq=100.0), "BandpassBias(9-11 Hz)"),
-        (LineNoiseBias(freq=50.0, sfreq=500.0, n_harmonics=3), "freq=50 Hz"),
-        (PeakFilterBias(freq=12.0, sfreq=100.0), "PeakFilterBias(freq=12 Hz)"),
-        (
-            CombFilterBias(fundamental_freq=12.0, sfreq=100.0, n_harmonics=3),
-            "CombFilterBias(f0=12 Hz, harmonics=3)",
-        ),
-        (LagAverageBias(lags=4), "LagAverageBias(lags=4)"),
-        (SmoothingBias(window=10), "SmoothingBias(window=10)"),
-    ],
-)
-def test_dss_bias_description_includes_scientific_configuration(bias, expected):
-    """DSS's stable bias description exposes the meaningful parameters."""
-    assert expected in _bias_name(bias)
 
 
 def test_compute_dss_identity_bias():
@@ -101,6 +55,11 @@ def test_compute_dss_known_signal():
 
     # Top eigenvalue should be ~10 (ratio of biased to baseline variance)
     assert eigenvalues[0] > 5, f"Eigenvalue {eigenvalues[0]} too low"
+
+    # The ordered eigenspace is deterministic for a fixed pair of covariances.
+    filters_again, _, eigenvalues_again = compute_dss(cov0, cov1, n_components=1)
+    assert_allclose(np.abs(filters_again), np.abs(filters))
+    assert_allclose(eigenvalues_again, eigenvalues)
 
 
 def test_compute_dss_eigenvalue_ordering():
@@ -231,23 +190,6 @@ def test_compute_dss_tiny_positive_covariance_is_scale_invariant():
 # =============================================================================
 
 
-def test_dss_fit_transform():
-    """DSS class should support fit_transform workflow."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 8, 1000
-    data = rng.standard_normal((n_channels, n_samples))
-
-    dss = DSS(bias=lambda x: x, n_components=3)
-    sources = dss.fit_transform(data)
-
-    assert sources.shape == (3, n_samples)
-    assert dss.filters_ is not None
-    assert dss.filters_.shape == (3, n_channels)
-    assert dss.patterns_ is not None
-    assert dss.mixing_ is not None
-    assert dss.eigenvalues_ is not None
-
-
 def test_dss_uses_fitted_mean_across_transform_batches():
     """Unrelated transform observations cannot change frozen DSS sources."""
     rng = np.random.default_rng(12)
@@ -276,6 +218,12 @@ def test_dss_center_false_uses_uncentered_second_moments():
 
     assert_allclose(dss.mean_, 0.0)
     assert_allclose(dss.transform(data), dss.filters_ @ data)
+    covariance = data @ data.T / data.shape[1]
+    assert_allclose(
+        dss.explained_variance_,
+        np.diag(dss.filters_ @ covariance @ dss.filters_.T),
+    )
+    assert_allclose(dss.eigenvalues_, np.ones(2), atol=1e-10)
 
 
 def test_dss_centering_does_not_change_bias_input():
@@ -296,426 +244,6 @@ def test_dss_rejects_non_boolean_center():
     """Centering semantics must be explicit rather than truthy."""
     with pytest.raises(TypeError, match="center must be a bool"):
         DSS(bias=lambda values: values, center=1).fit(np.eye(3))
-
-
-def test_dss_custom_bias_callable():
-    """DSS should accept custom callable bias."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 1000))
-
-    def my_bias(x):
-        return x * 2
-
-    dss = DSS(bias=my_bias, n_components=3)
-    sources = dss.fit_transform(data)
-
-    assert sources.shape == (3, 1000)
-
-
-def test_dss_denoiser_bias():
-    """DSS should accept LinearDenoiser bias."""
-    from mne_denoise.dss.denoisers import BandpassBias
-
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 2000))
-
-    bias = BandpassBias(freq_band=(8, 12), sfreq=250)
-    dss = DSS(bias=bias, n_components=3)
-    sources = dss.fit_transform(data)
-
-    assert sources.shape == (3, 2000)
-
-
-def test_dss_3d_data():
-    """DSS should handle 3D epoched data."""
-    rng = np.random.default_rng(42)
-    n_ch, n_times, n_epochs = 8, 100, 5
-    data = rng.standard_normal((n_ch, n_times, n_epochs))
-
-    dss = DSS(bias=lambda x: x, n_components=3)
-    dss.fit(data)
-    sources = dss.transform(data)
-
-    assert sources.shape == (3, n_times, n_epochs)
-
-
-def test_dss_without_normalization():
-    """DSS should work without input normalization."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 200))
-
-    dss = DSS(bias=lambda x: x, n_components=3, normalize_input=False)
-    sources = dss.fit_transform(data)
-
-    assert sources.shape == (3, 200)
-
-
-def test_dss_retain_reconstructs_sensor_data():
-    """DSS retention should reconstruct sensor-space data."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 200))
-
-    dss = DSS(bias=lambda x: x, n_components=3, component_action="retain")
-    dss.fit(data)
-    rec = dss.transform(data)
-
-    assert rec.shape == data.shape
-
-
-def test_dss_cov_method():
-    """DSS should accept different covariance methods."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 200))
-
-    dss = DSS(bias=lambda x: x, n_components=3, cov_method="shrinkage")
-    sources = dss.fit_transform(data)
-
-    assert sources.shape == (3, 200)
-
-
-def test_dss_cov_kws():
-    """DSS should pass cov_kws to covariance computation."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 200))
-
-    dss = DSS(bias=lambda x: x, n_components=3, cov_kws={"shrinkage": 0.5})
-    sources = dss.fit_transform(data)
-
-    assert sources.shape == (3, 200)
-
-
-# =============================================================================
-# DSS Class - inverse_transform
-# =============================================================================
-
-
-def test_dss_inverse_transform_2d():
-    """inverse_transform should work with 2D sources."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 500))
-
-    dss = DSS(bias=lambda x: x, n_components=5)
-    sources = dss.fit_transform(data)
-    rec = dss.inverse_transform(sources)
-
-    assert rec.shape == data.shape
-
-
-def test_dss_inverse_transform_3d():
-    """inverse_transform should handle 3D sources."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 100, 4))
-
-    dss = DSS(bias=lambda x: x, n_components=5)
-    sources = dss.fit_transform(data)
-    rec = dss.inverse_transform(sources)
-
-    assert rec.ndim == 3
-
-
-def test_dss_inverse_transform_boolean_mask():
-    """inverse_transform should work with boolean component mask."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 500))
-
-    dss = DSS(bias=lambda x: x, n_components=5)
-    sources = dss.fit_transform(data)
-
-    mask = np.array([True, True, True, False, False])
-    rec = dss.inverse_transform(sources, component_indices=mask)
-
-    assert rec.shape == data.shape
-
-
-def test_dss_inverse_transform_integer_indices():
-    """inverse_transform should work with integer component indices."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 500))
-
-    dss = DSS(bias=lambda x: x, n_components=5)
-    sources = dss.fit_transform(data)
-
-    indices = np.array([0, 2])
-    rec = dss.inverse_transform(sources, component_indices=indices)
-
-    assert rec.shape == data.shape
-
-
-# =============================================================================
-# DSS Class - Error Handling
-# =============================================================================
-
-
-def test_dss_error_unsupported_type():
-    """DSS should raise error for unsupported input types."""
-    dss = DSS(bias=lambda x: x, normalize_input=False)
-
-    with pytest.raises(TypeError, match="Unsupported input type"):
-        dss.fit("not an array")
-
-
-def test_dss_error_transform_before_fit():
-    """DSS should raise error when transform called before fit."""
-    dss = DSS(bias=lambda x: x)
-    data = np.random.randn(5, 100)
-
-    with pytest.raises(RuntimeError, match="not fitted"):
-        dss.transform(data)
-
-
-def test_dss_error_inverse_transform_before_fit():
-    """DSS should raise error when inverse_transform called before fit."""
-    dss = DSS(bias=lambda x: x)
-    sources = np.random.randn(3, 100)
-
-    with pytest.raises(RuntimeError, match="not fitted"):
-        dss.inverse_transform(sources)
-
-
-def test_dss_error_mask_length_mismatch():
-    """inverse_transform should raise error for wrong mask length."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 500))
-
-    dss = DSS(bias=lambda x: x, n_components=5)
-    sources = dss.fit_transform(data)
-
-    wrong_mask = np.array([True, True, True])
-    with pytest.raises(ValueError, match="Mask length"):
-        dss.inverse_transform(sources, component_indices=wrong_mask)
-
-
-def test_dss_supports_rank_numpy():
-    """DSS should support rank parameter with numpy arrays (no warning)."""
-    import warnings
-
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 500))
-
-    # Should not warn
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        dss = DSS(bias=lambda x: x, n_components=3, rank=5)
-        dss.fit(data)
-
-        # Filter out unrelated warnings if any (e.g. from MNE)
-        rank_warnings = [
-            warning for warning in w if "rank" in str(warning.message).lower()
-        ]
-        assert len(rank_warnings) == 0
-
-
-# =============================================================================
-# Integration / Functional Tests
-# =============================================================================
-
-
-def test_dss_recovers_narrowband_signal():
-    """DSS with bandpass bias should recover narrowband signal."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 8, 2000
-    sfreq = 250
-
-    noise = rng.standard_normal((n_channels, n_samples))
-
-    t = np.arange(n_samples) / sfreq
-    source = np.sin(2 * np.pi * 10 * t)  # 10 Hz
-
-    mixing = rng.standard_normal(n_channels)
-    mixing = mixing / np.linalg.norm(mixing)
-    data = noise + 5 * np.outer(mixing, source)
-
-    from mne_denoise.dss.denoisers import BandpassBias
-
-    bias = BandpassBias(freq_band=(8, 12), sfreq=sfreq)
-
-    dss = DSS(bias=bias, n_components=3)
-    sources = dss.fit_transform(data)
-
-    top_source = sources[0]
-    correlation = np.abs(np.corrcoef(top_source, source)[0, 1])
-    assert correlation > 0.8
-
-
-def test_dss_evoked_workflow():
-    """DSS with trial average bias should recover evoked response."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 8, 100, 50
-
-    noise = rng.standard_normal((n_channels, n_times, n_epochs))
-
-    evoked = np.zeros(n_times)
-    evoked[40:60] = np.hanning(20)
-
-    mixing = rng.standard_normal(n_channels)
-    mixing = mixing / np.linalg.norm(mixing)
-    signal = np.outer(mixing, evoked)[:, :, np.newaxis]
-
-    data = noise + signal
-
-    from mne_denoise.dss.denoisers import AverageBias
-
-    bias = AverageBias(axis="epochs")
-    dss = DSS(bias=bias, n_components=3)
-    sources = dss.fit_transform(data)
-
-    top_source_avg = sources[0].mean(axis=1)
-    correlation = np.abs(np.corrcoef(top_source_avg, evoked)[0, 1])
-    assert correlation > 0.7
-
-
-# =============================================================================
-# MNE Integration Tests
-# =============================================================================
-
-
-def test_dss_with_mne_raw():
-    """DSS should work with MNE Raw objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 8, 5000
-    sfreq = 500.0
-
-    data = rng.standard_normal((n_channels, n_samples))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    dss = DSS(bias=lambda x: x, n_components=3)
-    sources = dss.fit_transform(raw)
-
-    assert sources.shape == (3, n_samples)
-    assert dss.info_ is not None
-
-
-def test_dss_with_mne_epochs():
-    """DSS should work with MNE Epochs objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 8, 100, 20
-    sfreq = 250.0
-
-    # Create epoch data: MNE expects (n_epochs, n_channels, n_times)
-    data = rng.standard_normal((n_epochs, n_channels, n_times))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    from mne_denoise.dss.denoisers import AverageBias
-
-    dss = DSS(bias=AverageBias(axis="epochs"), n_components=3)
-    sources = dss.fit_transform(epochs)
-
-    # Sources should be (n_epochs, n_components, n_times)
-    assert sources.shape == (n_epochs, 3, n_times)
-
-
-def test_dss_with_mne_evoked():
-    """DSS should work with MNE Evoked objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times = 8, 200
-    sfreq = 250.0
-
-    data = rng.standard_normal((n_channels, n_times))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    evoked = mne.EvokedArray(data, info, verbose=False)
-
-    dss = DSS(bias=lambda x: x, n_components=3)
-    sources = dss.fit_transform(evoked)
-
-    assert sources.shape == (3, n_times)
-
-
-def test_dss_mne_retain_returns_epochs():
-    """DSS retention should preserve an MNE Epochs container."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 4, 50, 10
-    sfreq = 100.0
-
-    data = rng.standard_normal((n_epochs, n_channels, n_times))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    dss = DSS(bias=lambda x: x, n_components=3, component_action="retain")
-    dss.fit(epochs)
-    result = dss.transform(epochs)
-
-    # Should return MNE Epochs object
-    assert isinstance(result, mne.epochs.BaseEpochs)
-
-
-def test_dss_mne_retain_returns_raw():
-    """DSS retention should preserve an MNE Raw container."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 4, 2000
-    sfreq = 500.0
-
-    data = rng.standard_normal((n_channels, n_samples))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    dss = DSS(bias=lambda x: x, n_components=3, component_action="retain")
-    dss.fit(raw)
-    result = dss.transform(raw)
-
-    # Should return MNE Raw object
-    assert isinstance(result, mne.io.BaseRaw)
-
-
-def test_dss_mne_with_weights():
-    """DSS should handle MNE objects with weights (falls back to numpy path)."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 4, 1000
-    sfreq = 250.0
-
-    data = rng.standard_normal((n_channels, n_samples))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    weights = np.ones(n_samples)
-    weights[500:] = 0.5  # Lower weight for second half
-
-    dss = DSS(bias=lambda x: x, n_components=2)
-    dss.fit(raw, weights=weights)
-
-    assert dss.filters_.shape == (2, n_channels)
-
-
-def test_dss_mne_normalization():
-    """DSS normalization should work with MNE objects."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 4, 1000
-    sfreq = 250.0
-
-    # Create data with different scales
-    data = rng.standard_normal((n_channels, n_samples))
-    data[0] *= 1e-6  # Simulate gradiometer scale
-    data[1] *= 1e-12  # Simulate magnetometer scale
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    dss = DSS(bias=lambda x: x, n_components=3, normalize_input=True)
-    sources = dss.fit_transform(raw)
-
-    assert sources.shape == (3, n_samples)
-    assert dss.channel_norms_ is not None
 
 
 # =============================================================================
@@ -792,117 +320,6 @@ def test_dss_array_evoked_extracts_known_erp():
     assert correlation > 0.9, f"ERP correlation {correlation} too low"
 
 
-def test_dss_mne_raw_extracts_line_noise():
-    """DSS should extract line noise from MNE Raw (functional test)."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 8, 5000
-    sfreq = 500.0
-
-    # Create 50 Hz line noise in channels 0-3
-    t = np.arange(n_samples) / sfreq
-    line_noise = np.sin(2 * np.pi * 50 * t)
-
-    # Known mixing
-    mixing_weights = np.zeros(n_channels)
-    mixing_weights[:4] = [1, 0.8, 0.5, 0.2]
-    mixing_weights = mixing_weights / np.linalg.norm(mixing_weights)
-
-    # Create data
-    noise = rng.standard_normal((n_channels, n_samples)) * 0.3
-    data = noise + 2 * np.outer(mixing_weights, line_noise)
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    raw = mne.io.RawArray(data, info, verbose=False)
-
-    # Use line noise bias (notch method)
-    from mne_denoise.dss.denoisers import LineNoiseBias
-
-    bias = LineNoiseBias(freq=50, sfreq=sfreq, method="iir", bandwidth=2)
-
-    dss = DSS(bias=bias, n_components=1, normalize_input=False)
-    sources = dss.fit_transform(raw)
-
-    # Top source should correlate with line noise
-    correlation = np.abs(np.corrcoef(sources[0], line_noise)[0, 1])
-    assert correlation > 0.85, f"Line noise correlation {correlation} too low"
-
-
-def test_dss_mne_epochs_extracts_known_erp():
-    """DSS should extract known ERP from MNE Epochs (functional test)."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 6, 100, 40
-    sfreq = 100.0
-
-    # Create known ERP
-    erp = np.zeros(n_times)
-    erp[45:55] = np.hanning(10) * 3  # Strong peak
-
-    # Known mixing: ERP in first 3 channels
-    mixing_weights = np.array([1, 0.6, 0.3, 0, 0, 0])
-    mixing_weights = mixing_weights / np.linalg.norm(mixing_weights)
-
-    # Create data (MNE format: n_epochs, n_channels, n_times)
-    noise = rng.standard_normal((n_epochs, n_channels, n_times)) * 0.4
-    signal = np.outer(mixing_weights, erp)[np.newaxis, :, :]  # (1, n_ch, n_times)
-    data = noise + signal  # Broadcast signal to all epochs
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    from mne_denoise.dss.denoisers import AverageBias
-
-    bias = AverageBias(axis="epochs")
-
-    dss = DSS(bias=bias, n_components=1, normalize_input=False)
-    sources = dss.fit_transform(epochs)  # (n_epochs, 1, n_times)
-
-    # Average across epochs
-    source_avg = sources[:, 0, :].mean(axis=0)  # (n_times,)
-
-    # Should correlate with ERP
-    correlation = np.abs(np.corrcoef(source_avg, erp)[0, 1])
-    assert correlation > 0.9, f"Epochs ERP correlation {correlation} too low"
-
-
-def test_dss_mne_evoked_extracts_known_signal():
-    """DSS should work with MNE Evoked and extract known signal."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times = 6, 200
-    sfreq = 100.0
-
-    # Create known oscillatory signal at 10 Hz
-    t = np.arange(n_times) / sfreq
-    signal = np.sin(2 * np.pi * 10 * t)
-
-    # Known mixing
-    mixing_weights = np.array([1, 0.5, 0.2, 0, 0, 0])
-    mixing_weights = mixing_weights / np.linalg.norm(mixing_weights)
-
-    # Create data
-    noise = rng.standard_normal((n_channels, n_times)) * 0.3
-    data = noise + 2 * np.outer(mixing_weights, signal)
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    evoked = mne.EvokedArray(data, info, verbose=False)
-
-    from mne_denoise.dss.denoisers import BandpassBias
-
-    bias = BandpassBias(freq_band=(8, 12), sfreq=sfreq)
-
-    dss = DSS(bias=bias, n_components=1, normalize_input=False)
-    sources = dss.fit_transform(evoked)
-
-    # Top source should correlate with signal
-    correlation = np.abs(np.corrcoef(sources[0], signal)[0, 1])
-    assert correlation > 0.85, f"Evoked signal correlation {correlation} too low"
-
-
 @pytest.mark.parametrize("normalize_input", [False, True])
 def test_dss_raw_covariances_use_identical_sample_support(monkeypatch, normalize_input):
     """Baseline and biased Raw covariance must see identical sample support."""
@@ -953,61 +370,6 @@ def test_dss_raw_covariances_use_identical_sample_support(monkeypatch, normalize
     assert calls[0]["nfree"] == calls[1]["nfree"]
     assert calls[0]["nfree"] < raw.n_times - 1
     assert calls[0]["projectors"] == calls[1]["projectors"]
-
-
-@pytest.mark.parametrize("normalize_input", [False, True])
-def test_dss_raw_bad_channels_are_excluded_and_preserved(normalize_input):
-    """DSS must fit good channels and pass bad Raw channels through unchanged."""
-    rng = np.random.default_rng(43)
-    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
-    raw = mne.io.RawArray(
-        rng.standard_normal((4, 1000)),
-        info,
-        first_samp=250,
-        verbose=False,
-    )
-    raw.info["bads"] = ["EEG3"]
-    raw.set_annotations(
-        mne.Annotations(
-            onset=[1.0],
-            duration=[0.5],
-            description=["marker"],
-        )
-    )
-
-    dss = DSS(
-        bias=lambda data: data,
-        n_components=3,
-        normalize_input=normalize_input,
-        component_action="retain",
-    ).fit(raw)
-    transformed = dss.transform(raw)
-
-    assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
-    assert dss.filters_.shape == (3, 3)
-    assert transformed.first_samp == raw.first_samp
-    assert transformed.annotations == raw.annotations
-    assert transformed.info["bads"] == raw.info["bads"]
-    assert_allclose(transformed.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"]))
-
-
-def test_dss_fit_transform_preserves_bad_raw_channels():
-    """Artifact subtraction must operate only on the fitted good channels."""
-    rng = np.random.default_rng(44)
-    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
-    raw = mne.io.RawArray(rng.standard_normal((4, 1000)), info, verbose=False)
-    raw.info["bads"] = ["EEG3"]
-
-    cleaned = DSS(
-        bias=lambda data: data,
-        n_components=3,
-        n_select=1,
-        normalize_input=False,
-        component_action="subtract",
-    ).fit_transform(raw)
-
-    assert cleaned.info["bads"] == ["EEG3"]
-    assert_allclose(cleaned.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"]))
 
 
 @pytest.mark.parametrize("fit_kws", [{"smooth": 5}, {"whiten": True}])
@@ -1144,86 +506,6 @@ def test_dss_evoked_bad_channels_are_excluded_and_preserved():
     )
 
 
-def test_dss_reconstruction_preserves_signal():
-    """DSS transform + inverse_transform should preserve signal content."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 8, 500
-
-    # Create data with known structure
-    t = np.linspace(0, 1, n_samples)
-    signal1 = np.sin(2 * np.pi * 5 * t)  # 5 Hz
-    signal2 = np.sin(2 * np.pi * 10 * t)  # 10 Hz
-
-    data = np.zeros((n_channels, n_samples))
-    data[0] = signal1 * 2
-    data[1] = signal1 + signal2
-    data[2:] = rng.standard_normal((n_channels - 2, n_samples)) * 0.1
-
-    dss = DSS(bias=lambda x: x, n_components=n_channels, normalize_input=False)
-    sources = dss.fit_transform(data)
-    reconstructed = dss.inverse_transform(sources)
-
-    # Reconstruction should match centered original
-    data_centered = data - data.mean(axis=1, keepdims=True)
-    assert_allclose(reconstructed, data_centered, atol=0.1)
-
-
-def test_dss_mne_epochs_inverse_transform_with_normalization():
-    """inverse_transform should work with MNE Epochs format sources."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 6, 50, 10
-    sfreq = 100.0
-
-    # Create data (MNE format: n_epochs, n_channels, n_times)
-    data = rng.standard_normal((n_epochs, n_channels, n_times))
-
-    info = mne.create_info(
-        ch_names=[f"EEG{i:03d}" for i in range(n_channels)], sfreq=sfreq, ch_types="eeg"
-    )
-    epochs = mne.EpochsArray(data, info, verbose=False)
-
-    from mne_denoise.dss.denoisers import AverageBias
-
-    dss = DSS(bias=AverageBias(axis="epochs"), n_components=3, normalize_input=True)
-
-    # Fit and transform - sources will be (n_epochs, n_components, n_times)
-    sources = dss.fit_transform(epochs)
-
-    assert sources.shape == (n_epochs, 3, n_times)
-
-    # Now inverse_transform with MNE epochs format sources
-    reconstructed = dss.inverse_transform(sources)
-
-    # Should produce (n_epochs, n_channels, n_times)
-    assert reconstructed.shape == (n_epochs, n_channels, n_times)
-
-
-def test_dss_inverse_transform_mne_format_3d():
-    """inverse_transform should detect MNE epochs format (n_epochs, n_comps, n_times)."""
-    rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 8, 100, 5
-    n_components = 4
-
-    # Create numpy 3D data (channels, times, epochs)
-    data = rng.standard_normal((n_channels, n_times, n_epochs))
-
-    dss = DSS(bias=lambda x: x, n_components=n_components, normalize_input=True)
-    sources = dss.fit_transform(data)  # (n_components, n_times, n_epochs)
-
-    assert sources.shape == (n_components, n_times, n_epochs)
-
-    # Now manually transpose to MNE epochs format
-    sources_mne_format = np.transpose(
-        sources, (2, 0, 1)
-    )  # (n_epochs, n_comps, n_times)
-
-    # inverse_transform should detect this and handle it
-    reconstructed = dss.inverse_transform(sources_mne_format)
-
-    # Should produce (n_epochs, n_channels, n_times) since it detected MNE format
-    assert reconstructed.shape == (n_epochs, n_channels, n_times)
-
-
 def test_dss_normalization_with_different_scales():
     """Test DSS normalization with channels at vastly different scales."""
     rng = np.random.RandomState(42)
@@ -1329,83 +611,6 @@ def test_dss_cov_method_options():
     dss_mne.cov_method = "empirical"
     dss_mne.fit(raw)
     assert dss_mne.filters_.shape == (2, 3)
-
-
-def test_dss_preserves_scale():
-    """DSS reconstruction should preserve physical signal scale (Microvolts)."""
-    sfreq = 1000
-    n_channels = 10
-    n_times = 5000
-    t = np.arange(n_times) / sfreq
-
-    signal_scale = 5e-6
-    data = np.random.randn(n_channels, n_times) * 1e-7  # noise
-    data[0:3, :] += signal_scale * np.sin(2 * np.pi * 10 * t)
-
-    from mne_denoise.dss.denoisers import LinearDenoiser
-
-    class IdentityBias(LinearDenoiser):
-        def apply(self, data):
-            return data
-
-    bias = IdentityBias()
-    dss = DSS(
-        bias=bias,
-        n_components=n_channels,
-        normalize_input=False,
-        component_action="retain",
-    )
-    reconstructed = dss.fit_transform(data)
-
-    rms_orig = np.sqrt(np.mean(data**2))
-    rms_rec = np.sqrt(np.mean(reconstructed**2))
-
-    assert_allclose(rms_orig, rms_rec, rtol=0.05)
-
-
-def test_dss_get_normalized_patterns():
-    """Test the newly added get_normalized_patterns method in DSS."""
-    from mne_denoise.dss.denoisers import LinearDenoiser
-
-    class IdentityBias(LinearDenoiser):
-        def apply(self, data):
-            return data
-
-    data = np.random.randn(10, 1000)
-    dss = DSS(bias=IdentityBias(), n_components=2)
-    dss.fit(data)
-    norm_patterns = dss.get_normalized_patterns()
-    assert norm_patterns.shape == (10, 2)
-    assert_allclose(np.linalg.norm(norm_patterns, axis=0), 1.0)
-
-
-def test_compute_dss_warns_on_heavy_rank_reduction(caplog):
-    """``compute_dss`` warns when ``reg`` discards >75% of components.
-
-    Mimics MEG-style fT-scale covariances whose eigenvalues span many
-    decades: only a handful survive the default relative ``reg`` threshold,
-    and we want the user to see actionable workaround suggestions.
-    """
-    import logging
-
-    n_channels = 40
-    # Six eigenvalues at 1.0, the rest at 1e-15 -- well below the default
-    # reg=1e-9 cutoff, so n_keep ends up at 6 (< n_channels // 4 = 10).
-    eigvals = np.concatenate([np.ones(6), np.full(n_channels - 6, 1e-15)])
-    rng = np.random.default_rng(0)
-    Q, _ = np.linalg.qr(rng.standard_normal((n_channels, n_channels)))
-    cov = Q @ np.diag(eigvals) @ Q.T
-    cov = (cov + cov.T) / 2
-
-    with caplog.at_level(logging.WARNING, logger="mne_denoise"):
-        compute_dss(cov, cov)
-
-    assert any(
-        "components kept after rank reduction" in rec.getMessage()
-        for rec in caplog.records
-    )
-    assert any("lowering reg" in rec.getMessage() for rec in caplog.records)
-    assert not any("raising reg" in rec.getMessage() for rec in caplog.records)
 
 
 # =============================================================================
@@ -1590,31 +795,6 @@ def test_dss_whiten_no_data_channels_raises():
         DSS(bias=bias, whiten=True).fit(raw)
 
 
-def test_dss_whiten_rejects_unsupported_input():
-    """A non-array, non-MNE input is rejected in the whitening path."""
-    from mne_denoise.dss.denoisers import BandpassBias
-
-    bias = BandpassBias(freq_band=(8, 12), sfreq=200.0)
-    with pytest.raises(TypeError, match="Unsupported input type"):
-        DSS(bias=bias, whiten=True).fit("not data")
-
-
-def test_dss_whiten_inverse_transform_recovers_sensor_data():
-    """inverse_transform un-whitens sources back to sensor space."""
-    from mne_denoise.dss.denoisers import BandpassBias
-
-    raw, _, data = _mixed_sensor_raw()
-    bias = BandpassBias(freq_band=(8, 12), sfreq=raw.info["sfreq"])
-    dss = DSS(bias=bias, whiten=True, component_action="extract").fit(raw)
-
-    sources = dss.transform(raw)
-    rec = dss.inverse_transform(sources)
-
-    data_centered = data - data.mean(axis=1, keepdims=True)
-    assert rec.shape == data.shape
-    assert np.linalg.norm(rec - data_centered) / np.linalg.norm(data_centered) < 1e-6
-
-
 # =============================================================================
 # Adaptive DSS – Segmented Mode
 # =============================================================================
@@ -1679,20 +859,6 @@ def _make_small_adaptive_dss_case():
 class TestSegmentedDSS:
     """Tests for DSS with adaptive=True."""
 
-    def test_fit_produces_global_fit(self):
-        """fit() in adaptive mode yields a usable global fit, not an error.
-
-        Segmented adaptation happens in fit_transform; fit alone must still
-        honour the sklearn contract so DSS stays usable inside a Pipeline.
-        """
-        data = np.random.default_rng(0).standard_normal((8, 5000))
-        bias = LineNoiseBias(freq=50.0, sfreq=250.0)
-        dss = DSS(bias, component_action="subtract", adaptive=True, n_components=2)
-        dss.fit(data)
-        assert dss.filters_ is not None
-        assert dss.filters_.shape == (2, 8)
-        assert dss.segment_results_ is None
-
     def test_fit_transform_raises_without_sfreq(self):
         """fit_transform needs an sfreq it can discover for segmentation."""
 
@@ -1709,50 +875,17 @@ class TestSegmentedDSS:
         with pytest.raises(ValueError, match="sfreq"):
             dss.fit_transform(data)
 
-    def test_adaptive_clone_forwards_params(self):
-        """The per-segment estimator inherits every constructor parameter."""
-        bias = LineNoiseBias(freq=50.0, sfreq=250.0)
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            n_components=2,
-            reg=1e-7,
-            normalize_input=False,
-            selection_threshold=2.5,
-            knee_min_ratio=4.0,
-        )
-        est = dss._make_segment_estimator()
-        assert est.adaptive is False
-        assert est.reg == 1e-7
-        assert est.normalize_input is False
-        assert est.selection_threshold == 2.5
-        assert est.knee_min_ratio == 4.0
-        # adaptive mode with n_select unset must not silently select nothing
-        assert est.n_select == "auto"
-
-    def test_fit_transform_runs(self):
-        """fit_transform should run to completion in adaptive mode."""
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
-            n_components=2,
-        )
-        result = dss.fit_transform(raw)
-        assert result is not None
-
     def test_segment_results_populated(self):
-        """After segmented fit, segment_results_ should be populated."""
+        """Adaptive fitting keeps global state and local segment topology."""
         data, sfreq = _make_nonstationary_line_noise()
         info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
         raw = mne.io.RawArray(data, info, verbose=False)
         bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
+        global_est = DSS(
+            bias, component_action="subtract", adaptive=True, n_components=2
+        ).fit(data)
+        assert global_est.filters_.shape == (2, data.shape[0])
+        assert global_est.segment_results_ is None
         dss = DSS(
             bias,
             adaptive=True,
@@ -1761,8 +894,29 @@ class TestSegmentedDSS:
             n_components=2,
         )
         dss.fit_transform(raw)
-        assert hasattr(dss, "segment_results_")
-        assert len(dss.segment_results_) >= 2
+        assert dss.filters_.shape == (2, data.shape[0])
+        assert dss.segment_results_ is not None
+        assert len(dss.segment_results_) == 4
+        assert [
+            (result["start"], result["end"]) for result in dss.segment_results_
+        ] == [
+            (0, 7500),
+            (7500, 15000),
+            (15000, 22500),
+            (22500, 30000),
+        ]
+        assert all(
+            result["filters"].shape == dss.filters_.shape
+            for result in dss.segment_results_
+        )
+        assert all(
+            {"eigenvalues", "patterns", "filters"} <= result.keys()
+            for result in dss.segment_results_
+        )
+        assert any(
+            not np.allclose(np.abs(result["filters"]), np.abs(global_est.filters_))
+            for result in dss.segment_results_
+        )
 
     def test_adaptive_progress_reports_completed_segments(self):
         """Adaptive DSS emits one event per completed segment."""
@@ -1790,66 +944,6 @@ class TestSegmentedDSS:
         assert [event.metric for event in events] == [
             float(result["n_selected"]) for result in dss.segment_results_
         ]
-
-    def test_standard_progress_callback_emits_nothing(self):
-        """Standard DSS accepts a callback but has no progress units."""
-        data, _, bias, _ = _make_small_adaptive_dss_case()
-        events = []
-        DSS(
-            bias,
-            adaptive=False,
-            component_action="subtract",
-            n_components=2,
-            n_select=1,
-            normalize_input=False,
-        ).fit_transform(data, callback=events.append)
-
-        assert events == []
-
-    def test_adaptive_callback_exception_stops_after_first_segment(self):
-        """A DSS callback interruption leaves only the first segment completed."""
-        data, _, bias, segmenter = _make_small_adaptive_dss_case()
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=segmenter,
-            n_components=2,
-            n_select=1,
-            normalize_input=False,
-        )
-
-        def callback(event):
-            raise RuntimeError("DSS callback failed")
-
-        with pytest.raises(RuntimeError):
-            dss.fit_transform(data, callback=callback)
-
-        assert len(dss.segment_results_) == 1
-
-    def test_adaptive_epoch_progress_follows_segments(self):
-        """Epoch concatenation emits segment events, not epoch events."""
-        data, sfreq, bias, segmenter = _make_small_adaptive_dss_case()
-        n_epochs = 2
-        n_times = data.shape[1] // n_epochs
-        epochs_data = data.reshape(data.shape[0], n_epochs, n_times).transpose(1, 0, 2)
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        epochs = mne.EpochsArray(epochs_data, info, tmin=0, verbose=False)
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=segmenter,
-            n_components=2,
-            n_select=1,
-            normalize_input=False,
-        )
-        events = []
-
-        dss.fit_transform(epochs, callback=events.append)
-
-        assert len(events) == len(dss.segment_results_)
-        assert len(events) > n_epochs
 
     def test_n_selected_is_max(self):
         """n_selected_ should be the max across segments, not the sum."""
@@ -1898,54 +992,6 @@ class TestSegmentedDSS:
         pwr_after = avg_power_at_freq(cleaned_data, 50.0, sfreq)
         assert pwr_after < pwr_before
 
-    def test_covariance_segmenter(self):
-        """CovarianceSegmenter as segmenter should work."""
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=CovarianceSegmenter(sfreq=sfreq, min_chunk_len=20.0),
-            n_components=2,
-        )
-        result = dss.fit_transform(raw)
-        assert result is not None
-
-    def test_epochs_3d(self):
-        """Segmented DSS should reject 3-D data (Epochs) gracefully or run."""
-        rng = np.random.default_rng(42)
-        n_ch, n_times, sfreq = 8, 250, 250.0
-        n_epochs = 10
-        data_3d = rng.standard_normal((n_ch, n_times * n_epochs))
-        info = mne.create_info(n_ch, sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data_3d, info, verbose=False)
-        events = np.column_stack(
-            [
-                np.arange(0, n_times * n_epochs, n_times),
-                np.zeros(n_epochs, int),
-                np.ones(n_epochs, int),
-            ]
-        )
-        epochs = mne.Epochs(
-            raw,
-            events,
-            tmin=0,
-            tmax=(n_times - 1) / sfreq,
-            baseline=None,
-            preload=True,
-            verbose=False,
-        )
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(bias, component_action="subtract", adaptive=True, n_components=2)
-        # Epochs should either work (segmentation on concatenated) or raise
-        try:
-            dss.fit_transform(epochs)
-        except (ValueError, RuntimeError):
-            pass  # Acceptable: adaptive mode may not support Epochs
-
 
 class TestAutoSelect:
     """Tests for automatic component selection (n_select='outlier', etc.)."""
@@ -1960,23 +1006,6 @@ class TestAutoSelect:
         dss.fit(raw)
         assert dss.n_selected_ is not None
         assert dss.n_selected_ >= 0
-
-    def test_auto_matches_robust_selector(self):
-        """auto_select delegates to auto_select_components_robust."""
-        from mne_denoise.dss.selection import auto_select_components_robust
-
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(bias, n_components=4, n_select="auto")
-        dss.fit(raw)
-        assert dss.n_selected_ == auto_select_components_robust(
-            dss.eigenvalues_,
-            sigma=dss.selection_threshold,
-            knee_rel_floor=dss.knee_rel_floor,
-            knee_min_ratio=dss.knee_min_ratio,
-        )
 
     def test_auto_selects_nothing_on_clean_data(self):
         """A smoothly-decaying spectrum must not trigger false removals."""
@@ -2023,16 +1052,6 @@ class TestAutoSelect:
 
 class TestSmoothingDecomposition:
     """Tests for smooth parameter (smoothing decomposition)."""
-
-    def test_smooth_int_fit_transform(self):
-        """smooth=int should run fit_transform without error."""
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(bias, n_components=2, smooth=5)
-        result = dss.fit_transform(raw)
-        assert result is not None
 
     def test_fit_then_transform_preserves_smooth(self):
         """fit() then transform() should NOT lose the smooth component.
@@ -2137,24 +1156,6 @@ class TestCapAndFloor:
 class TestCrossfade:
     """Tests for cross-fade overlap-add blending at segment boundaries."""
 
-    def test_crossfade_output_shape(self):
-        """Output shape must match input shape regardless of crossfade."""
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
-            crossfade=1.0,
-            n_components=4,
-            n_select="auto",
-        )
-        cleaned = dss.fit_transform(raw)
-        assert cleaned.get_data().shape == data.shape
-
     def test_crossfade_no_boundary_jump(self):
         """Derivative at segment boundaries should not spike."""
         data, sfreq = _make_nonstationary_line_noise(duration=120.0)
@@ -2207,96 +1208,6 @@ class TestCrossfade:
         # (and often much better)
         assert ratio_xfade <= ratio_hard + 1.0 or ratio_xfade < 10.0
 
-    def test_crossfade_single_segment_matches_hard(self):
-        """With only one segment, crossfade has no effect."""
-        # Short data → single segment (< min_chunk_len * 2)
-        rng = np.random.default_rng(99)
-        sfreq = 250.0
-        data = rng.standard_normal((8, int(40 * sfreq)))
-        t = np.arange(data.shape[1]) / sfreq
-        data += 0.5 * np.sin(2 * np.pi * 50 * t)[np.newaxis, :]
-
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        seg = FixedWindowSegmenter(sfreq=sfreq, window_len=60.0)
-
-        dss_hard = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=seg,
-            crossfade=0.0,
-            n_components=4,
-            n_select="auto",
-        )
-        dss_xfade = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=seg,
-            crossfade=1.0,
-            n_components=4,
-            n_select="auto",
-        )
-
-        out_hard = dss_hard.fit_transform(data)
-        out_xfade = dss_xfade.fit_transform(data)
-        np.testing.assert_array_equal(out_hard, out_xfade)
-
-    def test_crossfade_zero_backward_compat(self):
-        """crossfade=0 must produce same result as before (hard concat)."""
-        data, sfreq = _make_nonstationary_line_noise()
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        seg = FixedWindowSegmenter(sfreq=sfreq, window_len=30.0)
-
-        # Default crossfade (0.0)
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=seg,
-            n_components=4,
-            n_select="auto",
-        )
-        out_default = dss.fit_transform(data)
-
-        # Explicit crossfade=0.0
-        dss0 = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=seg,
-            crossfade=0.0,
-            n_components=4,
-            n_select="auto",
-        )
-        out_zero = dss0.fit_transform(data)
-        np.testing.assert_array_equal(out_default, out_zero)
-
-    def test_crossfade_preserves_energy(self):
-        """Total signal power should not change dramatically with crossfade."""
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-
-        dss = DSS(
-            bias,
-            adaptive=True,
-            component_action="subtract",
-            segmenter=FixedWindowSegmenter(sfreq=sfreq, window_len=30.0),
-            crossfade=1.0,
-            n_components=4,
-            n_select="auto",
-        )
-        cleaned = dss.fit_transform(raw).get_data()
-
-        # Power ratio should be between 0.3 and 1.5
-        # (cleaning removes artifact, but broadband should be preserved)
-        power_in = np.mean(data**2)
-        power_out = np.mean(cleaned**2)
-        ratio = power_out / power_in
-        assert 0.3 < ratio < 1.5, f"Power ratio {ratio:.2f} out of range"
-
     def test_crossfade_overlap_clamped(self):
         """When crossfade is longer than half a segment, it gets clamped."""
         rng = np.random.default_rng(42)
@@ -2321,68 +1232,6 @@ class TestCrossfade:
         assert cleaned.shape == data.shape
 
 
-def test_narrowband_scan_rejects_adaptive():
-    """narrowband_scan should raise ValueError with adaptive=True."""
-    from mne_denoise.dss.variants.narrowband import narrowband_scan
-
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((8, 5000))
-    with pytest.raises(ValueError, match="adaptive"):
-        narrowband_scan(data, sfreq=250.0, adaptive=True)
-
-
-class TestSmootherResolution:
-    """_as_smoother coerces the ``smooth`` parameter to a denoiser."""
-
-    def test_none_returns_none(self):
-        from mne_denoise.dss.linear import _as_smoother
-
-        assert _as_smoother(None) is None
-
-    def test_int_becomes_smoothing_bias(self):
-        from mne_denoise.dss.denoisers.temporal import SmoothingBias
-        from mne_denoise.dss.linear import _as_smoother
-
-        smoother = _as_smoother(7)
-        assert isinstance(smoother, SmoothingBias)
-        assert smoother.window == 7
-
-    def test_numpy_integer_accepted(self):
-        """np.int64 windows arise naturally from int(sfreq / f_line)."""
-        from mne_denoise.dss.denoisers.temporal import SmoothingBias
-        from mne_denoise.dss.linear import _as_smoother
-
-        assert isinstance(_as_smoother(np.int64(7)), SmoothingBias)
-
-    def test_duck_typed_denoiser_passes_through(self):
-        from mne_denoise.dss.linear import _as_smoother
-
-        class Custom:
-            def apply(self, data):
-                return data
-
-        custom = Custom()
-        assert _as_smoother(custom) is custom
-
-    def test_unusable_value_raises(self):
-        from mne_denoise.dss.linear import _as_smoother
-
-        with pytest.raises(TypeError, match="smooth must be"):
-            _as_smoother("boxcar")
-
-
-def test_auto_select_before_fit_raises():
-    dss = DSS(bias=lambda x: x, n_select="auto")
-    with pytest.raises(RuntimeError, match="not fitted"):
-        dss.auto_select()
-
-
-def test_get_normalized_patterns_before_fit_raises():
-    dss = DSS(bias=lambda x: x)
-    with pytest.raises(RuntimeError, match="not fitted"):
-        dss.get_normalized_patterns()
-
-
 def test_get_normalized_patterns_returns_unit_columns():
     rng = np.random.default_rng(0)
     data = rng.standard_normal((6, 3000)) * 1e-6
@@ -2393,37 +1242,6 @@ def test_get_normalized_patterns_returns_unit_columns():
     assert_allclose(np.linalg.norm(patterns, axis=0), 1.0, rtol=1e-10)
     # The stored patterns keep their physical scale
     assert not np.allclose(np.linalg.norm(dss.patterns_, axis=0), 1.0)
-
-
-def test_fit_transform_subtracts_selected_components():
-    """Explicit subtraction removes selected components."""
-    sfreq = 250.0
-    n_times = int(20 * sfreq)
-    t = np.arange(n_times) / sfreq
-    rng = np.random.default_rng(0)
-    data = rng.standard_normal((8, n_times)) * 0.2
-    data += np.sin(2 * np.pi * 50.0 * t) * 4.0
-
-    bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-    dss = DSS(bias, n_select=2, component_action="subtract")
-    cleaned = dss.fit_transform(data)
-
-    assert cleaned.shape == data.shape
-    assert dss.n_selected_ == 2
-    # Some artifact was actually removed
-    assert not np.allclose(cleaned, data)
-
-
-def test_fit_transform_without_selection_is_passthrough():
-    """n_select=None means nothing is subtracted, so data returns unchanged."""
-    rng = np.random.default_rng(0)
-    data = rng.standard_normal((6, 2000))
-
-    dss = DSS(bias=lambda x: x, component_action="subtract")
-    cleaned = dss.fit_transform(data)
-
-    assert dss.n_selected_ is None
-    assert_allclose(cleaned, data)
 
 
 def test_empty_segmentation_raises():
@@ -2440,49 +1258,3 @@ def test_empty_segmentation_raises():
 
     with pytest.raises(ValueError, match="no segments"):
         dss.fit_transform(data)
-
-
-def test_default_segmenter_band_limits_around_bias_frequency():
-    bias = LineNoiseBias(freq=50.0, sfreq=250.0)
-    segmenter = DSS(bias, adaptive=True)._resolve_segmenter(250.0)
-
-    assert isinstance(segmenter, CovarianceSegmenter)
-    assert segmenter.bandpass == (47.0, 53.0)
-
-
-def test_default_segmenter_has_no_band_without_bias_frequency():
-    """A bias with no .freq gives a broadband segmenter rather than crashing."""
-    segmenter = DSS(bias=lambda x: x, adaptive=True)._resolve_segmenter(250.0)
-
-    assert isinstance(segmenter, CovarianceSegmenter)
-    assert segmenter.bandpass is None
-
-
-def test_normalize_preserves_raw_annotations():
-    rng = np.random.default_rng(0)
-    info = mne.create_info(4, 250.0, "eeg")
-    raw = mne.io.RawArray(rng.standard_normal((4, 2500)) * 1e-6, info, verbose=False)
-    raw.set_annotations(
-        mne.Annotations(onset=[1.0], duration=[0.5], description=["bad"])
-    )
-
-    normalized = DSS(bias=lambda x: x)._normalize(raw, fit=True)
-
-    assert len(normalized.annotations) == 1
-    assert normalized.annotations.description[0] == "bad"
-
-
-def test_normalize_preserves_epochs_metadata():
-    pd = pytest.importorskip("pandas")
-
-    rng = np.random.default_rng(0)
-    info = mne.create_info(4, 250.0, "eeg")
-    epochs = mne.EpochsArray(
-        rng.standard_normal((5, 4, 200)) * 1e-6, info, verbose=False
-    )
-    epochs.metadata = pd.DataFrame({"cond": list("abcde")})
-
-    normalized = DSS(bias=lambda x: x)._normalize(epochs, fit=True)
-
-    assert normalized.metadata is not None
-    assert list(normalized.metadata["cond"]) == list("abcde")

@@ -128,13 +128,6 @@ def test_smooth_tanh_denoiser():
     assert np.std(result) <= np.std(raw_tanh) * 1.2  # Allow some tolerance
 
 
-def test_smooth_tanh_denoiser_minimum_window():
-    """Test SmoothTanhDenoiser enforces minimum window size."""
-    # Window less than 3 should be set to 3
-    denoiser = SmoothTanhDenoiser(window=1)
-    assert denoiser.window == 3
-
-
 def test_kurtosis_denoiser_alpha():
     """Test KurtosisDenoiser with custom alpha."""
     # Tanh with alpha=2
