@@ -1656,6 +1656,26 @@ def _make_nonstationary_line_noise(
     return eeg + noise, sfreq
 
 
+def _make_small_adaptive_dss_case():
+    """Create a fast deterministic case for adaptive callback tests."""
+    rng = np.random.default_rng(123)
+    sfreq = 100.0
+    n_times = 600
+    times = np.arange(n_times) / sfreq
+    data = rng.standard_normal((4, n_times)) * 0.1
+    topo = rng.standard_normal(4)
+    topo /= np.linalg.norm(topo)
+    data += 2.0 * np.outer(topo, np.sin(2 * np.pi * 20.0 * times))
+    bias = LineNoiseBias(
+        freq=20.0,
+        sfreq=sfreq,
+        n_harmonics=1,
+        nfft=128,
+    )
+    segmenter = FixedWindowSegmenter(sfreq=sfreq, window_len=2.0)
+    return data, sfreq, bias, segmenter
+
+
 class TestSegmentedDSS:
     """Tests for DSS with adaptive=True."""
 
@@ -1743,6 +1763,142 @@ class TestSegmentedDSS:
         dss.fit_transform(raw)
         assert hasattr(dss, "segment_results_")
         assert len(dss.segment_results_) >= 2
+
+    def test_adaptive_progress_reports_completed_segments(self):
+        """Adaptive DSS emits one event per completed segment."""
+        data, sfreq, bias, segmenter = _make_small_adaptive_dss_case()
+        dss = DSS(
+            bias,
+            adaptive=True,
+            component_action="subtract",
+            segmenter=segmenter,
+            n_components=2,
+            n_select=1,
+            normalize_input=False,
+        )
+        events = []
+
+        dss.fit_transform(data, callback=events.append)
+
+        n_segments = len(dss.segment_results_)
+        assert len(events) == n_segments
+        assert [event.current for event in events] == list(range(1, n_segments + 1))
+        assert [event.total for event in events] == [n_segments] * n_segments
+        assert all(event.method == "dss" for event in events)
+        assert all(event.stage == "segment" for event in events)
+        assert all(event.component is None for event in events)
+        assert [event.metric for event in events] == [
+            float(result["n_selected"]) for result in dss.segment_results_
+        ]
+
+    def test_adaptive_callback_is_numerically_transparent(self):
+        """Adaptive DSS callback presence does not change fitted results."""
+        data, sfreq, bias, segmenter = _make_small_adaptive_dss_case()
+        kwargs = {
+            "bias": bias,
+            "adaptive": True,
+            "component_action": "subtract",
+            "segmenter": segmenter,
+            "n_components": 2,
+            "n_select": 1,
+            "normalize_input": False,
+        }
+        without_callback = DSS(**kwargs)
+        reference = without_callback.fit_transform(data)
+        with_callback = DSS(**kwargs)
+        result = with_callback.fit_transform(data, callback=lambda event: None)
+
+        assert_allclose(result, reference)
+        for name in (
+            "filters_",
+            "patterns_",
+            "eigenvalues_",
+            "explained_variance_",
+        ):
+            assert_allclose(
+                getattr(with_callback, name), getattr(without_callback, name)
+            )
+        assert with_callback.n_selected_ == without_callback.n_selected_
+        assert len(with_callback.segment_results_) == len(
+            without_callback.segment_results_
+        )
+        for expected, actual in zip(
+            without_callback.segment_results_,
+            with_callback.segment_results_,
+            strict=True,
+        ):
+            assert (expected["start"], expected["end"], expected["n_selected"]) == (
+                actual["start"],
+                actual["end"],
+                actual["n_selected"],
+            )
+            for name in ("filters", "patterns", "eigenvalues"):
+                assert_allclose(actual[name], expected[name])
+
+    def test_standard_progress_callback_emits_nothing(self):
+        """Standard DSS accepts a callback but has no progress units."""
+        data, _, bias, _ = _make_small_adaptive_dss_case()
+        kwargs = {
+            "bias": bias,
+            "adaptive": False,
+            "component_action": "subtract",
+            "n_components": 2,
+            "n_select": 1,
+            "normalize_input": False,
+        }
+        reference = DSS(**kwargs).fit_transform(data)
+        events = []
+        result = DSS(**kwargs).fit_transform(data, callback=events.append)
+
+        assert events == []
+        assert_allclose(result, reference)
+
+    def test_adaptive_callback_exception_propagates_unchanged(self):
+        """A DSS callback exception aborts the adaptive operation unchanged."""
+        data, _, bias, segmenter = _make_small_adaptive_dss_case()
+        dss = DSS(
+            bias,
+            adaptive=True,
+            component_action="subtract",
+            segmenter=segmenter,
+            n_components=2,
+            n_select=1,
+            normalize_input=False,
+        )
+        sentinel = RuntimeError("DSS callback failed")
+
+        def callback(event):
+            raise sentinel
+
+        with pytest.raises(RuntimeError) as caught:
+            dss.fit_transform(data, callback=callback)
+
+        assert caught.value is sentinel
+        assert len(dss.segment_results_) == 1
+
+    def test_adaptive_epoch_progress_follows_segments(self):
+        """Epoch concatenation emits segment events, not epoch events."""
+        data, sfreq, bias, segmenter = _make_small_adaptive_dss_case()
+        n_epochs = 2
+        n_times = data.shape[1] // n_epochs
+        epochs_data = data.reshape(data.shape[0], n_epochs, n_times).transpose(1, 0, 2)
+        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
+        epochs = mne.EpochsArray(epochs_data, info, tmin=0, verbose=False)
+        dss = DSS(
+            bias,
+            adaptive=True,
+            component_action="subtract",
+            segmenter=segmenter,
+            n_components=2,
+            n_select=1,
+            normalize_input=False,
+        )
+        events = []
+
+        dss.fit_transform(epochs, callback=events.append)
+
+        assert len(events) == len(dss.segment_results_)
+        assert len(events) > n_epochs
 
     def test_n_selected_is_max(self):
         """n_selected_ should be the max across segments, not the sum."""

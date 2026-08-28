@@ -57,6 +57,7 @@ from ..dss.denoisers.spectral import LineNoiseBias
 from ..dss.denoisers.temporal import SmoothingBias
 from ..dss.linear import DSS, _as_smoother
 from ..dss.segmentation import CovarianceSegmenter
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from .adaptive import (
     apply_hybrid_cleanup,
     check_artifact_presence,
@@ -456,6 +457,7 @@ class ZapLine(DSS):
         X,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
         **fit_params,
     ):
@@ -475,6 +477,10 @@ class ZapLine(DSS):
             The data to process.
         y : None
             Ignored. Present for scikit-learn API compatibility.
+        callback : callable | None, default=None
+            Called synchronously after each completed target-frequency pass in
+            adaptive mode. The event metric is the completed target frequency
+            in Hz. Standard mode emits no progress callbacks.
         **fit_params : dict
             Additional parameters passed to the parent :meth:`DSS.fit_transform`
             in standard mode.
@@ -494,8 +500,9 @@ class ZapLine(DSS):
         - ``line_freq``: Detected line frequency
         - ``chunk_info``: List of per-chunk processing information
         """
+        callback = _validate_callback(callback)
         if not self.adaptive:
-            return super().fit_transform(X, y=y, **fit_params)
+            return super().fit_transform(X, y=y, callback=callback, **fit_params)
 
         data, extracted_sfreq, mne_type, orig_inst, picks, ch_names = (
             extract_data_from_mne(
@@ -530,7 +537,7 @@ class ZapLine(DSS):
         else:
             data_work = data_cont
 
-        res = self._run_adaptive(data_work)
+        res = self._run_adaptive(data_work, callback=callback)
         self.n_removed_ = res["n_removed"]
         if self.whiten:
             removed = apply_spatial_transform(self._dewhitener_, res["removed"])
@@ -879,7 +886,12 @@ class ZapLine(DSS):
     # Adaptive Mode (ZapLine-plus) Methods
     # =========================================================================
 
-    def _run_adaptive(self, data: np.ndarray) -> dict:
+    def _run_adaptive(
+        self,
+        data: np.ndarray,
+        *,
+        callback: _ProgressCallback | None = None,
+    ) -> dict:
         """Run ZapLine-plus adaptive algorithm.
 
         Orchestrates:
@@ -891,6 +903,9 @@ class ZapLine(DSS):
         ----------
         data : ndarray (n_channels, n_times)
             Continuous data.
+        callback : callable | None, default=None
+            Already-validated callback called after each completed
+            target-frequency pass.
 
         Returns
         -------
@@ -942,7 +957,7 @@ class ZapLine(DSS):
         self._smoother = _as_smoother(self.smooth)
 
         try:
-            for target_freq in all_freqs_to_process:
+            for freq_idx, target_freq in enumerate(all_freqs_to_process):
                 self._target_freq_ = target_freq
                 segmenter = CovarianceSegmenter(
                     sfreq=self.sfreq,
@@ -950,7 +965,10 @@ class ZapLine(DSS):
                     bandpass=(target_freq - 3, target_freq + 3),
                 )
                 current_data = self._run_segmented(
-                    current_data, self.sfreq, segmenter=segmenter
+                    current_data,
+                    self.sfreq,
+                    segmenter=segmenter,
+                    callback=None,
                 )
                 logger.debug(
                     "ZapLine adaptive frequency pass %.3g Hz completed over %d "
@@ -975,6 +993,15 @@ class ZapLine(DSS):
                         self.eigenvalues_ = seg["eigenvalues"]
                     if seg.get("patterns") is not None:
                         self.patterns_ = seg["patterns"]
+                _emit_progress(
+                    callback,
+                    method="zapline",
+                    stage="frequency",
+                    current=freq_idx + 1,
+                    total=len(all_freqs_to_process),
+                    component=None,
+                    metric=float(target_freq),
+                )
         finally:
             self._target_freq_ = None
 

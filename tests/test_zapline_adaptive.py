@@ -750,6 +750,61 @@ def test_adaptive_uses_dss_adaptive_engine():
     assert spy.call_count >= 1
 
 
+def test_adaptive_single_frequency_reports_one_outer_event():
+    """A frequency pass emits one event despite multiple inner segments."""
+    data, sfreq = _nonstationary_line_data(duration=60.0, n_ch=4)
+    kwargs = {
+        "sfreq": sfreq,
+        "line_freq": 50.0,
+        "adaptive": True,
+        "adaptive_params": {"min_chunk_len": 20.0},
+    }
+    reference = ZapLine(**kwargs).fit_transform(data)
+    events = []
+    zap = ZapLine(**kwargs)
+    cleaned = zap.fit_transform(data, callback=events.append)
+
+    assert len(zap.segment_results_) > 1
+    assert len(events) == 1
+    event = events[0]
+    assert event.method == "zapline"
+    assert event.stage == "frequency"
+    assert event.current == 1
+    assert event.total == 1
+    assert event.component is None
+    assert event.metric == 50.0
+    assert_allclose(cleaned, reference)
+
+
+def test_adaptive_frequency_progress_includes_harmonics():
+    """Fundamentals and harmonics share one frequency-pass event stream."""
+    sfreq = 250.0
+    n_times = int(10 * sfreq)
+    times = np.arange(n_times) / sfreq
+    data = np.random.default_rng(0).standard_normal((4, n_times)) * 0.1
+    data += 3.0 * np.sin(2 * np.pi * 50.0 * times)
+    data += 1.5 * np.sin(2 * np.pi * 100.0 * times)
+    zap = ZapLine(
+        sfreq=sfreq,
+        line_freq=50.0,
+        adaptive=True,
+        adaptive_params={
+            "process_harmonics": True,
+            "min_chunk_len": 10.0,
+        },
+    )
+    events = []
+
+    with patch("mne_denoise.zapline.core.detect_harmonics", return_value=[100.0]):
+        zap.fit_transform(data, callback=events.append)
+
+    assert [(event.current, event.total) for event in events] == [(1, 2), (2, 2)]
+    assert [event.metric for event in events] == [50.0, 100.0]
+    assert all(event.method == "zapline" for event in events)
+    assert all(event.stage == "frequency" for event in events)
+    assert all(event.component is None for event in events)
+
+
 def test_adaptive_populates_segment_results_with_zapline_keys():
     """ZapLine's per-segment diagnostics ride along in segment_results_."""
     data, sfreq = _nonstationary_line_data()
@@ -828,12 +883,35 @@ def test_adaptive_no_detected_frequencies_is_passthrough():
     """When nothing is detected there is nothing to clean."""
     data = np.random.default_rng(0).standard_normal((4, 5000)) * 0.1
     zap = ZapLine(sfreq=250.0, line_freq=None, adaptive=True)
+    events = []
 
     with patch("mne_denoise.zapline.core.find_noise_freqs", return_value=[]):
-        cleaned = zap.fit_transform(data)
+        cleaned = zap.fit_transform(data, callback=events.append)
 
     assert_allclose(cleaned, data)
     assert zap.n_removed_ == 0
+    assert events == []
+
+
+def test_adaptive_callback_exception_resets_target_frequency():
+    """ZapLine propagates callback errors and keeps its target marker clean."""
+    data, sfreq = _nonstationary_line_data(duration=20.0, n_ch=4)
+    zap = ZapLine(
+        sfreq=sfreq,
+        line_freq=50.0,
+        adaptive=True,
+        adaptive_params={"min_chunk_len": 10.0},
+    )
+    sentinel = RuntimeError("ZapLine callback failed")
+
+    def callback(event):
+        raise sentinel
+
+    with pytest.raises(RuntimeError) as caught:
+        zap.fit_transform(data, callback=callback)
+
+    assert caught.value is sentinel
+    assert zap._target_freq_ is None
 
 
 def test_adaptive_accepts_scalar_line_freq():

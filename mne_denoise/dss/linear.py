@@ -38,6 +38,7 @@ from .._data import (
 )
 from .._logging import logger, verbose
 from .._spatial import apply_spatial_transform
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._whitening import (
     apply_covariance_transform,
     compute_data_covariance_whitener,
@@ -1271,6 +1272,7 @@ class DSS(BaseEstimator, TransformerMixin):
         X,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
         **fit_params,
     ):
@@ -1292,6 +1294,10 @@ class DSS(BaseEstimator, TransformerMixin):
             The data to process.
         y : None
             Ignored.
+        callback : callable | None, default=None
+            Called synchronously after each completed segment in adaptive mode.
+            Each event represents one fully fitted, selected, cleaned, and
+            recorded segment. Standard mode emits no progress callbacks.
         **fit_params
             Additional keyword arguments forwarded to :meth:`fit`.
 
@@ -1301,6 +1307,7 @@ class DSS(BaseEstimator, TransformerMixin):
             In adaptive mode, returns cleaned data (same type as input).
             In standard mode, the result follows ``component_action``.
         """
+        callback = _validate_callback(callback)
         self._validate_component_action()
         if not self.adaptive:
             self.fit(X, **fit_params)
@@ -1358,7 +1365,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.channel_norms_ = global_est.channel_norms_
 
         # Run segmented processing
-        cleaned = self._run_segmented(data_cont, sfreq)
+        cleaned = self._run_segmented(data_cont, sfreq, callback=callback)
 
         # Reshape back if epochs
         if is_epochs:
@@ -1416,6 +1423,8 @@ class DSS(BaseEstimator, TransformerMixin):
         data: np.ndarray,
         sfreq: float,
         segmenter: CovarianceSegmenter | FixedWindowSegmenter | None = None,
+        *,
+        callback: _ProgressCallback | None = None,
     ) -> np.ndarray:
         """Run segmented fit-transform on continuous data.
 
@@ -1440,6 +1449,8 @@ class DSS(BaseEstimator, TransformerMixin):
         segmenter : CovarianceSegmenter | FixedWindowSegmenter | None
             Explicit segmenter, overriding :attr:`segmenter` for this call.
             ZapLine uses this to re-segment around each target frequency.
+        callback : callable | None, default=None
+            Already-validated callback called after each completed segment.
 
         Returns
         -------
@@ -1518,6 +1529,15 @@ class DSS(BaseEstimator, TransformerMixin):
                 start,
                 end,
                 result.get("n_selected", 0),
+            )
+            _emit_progress(
+                callback,
+                method="dss",
+                stage="segment",
+                current=seg_idx + 1,
+                total=len(segments),
+                component=None,
+                metric=float(result["n_selected"]),
             )
 
         # Per-segment filters live in ``segment_results_``. The estimator-level

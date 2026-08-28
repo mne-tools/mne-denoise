@@ -148,6 +148,22 @@ def test_zapline_class_fit_transform(minimal_data):
     assert cleaned.shape == data.shape
 
 
+def test_zapline_standard_fit_transform_callback_is_noop(minimal_data):
+    """Standard ZapLine accepts a callback but emits no progress events."""
+    data = minimal_data["data"]
+    kwargs = {
+        "line_freq": minimal_data["line_freq"],
+        "sfreq": minimal_data["sfreq"],
+        "n_select": 1,
+    }
+    reference = ZapLine(**kwargs).fit_transform(data)
+    events = []
+    result = ZapLine(**kwargs).fit_transform(data, callback=events.append)
+
+    assert events == []
+    assert_allclose(result, reference)
+
+
 def test_zapline_whiten_processes_mixed_sensor_types(mixed_sensor_raw):
     """Whitening should jointly clean data channels and preserve other channels."""
     raw = mixed_sensor_raw
