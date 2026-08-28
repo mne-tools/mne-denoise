@@ -701,6 +701,29 @@ class SOUND(BaseEstimator, TransformerMixin):
         return self
 
     @verbose
+    def fit_transform(
+        self,
+        X,
+        y=None,
+        *,
+        callback=None,
+        verbose: bool | str | int | None = None,
+    ):
+        """Fit SOUND and apply the fitted operator to ``X``.
+
+        Parameters
+        ----------
+        callback : callable | None
+            Called synchronously after each completed SOUND sigma iteration
+            during fitting. Callback return values are ignored and callback
+            exceptions propagate unchanged.
+        verbose : bool | str | int | None
+            MNE-style logging level for the composed fit and transform call.
+        """
+        callback = _validate_callback(callback)
+        return self.fit(X, y=y, callback=callback).transform(X)
+
+    @verbose
     def transform(
         self,
         X,

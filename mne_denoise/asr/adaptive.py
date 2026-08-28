@@ -1042,7 +1042,7 @@ class AdaptiveASR(ASR):
                 _emit_progress(
                     callback,
                     method="adaptive_asr",
-                    stage="window",
+                    stage="calibration",
                     current=window_idx + 1,
                     total=n_windows,
                     component=None,
@@ -1104,7 +1104,7 @@ class AdaptiveASR(ASR):
             _emit_progress(
                 callback,
                 method="adaptive_asr",
-                stage="window",
+                stage="calibration",
                 current=window_idx + 1,
                 total=n_windows,
                 component=None,

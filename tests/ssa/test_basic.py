@@ -11,6 +11,7 @@ from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 
 from mne_denoise.ssa import (
+    LocalSingularSpectrumAnalysis,
     SingularSpectrumAnalysis,
     compute_basic_ssa,
     ssa_clean_channel,
@@ -69,6 +70,21 @@ def test_transform_before_fit_is_rejected(drift_data):
     X, sfreq = drift_data
     with pytest.raises(NotFittedError):
         SingularSpectrumAnalysis(sfreq=sfreq).transform(X)
+
+
+@pytest.mark.parametrize(
+    ("estimator_type", "kwargs"),
+    [
+        (SingularSpectrumAnalysis, {"sfreq": 100.0}),
+        (LocalSingularSpectrumAnalysis, {}),
+    ],
+)
+def test_ssa_fit_transform_validates_callback_before_fit(estimator_type, kwargs):
+    """Invalid SSA callbacks cannot leave a transformer fitted."""
+    estimator = estimator_type(**kwargs)
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        estimator.fit_transform(np.ones((2, 100)), callback=1)
+    assert not hasattr(estimator, "is_fitted_")
 
 
 def test_array_input_is_immutable(drift_data):

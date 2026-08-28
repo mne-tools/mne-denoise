@@ -549,7 +549,7 @@ def compute_bss_cca(
             bound=bound,
         )
         operators.append(operator)
-        if len(bounds) > 1:
+        if segment_len is not None:
             _emit_progress(
                 callback,
                 method="bss_cca",

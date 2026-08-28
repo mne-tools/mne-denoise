@@ -177,6 +177,7 @@ class _BaseSSATransformer(BaseEstimator, TransformerMixin):
         **fit_params,
     ) -> Any:
         """Fit the transductive estimator and transform ``X`` with progress."""
+        callback = _validate_callback(callback)
         if fit_params:
             unexpected = ", ".join(sorted(fit_params))
             raise TypeError(f"Unexpected fit parameters: {unexpected}")

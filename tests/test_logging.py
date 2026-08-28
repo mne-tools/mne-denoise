@@ -256,3 +256,88 @@ def test_asr_explicit_none_inherits_external_error_level(caplog):
         )
     finally:
         logger.setLevel(previous)
+
+
+def test_callback_progress_is_independent_of_silent_logging(caplog):
+    """A silent ASR call still delivers its structured progress events."""
+    estimator = ASR(
+        sfreq=SFREQ,
+        cutoff=20.0,
+        picks=None,
+        calibration="manual",
+        filter_kind="none",
+        verbose=False,
+    )
+    events = []
+    with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
+        estimator.fit_transform(_data(seed=11), callback=events.append, verbose=False)
+
+    assert events
+    assert not any(
+        record.name == "mne_denoise" and record.levelno < logging.WARNING
+        for record in caplog.records
+    )
+
+
+def test_verbose_does_not_change_asr_progress_or_output(caplog):
+    """Changing logging verbosity does not change events or denoising."""
+    quiet_events = []
+    debug_events = []
+    quiet_data = _data(seed=12)
+    debug_data = _data(seed=12)
+    kwargs = {
+        "sfreq": SFREQ,
+        "cutoff": 20.0,
+        "picks": None,
+        "calibration": "manual",
+        "filter_kind": "none",
+        "verbose": False,
+    }
+
+    with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
+        quiet = ASR(**kwargs).fit_transform(
+            quiet_data, callback=quiet_events.append, verbose=False
+        )
+        caplog.clear()
+        debug = ASR(**kwargs).fit_transform(
+            debug_data, callback=debug_events.append, verbose="DEBUG"
+        )
+
+    assert quiet_events == debug_events
+    np.testing.assert_allclose(quiet, debug)
+    assert any(
+        record.name == "mne_denoise" and record.levelno == logging.DEBUG
+        for record in caplog.records
+    )
+
+
+def test_callback_exception_restores_logging_scope():
+    """Callback exceptions propagate while the verbose scope is restored."""
+
+    class SentinelError(RuntimeError):
+        pass
+
+    sentinel = SentinelError("stop progress")
+
+    def fail(_event):
+        raise sentinel
+
+    previous_level = logger.level
+    previous_scope = _active_verbose_scope.get()
+    try:
+        estimator = ASR(
+            sfreq=SFREQ,
+            cutoff=20.0,
+            picks=None,
+            calibration="manual",
+            filter_kind="none",
+            verbose=False,
+        )
+        with pytest.raises(SentinelError) as exc_info:
+            estimator.fit_transform(_data(seed=13), callback=fail, verbose="DEBUG")
+
+        assert exc_info.value is sentinel
+        assert logger.level == previous_level
+        assert _active_verbose_scope.get() is previous_scope
+    finally:
+        logger.setLevel(previous_level)

@@ -410,7 +410,7 @@ def test_adaptive_fit_transform_combines_calibration_and_window_progress(
 
 @pytest.mark.parametrize("mw_mode", ["final_state", "sliding"])
 def test_adaptive_mw_fit_reports_outer_windows_including_skips(mw_mode):
-    """MW fit emits one event per outer attempt, including a short tail."""
+    """MW fit emits calibration progress for every outer attempt."""
     data = _make_synthetic(n_samples=2250, seed=125)
     asr = AdaptiveASR(
         sfreq=SFREQ,
@@ -425,7 +425,7 @@ def test_adaptive_mw_fit_reports_outer_windows_including_skips(mw_mode):
 
     assert len(events) == 3
     assert all(event.method == "adaptive_asr" for event in events)
-    assert all(event.stage == "window" for event in events)
+    assert all(event.stage == "calibration" for event in events)
     assert [event.current for event in events] == [1, 2, 3]
     assert [event.total for event in events] == [3, 3, 3]
     assert all(event.component is None for event in events)
@@ -498,6 +498,31 @@ def test_adaptive_mw_fit_reports_failed_window_and_propagates_callback(
     with pytest.raises(RuntimeError) as caught:
         fresh.fit(data, callback=callback)
     assert caught.value is sentinel
+
+
+def test_adaptive_mw_final_state_fit_transform_transitions_to_window_progress():
+    """Normal MW fit_transform separates calibration and reconstruction streams."""
+    data = _make_synthetic(n_samples=2250, seed=129)
+    kwargs = {
+        "sfreq": SFREQ,
+        "variant": "mw",
+        "mw_window_length": 4.0,
+        "blocksize": 500,
+        "mw_mode": "final_state",
+        "verbose": False,
+    }
+    events = []
+    cleaned = AdaptiveASR(**kwargs).fit_transform(data, callback=events.append)
+
+    calibration_events = [event for event in events if event.stage == "calibration"]
+    reconstruction_events = [event for event in events if event.stage == "window"]
+    assert calibration_events
+    assert reconstruction_events
+    assert events == calibration_events + reconstruction_events
+    assert all(event.method == "adaptive_asr" for event in events)
+    assert all(event.component is None for event in calibration_events)
+    assert all(event.component is None for event in reconstruction_events)
+    assert cleaned.shape == data.shape
 
 
 def test_adaptive_mw_sliding_fit_transform_progress_is_outer_window_only():

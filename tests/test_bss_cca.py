@@ -676,7 +676,13 @@ def test_one_block_covering_everything_equals_the_global_fit(rng):
         n_remove=2,
         callback=events.append,
     )
-    assert events == []
+    assert len(events) == 1
+    assert events[0].method == "bss_cca"
+    assert events[0].stage == "block"
+    assert events[0].current == 1
+    assert events[0].total == 1
+    assert events[0].component is None
+    assert events[0].metric == pytest.approx(float(np.mean(info["correlations"][0])))
     np.testing.assert_allclose(blocked_with_callback, blocked, atol=1e-10)
 
 

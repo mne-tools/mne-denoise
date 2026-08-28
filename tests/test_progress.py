@@ -68,7 +68,7 @@ def test_emit_progress():
     _emit_progress(
         events.append,
         method="iterative_dss",
-        stage="component",
+        stage="iteration",
         current=3,
         total=7,
         component=2,
@@ -78,7 +78,7 @@ def test_emit_progress():
     assert len(events) == 1
     assert isinstance(events[0], ProgressEvent)
     assert events[0].method == "iterative_dss"
-    assert events[0].stage == "component"
+    assert events[0].stage == "iteration"
     assert events[0].current == 3
     assert events[0].total == 7
     assert events[0].component == 2

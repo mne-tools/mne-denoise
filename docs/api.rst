@@ -35,9 +35,188 @@ Progress callbacks
 
    mne_denoise.progress.ProgressEvent
 
-Logging and ``verbose`` provide human-readable diagnostics. Structured
-progress callbacks are a separate machine-readable mechanism. Individual
-methods will document callback support when algorithm integrations are added.
+Callbacks provide synchronous, machine-readable progress. A callback receives
+one immutable :class:`~mne_denoise.progress.ProgressEvent` after a meaningful
+unit of work completes; its return value is ignored and exceptions propagate
+unchanged. Callbacks and logging are independent: ``verbose`` controls package
+logs and ``callback`` controls events. Callback state is supplied at runtime,
+is not an estimator parameter, and should be passed by keyword.
+
+For example:
+
+.. code-block:: python
+
+   events = []
+   model.fit(data, callback=events.append)
+
+   def report(event):
+       print(event.method, event.stage, event.current, event.total)
+
+``current`` is normally a 1-based completed-work count. ``total`` is the
+known number of work units, or ``None`` only when genuinely unknown.
+``component`` is populated only when component identity is meaningful, and
+``metric`` is method-specific and may be ``None``. The method and stage fields
+are open strings; the table below records the current package vocabulary rather
+than defining an enum.
+
+Current event contract
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table:: Structured progress event streams
+   :header-rows: 1
+   :widths: 25 16 14 29 25
+
+   * - Method / operation
+     - ``event.method``
+     - ``event.stage``
+     - Completed work unit
+     - ``event.metric``
+   * - SOUND fitting
+     - ``sound``
+     - ``iteration``
+     - Sigma iteration
+     - Maximum relative sigma change
+   * - Iterative DSS fixed-point solving
+     - ``iterative_dss``
+     - ``iteration``
+     - Fixed-point iteration; ``component`` is 1-based in deflation mode
+     - Convergence change, or ``None`` for a degenerate reinitialization
+   * - ASR, GuidedASR, and JugglerASR shared calibration
+     - ``asr``
+     - ``calibration``
+     - Fitted threshold component; ``component`` is 1-based
+     - Threshold
+   * - Standard ASR reconstruction
+     - ``asr``
+     - ``window``
+     - Reconstruction update
+     - Reconstructed component count
+   * - Standard ASR epoched reconstruction
+     - ``asr``
+     - ``epoch``
+     - Completed epoch
+     - Reconstructed sample fraction
+   * - GuidedASR epoched reconstruction
+     - ``guided_asr``
+     - ``epoch``
+     - Completed epoch
+     - Reconstructed sample fraction
+   * - GuidedASR continuous reconstruction
+     - ``guided_asr``
+     - ``window``
+     - Reconstruction update
+     - Reconstructed component count
+   * - AdaptiveASR PSP/PSW calibration
+     - ``adaptive_asr``
+     - ``calibration``
+     - Fitted threshold component; ``component`` is 1-based
+     - Threshold
+   * - AdaptiveASR normal MW calibration
+     - ``adaptive_asr``
+     - ``calibration``
+     - Attempted MW calibration window
+     - Rank when calibration passes, otherwise ``None``
+   * - AdaptiveASR MW sliding ``fit_transform``
+     - ``adaptive_asr``
+     - ``window``
+     - Attempted outer calibrate-and-reconstruct window
+     - Rank when calibration passes, otherwise ``None``
+   * - AdaptiveASR continuous reconstruction
+     - ``adaptive_asr``
+     - ``window``
+     - Reconstruction update
+     - Reconstructed component count
+   * - AdaptiveASR epoched reconstruction
+     - ``adaptive_asr``
+     - ``epoch``
+     - Completed epoch
+     - Reconstructed sample fraction
+   * - Adaptive DSS
+     - ``dss``
+     - ``segment``
+     - Completed fitted, selected, and cleaned segment
+     - Selected component count
+   * - Adaptive ZapLine
+     - ``zapline``
+     - ``frequency``
+     - Completed frequency pass
+     - Target frequency in Hz
+   * - ``narrowband_scan``
+     - ``narrowband_scan``
+     - ``frequency``
+     - Attempted candidate frequency
+     - Leading DSS eigenvalue, or ``None`` on scientific failure
+   * - Segmented BSS-CCA
+     - ``bss_cca``
+     - ``block``
+     - Fitted segmented block
+     - Mean canonical correlation for that operator
+   * - Continuous iCanClean
+     - ``icanclean``
+     - ``window``
+     - Completed continuous cleaning window
+     - Removed component count
+   * - Basic SSA continuous transform
+     - ``basic_ssa``
+     - ``channel``
+     - One channel SSA decomposition and cleaning
+     - Dropped component count
+   * - Basic SSA epoched transform
+     - ``basic_ssa``
+     - ``epoch``
+     - One complete epoch
+     - ``None``
+   * - Local SSA continuous transform
+     - ``local_ssa``
+     - ``channel``
+     - One channel local-SSA clustering and reconstruction
+     - Selected cluster count
+   * - Local SSA epoched transform
+     - ``local_ssa``
+     - ``epoch``
+     - One complete epoch
+     - ``None``
+   * - SNS fitting and channel-weight solving
+     - ``sns``
+     - ``channel``
+     - One channel regression/solve
+     - Local neighbor covariance numerical rank
+
+Deliberately silent modes
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Accepting a callback does not imply that an operation emits an event. In
+particular:
+
+SSA ``fit`` is silent because it only validates/records the transductive
+operating point. SSA single-channel primitives are silent. Epoched SSA
+suppresses nested channel events and reports epoch progress only. SNS
+``transform`` is silent because applying an already fitted spatial matrix is
+not a long iterative operation.
+
+* Standard ``DSS.fit_transform(callback=...)`` accepts a callback but emits no
+  events; only adaptive DSS has segmented progress.
+* Standard ``ZapLine.fit_transform(callback=...)`` accepts a callback but emits
+  no events; adaptive ZapLine owns frequency events.
+* Global BSS-CCA with ``segment_len=None`` emits no events. Explicit segmented
+  mode emits one event per fitted block, including a single block.
+* Global iCanClean emits no events.
+* Epoched iCanClean emits no events because epochs currently execute through
+  threaded joblib ``Parallel`` and callbacks are not invoked from workers.
+* ``AdaptiveASR.partial_fit`` does not accept a callback.
+* Standard one-shot matrix transforms are generally callback-free.
+
+Composed operations
+~~~~~~~~~~~~~~~~~~~
+
+``fit_transform`` may emit multiple stage streams when it performs multiple
+meaningful phases. Standard ASR emits ``asr/calibration`` followed by
+``asr/window`` or ``asr/epoch``. GuidedASR emits shared ``asr/calibration``
+followed by ``guided_asr/window`` or ``guided_asr/epoch``. AdaptiveASR emits
+``adaptive_asr/calibration`` followed by ``adaptive_asr/window`` or
+``adaptive_asr/epoch``. In particular, normal MW fitting is calibration-window
+progress, while MW sliding ``fit_transform`` deliberately reports its combined
+outer operation as ``adaptive_asr/window``.
 
 ASR
 ---

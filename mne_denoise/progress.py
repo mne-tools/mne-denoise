@@ -1,13 +1,22 @@
 """Structured computational progress events and callback helpers.
 
-Structured callbacks provide machine-readable computational progress, while
-logging and ``verbose`` provide human-readable diagnostics. The two mechanisms
-are independent: setting ``verbose=True`` does not enable callbacks, and
-providing a callback does not alter logging level or logging content.
+The package-wide progress API is a synchronous observer interface. A callback
+is a callable receiving one immutable :class:`ProgressEvent`; its return value
+is ignored and an exception raised by the callback propagates unchanged.
+Callbacks and logging are independent: ``verbose`` controls package logs,
+whereas ``callback`` controls structured events. A callback is runtime observer
+state, not an estimator hyperparameter, and public APIs expect it to be passed
+by keyword.
 
-Callbacks are synchronous and are invoked only when an emitter explicitly
-emits an event. Callback exceptions propagate unchanged, and callback return
-values are ignored.
+Events normally report a 1-based count of completed work. ``total`` is the
+known number of work units, or ``None`` only when that number is genuinely
+unknown. The current method vocabulary includes ``sound``, ``iterative_dss``,
+``asr``, ``guided_asr``, ``adaptive_asr``, ``dss``, ``zapline``,
+``narrowband_scan``, ``bss_cca``, ``icanclean``, ``basic_ssa``, ``local_ssa``,
+and ``sns``. Current stages include ``iteration``, ``calibration``,
+``window``, ``epoch``, ``segment``, ``frequency``, ``block``, and ``channel``.
+These are documented identifiers, not a closed enum; the contract remains open
+to additional semantic strings.
 """
 
 from collections.abc import Callable
@@ -24,40 +33,48 @@ class ProgressEvent:
     Parameters
     ----------
     method : str
-        Stable string identifier for the algorithm emitting the event. Future
-        integrations may use identifiers such as ``"sound"``,
-        ``"iterative_dss"``, ``"asr"``, ``"icanclean"``, ``"zapline"``, or
-        ``"narrowband_scan"``.
+        Stable string identifier for the algorithm emitting the event. Current
+        identifiers include ``"sound"``, ``"iterative_dss"``, ``"asr"``,
+        ``"guided_asr"``, ``"adaptive_asr"``, ``"dss"``, ``"zapline"``,
+        ``"narrowband_scan"``, ``"bss_cca"``, ``"icanclean"``,
+        ``"basic_ssa"``, ``"local_ssa"``, and ``"sns"``. This is an open
+        string contract rather than a Python enum.
     stage : str
-        Semantic phase within the algorithm. Future integrations may use
-        stages such as ``"iteration"``, ``"component"``, ``"window"``,
-        ``"segment"``, or ``"frequency"``.
+        Singular semantic phase within the algorithm. Current stages include
+        ``"iteration"``, ``"calibration"``, ``"window"``, ``"epoch"``,
+        ``"segment"``, ``"frequency"``, ``"block"``, and ``"channel"``.
+        This is an open string contract rather than a Python enum.
     current : int | None
-        1-based count of the progress unit that has just completed.
+        Normally the 1-based count of the progress unit that has just
+        completed. ``None`` is used only when a meaningful count is unavailable.
     total : int | None
-        Total planned units when known. For an iterative algorithm with early
-        convergence, this may be the maximum possible number of iterations
-        rather than the number eventually run.
+        Total planned units when known. ``None`` is used only when the total is
+        genuinely unknown. For an iterative algorithm with early convergence,
+        this may be the maximum possible number of iterations rather than the
+        number eventually run.
     component : int | None
         Optional 1-based component index for nested component-based
         algorithms, such as deflationary iterative DSS. ``None`` is used when
-        components are not meaningful.
+        component identity is not semantically useful.
     metric : float | None
         Optional scalar diagnostic associated with the event. Its
         interpretation is specific to the method and stage, such as a
-        convergence change, relative sigma change, or frequency score.
+        convergence change, threshold, rank, component count, or frequency.
 
     Notes
     -----
-    Progress events represent completed work. Future algorithm integrations
-    should normally emit an event after an iteration, window, frequency, or
-    other unit completes and after its diagnostic metric is known. Thus,
+    Progress events represent completed work. Emitters report after an
+    iteration, calibration unit, window, frequency, block, channel, or other
+    meaningful unit completes and after its diagnostic metric is known. Thus,
     ``current=1`` means that one unit is complete, not that unit 1 is about to
     start.
 
     Logging and structured callbacks are independent. Setting ``verbose=True``
     does not enable callbacks, and providing a callback does not alter logging
-    level or logging content.
+    level or logging content. Callback return values are ignored and callback
+    exceptions propagate unchanged. Callbacks are synchronous and should be
+    supplied by keyword; they are runtime observer state, not estimator
+    hyperparameters.
     """
 
     method: str

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import mne
@@ -428,6 +429,29 @@ def test_sound_fit_progress_callback(noisy_raw, forward):
     assert all(event.method == "sound" for event in events)
     assert all(event.stage == "iteration" for event in events)
     assert "callback" not in sound.get_params()
+
+
+def test_sound_fit_transform_exposes_callback_and_matches_composition(
+    noisy_raw, forward
+):
+    """SOUND fit_transform forwards one fitting stream and preserves output."""
+    raw, _ = noisy_raw
+    kwargs = {
+        "n_iter": 2,
+        "reference": "average",
+        "forward": forward,
+        "random_state": 0,
+    }
+    events = []
+    with_callback = SOUND(**kwargs).fit_transform(raw, callback=events.append)
+    reference = SOUND(**kwargs).fit(raw).transform(raw)
+
+    assert "callback" in inspect.signature(SOUND.fit_transform).parameters
+    assert "callback" not in SOUND(**kwargs).get_params()
+    assert [event.current for event in events] == [1, 2]
+    assert all(event.method == "sound" for event in events)
+    assert all(event.stage == "iteration" for event in events)
+    np.testing.assert_allclose(with_callback.get_data(), reference.get_data())
 
 
 def test_sound_transform_checks_fitted_channel_count(forward):
