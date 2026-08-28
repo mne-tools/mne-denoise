@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import numpy as np
@@ -174,8 +175,10 @@ def test_icanclean_epoch_and_debug_logging(synthetic_dual_layer, caplog):
         threshold=0.5,
         verbose="DEBUG",
     )
+    events = []
     with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
-        cleaned = estimator.transform(epochs)
+        cleaned = estimator.transform(epochs, callback=events.append)
+    assert events == []
     assert cleaned.get_data().shape == epochs_data.shape
     summaries = [record for record in caplog.records if "iCanClean:" in record.message]
     assert len(summaries) == 1
@@ -184,6 +187,34 @@ def test_icanclean_epoch_and_debug_logging(synthetic_dual_layer, caplog):
         record.levelno == logging.DEBUG and "iCanClean window" in record.message
         for record in caplog.records
     )
+
+
+def test_icanclean_epoch_fit_transform_callback_is_silent(synthetic_dual_layer):
+    """fit_transform keeps the existing threaded epoch path callback-silent."""
+    mne = pytest.importorskip("mne")
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    epochs_data = np.stack([data, data], axis=0)
+    info = mne.create_info(
+        [f"EEG{idx}" for idx in primary_idx]
+        + [f"REF{idx}" for idx in range(len(ref_idx))],
+        sfreq,
+        ["eeg"] * data.shape[0],
+    )
+    epochs = mne.EpochsArray(epochs_data, info, verbose=False)
+    estimator = ICanClean(
+        sfreq=sfreq,
+        ref_channels=ref_idx,
+        primary_channels=primary_idx,
+        segment_len=2.0,
+        threshold=0.5,
+        verbose=False,
+    )
+    events = []
+    cleaned = estimator.fit_transform(epochs, callback=events.append)
+
+    assert events == []
+    assert cleaned.get_data().shape == epochs_data.shape
+    assert estimator.n_windows_ > 0
 
 
 def test_icanclean_call_level_verbose_overrides_constructor(
@@ -301,6 +332,103 @@ def test_compute_icanclean_calibrated_mode_returns_window_qc(synthetic_dual_laye
     assert len(qc["patterns_"]) == qc["n_windows_"]
 
 
+@pytest.mark.parametrize("mode", ["sliding", "calibrated"])
+def test_compute_icanclean_window_progress_is_numerically_transparent(
+    synthetic_dual_layer, mode
+):
+    """Single-pass window callbacks report the final per-window QC state."""
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    kwargs = {
+        "sfreq": sfreq,
+        "mode": mode,
+        "segment_len": 2.0,
+        "overlap": 0.5,
+        "threshold": 0.5,
+        "verbose": False,
+    }
+    events = []
+    cleaned, qc = compute_icanclean(
+        data[primary_idx], data[ref_idx], callback=events.append, **kwargs
+    )
+    reference_cleaned, reference_qc = compute_icanclean(
+        data[primary_idx], data[ref_idx], **kwargs
+    )
+
+    assert len(events) == qc["n_windows_"]
+    assert [event.method for event in events] == ["icanclean"] * len(events)
+    assert [event.stage for event in events] == ["window"] * len(events)
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert [event.total for event in events] == [qc["n_windows_"]] * len(events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_array_equal(
+        [event.metric for event in events], qc["n_removed_"].astype(float)
+    )
+
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    for key in ("correlations_", "n_removed_", "thresholds_", "max_r2_"):
+        np.testing.assert_allclose(
+            qc[key], reference_qc[key], equal_nan=True, rtol=0.0, atol=0.0
+        )
+    assert qc["n_windows_"] == reference_qc["n_windows_"]
+    assert qc["samples_per_variable_"] == reference_qc["samples_per_variable_"]
+    for key in ("removed_idx_", "filters_", "patterns_"):
+        assert len(qc[key]) == len(reference_qc[key])
+        for actual, expected in zip(qc[key], reference_qc[key], strict=True):
+            np.testing.assert_array_equal(actual, expected)
+
+
+def test_compute_icanclean_global_callback_is_silent(synthetic_dual_layer):
+    """The implementation-reuse global pass emits no window event."""
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    kwargs = {"sfreq": sfreq, "mode": "global", "threshold": 0.5, "verbose": False}
+    events = []
+    cleaned, qc = compute_icanclean(
+        data[primary_idx], data[ref_idx], callback=events.append, **kwargs
+    )
+    reference_cleaned, reference_qc = compute_icanclean(
+        data[primary_idx], data[ref_idx], **kwargs
+    )
+
+    assert events == []
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_allclose(
+        qc["correlations_"], reference_qc["correlations_"], equal_nan=True
+    )
+    np.testing.assert_array_equal(qc["n_removed_"], reference_qc["n_removed_"])
+
+
+def test_compute_icanclean_null_threshold_emits_window_events(
+    synthetic_dual_layer, monkeypatch
+):
+    """Null surrogates remain nested inside one event per cleaning window."""
+    import mne_denoise.icanclean as icc_core
+
+    original_null_threshold = icc_core.null_r2_threshold
+
+    def fast_null_threshold(X_cca, Y_cca, **kwargs):
+        return original_null_threshold(X_cca, Y_cca, n_surrogate=3, **kwargs)
+
+    monkeypatch.setattr(icc_core, "null_r2_threshold", fast_null_threshold)
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    events = []
+    _, qc = compute_icanclean(
+        data[primary_idx],
+        data[ref_idx],
+        sfreq=sfreq,
+        mode="sliding",
+        threshold="null",
+        null_random_state=0,
+        callback=events.append,
+        verbose=False,
+    )
+
+    assert len(events) == qc["n_windows_"]
+    assert [event.current for event in events] == list(range(1, qc["n_windows_"] + 1))
+    np.testing.assert_array_equal(
+        [event.metric for event in events], qc["n_removed_"].astype(float)
+    )
+
+
 # ---------------------------------------------------------------------------
 # Estimator tests (numpy)
 # ---------------------------------------------------------------------------
@@ -386,14 +514,138 @@ def test_icanclean_numpy_window_too_long_raises(rng):
 def test_icanclean_numpy_auto_threshold(synthetic_dual_layer):
     """Auto threshold mode runs without error."""
     data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    events = []
     icc = ICanClean(
         sfreq=sfreq,
         ref_channels=ref_idx,
         threshold="auto",
         verbose=False,
     )
-    cleaned = icc.fit_transform(data)
+    cleaned = icc.fit_transform(data, callback=events.append)
     assert cleaned.shape == data.shape
+    assert len(events) == icc.n_windows_
+    assert [event.current for event in events] == list(range(1, icc.n_windows_ + 1))
+    np.testing.assert_array_equal(
+        [event.metric for event in events], icc.n_removed_.astype(float)
+    )
+
+
+def test_icanclean_callback_signature_and_validation(synthetic_dual_layer):
+    """Callbacks are runtime parameters on the intended public operations."""
+    assert "callback" not in inspect.signature(ICanClean.__init__).parameters
+    assert "callback" not in inspect.signature(ICanClean.fit).parameters
+    for method in (ICanClean.transform, ICanClean.fit_transform):
+        parameter = inspect.signature(method).parameters["callback"]
+        assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+        assert parameter.default is None
+    compute_callback = inspect.signature(compute_icanclean).parameters["callback"]
+    assert compute_callback.default is None
+
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        compute_icanclean(data[primary_idx], data[ref_idx], sfreq=sfreq, callback=1)
+
+
+def test_icanclean_transform_progress_is_numerically_transparent(
+    synthetic_dual_layer,
+):
+    """Continuous estimator callbacks match the installed QC state."""
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    kwargs = {
+        "sfreq": sfreq,
+        "ref_channels": ref_idx,
+        "primary_channels": primary_idx,
+        "segment_len": 2.0,
+        "overlap": 0.5,
+        "threshold": 0.5,
+        "verbose": False,
+    }
+    with_callback = ICanClean(**kwargs)
+    events = []
+    cleaned = with_callback.transform(data, callback=events.append)
+    without_callback = ICanClean(**kwargs)
+    reference_cleaned = without_callback.transform(data)
+
+    assert len(events) == with_callback.n_windows_
+    assert [event.current for event in events] == list(
+        range(1, with_callback.n_windows_ + 1)
+    )
+    assert [event.total for event in events] == [with_callback.n_windows_] * len(events)
+    assert all(event.method == "icanclean" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_array_equal(
+        [event.metric for event in events], with_callback.n_removed_.astype(float)
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_allclose(
+        with_callback.correlations_,
+        without_callback.correlations_,
+        equal_nan=True,
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_array_equal(with_callback.n_removed_, without_callback.n_removed_)
+    assert "callback" not in with_callback.__dict__
+
+
+def test_icanclean_fit_transform_progress_matches_transform(synthetic_dual_layer):
+    """fit_transform forwards callbacks only to the callback-aware transform."""
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    kwargs = {
+        "sfreq": sfreq,
+        "ref_channels": ref_idx,
+        "primary_channels": primary_idx,
+        "segment_len": 2.0,
+        "overlap": 0.5,
+        "threshold": 0.5,
+        "verbose": False,
+    }
+    transform_events = []
+    transform_estimator = ICanClean(**kwargs)
+    transform_cleaned = transform_estimator.transform(
+        data, callback=transform_events.append
+    )
+    fit_transform_events = []
+    fit_transform_estimator = ICanClean(**kwargs)
+    fit_transform_cleaned = fit_transform_estimator.fit_transform(
+        data, callback=fit_transform_events.append
+    )
+
+    assert fit_transform_events == transform_events
+    np.testing.assert_allclose(fit_transform_cleaned, transform_cleaned)
+    np.testing.assert_array_equal(
+        fit_transform_estimator.n_removed_, transform_estimator.n_removed_
+    )
+
+
+def test_icanclean_callback_exception_propagates_without_partial_qc(
+    synthetic_dual_layer,
+):
+    """A callback failure aborts continuous processing unchanged."""
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    estimator = ICanClean(
+        sfreq=sfreq,
+        ref_channels=ref_idx,
+        primary_channels=primary_idx,
+        segment_len=2.0,
+        threshold=0.5,
+        verbose=False,
+    )
+    sentinel = RuntimeError("icanclean callback failed")
+    events = []
+
+    def callback(event):
+        events.append(event)
+        raise sentinel
+
+    with pytest.raises(RuntimeError) as caught:
+        estimator.transform(data, callback=callback)
+
+    assert caught.value is sentinel
+    assert len(events) == 1
+    assert events[0].current == 1
+    assert not hasattr(estimator, "n_windows_")
 
 
 def test_icanclean_numpy_max_reject_fraction(synthetic_dual_layer):
@@ -769,15 +1021,18 @@ def test_pseudo_ref_removes_out_of_band_artifact(synthetic_dual_layer):
 def test_icanclean_max_reject_zero_preserves_data(synthetic_dual_layer):
     """max_reject_fraction=0.0 should remove nothing."""
     data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    events = []
     icc = ICanClean(
         sfreq=sfreq,
         ref_channels=list(ref_idx),
         max_reject_fraction=0.0,
         threshold=0.0,  # would reject everything if cap weren't 0
     )
-    cleaned = icc.fit_transform(data)
+    cleaned = icc.fit_transform(data, callback=events.append)
     np.testing.assert_array_almost_equal(cleaned, data)
     assert icc.n_removed_.sum() == 0
+    assert len(events) == icc.n_windows_
+    assert [event.metric for event in events] == [0.0] * icc.n_windows_
 
 
 def test_icanclean_mode_global(synthetic_dual_layer):
@@ -812,6 +1067,62 @@ def test_icanclean_mode_hybrid(synthetic_dual_layer):
     assert hasattr(icc, "sliding_correlations_")
     assert icc.n_windows_ > 1
     assert icc.correlations_.shape == icc.sliding_correlations_.shape
+
+
+def test_icanclean_hybrid_progress_reports_only_sliding_pass(
+    synthetic_dual_layer,
+):
+    """Hybrid callbacks expose sliding windows, not the global setup pass."""
+    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
+    kwargs = {
+        "sfreq": sfreq,
+        "ref_channels": ref_idx,
+        "primary_channels": primary_idx,
+        "mode": "hybrid",
+        "segment_len": 2.0,
+        "overlap": 0.5,
+        "threshold": 0.5,
+        "global_threshold": 0.8,
+        "global_clean_with": "Y",
+        "global_max_reject_fraction": 0.5,
+        "verbose": False,
+    }
+    with_callback = ICanClean(**kwargs)
+    events = []
+    cleaned = with_callback.transform(data, callback=events.append)
+    without_callback = ICanClean(**kwargs)
+    reference_cleaned = without_callback.transform(data)
+
+    assert len(events) == with_callback.sliding_n_windows_
+    assert with_callback.global_n_windows_ == 1
+    assert [event.method for event in events] == ["icanclean"] * len(events)
+    assert [event.stage for event in events] == ["window"] * len(events)
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert [event.total for event in events] == [
+        with_callback.sliding_n_windows_
+    ] * len(events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_array_equal(
+        [event.metric for event in events],
+        with_callback.sliding_n_removed_.astype(float),
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_allclose(
+        with_callback.global_correlations_,
+        without_callback.global_correlations_,
+        equal_nan=True,
+    )
+    np.testing.assert_array_equal(
+        with_callback.global_n_removed_, without_callback.global_n_removed_
+    )
+    np.testing.assert_allclose(
+        with_callback.sliding_correlations_,
+        without_callback.sliding_correlations_,
+        equal_nan=True,
+    )
+    np.testing.assert_array_equal(
+        with_callback.sliding_n_removed_, without_callback.sliding_n_removed_
+    )
 
 
 def test_icanclean_mode_sliding_default(synthetic_dual_layer):
