@@ -117,6 +117,54 @@ def test_asr_continuous_transform_progress_is_numerically_transparent(
     )
 
 
+def test_asr_fit_transform_composes_calibration_and_window_progress(
+    synthetic_burst_data,
+):
+    """ASR.fit_transform emits calibration events before window events."""
+    data, _, _, sfreq = synthetic_burst_data
+    kwargs = {
+        "sfreq": sfreq,
+        "cutoff": 3.0,
+        "calibration": "manual",
+        "filter_kind": "none",
+        "max_dims": 0.5,
+        "lookahead": 0.0,
+        "stepsize": 100,
+        "verbose": False,
+    }
+    events = []
+    with_callback = ASR(**kwargs)
+    cleaned, diagnostics = with_callback.fit_transform(
+        data,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+    without_callback = ASR(**kwargs)
+    reference_cleaned, reference_diagnostics = without_callback.fit_transform(
+        data,
+        return_diagnostics=True,
+    )
+
+    n_components = with_callback.thresholds_.size
+    calibration_events = events[:n_components]
+    window_events = events[n_components:]
+    assert [event.method for event in calibration_events] == ["asr"] * n_components
+    assert [event.stage for event in calibration_events] == [
+        "calibration"
+    ] * n_components
+    assert len(window_events) == diagnostics["n_windows"]
+    assert all(event.method == "asr" for event in window_events)
+    assert all(event.stage == "window" for event in window_events)
+    assert [event.current for event in window_events] == list(
+        range(1, len(window_events) + 1)
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
 def test_asr_epoched_transform_reports_epochs_without_inner_windows(
     synthetic_burst_data,
 ):
@@ -155,6 +203,56 @@ def test_asr_epoched_transform_reports_epochs_without_inner_windows(
     assert [event.component for event in events] == [None] * n_epochs
     np.testing.assert_allclose(
         [event.metric for event in events],
+        [
+            diag["fraction_reconstructed_samples"]
+            for diag in diagnostics["epoch_diagnostics"]
+        ],
+    )
+
+
+def test_asr_fit_transform_epoched_progress_has_no_nested_windows(
+    synthetic_burst_data,
+):
+    """ASR.fit_transform emits calibration then one event per epoch."""
+    mne = pytest.importorskip("mne")
+    data, _, _, sfreq = synthetic_burst_data
+    n_epochs = 3
+    n_times = data.shape[1] // n_epochs
+    info = mne.create_info(data.shape[0], sfreq, "eeg")
+    epochs = mne.EpochsArray(
+        data.reshape(data.shape[0], n_epochs, n_times).transpose(1, 0, 2),
+        info,
+        verbose=False,
+    )
+    asr = ASR(
+        sfreq=sfreq,
+        cutoff=3.0,
+        calibration="manual",
+        filter_kind="none",
+        lookahead=0.0,
+        verbose=False,
+    )
+    events = []
+    _, diagnostics = asr.fit_transform(
+        epochs,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+
+    n_components = asr.thresholds_.size
+    epoch_events = events[n_components:]
+    assert len(epoch_events) == n_epochs
+    assert [event.method for event in events[:n_components]] == ["asr"] * n_components
+    assert [event.stage for event in events[:n_components]] == [
+        "calibration"
+    ] * n_components
+    assert [event.method for event in epoch_events] == ["asr"] * n_epochs
+    assert [event.stage for event in epoch_events] == ["epoch"] * n_epochs
+    assert [event.current for event in epoch_events] == list(range(1, n_epochs + 1))
+    assert [event.total for event in epoch_events] == [n_epochs] * n_epochs
+    assert all(event.component is None for event in epoch_events)
+    np.testing.assert_allclose(
+        [event.metric for event in epoch_events],
         [
             diag["fraction_reconstructed_samples"]
             for diag in diagnostics["epoch_diagnostics"]

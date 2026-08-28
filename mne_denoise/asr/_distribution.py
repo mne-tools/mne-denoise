@@ -12,6 +12,7 @@ from typing import Any, Literal, overload
 import numpy as np
 from scipy import special
 
+from ..progress import _emit_progress, _ProgressCallback
 from ._validation import _round_half_up
 
 _AASR_BETA_GRID = 1.7 + 0.15 * np.arange(13, dtype=np.float64)
@@ -349,6 +350,7 @@ def _fit_adaptive_thresholds(
     cutoff: float,
     min_clean_fraction: float,
     max_dropout_fraction: float,
+    callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Fit adaptive ASR thresholds for each component via its RMS distribution.
 
@@ -370,6 +372,9 @@ def _fit_adaptive_thresholds(
         The minimum fraction of clean data expected.
     max_dropout_fraction : float
         The maximum fraction of dropout data expected.
+    callback : callable | None
+        Called synchronously after each component threshold is fitted. Callback
+        return values are ignored and callback exceptions propagate unchanged.
 
     Returns
     -------
@@ -410,6 +415,15 @@ def _fit_adaptive_thresholds(
         fit_errors[comp_idx] = info["fit_error"]
         fit_intervals[comp_idx] = info["fit_interval"]
         thresholds[comp_idx] = mu + cutoff * sigma
+        _emit_progress(
+            callback,
+            method="adaptive_asr",
+            stage="calibration",
+            current=comp_idx + 1,
+            total=projected.shape[1],
+            component=comp_idx + 1,
+            metric=float(thresholds[comp_idx]),
+        )
 
     info_out: dict[str, Any] = {
         "mu": mu_values,

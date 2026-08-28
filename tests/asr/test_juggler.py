@@ -314,6 +314,47 @@ def test_juggler_transform_progress_uses_standard_asr_windows(synthetic_burst_da
     )
 
 
+def test_juggler_fit_transform_inherits_standard_progress(synthetic_burst_data):
+    """Juggler fit_transform composes ASR calibration and window events."""
+    data, _, _, sfreq = synthetic_burst_data
+    kwargs = {
+        "sfreq": sfreq,
+        "cutoff": 3.0,
+        "strategy": "dbscan",
+        "filter_kind": "none",
+        "selection_filter_kind": "none",
+        "lookahead": 0.0,
+        "verbose": False,
+    }
+    events = []
+    with_callback = JugglerASR(**kwargs)
+    cleaned, diagnostics = with_callback.fit_transform(
+        data,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+    without_callback = JugglerASR(**kwargs)
+    reference_cleaned, reference_diagnostics = without_callback.fit_transform(
+        data,
+        return_diagnostics=True,
+    )
+
+    n_components = with_callback.thresholds_.size
+    calibration_events = events[:n_components]
+    reconstruction_events = events[n_components:]
+    assert all(event.method == "asr" for event in calibration_events)
+    assert all(event.stage == "calibration" for event in calibration_events)
+    assert len(reconstruction_events) == diagnostics["n_windows"]
+    assert all(event.method == "asr" for event in reconstruction_events)
+    assert all(event.stage == "window" for event in reconstruction_events)
+    assert all(event.component is None for event in reconstruction_events)
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
 def test_juggler_asr_gev_fit_transform_round_trip():
     """JugglerASR(gev) should fit + transform end-to-end on synthetic data."""
     sfreq = 250.0

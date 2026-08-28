@@ -496,6 +496,50 @@ def test_guided_fit_progress_is_shared_asr_calibration():
     assert not any(event.method == "guided_asr" for event in events)
 
 
+def test_guided_fit_transform_inherits_callback_composition():
+    """GuidedASR.fit_transform combines shared fit and guided reconstruction events."""
+    X = _eeg(n_times=4000)
+    kwargs = {
+        "sfreq": SFREQ,
+        "cutoff": 20.0,
+        "calibration": "manual",
+        "filter_kind": "none",
+        "reconstruction": "hard",
+        "picks": None,
+        "lookahead": 0.0,
+        "verbose": False,
+    }
+    events = []
+    with_callback = GuidedASR(**kwargs)
+    cleaned, diagnostics = with_callback.fit_transform(
+        X,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+    without_callback = GuidedASR(**kwargs)
+    reference_cleaned, reference_diagnostics = without_callback.fit_transform(
+        X,
+        return_diagnostics=True,
+    )
+
+    n_components = with_callback.thresholds_.size
+    calibration_events = events[:n_components]
+    reconstruction_events = events[n_components:]
+    assert [event.method for event in calibration_events] == ["asr"] * n_components
+    assert [event.stage for event in calibration_events] == [
+        "calibration"
+    ] * n_components
+    assert len(reconstruction_events) == diagnostics["n_windows"]
+    assert all(event.method == "guided_asr" for event in reconstruction_events)
+    assert all(event.stage == "window" for event in reconstruction_events)
+    assert all(event.component is None for event in reconstruction_events)
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
 def test_guided_epoched_transform_reports_outer_epochs_only():
     """Guided epoch transforms do not expose nested reconstruction windows."""
     mne = pytest.importorskip("mne")

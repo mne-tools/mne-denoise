@@ -975,6 +975,7 @@ def _process_adaptive_chunk(
     store_reconstruction_matrices: bool,
     adaptive_variant: str,
     max_mem_mb: int | float | None,
+    callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any], dict[str, Any]]:
     """Mirror the AASR ``reconstruct()`` wrapper around ``asr_process``.
 
@@ -1003,6 +1004,8 @@ def _process_adaptive_chunk(
         The variant of the adaptive updating rule used (e.g., 'psw').
     max_mem_mb : int | float | None
         The maximum memory allowed for block computations.
+    callback : callable | None
+        Called synchronously after each completed reconstruction-matrix update.
 
     Returns
     -------
@@ -1126,7 +1129,7 @@ def _process_adaptive_chunk(
     window_stops: list[int] = []
 
     last_n = 0
-    for n in update_at:
+    for progress_idx, n in enumerate(update_at, start=1):
         if covariance_iter is None:
             assert Xcov_flat is not None
             Cw = Xcov_flat[:, n - 1].reshape(n_channels, n_channels, order="F")
@@ -1174,6 +1177,15 @@ def _process_adaptive_chunk(
         last_n = int(n)
         last_R = R
         last_trivial = trivial
+        _emit_progress(
+            callback,
+            method="adaptive_asr",
+            stage="window",
+            current=progress_idx,
+            total=len(update_at),
+            component=None,
+            metric=float(n_bad),
+        )
 
     carry_out = (
         data_stream[:, -lookahead_samples:].copy() if lookahead_samples > 0 else None

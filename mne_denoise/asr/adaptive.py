@@ -30,6 +30,7 @@ import numpy as np
 from .._data import continuous_to_epochs, extract_data_from_mne, reconstruct_mne_object
 from .._logging import logger, verbose
 from .._validation import check_channel_layout
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._covariance import (
     _adaptive_covariance_sqrt,
 )
@@ -239,6 +240,7 @@ class AdaptiveASR(ASR):
         calibration: BaseRaw | BaseEpochs | np.ndarray | None = None,
         calibration_mask: np.ndarray | None = None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> AdaptiveASR:
         """Fit the initial adaptive ASR state from calibration data.
@@ -262,6 +264,10 @@ class AdaptiveASR(ASR):
             Optional boolean mask of shape (n_times,) denoting which samples in the
             calibration data are clean and should be used to estimate the initial state.
             If None, the mask is estimated automatically.
+        callback : callable | None
+            Called synchronously after each adaptive calibration component for PSP/PSW,
+            or after each MW calibration window. Callback return values are ignored and
+            callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -269,6 +275,7 @@ class AdaptiveASR(ASR):
             The fitted estimator instance.
         """
         del y
+        callback = _validate_callback(callback)
         _validate_adaptive_params(
             variant=self.variant,
             update_window_length=self.update_window_length,
@@ -319,11 +326,11 @@ class AdaptiveASR(ASR):
                 learner,
                 process_state,
                 mw_diagnostics,
-            ) = self._fit_mw_state(data_2d, sfreq)
+            ) = self._fit_mw_state(data_2d, sfreq, callback=callback)
             self.mw_diagnostics_ = mw_diagnostics
         else:
             state, cal_info, learner, process_state = self._fit_adaptive_state(
-                data_2d, sfreq
+                data_2d, sfreq, callback=callback
             )
             # Ensure attribute is always defined post-fit for consumer code.
             self.mw_diagnostics_ = []
@@ -486,6 +493,7 @@ class AdaptiveASR(ASR):
         copy: bool | None = None,
         return_diagnostics: bool = False,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
         """Clean data using the current adaptive ASR state.
@@ -505,6 +513,11 @@ class AdaptiveASR(ASR):
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)`` where
             ``diagnostics`` is a dictionary detailing the reconstruction process.
+        callback : callable | None
+            Called synchronously after each completed reconstruction window for
+            continuous input, or after each completed epoch for epoched input.
+            Callback return values are ignored and callback exceptions propagate
+            unchanged.
 
         Returns
         -------
@@ -515,6 +528,7 @@ class AdaptiveASR(ASR):
             eigenvalues). Only returned if ``return_diagnostics=True``.
         """
         del y, copy
+        callback = _validate_callback(callback)
         self._check_is_fitted()
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
             X, auto_pick=True
@@ -541,7 +555,11 @@ class AdaptiveASR(ASR):
         self._warn_preprocessing_state(orig_inst, mne_type)
 
         if mne_type == "epochs":
-            cleaned_data, diagnostics = self._transform_epochs_adaptive(data, sfreq)
+            cleaned_data, diagnostics = self._transform_epochs_adaptive(
+                data,
+                sfreq,
+                callback=callback,
+            )
         else:
             selected = np.asarray(data, dtype=np.float64)
             selected_clean, diagnostics, next_process_state = _process_adaptive_chunk(
@@ -556,6 +574,7 @@ class AdaptiveASR(ASR):
                 store_reconstruction_matrices=self.store_reconstruction_matrices,
                 adaptive_variant=self.variant,
                 max_mem_mb=self.max_mem_mb,
+                callback=callback,
             )
             if mne_type == "raw" and self.reject_by_annotation:
                 good_mask = _create_good_sample_mask_from_mne(
@@ -620,6 +639,7 @@ class AdaptiveASR(ASR):
         calibration: BaseRaw | BaseEpochs | np.ndarray | None = None,
         return_diagnostics: bool = False,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
         """Fit adaptive ASR and reconstruct ``X`` with the fitted state.
@@ -643,6 +663,10 @@ class AdaptiveASR(ASR):
             Optional separate calibration dataset.
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)``.
+        callback : callable | None
+            Called synchronously after each completed adaptive calibration or
+            reconstruction progress unit. Callback return values are ignored
+            and callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -652,18 +676,27 @@ class AdaptiveASR(ASR):
             A dictionary containing processing metadata. Only returned if
             ``return_diagnostics=True``.
         """
+        callback = _validate_callback(callback)
         if self.variant == "mw" and self.mw_mode == "sliding":
             return self._fit_transform_mw_sliding(
-                X, calibration=calibration, return_diagnostics=return_diagnostics
+                X,
+                calibration=calibration,
+                return_diagnostics=return_diagnostics,
+                callback=callback,
             )
-        self.fit(X, y=y, calibration=calibration)
-        return self.transform(X, return_diagnostics=return_diagnostics)
+        self.fit(X, y=y, calibration=calibration, callback=callback)
+        return self.transform(
+            X,
+            return_diagnostics=return_diagnostics,
+            callback=callback,
+        )
 
     def _fit_transform_mw_sliding(
         self,
         X: BaseRaw | BaseEpochs | np.ndarray,
         calibration: BaseRaw | BaseEpochs | np.ndarray | None = None,
         return_diagnostics: bool = False,
+        callback: _ProgressCallback | None = None,
     ) -> Any:
         """Per-window calibrate-AND-clean implementation for MW sliding mode.
 
@@ -686,6 +719,9 @@ class AdaptiveASR(ASR):
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)`` where
             ``diagnostics`` compiles metadata across all processed windows.
+        callback : callable | None
+            Called once after each attempted MW window completes. Callback return
+            values are ignored and callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -775,10 +811,20 @@ class AdaptiveASR(ASR):
                     window.shape[1],
                     self.blocksize,
                 )
+                _emit_progress(
+                    callback,
+                    method="adaptive_asr",
+                    stage="window",
+                    current=window_idx + 1,
+                    total=n_windows,
+                    component=None,
+                    metric=None,
+                )
                 continue
+            window_metric = None
             try:
                 state, cal_info, learner, process_state = self._fit_adaptive_state(
-                    window, sfreq_val
+                    window, sfreq_val, callback=None
                 )
                 window_cleaned, _, _ = _process_adaptive_chunk(
                     window,
@@ -792,6 +838,7 @@ class AdaptiveASR(ASR):
                     store_reconstruction_matrices=False,
                     adaptive_variant=self.variant,
                     max_mem_mb=self.max_mem_mb,
+                    callback=None,
                 )
                 cleaned[:, start:stop] = window_cleaned
                 entry.update(
@@ -807,6 +854,7 @@ class AdaptiveASR(ASR):
                     }
                 )
                 last = (state, cal_info, learner, process_state)
+                window_metric = float(state.rank)
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
                     "AdaptiveASR variant=mw window %d failed; passing it through: %s",
@@ -826,6 +874,15 @@ class AdaptiveASR(ASR):
                 window_idx + 1,
                 n_windows,
                 entry["status"],
+            )
+            _emit_progress(
+                callback,
+                method="adaptive_asr",
+                stage="window",
+                current=window_idx + 1,
+                total=n_windows,
+                component=None,
+                metric=window_metric,
             )
 
         if last is None:
@@ -919,6 +976,7 @@ class AdaptiveASR(ASR):
         self,
         X: np.ndarray,
         sfreq: float,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[
         ASRState,
         dict[str, Any],
@@ -942,6 +1000,8 @@ class AdaptiveASR(ASR):
             The input data array of shape (n_channels, n_times).
         sfreq : float
             The sampling frequency of the data in Hz.
+        callback : callable | None
+            Called once after each attempted MW calibration window completes.
 
         Returns
         -------
@@ -979,10 +1039,20 @@ class AdaptiveASR(ASR):
                     window.shape[1],
                     self.blocksize,
                 )
+                _emit_progress(
+                    callback,
+                    method="adaptive_asr",
+                    stage="window",
+                    current=window_idx + 1,
+                    total=n_windows,
+                    component=None,
+                    metric=None,
+                )
                 continue
+            window_metric = None
             try:
                 state, cal_info, learner, process_state = self._fit_adaptive_state(
-                    window, sfreq
+                    window, sfreq, callback=None
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
@@ -1001,33 +1071,44 @@ class AdaptiveASR(ASR):
                         "error": str(exc),
                     }
                 )
-                continue
-            diagnostics_list.append(
-                {
-                    "window_idx": int(window_idx),
-                    "window_start": int(start),
-                    "window_stop": int(stop),
-                    "n_samples": int(window.shape[1]),
-                    "status": "passed",
-                    "M": np.asarray(state.M, dtype=np.float64),
-                    "T": np.asarray(state.T, dtype=np.float64),
-                    "thresholds": np.asarray(state.thresholds, dtype=np.float64),
-                    "rank": int(state.rank),
-                    "clean_window_fraction": cal_info.get(
-                        "calibration_clean_window_fraction"
+            else:
+                diagnostics_list.append(
+                    {
+                        "window_idx": int(window_idx),
+                        "window_start": int(start),
+                        "window_stop": int(stop),
+                        "n_samples": int(window.shape[1]),
+                        "status": "passed",
+                        "M": np.asarray(state.M, dtype=np.float64),
+                        "T": np.asarray(state.T, dtype=np.float64),
+                        "thresholds": np.asarray(state.thresholds, dtype=np.float64),
+                        "rank": int(state.rank),
+                        "clean_window_fraction": cal_info.get(
+                            "calibration_clean_window_fraction"
+                        ),
+                    }
+                )
+                last = (state, cal_info, learner, process_state)
+                window_metric = float(state.rank)
+                logger.debug(
+                    "AdaptiveASR variant=mw calibration window %d/%d: rank=%d, "
+                    "clean fraction=%.3f.",
+                    window_idx + 1,
+                    n_windows,
+                    state.rank,
+                    float(
+                        cal_info.get("calibration_clean_window_fraction")
+                        or float("nan")
                     ),
-                }
-            )
-            last = (state, cal_info, learner, process_state)
-            logger.debug(
-                "AdaptiveASR variant=mw calibration window %d/%d: rank=%d, "
-                "clean fraction=%.3f.",
-                window_idx + 1,
-                n_windows,
-                state.rank,
-                float(
-                    cal_info.get("calibration_clean_window_fraction") or float("nan")
-                ),
+                )
+            _emit_progress(
+                callback,
+                method="adaptive_asr",
+                stage="window",
+                current=window_idx + 1,
+                total=n_windows,
+                component=None,
+                metric=window_metric,
             )
 
         if last is None:
@@ -1046,6 +1127,7 @@ class AdaptiveASR(ASR):
         self,
         X: np.ndarray,
         sfreq: float,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[ASRState, dict[str, Any], _AdaptiveSimilarityMatcher, dict[str, Any]]:
         X = _validate_array_2d(X)
         self._check_adaptive_segment_length(X, sfreq, operation="fit")
@@ -1077,6 +1159,7 @@ class AdaptiveASR(ASR):
             cutoff=self.cutoff,
             min_clean_fraction=self.min_clean_fraction,
             max_dropout_fraction=self.max_dropout_fraction,
+            callback=callback,
         )
         state = ASRState(
             M=M,
@@ -1290,6 +1373,7 @@ class AdaptiveASR(ASR):
         self,
         data: np.ndarray,
         sfreq: float,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         cleaned = np.asarray(data, dtype=np.float64).copy()
         epoch_diags = []
@@ -1302,7 +1386,8 @@ class AdaptiveASR(ASR):
         rejection_keep_masks: list[np.ndarray] = []
         rejection_remove_masks: list[np.ndarray] = []
         counts: list[np.ndarray] = []
-        for epoch_idx in range(cleaned.shape[0]):
+        n_epochs = cleaned.shape[0]
+        for epoch_idx in range(n_epochs):
             selected = cleaned[epoch_idx, :, :]
             selected_clean, diag, _ = _process_adaptive_chunk(
                 selected,
@@ -1316,6 +1401,7 @@ class AdaptiveASR(ASR):
                 store_reconstruction_matrices=self.store_reconstruction_matrices,
                 adaptive_variant=self.variant,
                 max_mem_mb=self.max_mem_mb,
+                callback=None,
             )
             cleaned[epoch_idx, :, :] = selected_clean
             if self.window_criterion is not None:
@@ -1353,6 +1439,15 @@ class AdaptiveASR(ASR):
                 rejection_keep_masks.append(diag["rejection_window_keep_mask"])
                 rejection_remove_masks.append(diag["rejection_window_remove_mask"])
             counts.append(diag["n_components_reconstructed"])
+            _emit_progress(
+                callback,
+                method="adaptive_asr",
+                stage="epoch",
+                current=epoch_idx + 1,
+                total=n_epochs,
+                component=None,
+                metric=float(diag["fraction_reconstructed_samples"]),
+            )
 
         diagnostics: dict[str, Any] = {
             "epoch_diagnostics": epoch_diags,

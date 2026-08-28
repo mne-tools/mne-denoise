@@ -636,6 +636,7 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration: BaseRaw | BaseEpochs | np.ndarray | None = None,
         return_diagnostics: bool = False,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
         """Fit ASR and apply it to ``X``.
@@ -650,6 +651,9 @@ class ASR(BaseEstimator, TransformerMixin):
             Optional separate calibration data with matching channels.
         return_diagnostics : bool, default=False
             If True, return ``(cleaned, diagnostics)``.
+        callback : callable | None
+            Passed to fitting and reconstruction progress callbacks. Callback
+            return values are ignored and callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -672,8 +676,13 @@ class ASR(BaseEstimator, TransformerMixin):
 
         >>> clean_data, diagnostics = asr.fit_transform(data, return_diagnostics=True)
         """
-        self.fit(X, y=y, calibration=calibration)
-        return self.transform(X, return_diagnostics=return_diagnostics)
+        callback = _validate_callback(callback)
+        self.fit(X, y=y, calibration=calibration, callback=callback)
+        return self.transform(
+            X,
+            return_diagnostics=return_diagnostics,
+            callback=callback,
+        )
 
     def get_diagnostics(self) -> dict[str, Any]:
         """Return diagnostics from the last transform.

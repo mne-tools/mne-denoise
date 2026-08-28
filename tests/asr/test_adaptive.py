@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import numpy as np
@@ -163,6 +164,404 @@ def test_mw_partial_fit_raises_not_implemented():
     extra = _make_synthetic(n_samples=2000, sfreq=sfreq, seed=44)
     with pytest.raises(NotImplementedError, match="variant='mw'"):
         mw.partial_fit(extra)
+
+
+@pytest.mark.parametrize("variant", ["psp", "psw"])
+def test_adaptive_fit_progress_is_numerically_transparent(variant):
+    """PSP/PSW fit emits one adaptive calibration event per component."""
+    data = _make_synthetic(n_samples=3000, seed=123)
+    kwargs = {"sfreq": SFREQ, "variant": variant, "verbose": False}
+    events = []
+    with_callback = AdaptiveASR(**kwargs)
+    with_callback.fit(data, callback=events.append)
+    without_callback = AdaptiveASR(**kwargs).fit(data)
+
+    n_components = with_callback.thresholds_.size
+    assert len(events) == n_components
+    assert [event.method for event in events] == ["adaptive_asr"] * n_components
+    assert [event.stage for event in events] == ["calibration"] * n_components
+    assert [event.current for event in events] == list(range(1, n_components + 1))
+    assert [event.total for event in events] == [n_components] * n_components
+    assert [event.component for event in events] == list(range(1, n_components + 1))
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        with_callback.thresholds_,
+        rtol=0.0,
+        atol=1e-12,
+    )
+
+    for name in ("M_", "T_", "thresholds_", "patterns_"):
+        np.testing.assert_allclose(
+            getattr(with_callback, name), getattr(without_callback, name)
+        )
+    assert with_callback.rank_ == without_callback.rank_
+
+
+def test_adaptive_callback_signature_and_validation():
+    """Adaptive public callbacks are runtime parameters, not estimator state."""
+    assert "callback" not in inspect.signature(AdaptiveASR.__init__).parameters
+    assert "callback" not in inspect.signature(AdaptiveASR.partial_fit).parameters
+    for method in (AdaptiveASR.fit, AdaptiveASR.transform, AdaptiveASR.fit_transform):
+        parameter = inspect.signature(method).parameters["callback"]
+        assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+        assert parameter.default is None
+
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        AdaptiveASR(sfreq=SFREQ, variant="psp", verbose=False).fit(
+            _make_synthetic(n_samples=1000), callback=1
+        )
+
+
+def test_adaptive_continuous_transform_progress_is_numerically_transparent(
+    synthetic_burst_data,
+):
+    """Adaptive continuous reconstruction reports ordered window progress."""
+    data, _, _, sfreq = synthetic_burst_data
+    kwargs = {
+        "sfreq": sfreq,
+        "variant": "psp",
+        "max_dims": 0.5,
+        "lookahead": 0.0,
+        "stepsize": 100,
+        "verbose": False,
+    }
+    with_callback = AdaptiveASR(**kwargs).fit(data)
+    without_callback = AdaptiveASR(**kwargs).fit(data)
+
+    events = []
+    cleaned, diagnostics = with_callback.transform(
+        data,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+    reference_cleaned, reference_diagnostics = without_callback.transform(
+        data,
+        return_diagnostics=True,
+    )
+
+    n_windows = diagnostics["n_windows"]
+    assert len(events) == n_windows
+    assert all(event.method == "adaptive_asr" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert [event.current for event in events] == list(range(1, n_windows + 1))
+    assert [event.total for event in events] == [n_windows] * n_windows
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        diagnostics["n_components_reconstructed"],
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+    for key in ("cov", "carry", "iir", "last_R"):
+        actual = with_callback.process_state_[key]
+        expected = without_callback.process_state_[key]
+        if actual is None:
+            assert expected is None
+        else:
+            np.testing.assert_allclose(actual, expected)
+    assert (
+        with_callback.process_state_["last_trivial"]
+        == without_callback.process_state_["last_trivial"]
+    )
+
+
+def test_adaptive_identity_transform_emits_no_window_progress(synthetic_burst_data):
+    """The adaptive identity path has no reconstruction progress units."""
+    data, _, _, sfreq = synthetic_burst_data
+    asr = AdaptiveASR(
+        sfreq=sfreq,
+        variant="psp",
+        max_dims=0.0,
+        verbose=False,
+    ).fit(data)
+    events = []
+    cleaned = asr.transform(data, callback=events.append)
+
+    assert events == []
+    np.testing.assert_allclose(cleaned, data)
+
+
+def test_adaptive_transform_callback_exception_does_not_advance_state(
+    synthetic_burst_data,
+):
+    """A failed callback leaves the adaptive streaming state unchanged."""
+    data, _, _, sfreq = synthetic_burst_data
+    asr = AdaptiveASR(
+        sfreq=sfreq,
+        variant="psp",
+        lookahead=0.0,
+        stepsize=100,
+        verbose=False,
+    ).fit(data)
+    state_before = {
+        key: None if value is None else np.asarray(value).copy()
+        for key, value in asr.process_state_.items()
+        if key != "last_trivial"
+    }
+    state_before["last_trivial"] = asr.process_state_["last_trivial"]
+    sentinel = RuntimeError("adaptive reconstruction callback failed")
+
+    def callback(event):
+        del event
+        raise sentinel
+
+    with pytest.raises(RuntimeError) as caught:
+        asr.transform(data, callback=callback)
+    assert caught.value is sentinel
+    for key, expected in state_before.items():
+        actual = asr.process_state_[key]
+        if expected is None:
+            assert actual is None
+        elif key == "last_trivial":
+            assert actual == expected
+        else:
+            np.testing.assert_array_equal(actual, expected)
+
+
+def test_adaptive_epoched_transform_reports_outer_epochs_only():
+    """Adaptive epoched reconstruction emits no nested window events."""
+    mne = pytest.importorskip("mne")
+    data = _make_synthetic(n_samples=3000, seed=124)
+    n_epochs = 3
+    info = mne.create_info(data.shape[0], SFREQ, "eeg")
+    epochs = mne.EpochsArray(
+        data.reshape(data.shape[0], n_epochs, -1).transpose(1, 0, 2) * 1e-6,
+        info,
+        verbose=False,
+    )
+    asr = AdaptiveASR(
+        sfreq=SFREQ,
+        variant="psp",
+        lookahead=0.0,
+        stepsize=100,
+        verbose=False,
+    ).fit(epochs)
+
+    events = []
+    _, diagnostics = asr.transform(
+        epochs,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+
+    assert len(events) == n_epochs
+    assert [event.method for event in events] == ["adaptive_asr"] * n_epochs
+    assert [event.stage for event in events] == ["epoch"] * n_epochs
+    assert [event.current for event in events] == list(range(1, n_epochs + 1))
+    assert [event.total for event in events] == [n_epochs] * n_epochs
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        [
+            diag["fraction_reconstructed_samples"]
+            for diag in diagnostics["epoch_diagnostics"]
+        ],
+    )
+
+
+def test_adaptive_fit_transform_combines_calibration_and_window_progress(
+    synthetic_burst_data,
+):
+    """Non-MW adaptive fit_transform orders calibration before reconstruction."""
+    data, _, _, sfreq = synthetic_burst_data
+    kwargs = {
+        "sfreq": sfreq,
+        "variant": "psp",
+        "max_dims": 0.5,
+        "lookahead": 0.0,
+        "stepsize": 100,
+        "verbose": False,
+    }
+    events = []
+    with_callback = AdaptiveASR(**kwargs)
+    cleaned, diagnostics = with_callback.fit_transform(
+        data,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+    without_callback = AdaptiveASR(**kwargs)
+    reference_cleaned, reference_diagnostics = without_callback.fit_transform(
+        data,
+        return_diagnostics=True,
+    )
+
+    n_components = with_callback.thresholds_.size
+    assert [event.stage for event in events[:n_components]] == [
+        "calibration"
+    ] * n_components
+    window_events = events[n_components:]
+    assert len(window_events) == diagnostics["n_windows"]
+    assert all(event.method == "adaptive_asr" for event in events)
+    assert all(event.stage == "window" for event in window_events)
+    assert [event.current for event in window_events] == list(
+        range(1, len(window_events) + 1)
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
+@pytest.mark.parametrize("mw_mode", ["final_state", "sliding"])
+def test_adaptive_mw_fit_reports_outer_windows_including_skips(mw_mode):
+    """MW fit emits one event per outer attempt, including a short tail."""
+    data = _make_synthetic(n_samples=2250, seed=125)
+    asr = AdaptiveASR(
+        sfreq=SFREQ,
+        variant="mw",
+        mw_window_length=4.0,
+        blocksize=500,
+        mw_mode=mw_mode,
+        verbose=False,
+    )
+    events = []
+    asr.fit(data, callback=events.append)
+
+    assert len(events) == 3
+    assert all(event.method == "adaptive_asr" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert [event.current for event in events] == [1, 2, 3]
+    assert [event.total for event in events] == [3, 3, 3]
+    assert all(event.component is None for event in events)
+    diagnostics_by_window = {
+        entry["window_idx"]: entry for entry in asr.mw_diagnostics_
+    }
+    assert [entry["status"] for entry in asr.mw_diagnostics_] == [
+        "passed",
+        "passed",
+    ]
+    for event in events[:2]:
+        assert event.metric == pytest.approx(
+            float(diagnostics_by_window[event.current - 1]["rank"])
+        )
+    assert events[2].metric is None
+
+
+def test_adaptive_mw_fit_reports_failed_window_and_propagates_callback(
+    monkeypatch,
+):
+    """MW fit keeps failed-window handling separate from callback failures."""
+    data = _make_synthetic(n_samples=3000, seed=126)
+    asr = AdaptiveASR(
+        sfreq=SFREQ,
+        variant="mw",
+        mw_window_length=4.0,
+        mw_mode="final_state",
+        verbose=False,
+    )
+    original_fit = asr._fit_adaptive_state
+    calls = 0
+
+    def fail_first(window, sfreq, callback=None):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("synthetic MW calibration failure")
+        return original_fit(window, sfreq, callback=callback)
+
+    monkeypatch.setattr(asr, "_fit_adaptive_state", fail_first)
+    events = []
+    asr.fit(data, callback=events.append)
+    assert events[0].metric is None
+    assert asr.mw_diagnostics_[0]["status"] == "failed"
+
+    sentinel = RuntimeError("MW fit callback failed")
+
+    def callback(event):
+        del event
+        raise sentinel
+
+    fresh = AdaptiveASR(
+        sfreq=SFREQ,
+        variant="mw",
+        mw_window_length=4.0,
+        mw_mode="final_state",
+        verbose=False,
+    )
+    calls = 0
+    original_fit = fresh._fit_adaptive_state
+
+    def fail_first_again(window, sfreq, callback=None):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("synthetic MW calibration failure")
+        return original_fit(window, sfreq, callback=callback)
+
+    monkeypatch.setattr(fresh, "_fit_adaptive_state", fail_first_again)
+    with pytest.raises(RuntimeError) as caught:
+        fresh.fit(data, callback=callback)
+    assert caught.value is sentinel
+
+
+def test_adaptive_mw_sliding_fit_transform_progress_is_outer_window_only():
+    """MW sliding fit_transform suppresses inner calibration/reconstruction events."""
+    data = _make_synthetic(n_samples=2250, seed=127)
+    kwargs = {
+        "sfreq": SFREQ,
+        "variant": "mw",
+        "mw_window_length": 4.0,
+        "blocksize": 500,
+        "mw_mode": "sliding",
+        "verbose": False,
+    }
+    events = []
+    with_callback = AdaptiveASR(**kwargs)
+    cleaned = with_callback.fit_transform(data, callback=events.append)
+    without_callback = AdaptiveASR(**kwargs)
+    reference_cleaned = without_callback.fit_transform(data)
+
+    assert len(events) == 3
+    assert len(events) == len(with_callback.mw_diagnostics_)
+    assert all(event.method == "adaptive_asr" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert all(event.component is None for event in events)
+    assert [event.current for event in events] == [1, 2, 3]
+    assert [event.total for event in events] == [3, 3, 3]
+    for event, entry in zip(events, with_callback.mw_diagnostics_):
+        if entry["status"] == "passed":
+            assert event.metric == pytest.approx(float(entry["rank"]))
+        else:
+            assert entry["status"] == "skipped_too_short"
+            assert event.metric is None
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_allclose(with_callback.M_, without_callback.M_)
+    np.testing.assert_allclose(with_callback.T_, without_callback.T_)
+    np.testing.assert_allclose(with_callback.thresholds_, without_callback.thresholds_)
+
+
+def test_adaptive_mw_sliding_callback_exception_propagates_unchanged(monkeypatch):
+    """MW sliding callback errors are not converted into failed windows."""
+    data = _make_synthetic(n_samples=3000, seed=128)
+    asr = AdaptiveASR(
+        sfreq=SFREQ,
+        variant="mw",
+        mw_window_length=4.0,
+        mw_mode="sliding",
+        verbose=False,
+    )
+
+    def fail_first(window, sfreq, callback=None):
+        del window, sfreq, callback
+        raise RuntimeError("synthetic MW sliding failure")
+
+    monkeypatch.setattr(asr, "_fit_adaptive_state", fail_first)
+    sentinel = RuntimeError("MW sliding callback failed")
+
+    def callback(event):
+        del event
+        raise sentinel
+
+    with pytest.raises(RuntimeError) as caught:
+        asr.fit_transform(data, callback=callback)
+    assert caught.value is sentinel
+    assert not hasattr(asr, "state_")
 
 
 def test_mw_diagnostics_empty_for_psp_psw():
