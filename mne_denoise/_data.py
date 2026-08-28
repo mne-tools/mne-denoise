@@ -107,12 +107,11 @@ def _resolve_mne_picks(
 ) -> np.ndarray | None:
     """Resolve the channel-selection policy for an MNE instance."""
     if ch_names is not None:
-        missing = [ch for ch in ch_names if ch not in inst.ch_names]
-        if missing:
-            raise ValueError(
-                f"Input MNE object is missing required channels: {missing[:5]}"
-            )
-        return np.array([inst.ch_names.index(ch) for ch in ch_names])
+        return _mne.mne.pick_channels(
+            inst.ch_names,
+            include=ch_names,
+            ordered=True,
+        )
 
     if auto_pick == "data":
         picks = _mne.mne.pick_types(

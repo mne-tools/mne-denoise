@@ -842,7 +842,7 @@ def test_mne_channel_names_must_match_fit(muscle_data):
         verbose=False,
     )
     estimator = BSSCCA(n_remove=3).fit(train)
-    with pytest.raises(ValueError, match="missing required channels"):
+    with pytest.raises(ValueError, match="Missing channels"):
         estimator.transform(renamed)
 
 

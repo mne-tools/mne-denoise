@@ -115,10 +115,7 @@ def test_extract_data_from_mne_missing_explicit_names():
     info = mne.create_info(["C1", "C2"], 100.0, "eeg")
     raw = mne.io.RawArray(np.ones((2, 100)), info, verbose=False)
 
-    with pytest.raises(
-        ValueError,
-        match=r"Input MNE object is missing required channels: \['C3'\]",
-    ):
+    with pytest.raises(ValueError, match="Missing channels"):
         extract_data_from_mne(raw, ch_names=["C3"])
 
 

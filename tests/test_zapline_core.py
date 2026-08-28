@@ -165,7 +165,7 @@ def test_zapline_whiten_processes_mixed_sensor_types(mixed_sensor_raw):
     assert est.filters_.shape[1] == 6
     assert cleaned.ch_names == raw.ch_names
     np.testing.assert_array_equal(cleaned.get_data(picks="stim"), stim_before)
-    with pytest.raises(ValueError, match="missing required channels"):
+    with pytest.raises(ValueError, match="Missing channels"):
         est.transform(raw.copy().drop_channels(["CH0"]))
 
 
@@ -757,9 +757,7 @@ def test_zapline_mne_transform_requires_fitted_channels():
     est = ZapLine(sfreq=sfreq, line_freq=50.0, n_select=1, n_harmonics=1, nfft=400)
     est.fit(raw)
 
-    with pytest.raises(
-        ValueError, match="Input MNE object is missing required channels"
-    ):
+    with pytest.raises(ValueError, match="Missing channels"):
         est.transform(raw.copy().drop_channels(["EEG002"]))
 
 

@@ -1305,8 +1305,10 @@ class ICanClean(BaseEstimator, TransformerMixin):
             # from the primary channels in _build_reference_block.
             if self.primary_channels is not None:
                 if ch_names is not None and isinstance(self.primary_channels[0], str):
-                    primary_idx = np.array(
-                        [ch_names.index(ch) for ch in self.primary_channels], dtype=int
+                    primary_idx = _mne.mne.pick_channels(
+                        ch_names,
+                        include=list(self.primary_channels),
+                        ordered=True,
                     )
                 else:
                     primary_idx = np.asarray(self.primary_channels, dtype=int)
@@ -1318,9 +1320,10 @@ class ICanClean(BaseEstimator, TransformerMixin):
             return primary_idx, np.array([], dtype=int)
 
         if ch_names is not None and isinstance(self.ref_channels[0], str):
-            ref_idx = np.array(
-                [ch_names.index(ch) for ch in self.ref_channels],
-                dtype=int,
+            ref_idx = _mne.mne.pick_channels(
+                ch_names,
+                include=list(self.ref_channels),
+                ordered=True,
             )
             ref_names = list(self.ref_channels)
         else:
@@ -1331,9 +1334,10 @@ class ICanClean(BaseEstimator, TransformerMixin):
 
         if self.primary_channels is not None:
             if ch_names is not None and isinstance(self.primary_channels[0], str):
-                primary_idx = np.array(
-                    [ch_names.index(ch) for ch in self.primary_channels],
-                    dtype=int,
+                primary_idx = _mne.mne.pick_channels(
+                    ch_names,
+                    include=list(self.primary_channels),
+                    ordered=True,
                 )
                 primary_names = list(self.primary_channels)
             else:

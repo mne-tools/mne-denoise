@@ -1060,7 +1060,7 @@ def test_dss_transform_rejects_missing_fitted_channel():
     raw = mne.io.RawArray(rng.standard_normal((3, 1000)), info, verbose=False)
     dss = DSS(bias=lambda data: data, normalize_input=False).fit(raw)
 
-    with pytest.raises(ValueError, match="missing required channels.*EEG2"):
+    with pytest.raises(ValueError, match="Missing channels"):
         dss.transform(raw.copy().drop_channels(["EEG2"]))
 
 

@@ -498,7 +498,7 @@ def test_icanclean_mne_raw_cleaning(raw_with_refs):
 
 
 def test_icanclean_mne_explicit_channel_names(rng):
-    """Explicit MNE channel-name selection works."""
+    """Explicit MNE channel-name selection preserves requested order."""
     mne = pytest.importorskip("mne")
     sfreq = 250.0
     n_times = int(sfreq * 6)
@@ -512,17 +512,72 @@ def test_icanclean_mne_explicit_channel_names(rng):
     info = mne.create_info(ch_names, sfreq, ch_types)
     data = rng.standard_normal((n_scalp + n_noise, n_times))
     raw = mne.io.RawArray(data, info, verbose=False)
+    primary_names = [f"1-EEG{i}" for i in reversed(range(n_scalp))]
+    ref_names = [f"2-NSE{i}" for i in reversed(range(n_noise))]
 
     icc = ICanClean(
         sfreq=sfreq,
-        primary_channels=[f"1-EEG{i}" for i in range(n_scalp)],
-        ref_channels=[f"2-NSE{i}" for i in range(n_noise)],
+        primary_channels=primary_names,
+        ref_channels=ref_names,
         verbose=False,
     )
     raw_clean = icc.fit_transform(raw)
     assert isinstance(raw_clean, mne.io.RawArray)
-    assert icc.primary_channels_ == [f"1-EEG{i}" for i in range(n_scalp)]
-    assert icc.ref_channels_ == [f"2-NSE{i}" for i in range(n_noise)]
+    assert icc.primary_channels_ == primary_names
+    assert icc.ref_channels_ == ref_names
+
+
+@pytest.mark.parametrize(
+    ("primary_channels", "ref_channels"),
+    [
+        (["MISSING"], ["2-NSE0"]),
+        (["1-EEG0"], ["MISSING"]),
+    ],
+)
+def test_icanclean_mne_missing_named_channel_raises(
+    rng, primary_channels, ref_channels
+):
+    """MNE named channel resolution reports missing primary or reference names."""
+    mne = pytest.importorskip("mne")
+    info = mne.create_info(
+        ["1-EEG0", "1-EEG1", "2-NSE0", "2-NSE1"],
+        100.0,
+        ["eeg", "eeg", "eeg", "eeg"],
+    )
+    raw = mne.io.RawArray(rng.standard_normal((4, 200)), info, verbose=False)
+    icc = ICanClean(
+        sfreq=100.0,
+        primary_channels=primary_channels,
+        ref_channels=ref_channels,
+        verbose=False,
+    )
+
+    with pytest.raises(ValueError, match="Missing channels"):
+        icc.fit_transform(raw)
+
+
+def test_icanclean_mne_integer_channel_indices_remain_index_based(rng):
+    """Integer MNE channel specifications retain their existing semantics."""
+    mne = pytest.importorskip("mne")
+    info = mne.create_info(
+        ["P0", "P1", "R0", "R1"],
+        100.0,
+        ["eeg"] * 4,
+    )
+    raw = mne.io.RawArray(rng.standard_normal((4, 200)), info, verbose=False)
+    icc = ICanClean(
+        sfreq=100.0,
+        primary_channels=[1, 0],
+        ref_channels=[3, 2],
+        verbose=False,
+    )
+
+    primary_idx, ref_idx = icc._resolve_channels(raw.get_data(), raw)
+
+    np.testing.assert_array_equal(primary_idx, [1, 0])
+    np.testing.assert_array_equal(ref_idx, [3, 2])
+    assert icc.primary_channels_ == ["P1", "P0"]
+    assert icc.ref_channels_ == ["R1", "R0"]
 
 
 def test_icanclean_mne_artifact_reduction(raw_with_refs):
