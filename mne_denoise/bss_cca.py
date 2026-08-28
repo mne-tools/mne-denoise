@@ -63,6 +63,7 @@ from ._validation import (
     check_positive_real,
     resolve_sfreq,
 )
+from .progress import _emit_progress, _validate_callback
 
 __all__ = ["BSSCCA", "compute_bss_cca"]
 
@@ -390,6 +391,7 @@ def compute_bss_cca(
     segment_len: float | None = None,
     overlap: float = 0.0,
     preserve_mean: bool = True,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     r"""Learn and apply reference-free BSS-CCA to a channel-first array.
@@ -441,6 +443,10 @@ def compute_bss_cca(
         Add the fitted channel mean back after cleaning. Equation (7) of [1]_
         reconstructs mean-free data; restoring the mean keeps the output on
         the same offset as the input.
+    callback : callable | None, default=None
+        Called synchronously after each completed BSS-CCA block in segmented
+        mode. Global mode emits no progress events. Callback return values are
+        ignored and callback exceptions propagate unchanged.
     verbose : bool | str | int | None, default=None
         MNE-style logging level.
 
@@ -497,6 +503,7 @@ def compute_bss_cca(
            artifact removal. Epilepsia, 48(5), 950-958.
            https://doi.org/10.1111/j.1528-1167.2007.01031.x
     """
+    callback = _validate_callback(callback)
     X = check_channel_first_data(X, name="BSS-CCA")
     if not isinstance(preserve_mean, bool):
         raise TypeError("preserve_mean must be a bool")
@@ -530,8 +537,9 @@ def compute_bss_cca(
         if n_block is None
         else _segment_bounds(n_times, n_block=n_block, hop=hop)
     )
-    operators = [
-        _learn_operator(
+    operators = []
+    for block_idx, bound in enumerate(bounds):
+        operator = _learn_operator(
             X,
             lag_samples=lag,
             n_remove=n_remove,
@@ -540,8 +548,17 @@ def compute_bss_cca(
             threshold_on=threshold_on,
             bound=bound,
         )
-        for bound in bounds
-    ]
+        operators.append(operator)
+        if len(bounds) > 1:
+            _emit_progress(
+                callback,
+                method="bss_cca",
+                stage="block",
+                current=block_idx + 1,
+                total=len(bounds),
+                component=None,
+                metric=float(np.mean(operator["correlations"])),
+            )
     cleaned = _apply_operators(X, operators, preserve_mean=preserve_mean)
 
     # Per-block quantities are reported as tuples only when blocking is in
@@ -806,6 +823,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         X: Any,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> BSSCCA:
         """Learn the BSS-CCA operators.
@@ -816,6 +834,11 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             Data used to learn the operators.
         y : None
             Ignored. Included for scikit-learn compatibility.
+        callback : callable | None, default=None
+            Called synchronously after each completed BSS-CCA block in
+            segmented mode. Global mode emits no progress events. Callback
+            return values are ignored and callback exceptions propagate
+            unchanged.
 
         Returns
         -------
@@ -823,6 +846,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             Fitted estimator.
         """
         del y
+        callback = _validate_callback(callback)
         data, data_sfreq, _mne_type, _orig, _picks, names = extract_data_from_mne(
             X, auto_pick=True
         )
@@ -839,6 +863,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             segment_len=self.segment_len,
             overlap=self.overlap,
             preserve_mean=self.preserve_mean,
+            callback=callback,
         )
         self.cleaning_matrix_ = info["cleaning_matrix"]
         self.filters_ = info["filters"]
@@ -914,6 +939,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         X: Any,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
         **fit_params,
     ) -> Any:
@@ -925,6 +951,11 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             Data to fit and transform.
         y : None
             Ignored. Included for scikit-learn compatibility.
+        callback : callable | None, default=None
+            Called synchronously after each completed BSS-CCA block in
+            segmented mode. Global mode emits no progress events. Callback
+            return values are ignored and callback exceptions propagate
+            unchanged.
         **fit_params : dict
             Reserved for scikit-learn compatibility.
 
@@ -936,4 +967,5 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         if fit_params:
             unexpected = ", ".join(sorted(fit_params))
             raise TypeError(f"Unexpected fit parameters: {unexpected}")
-        return self.fit(X, y).transform(X)
+        callback = _validate_callback(callback)
+        return self.fit(X, y, callback=callback).transform(X)
