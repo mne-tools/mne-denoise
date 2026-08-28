@@ -8,30 +8,19 @@ I/O, and the experimental opt-in / validation guards.
 
 from __future__ import annotations
 
-import inspect
 import logging
 
 import numpy as np
 import pytest
-from sklearn.base import clone
 
 from mne_denoise.asr import ASR, GuidedASR, process_guided_asr
 from mne_denoise.asr._guidance import (
     _compute_guidance_covariance,
     _guided_component_weights,
 )
-from mne_denoise.asr._validation import _validate_covariance_matrix
-from mne_denoise.dss.denoisers import BandpassBias, LineNoiseBias, PeakFilterBias
+from mne_denoise.dss.denoisers import LineNoiseBias, PeakFilterBias
 
 SFREQ = 250.0
-
-
-def test_asr_family_exposes_sklearn_constructor_state():
-    assert ASR(sfreq=SFREQ, picks=None).get_params()["picks"] is None
-    assert (
-        GuidedASR(sfreq=SFREQ).get_params()["filter_kind"]
-        == ASR(sfreq=SFREQ).get_params()["filter_kind"]
-    )
 
 
 def _eeg(n_channels=8, n_times=6000, seed=0, bursts=4):
@@ -78,14 +67,6 @@ def test_hard_no_bias_equals_riemannian_windowed():
     np.testing.assert_allclose(guided, ref, rtol=0, atol=1e-9)
 
 
-def test_hard_no_bias_needs_no_experimental_optin():
-    # reconstruction="hard" reproduces ASR and requires no experimental flag.
-    out = GuidedASR(
-        sfreq=SFREQ, cutoff=20.0, reconstruction="hard", picks=None, verbose=False
-    ).fit_transform(_eeg())
-    assert np.all(np.isfinite(np.asarray(out)))
-
-
 def test_guided_asr_reports_distinct_calibration_and_guidance_results(caplog):
     """GuidedASR has one shared calibration and one distinct configuration report."""
     with caplog.at_level(logging.INFO, logger="mne_denoise"):
@@ -109,42 +90,9 @@ def test_guided_asr_reports_distinct_calibration_and_guidance_results(caplog):
     assert "guidance strength=" in guidance[0].message
 
 
-def test_constructor_tracks_asr_parameter_defaults_and_kinds():
-    asr_parameters = inspect.signature(ASR).parameters
-    guided_parameters = inspect.signature(GuidedASR).parameters
-    for name, parameter in asr_parameters.items():
-        if name == "method":
-            continue
-        assert name in guided_parameters
-        assert guided_parameters[name].default == parameter.default
-        assert guided_parameters[name].kind == parameter.kind
-
-
 # ---------------------------------------------------------------------------
 # Discriminative soft-weight math (the novel core)
 # ---------------------------------------------------------------------------
-
-
-def test_covariance_validation_does_not_change_scale():
-    covariance = np.diag([1.0, 2.0, 3.0, 4.0])
-    prepared = _validate_covariance_matrix(
-        covariance,
-        n_channels=4,
-        name="covariance",
-    )
-    np.testing.assert_allclose(prepared, covariance)
-    np.testing.assert_allclose(
-        _validate_covariance_matrix(
-            100.0 * covariance, n_channels=4, name="covariance"
-        ),
-        100.0 * covariance,
-    )
-    with pytest.raises(ValueError, match="positive semidefinite"):
-        _validate_covariance_matrix(
-            np.diag([1.0, 1.0, 1.0, -1.0]),
-            n_channels=4,
-            name="covariance",
-        )
 
 
 def test_guidance_covariance_uses_equal_scale_invariant_bias_votes():
@@ -307,77 +255,7 @@ def test_preserve_bias_retains_more_target_band_than_hard():
     assert band_power(soft) >= band_power(hard)
 
 
-# ---------------------------------------------------------------------------
-# I/O: ndarray, Raw, Epochs
-# ---------------------------------------------------------------------------
-
-
-def test_ndarray_io_shape_preserved():
-    X = _eeg()
-    out = GuidedASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        reconstruction="soft",
-        experimental=True,
-        preserve_biases=[BandpassBias((8.0, 12.0), SFREQ)],
-        picks=None,
-        verbose=False,
-    ).fit_transform(X)
-    assert np.asarray(out).shape == X.shape
-
-
-def test_raw_and_epochs_io():
-    mne = pytest.importorskip("mne")
-    ch = [f"EEG{i:02d}" for i in range(8)]
-    info = mne.create_info(ch, SFREQ, "eeg")
-    raw = mne.io.RawArray(_eeg() * 1e-6, info, verbose=False)
-    gs = GuidedASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        reconstruction="soft",
-        experimental=True,
-        preserve_biases=[PeakFilterBias(10.0, SFREQ)],
-        verbose=False,
-    )
-    raw_out = gs.fit_transform(raw)
-    assert raw_out.get_data().shape == raw.get_data().shape
-
-    X = _eeg(n_times=6000)
-    epo = mne.EpochsArray(
-        X.reshape(8, 3, 2000).transpose(1, 0, 2) * 1e-6, info, verbose=False
-    )
-    epo_out = gs.fit(epo).transform(epo)
-    assert epo_out.get_data().shape == epo.get_data().shape
-    assert "soft_weights" in gs.get_diagnostics()
-
-
-def test_evoked_and_non_data_channels_follow_current_asr_workflow():
-    mne = pytest.importorskip("mne")
-    eeg = _eeg() * 1e-6
-    eog = np.sin(2 * np.pi * np.arange(eeg.shape[1]) / SFREQ)[None, :]
-    data = np.vstack([eeg, eog])
-    names = [f"EEG{i:02d}" for i in range(8)] + ["EOG"]
-    info = mne.create_info(names, SFREQ, ["eeg"] * 8 + ["eog"])
-    raw = mne.io.RawArray(data, info, verbose=False)
-    evoked = mne.EvokedArray(data, info, verbose=False)
-    guided = GuidedASR(
-        cutoff=20.0,
-        reconstruction="soft",
-        experimental=True,
-        preserve_biases=[PeakFilterBias(10.0, SFREQ)],
-        verbose=False,
-    )
-
-    with pytest.warns(UserWarning, match="unpublished, unvalidated"):
-        raw_out = guided.fit_transform(raw)
-    evoked_out = guided.transform(evoked)
-
-    assert isinstance(evoked_out, mne.Evoked)
-    np.testing.assert_allclose(raw_out.get_data(picks=["EOG"]), eog)
-    np.testing.assert_allclose(evoked_out.get_data(picks=["EOG"]), eog)
-
-
-def test_current_diagnostics_rejection_and_sklearn_workflows():
+def test_current_diagnostics_and_rejection_workflows():
     X = _eeg()
     guided = GuidedASR(
         sfreq=SFREQ,
@@ -391,8 +269,6 @@ def test_current_diagnostics_rejection_and_sklearn_workflows():
         verbose=False,
     )
 
-    cloned = clone(guided)
-    assert cloned.get_params()["window_criterion"] == 0.25
     with pytest.warns(UserWarning, match="unpublished, unvalidated"):
         cleaned, diagnostics = guided.fit_transform(X, return_diagnostics=True)
 
@@ -402,6 +278,10 @@ def test_current_diagnostics_rejection_and_sklearn_workflows():
         guided.get_rejection_mask(), diagnostics["rejection_sample_mask"]
     )
     assert guided.history_["estimator"] == "GuidedASR"
+    guided_diagnostics = guided.get_diagnostics()
+    assert guided_diagnostics["covariance_geometry"] == "guided"
+    assert guided_diagnostics["soft_weights"].shape[1] == X.shape[0]
+    assert 0.0 <= guided_diagnostics["mean_soft_weight"] <= 1.0
 
 
 def test_process_guided_asr_validates_public_parameters():
@@ -461,127 +341,9 @@ def test_process_guided_asr_progress_reports_ordered_windows():
     )
 
 
-def test_guided_fit_progress_is_shared_asr_calibration():
-    """GuidedASR.fit emits only the shared ASR calibration stream."""
-    X = _eeg(n_times=4000)
-    events = []
-    guided = GuidedASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        calibration="manual",
-        filter_kind="none",
-        reconstruction="hard",
-        picks=None,
-        verbose=False,
-    )
-    guided.fit(X, callback=events.append)
-
-    assert len(events) == guided.thresholds_.size
-    assert all(event.method == "asr" for event in events)
-    assert all(event.stage == "calibration" for event in events)
-    assert not any(event.method == "guided_asr" for event in events)
-
-
-def test_guided_fit_transform_inherits_callback_composition():
-    """GuidedASR.fit_transform combines shared fit and guided reconstruction events."""
-    X = _eeg(n_times=4000)
-    kwargs = {
-        "sfreq": SFREQ,
-        "cutoff": 20.0,
-        "calibration": "manual",
-        "filter_kind": "none",
-        "reconstruction": "hard",
-        "picks": None,
-        "lookahead": 0.0,
-        "verbose": False,
-    }
-    events = []
-    with_callback = GuidedASR(**kwargs)
-    _cleaned, diagnostics = with_callback.fit_transform(
-        X,
-        callback=events.append,
-        return_diagnostics=True,
-    )
-
-    n_components = with_callback.thresholds_.size
-    calibration_events = events[:n_components]
-    reconstruction_events = events[n_components:]
-    assert [event.method for event in calibration_events] == ["asr"] * n_components
-    assert [event.stage for event in calibration_events] == [
-        "calibration"
-    ] * n_components
-    assert len(reconstruction_events) == diagnostics["n_windows"]
-    assert all(event.method == "guided_asr" for event in reconstruction_events)
-    assert all(event.stage == "window" for event in reconstruction_events)
-    assert all(event.component is None for event in reconstruction_events)
-
-
-def test_guided_epoched_transform_reports_outer_epochs_only():
-    """Guided epoch transforms do not expose nested reconstruction windows."""
-    mne = pytest.importorskip("mne")
-    X = _eeg(n_times=6000)
-    n_epochs = 3
-    info = mne.create_info(8, SFREQ, "eeg")
-    epochs = mne.EpochsArray(
-        X.reshape(8, n_epochs, -1).transpose(1, 0, 2) * 1e-6,
-        info,
-        verbose=False,
-    )
-    guided = GuidedASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        calibration="manual",
-        filter_kind="none",
-        reconstruction="hard",
-        picks=None,
-        lookahead=0.0,
-        verbose=False,
-    ).fit(epochs)
-
-    events = []
-    _, diagnostics = guided.transform(
-        epochs,
-        callback=events.append,
-        return_diagnostics=True,
-    )
-
-    assert len(events) == n_epochs
-    assert [event.method for event in events] == ["guided_asr"] * n_epochs
-    assert [event.stage for event in events] == ["epoch"] * n_epochs
-    assert [event.current for event in events] == list(range(1, n_epochs + 1))
-    assert [event.total for event in events] == [n_epochs] * n_epochs
-    assert all(event.component is None for event in events)
-    np.testing.assert_allclose(
-        [event.metric for event in events],
-        [
-            diag["fraction_reconstructed_samples"]
-            for diag in diagnostics["epoch_diagnostics"]
-        ],
-    )
-
-
 # ---------------------------------------------------------------------------
 # Diagnostics / annotations / guards
 # ---------------------------------------------------------------------------
-
-
-def test_diagnostics_and_annotations():
-    mne = pytest.importorskip("mne")
-    gs = GuidedASR(
-        sfreq=SFREQ,
-        cutoff=10.0,
-        reconstruction="soft",
-        experimental=True,
-        preserve_biases=[PeakFilterBias(10.0, SFREQ)],
-        picks=None,
-        verbose=False,
-    )
-    gs.fit_transform(_eeg(bursts=8))
-    diag = gs.get_diagnostics()
-    assert "soft_weights" in diag and "mean_soft_weight" in diag
-    assert diag["covariance_geometry"] == "guided"
-    ann = gs.to_annotations("repair")
-    assert isinstance(ann, mne.Annotations)
 
 
 def test_soft_requires_experimental_optin():

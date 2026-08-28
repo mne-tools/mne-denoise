@@ -15,14 +15,15 @@ def _eeg():
     return np.random.default_rng(42).standard_normal((3, 1000))
 
 
-def test_calibrate_asr_returns_state_and_diagnostics(synthetic_burst_data):
-    """Array-level calibration returns a valid ASR state."""
+@pytest.mark.parametrize("calibration", ["auto", "manual"])
+def test_calibrate_asr_returns_state_and_diagnostics(synthetic_burst_data, calibration):
+    """Automatic and manual calibration expose the fitted ASR state."""
     data, _, _, sfreq = synthetic_burst_data
     state, diagnostics = calibrate_asr(
         data,
         sfreq,
         cutoff=4.0,
-        calibration="auto",
+        calibration=calibration,
         filter_kind="none",
     )
 
@@ -31,11 +32,21 @@ def test_calibrate_asr_returns_state_and_diagnostics(synthetic_burst_data):
     assert state.T.shape == (data.shape[0], data.shape[0])
     assert state.thresholds.shape == (data.shape[0],)
     assert diagnostics["clean_window_mask"].ndim == 1
-    assert diagnostics["n_clean_windows"] > 0
+    if calibration == "auto":
+        assert diagnostics["n_clean_windows"] > 0
+    else:
+        assert diagnostics["n_clean_windows"] == 0
+        np.testing.assert_array_equal(diagnostics["clean_sample_mask"], True)
     assert diagnostics["threshold_mu"].shape == (data.shape[0],)
     assert diagnostics["threshold_sigma"].shape == (data.shape[0],)
     assert diagnostics["threshold_beta"].shape == (data.shape[0],)
     assert diagnostics["threshold_fit_interval"].shape == (data.shape[0], 2)
+    assert np.all(state.thresholds > 0)
+    assert state.rank == diagnostics["rank"]
+    np.testing.assert_allclose(
+        state.T,
+        np.diag(state.thresholds) @ state.calibration_patterns.T,
+    )
 
 
 def test_calibrate_asr_progress_reports_fitted_component_thresholds():
@@ -65,8 +76,8 @@ def test_calibrate_asr_progress_reports_fitted_component_thresholds():
     )
 
 
-def test_calibrate_asr_low_memory_handles_remainder_two(rng):
-    """Low-memory calibration handles the ASRpy block remainder edge case."""
+def test_calibrate_asr_low_memory_matches_full_with_remainder_two(rng):
+    """Chunked calibration matches full calibration with a short remainder."""
     sfreq = 250.0
     n_channels = 6
     n_times = 1002
@@ -74,6 +85,15 @@ def test_calibrate_asr_low_memory_handles_remainder_two(rng):
     assert n_times % blocksize == 2
     data = 0.05 * rng.standard_normal((n_channels, n_times))
 
+    full_state, full_diagnostics = calibrate_asr(
+        data,
+        sfreq,
+        cutoff=5.0,
+        calibration="manual",
+        blocksize=blocksize,
+        filter_kind="none",
+        max_mem_mb=None,
+    )
     state, diagnostics = calibrate_asr(
         data,
         sfreq,
@@ -86,32 +106,31 @@ def test_calibrate_asr_low_memory_handles_remainder_two(rng):
 
     assert isinstance(state, ASRState)
     assert state.M.shape == (n_channels, n_channels)
+    assert full_diagnostics["memory_mode"] == "full"
     assert diagnostics["memory_mode"] == "chunked"
     assert diagnostics["used_memory_bound"] is True
     assert (
         diagnostics["estimated_full_cov_bytes"] > diagnostics["peak_cov_buffer_bytes"]
     )
     assert diagnostics["chunk_samples"] == blocksize
+    for name in ("M", "T", "thresholds", "calibration_patterns", "cov"):
+        np.testing.assert_allclose(getattr(state, name), getattr(full_state, name))
+    assert state.rank == full_state.rank
 
 
-def test_calibrate_asr_bad_calibration_raises():
-    with pytest.raises(ValueError, match="calibration must be"):
-        calibrate_asr(_eeg(), SFREQ, calibration="bogus", filter_kind="none")
-
-
-def test_calibrate_asr_bad_cov_estimator_raises():
-    with pytest.raises(ValueError, match="cov_estimator"):
-        calibrate_asr(_eeg(), SFREQ, cov_estimator="bogus", filter_kind="none")
-
-
-def test_calibrate_asr_bad_method_raises():
-    with pytest.raises(ValueError, match="method must be"):
-        calibrate_asr(_eeg(), SFREQ, method="bogus", filter_kind="none")
-
-
-def test_calibrate_asr_bad_blocksize_raises():
-    with pytest.raises(ValueError, match="blocksize"):
-        calibrate_asr(_eeg(), SFREQ, blocksize=0, filter_kind="none")
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"calibration": "bogus"}, "calibration must be"),
+        ({"cov_estimator": "bogus"}, "cov_estimator"),
+        ({"method": "bogus"}, "method must be"),
+        ({"blocksize": 0}, "blocksize"),
+    ],
+)
+def test_calibrate_asr_rejects_invalid_options(kwargs, message):
+    """Calibration-specific public options fail with useful errors."""
+    with pytest.raises(ValueError, match=message):
+        calibrate_asr(_eeg(), SFREQ, filter_kind="none", **kwargs)
 
 
 def test_calibrate_asr_riemannian_method():
@@ -130,6 +149,27 @@ def test_calibrate_asr_riemannian_method():
     assert state.method == "riemannian"
     assert state.riemannian_solver == "nonlinear_eigenspace"
     assert state.M.shape == (4, 4)
+
+
+def test_calibrate_asr_cutoff_changes_rejection_thresholds():
+    """The cutoff controls the fitted component rejection thresholds."""
+    data = _eeg()
+    aggressive, _ = calibrate_asr(
+        data,
+        SFREQ,
+        cutoff=2.0,
+        calibration="manual",
+        filter_kind="none",
+    )
+    permissive, _ = calibrate_asr(
+        data,
+        SFREQ,
+        cutoff=20.0,
+        calibration="manual",
+        filter_kind="none",
+    )
+
+    assert np.all(permissive.thresholds > aggressive.thresholds)
 
 
 def test_min_clean_fraction_does_not_impose_a_retained_window_quota():

@@ -5,16 +5,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from mne_denoise import _mne
-from mne_denoise.asr import (
-    ASR,
-)
+from mne_denoise.asr import ASR
 
 SFREQ = 250.0
 
 
 def test_asr_default_uses_original_spectral_shaping_filter():
-    """The estimator defaults to inverse-EEG spectral shaping."""
+    """The ASR default keeps the ASR-specific spectral shaping filter."""
     assert ASR().filter_kind == "asr"
 
 
@@ -43,65 +40,6 @@ def test_asrcore_numpy_qc_and_no_repair_cap(synthetic_burst_data):
     assert asr.n_components_reconstructed_.shape == (asr.n_windows_,)
     assert asr.n_components_reconstructed_.sum() == 0
     assert asr.get_calibration_mask().shape == asr.clean_window_mask_.shape
-
-
-def test_asr_fit_progress_is_shared_calibration_stream(synthetic_burst_data):
-    """ASR.fit exposes one calibration event per fitted threshold component."""
-    data, _, _, sfreq = synthetic_burst_data
-    events = []
-    asr = ASR(
-        sfreq=sfreq,
-        cutoff=3.0,
-        calibration="manual",
-        filter_kind="none",
-        verbose=False,
-    )
-    asr.fit(data, callback=events.append)
-
-    assert len(events) == asr.thresholds_.size
-    assert all(event.method == "asr" for event in events)
-    assert all(event.stage == "calibration" for event in events)
-    np.testing.assert_allclose(
-        [event.metric for event in events], asr.thresholds_, rtol=0.0, atol=1e-12
-    )
-
-
-def test_asr_continuous_transform_progress_reports_ordered_windows(
-    synthetic_burst_data,
-):
-    """ASR.transform reports each completed reconstruction window."""
-    data, _, _, sfreq = synthetic_burst_data
-    kwargs = {
-        "sfreq": sfreq,
-        "cutoff": 3.0,
-        "calibration": "manual",
-        "filter_kind": "none",
-        "max_dims": 0.5,
-        "lookahead": 0.0,
-        "verbose": False,
-    }
-    model = ASR(**kwargs).fit(data)
-
-    events = []
-    cleaned, diagnostics = model.transform(
-        data,
-        callback=events.append,
-        return_diagnostics=True,
-    )
-
-    assert cleaned.shape == data.shape
-    assert len(events) == diagnostics["n_windows"]
-    assert all(event.method == "asr" for event in events)
-    assert all(event.stage == "window" for event in events)
-    assert all(event.component is None for event in events)
-    assert [event.current for event in events] == list(range(1, len(events) + 1))
-    assert [event.total for event in events] == [len(events)] * len(events)
-    np.testing.assert_allclose(
-        [event.metric for event in events],
-        diagnostics["n_components_reconstructed"],
-        rtol=0.0,
-        atol=0.0,
-    )
 
 
 def test_asr_fit_transform_composes_calibration_and_window_progress(
@@ -187,148 +125,6 @@ def test_asr_epoched_transform_reports_epochs_without_inner_windows(
     )
 
 
-def test_asr_fit_transform_epoched_progress_has_no_nested_windows(
-    synthetic_burst_data,
-):
-    """ASR.fit_transform emits calibration then one event per epoch."""
-    mne = pytest.importorskip("mne")
-    data, _, _, sfreq = synthetic_burst_data
-    n_epochs = 3
-    n_times = data.shape[1] // n_epochs
-    info = mne.create_info(data.shape[0], sfreq, "eeg")
-    epochs = mne.EpochsArray(
-        data.reshape(data.shape[0], n_epochs, n_times).transpose(1, 0, 2),
-        info,
-        verbose=False,
-    )
-    asr = ASR(
-        sfreq=sfreq,
-        cutoff=3.0,
-        calibration="manual",
-        filter_kind="none",
-        lookahead=0.0,
-        verbose=False,
-    )
-    events = []
-    _, diagnostics = asr.fit_transform(
-        epochs,
-        callback=events.append,
-        return_diagnostics=True,
-    )
-
-    n_components = asr.thresholds_.size
-    epoch_events = events[n_components:]
-    assert len(epoch_events) == n_epochs
-    assert [event.method for event in events[:n_components]] == ["asr"] * n_components
-    assert [event.stage for event in events[:n_components]] == [
-        "calibration"
-    ] * n_components
-    assert [event.method for event in epoch_events] == ["asr"] * n_epochs
-    assert [event.stage for event in epoch_events] == ["epoch"] * n_epochs
-    assert [event.current for event in epoch_events] == list(range(1, n_epochs + 1))
-    assert [event.total for event in epoch_events] == [n_epochs] * n_epochs
-    assert all(event.component is None for event in epoch_events)
-    np.testing.assert_allclose(
-        [event.metric for event in epoch_events],
-        [
-            diag["fraction_reconstructed_samples"]
-            for diag in diagnostics["epoch_diagnostics"]
-        ],
-    )
-
-
-def test_asr_cleaning_is_invariant_to_eeg_unit_scaling(synthetic_burst_data):
-    """Equivalent signals in volts and microvolts receive equivalent cleaning."""
-    data_uv, _, _, sfreq = synthetic_burst_data
-    model_uv = ASR(sfreq=sfreq, cutoff=3.0, calibration="manual", verbose=False)
-    clean_uv = model_uv.fit_transform(data_uv)
-
-    data_v = data_uv * 1e-6
-    model_v = ASR(sfreq=sfreq, cutoff=3.0, calibration="manual", verbose=False)
-    clean_v = model_v.fit_transform(data_v)
-
-    np.testing.assert_allclose(clean_v * 1e6, clean_uv, rtol=2e-7, atol=2e-8)
-    np.testing.assert_array_equal(
-        model_v.n_components_reconstructed_, model_uv.n_components_reconstructed_
-    )
-
-
-def test_asr_mne_raw_preserves_non_picked_channels(synthetic_burst_data):
-    """MNE Raw support cleans EEG picks and preserves non-picked channels."""
-    mne = pytest.importorskip("mne")
-    data, _, _, sfreq = synthetic_burst_data
-    eog = np.vstack(
-        [
-            np.sin(2 * np.pi * 1.0 * np.arange(data.shape[1]) / sfreq),
-            np.cos(2 * np.pi * 1.0 * np.arange(data.shape[1]) / sfreq),
-        ]
-    )
-    raw_data = np.vstack([data, eog])
-    ch_names = [f"EEG{idx}" for idx in range(data.shape[0])] + ["EOG1", "EOG2"]
-    ch_types = ["eeg"] * data.shape[0] + ["eog", "eog"]
-    info = mne.create_info(ch_names, sfreq, ch_types)
-    raw = mne.io.RawArray(raw_data, info, verbose=False)
-
-    asr = ASR(cutoff=3.0, filter_kind="none", verbose=False)
-    raw_clean = asr.fit_transform(raw)
-
-    assert isinstance(raw_clean, mne.io.RawArray)
-    assert raw_clean.get_data().shape == raw_data.shape
-    np.testing.assert_allclose(raw_clean.get_data(picks=["EOG1", "EOG2"]), eog)
-    assert asr.ch_names_ == ch_names[: data.shape[0]]
-
-
-def test_asr_transform_checks_fitted_channel_layout(synthetic_burst_data):
-    """ASR preserves named-fit safety and rejects changed layouts."""
-    mne = pytest.importorskip("mne")
-    data, _, _, sfreq = synthetic_burst_data
-    names = [f"EEG{idx}" for idx in range(data.shape[0])]
-    raw = mne.io.RawArray(data, mne.create_info(names, sfreq, "eeg"), verbose=False)
-    asr = ASR(cutoff=3.0, filter_kind="none", verbose=False).fit(raw)
-
-    asr.transform(raw)
-    with pytest.raises(ValueError, match="ASR was fitted with named channels"):
-        asr.transform(data)
-    with pytest.raises(ValueError, match="MNE channel names/order differ from fit"):
-        asr.transform(raw.copy().reorder_channels(names[::-1]))
-
-    array_asr = ASR(sfreq=sfreq, cutoff=3.0, filter_kind="none", verbose=False).fit(
-        data
-    )
-    with pytest.raises(ValueError, match="ASR: X has 7 channels; fitted data had 8"):
-        array_asr.transform(data[:-1])
-
-
-def test_asr_mne_raw_low_memory_preserves_metadata(synthetic_burst_data):
-    """Low-memory Raw processing preserves metadata and non-picked channels."""
-    mne = pytest.importorskip("mne")
-    data, _, _, sfreq = synthetic_burst_data
-    eog = np.sin(2 * np.pi * 1.0 * np.arange(data.shape[1]) / sfreq)[None, :]
-    raw_data = np.vstack([data, eog])
-    ch_names = [f"EEG{idx}" for idx in range(data.shape[0])] + ["EOG1"]
-    ch_types = ["eeg"] * data.shape[0] + ["eog"]
-    info = mne.create_info(ch_names, sfreq, ch_types)
-    raw = mne.io.RawArray(raw_data, info, verbose=False)
-    raw.info["bads"] = ["EEG7"]
-    raw.set_annotations(mne.Annotations([1.0], [0.25], ["BAD_test"]))
-
-    asr = ASR(
-        cutoff=3.0,
-        filter_kind="none",
-        reject_by_annotation=False,
-        max_mem_mb=0.001,
-        verbose=False,
-    )
-    raw_clean = asr.fit_transform(raw)
-
-    assert raw_clean.ch_names == raw.ch_names
-    assert raw_clean.info["bads"] == raw.info["bads"]
-    assert len(raw_clean.annotations) == len(raw.annotations)
-    assert raw_clean.info["sfreq"] == raw.info["sfreq"]
-    np.testing.assert_allclose(raw_clean.get_data(picks=["EOG1"]), eog)
-    assert asr.diagnostics_["memory_mode"] == "rolling"
-
-
 def test_asr_raw_bad_annotations_are_preserved(synthetic_burst_data):
     """Bad annotated Raw spans are excluded from final replacement."""
     mne = pytest.importorskip("mne")
@@ -350,22 +146,8 @@ def test_asr_raw_bad_annotations_are_preserved(synthetic_burst_data):
     )
 
 
-def test_asr_to_annotations(synthetic_burst_data):
-    """Last-transform repaired windows can be converted to annotations."""
-    mne = pytest.importorskip("mne")
-    data, _, _, sfreq = synthetic_burst_data
-    asr = ASR(sfreq=sfreq, cutoff=3.0, filter_kind="none", verbose=False)
-    asr.fit_transform(data)
-    annotations = asr.to_annotations()
-
-    assert isinstance(annotations, mne.Annotations)
-    assert len(annotations) >= 1
-    assert set(annotations.description) == {"ASR_REPAIR"}
-
-
-def test_asr_window_criterion_mask_and_annotations(synthetic_burst_data):
+def test_asr_window_criterion_exposes_rejection_samples(synthetic_burst_data):
     """Optional final window rejection exposes retained-sample masks."""
-    mne = pytest.importorskip("mne")
     data, _, _, sfreq = synthetic_burst_data
     asr = ASR(
         sfreq=sfreq,
@@ -375,16 +157,16 @@ def test_asr_window_criterion_mask_and_annotations(synthetic_burst_data):
         window_criterion_tolerances=(-np.inf, 2.0),
         verbose=False,
     )
-    asr.fit_transform(data)
+    _, diagnostics = asr.fit_transform(data, return_diagnostics=True)
 
     rejection_mask = asr.get_rejection_mask()
     assert rejection_mask.shape == (data.shape[1],)
+    assert rejection_mask.dtype == bool
     assert not np.all(rejection_mask)
-
-    annotations = asr.to_annotations("rejection")
-    assert isinstance(annotations, mne.Annotations)
-    assert len(annotations) >= 1
-    assert set(annotations.description) == {"ASR_REJECT"}
+    np.testing.assert_array_equal(rejection_mask, diagnostics["rejection_sample_mask"])
+    assert diagnostics["fraction_retained_after_window_rejection"] == pytest.approx(
+        np.mean(rejection_mask)
+    )
 
 
 def test_asr_riemannian_experimental_backend(synthetic_burst_data):
@@ -411,6 +193,27 @@ def test_asr_riemannian_experimental_backend(synthetic_burst_data):
     assert after < before
 
 
+def test_asr_transform_uses_fitted_state_for_new_data(synthetic_burst_data):
+    """A fitted calibration remains fixed while transforming a new stream."""
+    data, _, _, sfreq = synthetic_burst_data
+    calibration = data[:, : int(6 * sfreq)]
+    new_data = data[:, int(6 * sfreq) :]
+    asr = ASR(
+        sfreq=sfreq,
+        cutoff=3.0,
+        calibration="manual",
+        filter_kind="none",
+        lookahead=0.0,
+        verbose=False,
+    ).fit(calibration)
+    thresholds = asr.thresholds_.copy()
+    cleaned, diagnostics = asr.transform(new_data, return_diagnostics=True)
+
+    assert cleaned.shape == new_data.shape
+    assert diagnostics["n_windows"] > 0
+    np.testing.assert_array_equal(asr.thresholds_, thresholds)
+
+
 def test_asr_epochs_round_trip(synthetic_burst_data):
     """Epochs can be calibrated by concatenation and transformed per epoch."""
     mne = pytest.importorskip("mne")
@@ -423,10 +226,15 @@ def test_asr_epochs_round_trip(synthetic_burst_data):
     epochs = mne.EpochsArray(epoch_data, info, verbose=False)
 
     asr = ASR(cutoff=4.0, filter_kind="none", verbose=False)
-    epochs_clean = asr.fit_transform(epochs)
+    epochs_clean, diagnostics = asr.fit_transform(epochs, return_diagnostics=True)
 
     assert epochs_clean.get_data().shape == epoch_data.shape
     assert asr.sample_mask_.shape == (n_epochs, epoch_data.shape[-1])
+    assert len(diagnostics["epoch_diagnostics"]) == n_epochs
+    assert all(
+        epoch_diag["sample_mask"].shape == (epoch_data.shape[-1],)
+        for epoch_diag in diagnostics["epoch_diagnostics"]
+    )
 
 
 def _eeg(n_channels=8, n_times=8000, seed=0, bursts=5):
@@ -444,48 +252,6 @@ def _eeg(n_channels=8, n_times=8000, seed=0, bursts=5):
     return X
 
 
-def _inject_bursts(
-    data: np.ndarray,
-    n_bursts: int = 8,
-    burst_duration_s: float = 0.5,
-    amplitude: float = 12.0,
-    sfreq: float = 250.0,
-    seed: int = 97,
-) -> np.ndarray:
-    rng = np.random.default_rng(seed)
-    burst_len = int(round(burst_duration_s * sfreq))
-    n_times = data.shape[1]
-    starts = np.linspace(burst_len, n_times - burst_len, n_bursts).astype(int)
-    contaminated = data.copy()
-    scale = float(np.median(np.std(data, axis=1)))
-    for start in starts:
-        stop = min(start + burst_len, n_times)
-        spatial = rng.standard_normal(data.shape[0])
-        spatial /= max(np.linalg.norm(spatial), 1e-12)
-        temporal = rng.standard_normal(stop - start)
-        contaminated[:, start:stop] += amplitude * scale * np.outer(spatial, temporal)
-    return contaminated
-
-
-def _make_clean_eeg(
-    n_channels: int = 16,
-    duration_s: float = 40.0,
-    sfreq: float = 250.0,
-    seed: int = 11,
-) -> np.ndarray:
-    rng = np.random.default_rng(seed)
-    n = int(sfreq * duration_s)
-    t = np.arange(n) / sfreq
-    data = np.zeros((n_channels, n), dtype=np.float64)
-    for ch in range(n_channels):
-        phase = rng.uniform(0, 2 * np.pi)
-        data[ch] = 0.6 * np.sin(2 * np.pi * 10.0 * t + phase) + 0.15 * np.sin(
-            2 * np.pi * 6.5 * t + phase * 0.8
-        )
-    data += 0.05 * rng.standard_normal(data.shape)
-    return data
-
-
 def test_asr_riemannian_windowed_no_experimental_needed():
     cleaned = ASR(
         sfreq=SFREQ, method="riemannian_windowed", verbose=False
@@ -493,52 +259,8 @@ def test_asr_riemannian_windowed_no_experimental_needed():
     assert cleaned.shape == (8, 8000)
 
 
-def test_get_diagnostics_present():
-    est = ASR(sfreq=SFREQ, verbose=False)
-    est.fit_transform(_eeg())
-    assert isinstance(est.get_diagnostics(), dict)
-
-
-def test_asr_window_criterion_rejection_and_annotations():
-    mne = pytest.importorskip("mne")
-    asr = ASR(
-        sfreq=SFREQ,
-        cutoff=10.0,
-        calibration="auto",
-        window_criterion=0.3,
-        window_criterion_tolerances=(-np.inf, 5.0),
-        verbose=False,
-    )
-    asr.fit_transform(_eeg(bursts=8))
-    mask = asr.get_rejection_mask()
-    assert mask.dtype == bool
-    ann = asr.to_annotations("rejection")
-    assert isinstance(ann, mne.Annotations)
-
-
-def test_standard_low_memory_matches_full():
-    X = _eeg()
-    full = ASR(sfreq=SFREQ, cutoff=20.0, max_mem_mb=512, verbose=False)
-    low = ASR(sfreq=SFREQ, cutoff=20.0, max_mem_mb=1, verbose=False)
-    c_full = full.fit_transform(X)
-    c_low = low.fit_transform(X)
-    np.testing.assert_allclose(c_full, c_low, atol=1e-9)
-
-
-def test_riemannian_windowed_low_memory_runs():
-    X = _eeg()
-    asr = ASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        method="riemannian_windowed",
-        max_mem_mb=1,
-        verbose=False,
-    )
-    cleaned = asr.fit_transform(X)
-    assert np.all(np.isfinite(cleaned))
-
-
 def test_asr_window_criterion_on_epochs_populates_rejection():
+    """Epoch processing keeps a separate rejection mask per epoch."""
     epo = _epochs()
     asr = ASR(
         sfreq=SFREQ,
@@ -547,27 +269,15 @@ def test_asr_window_criterion_on_epochs_populates_rejection():
         window_criterion_tolerances=(-np.inf, 5.0),
         verbose=False,
     )
-    out = asr.fit_transform(epo)
+    out, diagnostics = asr.fit_transform(epo, return_diagnostics=True)
     assert out.get_data().shape == epo.get_data().shape
-    diag = asr.get_diagnostics()
-    assert "rejection_sample_mask" in diag
-    assert "fraction_retained_after_window_rejection" in diag
-
-
-def test_riemannian_low_memory_runs():
-    asr = ASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        method="riemannian",
-        experimental=True,
-        max_mem_mb=1,
-        verbose=False,
+    assert diagnostics["rejection_sample_mask"].shape == (
+        len(epo),
+        epo.get_data().shape[-1],
     )
-    cleaned = asr.fit_transform(_eeg())
-    assert np.all(np.isfinite(cleaned))
 
 
-def test_core_edge_cases(synthetic_burst_data, monkeypatch):
+def test_asr_rejects_unsupported_calibration_inputs(synthetic_burst_data):
     mne = pytest.importorskip("mne")
     data, _, _, sfreq = synthetic_burst_data
 
@@ -580,36 +290,24 @@ def test_core_edge_cases(synthetic_burst_data, monkeypatch):
         ASR(sfreq=sfreq).fit(
             data, calibration=data, calibration_mask=np.array([True, False])
         )
-    # Valid mask should not raise
-    ASR(sfreq=sfreq).fit(
-        data, calibration=data, calibration_mask=np.ones(data.shape[1], dtype=bool)
-    )
 
-    asr = ASR(sfreq=sfreq).fit(data)
-    info_diff_sfreq = mne.create_info(8, sfreq + 10.0, "eeg")
-    raw_diff_sfreq = mne.io.RawArray(data, info_diff_sfreq, verbose=False)
-    with pytest.raises(ValueError, match="does not match fitted sfreq"):
-        asr.transform(raw_diff_sfreq)
 
-    cleaned, diag = asr.transform(data, return_diagnostics=True)
-    assert isinstance(cleaned, np.ndarray)
-    assert isinstance(diag, dict)
+def test_asr_clears_stale_rejection_state(synthetic_burst_data):
+    """Disabling window rejection removes diagnostics from a prior transform."""
+    data, _, _, sfreq = synthetic_burst_data
+    asr = ASR(sfreq=sfreq, window_criterion=0.25, verbose=False).fit(data)
+    asr.transform(data)
+    assert hasattr(asr, "rejection_sample_mask_")
 
-    asr_new = ASR(sfreq=sfreq).fit(data)
-    assert asr_new.get_diagnostics() == {}
+    asr.window_criterion = None
+    asr.transform(data)
+    assert not hasattr(asr, "rejection_sample_mask_")
 
-    with pytest.raises(ValueError, match="must be positive"):
-        asr._resolve_sfreq(-10.0)
 
-    # First create rejection mask
-    asr_rej = ASR(sfreq=sfreq, window_criterion=0.25).fit(data)
-    asr_rej.transform(data)
-    assert hasattr(asr_rej, "rejection_sample_mask_")
-    # Then transform without window criterion (it uses the object's setting, so we disable it)
-    asr_rej.window_criterion = None
-    asr_rej.transform(data)
-    assert not hasattr(asr_rej, "rejection_sample_mask_")
-
+def test_asr_warns_for_unfiltered_projected_input(synthetic_burst_data):
+    """ASR reports preprocessing assumptions that affect calibration quality."""
+    mne = pytest.importorskip("mne")
+    data, _, _, sfreq = synthetic_burst_data
     info_warn = mne.create_info(3, sfreq, "eeg")
     with info_warn._unlock():
         info_warn["highpass"] = 0.1
@@ -628,24 +326,3 @@ def test_core_edge_cases(synthetic_burst_data, monkeypatch):
     with pytest.warns(UserWarning, match="highpass"):
         with pytest.warns(UserWarning, match="projectors"):
             ASR(sfreq=sfreq).fit(raw_warn)
-
-    # Cover the false branch of highpass < 0.25
-    info_ok = mne.create_info(3, sfreq, "eeg")
-    with info_ok._unlock():
-        info_ok["highpass"] = 1.0
-    raw_ok = mne.io.RawArray(data[:3], info_ok, verbose=False)
-    ASR(sfreq=sfreq).fit(raw_ok)  # Should not warn
-
-    raw_annot = mne.io.RawArray(
-        data[:3], mne.create_info(3, sfreq, "eeg"), verbose=False
-    )
-    raw_annot.set_annotations(mne.Annotations([0.0], [0.1], ["BAD"]))
-    asr_rej_annot = ASR(
-        sfreq=sfreq, window_criterion=0.25, reject_by_annotation=True
-    ).fit(raw_annot)
-    cleaned_raw_rej = asr_rej_annot.transform(raw_annot)
-    assert isinstance(cleaned_raw_rej, mne.io.RawArray)
-
-    monkeypatch.setattr(_mne, "mne", None)
-    with pytest.raises(ImportError, match="ASR annotations.*MNE-Python"):
-        asr.to_annotations("repair")

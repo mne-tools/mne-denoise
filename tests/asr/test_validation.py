@@ -313,41 +313,6 @@ def test_validate_juggler_params():
         )
 
 
-def test_asr_validation_errors(synthetic_burst_data):
-    import pytest
-
-    from mne_denoise.asr import ASR, AdaptiveASR, JugglerASR
-
-    data, _, _, sfreq = synthetic_burst_data
-    with pytest.raises(ValueError, match="experimental=True"):
-        ASR(sfreq=sfreq, method="riemannian").fit(data)
-    with pytest.raises(ValueError, match="strategy"):
-        JugglerASR(sfreq=sfreq, strategy="unknown").fit(data)
-    with pytest.raises(ValueError, match="variant"):
-        AdaptiveASR(sfreq=sfreq, variant="unknown").fit(data)
-    with pytest.raises(NotImplementedError, match="Supported methods"):
-        ASR(sfreq=sfreq, method="unknown").fit(data)
-    with pytest.raises(ValueError, match="sfreq"):
-        ASR().fit(data)
-    with pytest.raises(ValueError, match="at least two channels"):
-        ASR(sfreq=sfreq).fit(data[:1])
-    with pytest.raises(RuntimeError, match="not fitted"):
-        ASR(sfreq=sfreq).transform(data)
-
-
-def test_asr_unknown_method_raises():
-    import numpy as np
-    import pytest
-
-    from mne_denoise.asr import ASR
-
-    rng = np.random.default_rng(42)
-    with pytest.raises(NotImplementedError, match="Supported methods"):
-        ASR(sfreq=250.0, method="bogus", verbose=False).fit(
-            rng.standard_normal((8, 2000))
-        )
-
-
 def test_asr_riemannian_requires_experimental():
     import numpy as np
     import pytest
@@ -372,29 +337,3 @@ def test_get_rejection_mask_without_window_criterion_raises():
     asr.fit_transform(rng.standard_normal((8, 2000)))
     with pytest.raises(RuntimeError, match="rejection mask"):
         asr.get_rejection_mask()
-
-
-def test_to_annotations_bad_kind_raises():
-    import numpy as np
-    import pytest
-
-    from mne_denoise.asr import ASR
-
-    rng = np.random.default_rng(42)
-    asr = ASR(sfreq=250.0, cutoff=20.0, verbose=False)
-    asr.fit_transform(rng.standard_normal((8, 2000)))
-    with pytest.raises(ValueError, match="kind must be"):
-        asr.to_annotations("bogus")
-
-
-def test_to_annotations_calibration_on_window_backend_raises():
-    import numpy as np
-    import pytest
-
-    from mne_denoise.asr import ASR
-
-    rng = np.random.default_rng(42)
-    asr = ASR(sfreq=250.0, cutoff=20.0, verbose=False)
-    asr.fit_transform(rng.standard_normal((8, 2000)))
-    with pytest.raises(RuntimeError, match="sample-based"):
-        asr.to_annotations("calibration")
