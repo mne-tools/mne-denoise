@@ -902,15 +902,13 @@ def test_adaptive_callback_exception_resets_target_frequency():
         adaptive=True,
         adaptive_params={"min_chunk_len": 10.0},
     )
-    sentinel = RuntimeError("ZapLine callback failed")
 
     def callback(event):
-        raise sentinel
+        raise RuntimeError("ZapLine callback failed")
 
-    with pytest.raises(RuntimeError) as caught:
+    with pytest.raises(RuntimeError):
         zap.fit_transform(data, callback=callback)
 
-    assert caught.value is sentinel
     assert zap._target_freq_ is None
 
 

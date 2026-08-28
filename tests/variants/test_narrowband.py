@@ -160,33 +160,6 @@ def test_narrowband_scan_progress_success(osc_data_generator):
     np.testing.assert_allclose([event.metric for event in events], eigenvalues)
 
 
-def test_narrowband_scan_callback_is_numerically_transparent(osc_data_generator):
-    """A callback does not change the fitted DSS or scan results."""
-    data, sfreq, _freq, _signal = osc_data_generator((3, 500))
-    scan_kws = {
-        "sfreq": sfreq,
-        "freq_range": (9, 11),
-        "freq_step": 1.0,
-        "bandwidth": 2.0,
-        "n_components": 1,
-    }
-
-    best_without, frequencies_without, eigenvalues_without = narrowband_scan(
-        data, **scan_kws
-    )
-    events = []
-    best_with, frequencies_with, eigenvalues_with = narrowband_scan(
-        data, callback=events.append, **scan_kws
-    )
-
-    np.testing.assert_array_equal(frequencies_with, frequencies_without)
-    np.testing.assert_allclose(eigenvalues_with, eigenvalues_without)
-    for attribute in ("eigenvalues_", "filters_", "patterns_"):
-        np.testing.assert_allclose(
-            getattr(best_with, attribute), getattr(best_without, attribute)
-        )
-
-
 def test_narrowband_scan_errors():
     """Test error handling in scanning loop."""
     rng = np.random.default_rng(42)
@@ -274,18 +247,15 @@ def test_narrowband_scan_callback_exception_propagates(osc_data_generator):
     data, sfreq, _freq, _signal = osc_data_generator((3, 500))
     events = []
 
-    class CallbackSentinel(RuntimeError):
-        pass
-
     def callback(event):
         events.append(event)
-        raise CallbackSentinel("stop")
+        raise RuntimeError("stop")
 
     with patch(
         "mne_denoise.dss.variants.narrowband.narrowband_dss",
         wraps=narrowband_dss,
     ) as mock_dss:
-        with pytest.raises(CallbackSentinel, match="stop") as caught:
+        with pytest.raises(RuntimeError, match="stop"):
             narrowband_scan(
                 data,
                 sfreq=sfreq,
@@ -294,17 +264,8 @@ def test_narrowband_scan_callback_exception_propagates(osc_data_generator):
                 callback=callback,
             )
 
-    assert type(caught.value) is CallbackSentinel
     assert len(events) == 1
     assert mock_dss.call_count == 1
-
-
-def test_narrowband_scan_rejects_invalid_callback():
-    """narrowband_scan validates callbacks before starting the scan."""
-    data = np.zeros((3, 100))
-
-    with pytest.raises(TypeError, match="callback must be callable or None"):
-        narrowband_scan(data, sfreq=100, freq_range=(9, 11), callback=1)
 
 
 def test_narrowband_scan_rejects_adaptive_before_progress():

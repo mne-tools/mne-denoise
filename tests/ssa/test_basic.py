@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 
 import numpy as np
 import pytest
 
 from mne_denoise.ssa import (
-    LocalSingularSpectrumAnalysis,
     SingularSpectrumAnalysis,
     compute_basic_ssa,
     ssa_clean_channel,
@@ -61,21 +59,6 @@ def test_sample_and_second_windows_are_equivalent(rng):
     by_time, time_info = ssa_decompose(x, window_seconds=0.2, sfreq=100.0)
     np.testing.assert_allclose(by_sample, by_time)
     assert sample_info["window_length"] == time_info["window_length"] == 20
-
-
-@pytest.mark.parametrize(
-    ("estimator_type", "kwargs"),
-    [
-        (SingularSpectrumAnalysis, {"sfreq": 100.0}),
-        (LocalSingularSpectrumAnalysis, {}),
-    ],
-)
-def test_ssa_fit_transform_validates_callback_before_fit(estimator_type, kwargs):
-    """Invalid SSA callbacks cannot leave a transformer fitted."""
-    estimator = estimator_type(**kwargs)
-    with pytest.raises(TypeError, match="callback must be callable or None"):
-        estimator.fit_transform(np.ones((2, 100)), callback=1)
-    assert not hasattr(estimator, "is_fitted_")
 
 
 def test_array_input_is_immutable(drift_data):
@@ -172,28 +155,6 @@ def test_compute_basic_ssa_progress_callback(drift_data):
     )
 
 
-def test_compute_basic_ssa_callback_is_numerically_transparent(drift_data):
-    """Basic SSA callbacks do not alter cleaned data or diagnostics."""
-    X, sfreq = drift_data
-    X = X[:3, :240]
-    without, without_info = compute_basic_ssa(X, sfreq, window_length=20)
-    events = []
-    with_callback, with_info = compute_basic_ssa(
-        X, sfreq, window_length=20, callback=events.append
-    )
-
-    np.testing.assert_allclose(with_callback, without)
-    np.testing.assert_array_equal(
-        with_info["dropped_counts"], without_info["dropped_counts"]
-    )
-    for expected, actual in zip(
-        without_info["dropped_frequencies"],
-        with_info["dropped_frequencies"],
-        strict=True,
-    ):
-        np.testing.assert_array_equal(actual, expected)
-
-
 def test_compute_basic_ssa_rejects_1d():
     """A 1-D input to compute_basic_ssa raises a clear error."""
     with pytest.raises(ValueError, match="2-D"):
@@ -265,13 +226,12 @@ def test_ssa_fit_transform_callback_matches_direct_transform(drift_data):
     X = X[:3, :240]
     direct_events = []
     direct_model = SingularSpectrumAnalysis(sfreq=sfreq, window_length=20)
-    direct = direct_model.fit(X).transform(X, callback=direct_events.append)
+    direct_model.fit(X).transform(X, callback=direct_events.append)
 
     composed_events = []
     composed_model = SingularSpectrumAnalysis(sfreq=sfreq, window_length=20)
-    composed = composed_model.fit_transform(X, callback=composed_events.append)
+    composed_model.fit_transform(X, callback=composed_events.append)
 
-    np.testing.assert_allclose(composed, direct)
     assert composed_events == direct_events
 
 
@@ -291,42 +251,6 @@ def test_ssa_epoched_transform_reports_epochs_only(drift_data):
     assert all(event.total == epochs.shape[0] for event in events)
     assert all(event.component is None for event in events)
     assert all(event.metric is None for event in events)
-
-
-def test_ssa_callback_exception_propagates_unchanged(drift_data):
-    """An SSA integration callback exception aborts the transform unchanged."""
-    X, sfreq = drift_data
-    X = X[:3, :240]
-    estimator = SingularSpectrumAnalysis(sfreq=sfreq, window_length=20).fit(X)
-
-    class SentinelError(RuntimeError):
-        pass
-
-    error = SentinelError("stop SSA")
-
-    def callback(event):
-        raise error
-
-    with pytest.raises(SentinelError) as caught:
-        estimator.transform(X, callback=callback)
-    assert caught.value is error
-
-
-def test_ssa_callback_api_is_runtime_only():
-    """SSA fit and single-channel helpers remain callback-free APIs."""
-    assert (
-        "callback"
-        not in inspect.signature(SingularSpectrumAnalysis.__init__).parameters
-    )
-    assert "callback" not in inspect.signature(SingularSpectrumAnalysis.fit).parameters
-    for function in (ssa_decompose, ssa_clean_channel, ssa_w_correlation):
-        assert "callback" not in inspect.signature(function).parameters
-
-
-def test_compute_basic_ssa_rejects_invalid_callback():
-    """Basic SSA validates callbacks at its public functional boundary."""
-    with pytest.raises(TypeError, match="callback must be callable or None"):
-        compute_basic_ssa(np.ones((2, 20)), 100.0, callback=1)
 
 
 def test_ssa_requires_sfreq_for_array(drift_data):

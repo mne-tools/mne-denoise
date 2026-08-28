@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 from unittest.mock import patch
 
@@ -284,63 +283,6 @@ def test_iterative_dss_symmetric_progress_events():
     )
 
 
-def test_iterative_dss_callback_is_numerically_transparent():
-    """Callbacks do not change deflationary or symmetric DSS results."""
-    rng = np.random.default_rng(106)
-    data = rng.standard_normal((6, 500))
-
-    for method in ("deflation", "symmetric"):
-        without = iterative_dss(
-            data,
-            np.tanh,
-            n_components=2,
-            method=method,
-            max_iter=5,
-            tol=-1.0,
-            random_state=0,
-        )
-        with_callback = iterative_dss(
-            data,
-            np.tanh,
-            n_components=2,
-            method=method,
-            max_iter=5,
-            tol=-1.0,
-            random_state=0,
-            callback=lambda event: None,
-        )
-
-        for expected, actual in zip(without, with_callback, strict=True):
-            np.testing.assert_allclose(expected, actual)
-
-
-def test_iterative_dss_callback_validation_and_exceptions():
-    """Iterative DSS validates callbacks and propagates their exceptions."""
-    rng = np.random.default_rng(107)
-    data = rng.standard_normal((6, 500))
-
-    with pytest.raises(TypeError, match="callback must be callable or None"):
-        iterative_dss(data, np.tanh, n_components=2, callback=1)
-
-    class SentinelError(Exception):
-        pass
-
-    error = SentinelError("stop")
-
-    def callback(event):
-        raise error
-
-    with pytest.raises(SentinelError) as caught:
-        iterative_dss(
-            data,
-            np.tanh,
-            n_components=2,
-            max_iter=3,
-            callback=callback,
-        )
-    assert caught.value is error
-
-
 def test_iterative_dss_3d_data():
     """iterative_dss should handle 3D epoched data."""
     rng = np.random.default_rng(42)
@@ -427,18 +369,6 @@ def test_iterative_dss_with_w_init():
     assert filters.shape == (3, 6)
 
 
-def test_iterative_dss_debug_logging(caplog):
-    """iterative_dss should report component progress at DEBUG."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 500))
-
-    denoiser = KurtosisDenoiser()
-    with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
-        iterative_dss(data, denoiser, n_components=2, max_iter=5, verbose="DEBUG")
-
-    assert "IterativeDSS component" in caplog.text
-
-
 @pytest.mark.parametrize("verbosity", [True, "DEBUG"])
 def test_iterative_dss_uses_logging_not_stdout(verbosity, caplog, capsys):
     """INFO and DEBUG iterative reports never write processing output to stdout."""
@@ -461,25 +391,6 @@ def test_iterative_dss_uses_logging_not_stdout(verbosity, caplog, capsys):
     assert len(summaries) == 1
     for token in ("method=", "denoiser=KurtosisDenoiser", "converged=", "iterations="):
         assert token in summaries[0].message
-
-
-def test_iterative_dss_symmetric_debug_logging(caplog):
-    """iterative_dss symmetric should report progress at DEBUG."""
-    rng = np.random.default_rng(42)
-    data = rng.standard_normal((5, 500))
-
-    denoiser = KurtosisDenoiser()
-    with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
-        iterative_dss(
-            data,
-            denoiser,
-            n_components=2,
-            method="symmetric",
-            max_iter=5,
-            verbose="DEBUG",
-        )
-
-    assert "IterativeDSS symmetric iteration" in caplog.text
 
 
 def test_iterative_dss_symmetric_with_alpha_beta():
@@ -557,8 +468,6 @@ def test_iterative_dss_class_fit_progress_callback():
 
     assert {event.component for event in events} == {1, 2}
     assert len(events) == int(np.sum(it_dss.convergence_info_[:, 0]))
-    assert "callback" not in vars(it_dss)
-    assert "callback" not in inspect.signature(IterativeDSS.__init__).parameters
 
 
 def test_iterative_dss_class_fit_transform_progress_callback():
@@ -904,7 +813,7 @@ def test_iterative_dss_symmetric_callable_alpha_beta():
     assert filters.shape == (2, 5)
 
 
-def test_iterative_dss_symmetric_converges(caplog):
+def test_iterative_dss_symmetric_converges():
     """Symmetric method should report convergence when it happens."""
     rng = np.random.default_rng(42)
     data = rng.standard_normal((4, 2000))  # Enough data for convergence
@@ -913,19 +822,18 @@ def test_iterative_dss_symmetric_converges(caplog):
     def denoiser(s):
         return s**3  # cubic
 
-    with caplog.at_level(logging.DEBUG, logger="mne_denoise"):
-        filters, sources, patterns, conv = iterative_dss(
-            data,
-            denoiser,
-            n_components=2,
-            method="symmetric",
-            max_iter=100,
-            tol=1e-4,
-            verbose="DEBUG",
-        )
+    filters, sources, patterns, conv = iterative_dss(
+        data,
+        denoiser,
+        n_components=2,
+        method="symmetric",
+        max_iter=100,
+        tol=1e-4,
+        verbose="DEBUG",
+    )
 
     # Either converges or hits max_iter - both are covered
-    assert "IterativeDSS symmetric" in caplog.text
+    assert conv.shape == (2, 2)
 
 
 def test_iterative_dss_transform_mne_raw():

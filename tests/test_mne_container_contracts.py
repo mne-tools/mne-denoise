@@ -18,15 +18,6 @@ from tests._contract_cases import (
 MNE_KINDS = (MNE_RAW, MNE_EPOCHS, MNE_EVOKED)
 
 
-def _mne_cases(kind: str, capability: str | None = None):
-    return tuple(
-        case
-        for case in ESTIMATOR_CASES
-        if kind in case.capabilities
-        and (capability is None or capability in case.capabilities)
-    )
-
-
 def _mne_parameters():
     return tuple(
         pytest.param(case, kind, id=f"{case.name}-{kind.removeprefix('mne_')}")
@@ -126,6 +117,29 @@ def _channel_data(data, kind, channel):
     return data[channel] if kind != MNE_EPOCHS else data[:, channel, :]
 
 
+def _assert_fitted_raw_layout_safety(case, estimator, raw, names):
+    """Check the fitted Raw layout properties declared by one estimator."""
+    if FITTED_CHANNEL_NAMES in case.capabilities:
+        renamed = raw.copy()
+        renamed.rename_channels({names[0]: "renamed-channel"})
+        with pytest.raises(ValueError):
+            estimator.transform(renamed)
+
+    if FITTED_CHANNEL_ORDER in case.capabilities:
+        reordered = raw.copy().reorder_channels([names[1], names[0], *names[2:]])
+        with pytest.raises(ValueError):
+            estimator.transform(reordered)
+
+    if SFREQ_AWARE in case.capabilities:
+        mne = pytest.importorskip("mne")
+        mismatch_info = mne.create_info(names, 220.0, raw.get_channel_types())
+        mismatch = mne.io.RawArray(
+            raw.get_data(), mismatch_info, first_samp=raw.first_samp, verbose=False
+        )
+        with pytest.raises(ValueError, match="(?i)sfreq|sampling"):
+            estimator.transform(mismatch)
+
+
 @pytest.mark.parametrize("case, kind", _mne_parameters())
 def test_mne_container_contracts_preserve_identity_and_metadata(
     case, kind, rich_mne_inputs
@@ -155,7 +169,8 @@ def test_mne_container_contracts_preserve_identity_and_metadata(
         before_last = inst.last
         before_times = inst.times.copy()
 
-    cleaned = _mne_estimator(case, names).fit_transform(inst)
+    estimator = _mne_estimator(case, names)
+    cleaned = estimator.fit_transform(inst)
     cleaned_data = _data(cleaned, kind)
 
     mne = pytest.importorskip("mne")
@@ -214,53 +229,5 @@ def test_mne_container_contracts_preserve_identity_and_metadata(
         assert inst.last == before_last
         np.testing.assert_array_equal(inst.times, before_times)
 
-
-@pytest.mark.parametrize(
-    "case",
-    _mne_cases(MNE_RAW, FITTED_CHANNEL_NAMES),
-    ids=lambda case: case.name,
-)
-def test_fitted_mne_channel_names_are_checked(case, rich_mne_inputs):
-    """Changing a fitted channel name fails instead of silently misapplying it."""
-    raw = rich_mne_inputs[MNE_RAW]
-    names = rich_mne_inputs["names"]
-    estimator = _mne_estimator(case, names).fit(raw)
-    renamed = raw.copy()
-    renamed.rename_channels({names[0]: "renamed-channel"})
-
-    with pytest.raises(ValueError):
-        estimator.transform(renamed)
-
-
-@pytest.mark.parametrize("case", _mne_cases(MNE_RAW), ids=lambda case: case.name)
-def test_fitted_mne_channel_order_is_checked_where_declared(case, rich_mne_inputs):
-    """Exact-layout estimators reject reordered MNE inputs."""
-    if FITTED_CHANNEL_ORDER not in case.capabilities:
-        pytest.skip("this estimator resolves named channels by public name")
-
-    raw = rich_mne_inputs[MNE_RAW]
-    names = rich_mne_inputs["names"]
-    estimator = _mne_estimator(case, names).fit(raw)
-    reordered = raw.copy().reorder_channels([names[1], names[0], *names[2:]])
-
-    with pytest.raises(ValueError, match="(?i)channel|order|names"):
-        estimator.transform(reordered)
-
-
-@pytest.mark.parametrize("case", _mne_cases(MNE_RAW), ids=lambda case: case.name)
-def test_fitted_mne_sampling_frequency_is_checked_where_declared(case, rich_mne_inputs):
-    """Sampling-rate-dependent estimators reject a meaningful mismatch."""
-    if SFREQ_AWARE not in case.capabilities:
-        pytest.skip("sampling frequency is not part of this fitted operator")
-
-    mne = pytest.importorskip("mne")
-    raw = rich_mne_inputs[MNE_RAW]
-    names = rich_mne_inputs["names"]
-    estimator = _mne_estimator(case, names).fit(raw)
-    mismatch_info = mne.create_info(names, 220.0, raw.get_channel_types())
-    mismatch = mne.io.RawArray(
-        raw.get_data(), mismatch_info, first_samp=raw.first_samp, verbose=False
-    )
-
-    with pytest.raises(ValueError, match="(?i)sfreq|sampling"):
-        estimator.transform(mismatch)
+    if kind == MNE_RAW:
+        _assert_fitted_raw_layout_safety(case, estimator, inst, names)

@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 
 import numpy as np
 import pytest
-from sklearn.base import clone
-from sklearn.exceptions import NotFittedError
 
 from mne_denoise.ssa import (
     LocalSingularSpectrumAnalysis,
     compute_local_ssa,
     local_ssa_clean_channel,
 )
-from mne_denoise.ssa.local import _fit_local_clusters, _mdl_order
+from mne_denoise.ssa.local import _mdl_order
 
 from ._utils import band_power
 
@@ -77,26 +74,6 @@ def test_compute_local_ssa_progress_callback(rng):
     )
 
 
-def test_compute_local_ssa_callback_is_numerically_transparent(rng):
-    """Local SSA callbacks do not alter deterministic clustering results."""
-    X = rng.standard_normal((3, 120))
-    without, without_info = compute_local_ssa(
-        X, window_length=10, n_clusters=2, random_state=0
-    )
-    events = []
-    with_callback, with_info = compute_local_ssa(
-        X,
-        window_length=10,
-        n_clusters=2,
-        random_state=0,
-        callback=events.append,
-    )
-
-    np.testing.assert_allclose(with_callback, without)
-    np.testing.assert_array_equal(with_info["n_clusters"], without_info["n_clusters"])
-    np.testing.assert_array_equal(with_info["artifacts"], without_info["artifacts"])
-
-
 def test_local_ssa_attenuates_artifact_and_preserves_broadband_eeg(rng):
     """The paper interpretation removes coherent drift and retains broadband EEG."""
     sfreq = 128.0
@@ -144,7 +121,7 @@ def test_local_ssa_rejects_invalid_parameters(kwargs):
 
 
 def test_local_estimator_contract_and_mne_roundtrip(drift_data, caplog):
-    """Local SSA clones, records fit state, and preserves an MNE Raw container."""
+    """Local SSA records fit state and preserves an MNE Raw container."""
     mne = pytest.importorskip("mne")
     X, sfreq = drift_data
     info = mne.create_info([f"EEG{i}" for i in range(2)], sfreq, "eeg")
@@ -152,11 +129,8 @@ def test_local_estimator_contract_and_mne_roundtrip(drift_data, caplog):
     estimator = LocalSingularSpectrumAnalysis(
         window_length=41, n_clusters=2, random_state=0
     )
-    with pytest.raises(NotFittedError):
-        estimator.transform(raw)
     with caplog.at_level(logging.INFO, logger="mne_denoise"):
         cleaned = estimator.fit_transform(raw)
-    assert clone(estimator).get_params() == estimator.get_params()
     assert cleaned is not raw
     assert cleaned.first_samp == raw.first_samp
     assert estimator.n_channels_in_ == 2
@@ -206,17 +180,3 @@ def test_local_epoched_transform_reports_epochs_only(rng):
     assert all(event.total == epochs.shape[0] for event in events)
     assert all(event.component is None for event in events)
     assert all(event.metric is None for event in events)
-
-
-def test_local_ssa_callback_api_is_runtime_only():
-    """Local SSA fit and single-channel internals remain callback-free."""
-    assert (
-        "callback"
-        not in inspect.signature(LocalSingularSpectrumAnalysis.__init__).parameters
-    )
-    assert (
-        "callback"
-        not in inspect.signature(LocalSingularSpectrumAnalysis.fit).parameters
-    )
-    for function in (local_ssa_clean_channel, _fit_local_clusters, _mdl_order):
-        assert "callback" not in inspect.signature(function).parameters

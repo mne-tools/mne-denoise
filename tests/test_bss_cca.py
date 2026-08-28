@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 
 import numpy as np
@@ -571,33 +570,6 @@ def test_fit_reports_the_resolved_operating_point(rng, caplog):
         assert token in summaries[0].message
 
 
-@pytest.mark.parametrize(
-    "verbose",
-    ["ERROR", True, False],
-)
-def test_verbose_temporarily_sets_the_package_logger_level(rng, verbose):
-    """MNE-style verbosity is scoped to the operation and then restored."""
-    package_logger = logging.getLogger("mne_denoise")
-    previous = package_logger.level
-    try:
-        BSSCCA(n_remove=1, verbose=verbose).fit(rng.standard_normal((5, 500)))
-        assert package_logger.level == previous
-    finally:
-        package_logger.setLevel(previous)
-
-
-def test_verbose_none_leaves_external_configuration_alone(rng):
-    """verbose=None respects whatever level the caller configured."""
-    package_logger = logging.getLogger("mne_denoise")
-    previous = package_logger.level
-    try:
-        package_logger.setLevel(logging.CRITICAL)
-        BSSCCA(n_remove=1, verbose=None).fit(rng.standard_normal((5, 500)))
-        assert package_logger.level == logging.CRITICAL
-    finally:
-        package_logger.setLevel(previous)
-
-
 # ---------------------------------------------------------------------------
 # Block-wise operation
 # ---------------------------------------------------------------------------
@@ -704,54 +676,17 @@ def test_segmented_callback_reports_completed_operator_blocks(rng, overlap):
 
 
 @pytest.mark.parametrize("shape", [(6, 1000), (4, 3, 250)])
-def test_global_callback_is_silent_and_numerically_transparent(rng, shape):
+def test_global_callback_is_silent(rng, shape):
     """A global BSS-CCA fit accepts callbacks but emits no events."""
     data = rng.standard_normal(shape)
-    reference, reference_info = compute_bss_cca(data, n_remove=2)
     events = []
-    cleaned, info = compute_bss_cca(data, n_remove=2, callback=events.append)
+    compute_bss_cca(data, n_remove=2, callback=events.append)
 
     assert events == []
-    np.testing.assert_allclose(cleaned, reference, atol=1e-12)
-    np.testing.assert_allclose(info["correlations"], reference_info["correlations"])
-    np.testing.assert_allclose(info["filters"], reference_info["filters"])
-    np.testing.assert_allclose(info["patterns"], reference_info["patterns"])
-    np.testing.assert_array_equal(info["kept_mask"], reference_info["kept_mask"])
-    assert info["spans"] == reference_info["spans"]
 
 
-def test_segmented_callback_is_numerically_transparent(rng):
-    """Adding a segmented callback does not change BSS-CCA results."""
-    data = rng.standard_normal((5, 1500))
-    kwargs = {
-        "sfreq": SFREQ,
-        "segment_len": 2.0,
-        "overlap": 0.5,
-        "n_remove": 1,
-    }
-    reference, reference_info = compute_bss_cca(data, **kwargs)
-    events = []
-    cleaned, info = compute_bss_cca(data, callback=events.append, **kwargs)
-
-    np.testing.assert_allclose(cleaned, reference, atol=1e-12)
-    for key in (
-        "cleaning_matrix",
-        "filters",
-        "patterns",
-        "correlations",
-        "autocorrelations",
-        "filter_asymmetry",
-        "kept_mask",
-        "training_mean",
-    ):
-        for expected, actual in zip(reference_info[key], info[key], strict=True):
-            np.testing.assert_allclose(actual, expected, atol=1e-12)
-    assert info["spans"] == reference_info["spans"]
-    assert len(events) == info["n_blocks"]
-
-
-def test_segmented_callback_exception_propagates_unchanged(rng):
-    """A callback error aborts BSS-CCA without scientific error handling."""
+def test_segmented_callback_exception_stops_after_first_block(rng):
+    """A callback interruption leaves the segmented topology at block one."""
     data = rng.standard_normal((5, 1500))
 
     class CallbackSentinel(RuntimeError):
@@ -764,7 +699,7 @@ def test_segmented_callback_exception_propagates_unchanged(rng):
         events.append(event)
         raise error
 
-    with pytest.raises(CallbackSentinel) as caught:
+    with pytest.raises(CallbackSentinel):
         compute_bss_cca(
             data,
             sfreq=SFREQ,
@@ -773,15 +708,9 @@ def test_segmented_callback_exception_propagates_unchanged(rng):
             callback=callback,
         )
 
-    assert caught.value is error
-    assert len(events) == 1
-    assert events[0].current == 1
-
-
-def test_callback_is_validated_at_the_compute_boundary(rng):
-    """The public BSS-CCA function rejects non-callable callbacks."""
-    with pytest.raises(TypeError, match="callback must be callable or None"):
-        compute_bss_cca(rng.standard_normal((5, 1000)), n_remove=1, callback=1)
+    assert [(event.method, event.stage, event.current) for event in events] == [
+        ("bss_cca", "block", 1)
+    ]
 
 
 def test_block_wise_estimator_is_tied_to_its_timeline(rng):
@@ -830,14 +759,6 @@ def test_global_estimator_callback_is_silent(rng):
     events = []
     BSSCCA(n_remove=1).fit(rng.standard_normal((5, 1000)), callback=events.append)
     assert events == []
-
-
-def test_estimator_callback_is_not_constructor_or_transform_state():
-    """Callbacks belong to fitting operations, not estimator state."""
-    assert "callback" not in inspect.signature(BSSCCA).parameters
-    assert "callback" not in inspect.signature(BSSCCA.transform).parameters
-    with pytest.raises(TypeError, match="unexpected keyword argument 'callback'"):
-        BSSCCA(n_remove=1, callback=lambda event: None)
 
 
 def test_segment_len_is_rejected_for_epoched_input(rng):

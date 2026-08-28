@@ -2,8 +2,6 @@
 
 import importlib
 
-import pytest
-
 PUBLIC_FACADES = (
     "mne_denoise",
     "mne_denoise.asr",
@@ -74,26 +72,21 @@ CANONICAL_PUBLIC_PATHS = (
 )
 
 
-def test_public_facades_have_unique_existing_all():
+def test_public_facades_declare_unique_existing_all():
     """Every declared public facade has a unique, existing ``__all__``."""
     for module_name in PUBLIC_FACADES:
         module = importlib.import_module(module_name)
         public_names = getattr(module, "__all__", None)
-        if public_names is None:
-            continue
+        assert public_names is not None, f"{module_name} must declare __all__"
 
         assert len(public_names) == len(set(public_names)), module_name
         for name in public_names:
             assert hasattr(module, name), f"{module_name}.{name} is missing"
 
 
-@pytest.mark.parametrize(
-    "module_name, name",
-    CANONICAL_PUBLIC_PATHS,
-    ids=lambda path: ".".join(path),
-)
-def test_canonical_public_paths_are_importable(module_name, name):
+def test_canonical_public_paths_are_importable():
     """Documented public classes and functions remain importable canonically."""
-    module = importlib.import_module(module_name)
-    public_object = getattr(module, name, None)
-    assert callable(public_object), f"{module_name}.{name} is not callable"
+    for module_name, name in CANONICAL_PUBLIC_PATHS:
+        module = importlib.import_module(module_name)
+        public_object = getattr(module, name, None)
+        assert callable(public_object), f"{module_name}.{name} is not callable"

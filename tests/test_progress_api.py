@@ -131,73 +131,61 @@ CALLBACK_ESTIMATORS = (
 )
 
 
-@pytest.mark.parametrize("name, operation", CALLBACK_APIS)
-def test_public_operations_expose_callback(name, operation):
-    """Every audited callback-aware public operation names its callback."""
-    assert operation is not None, name
-    assert "callback" in inspect.signature(operation).parameters
-
-
-@pytest.mark.parametrize("name, operation", CALLBACK_FREE_APIS)
-def test_deliberate_callback_free_operations_omit_callback(name, operation):
-    """Deliberate silent operations do not grow a meaningless callback API."""
-    assert "callback" not in inspect.signature(operation).parameters, name
-
-
-@pytest.mark.parametrize("estimator", CALLBACK_ESTIMATORS)
-def test_callback_is_absent_from_every_estimator_constructor(estimator):
-    """Callbacks are runtime observer state, not estimator parameters."""
-    assert "callback" not in inspect.signature(estimator.__init__).parameters
-
-
 _LEGACY_CALLBACK_APIS = {"calibrate_asr", "compute_icanclean"}
 
 
-@pytest.mark.parametrize(
-    "name, operation",
-    [item for item in CALLBACK_APIS if item[0] not in _LEGACY_CALLBACK_APIS],
-)
-def test_modern_callback_parameters_are_keyword_only(name, operation):
-    """Modern callback APIs expose callback after their keyword-only boundary."""
-    parameter = inspect.signature(operation).parameters["callback"]
-    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY, name
+def test_callback_aware_public_signatures_are_consistent():
+    """Callback-aware operations expose keyword-only runtime observer state."""
+    for name, operation in CALLBACK_APIS:
+        parameters = inspect.signature(operation).parameters
+        assert "callback" in parameters, f"{name}: callback is missing"
+        if name not in _LEGACY_CALLBACK_APIS:
+            assert parameters["callback"].kind is inspect.Parameter.KEYWORD_ONLY, (
+                f"{name}: callback must be keyword-only"
+            )
+
+    for estimator in CALLBACK_ESTIMATORS:
+        assert "callback" not in inspect.signature(estimator.__init__).parameters, (
+            f"{estimator.__name__}: callback must not be an estimator parameter"
+        )
+
+
+def test_callback_free_public_signatures_are_intentional():
+    """Deliberate silent operations do not grow a meaningless callback API."""
+    for name, operation in CALLBACK_FREE_APIS:
+        assert "callback" not in inspect.signature(operation).parameters, (
+            f"{name}: callback is not allowed on this operation"
+        )
 
 
 @pytest.mark.parametrize("case", CALLBACK_CASES, ids=lambda case: case.name)
-def test_representative_public_callbacks_are_numerically_transparent(case):
-    """Representative public callbacks observe work without changing results."""
+def test_representative_public_callback_contracts(case):
+    """Representative estimators cover callback transparency and failures."""
     factory = case.callback_factory
-    assert factory is not None
+    assert factory is not None, f"{case.name}: callback factory is missing"
     data = case.make_array()
+
     expected = factory().fit_transform(data)
     events = []
     actual = factory().fit_transform(data, callback=events.append)
+    np.testing.assert_allclose(
+        actual,
+        expected,
+        err_msg=f"{case.name}: callback changed the numerical result",
+    )
+    assert events, f"{case.name}: callback received no progress events"
+    assert all(isinstance(event, ProgressEvent) for event in events), (
+        f"{case.name}: callback received a non-ProgressEvent value"
+    )
 
-    np.testing.assert_allclose(actual, expected)
-    assert events
-    assert all(isinstance(event, ProgressEvent) for event in events)
-
-
-@pytest.mark.parametrize("case", CALLBACK_CASES, ids=lambda case: case.name)
-def test_representative_public_callback_exceptions_propagate(case):
-    """Representative public operations preserve the callback exception object."""
-    factory = case.callback_factory
-    assert factory is not None
     error = RuntimeError(f"{case.name} callback failed")
 
     def callback(_event):
         raise error
 
     with pytest.raises(RuntimeError) as caught:
-        factory().fit_transform(case.make_array(), callback=callback)
+        factory().fit_transform(data, callback=callback)
+    assert caught.value is error, f"{case.name}: callback exception was replaced"
 
-    assert caught.value is error
-
-
-@pytest.mark.parametrize("case", CALLBACK_CASES, ids=lambda case: case.name)
-def test_representative_public_callbacks_validate_noncallables(case):
-    """Representative callback-aware APIs reject invalid callback values."""
-    factory = case.callback_factory
-    assert factory is not None
     with pytest.raises(TypeError, match="callback must be callable or None"):
-        factory().fit_transform(case.make_array(), callback=1)
+        factory().fit_transform(data, callback=1)

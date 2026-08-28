@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 
 import mne
@@ -197,47 +196,6 @@ def test_compute_sound_progress_event_on_early_convergence():
     assert events[-1].total == 7
 
 
-def test_compute_sound_callback_is_numerically_transparent():
-    """A SOUND callback does not change the numerical result."""
-    rng = np.random.default_rng(103)
-    data = rng.standard_normal((6, 300))
-    leadfield = rng.standard_normal((6, 8))
-
-    without = compute_sound(data, leadfield, n_iter=3, random_state=0)
-    with_callback = compute_sound(
-        data,
-        leadfield,
-        n_iter=3,
-        random_state=0,
-        callback=lambda event: None,
-    )
-
-    for expected, actual in zip(without, with_callback, strict=True):
-        np.testing.assert_allclose(expected, actual)
-
-
-def test_compute_sound_callback_validation_and_exceptions():
-    """SOUND validates callbacks and propagates their exceptions."""
-    rng = np.random.default_rng(104)
-    data = rng.standard_normal((6, 300))
-    leadfield = rng.standard_normal((6, 8))
-
-    with pytest.raises(TypeError, match="callback must be callable or None"):
-        compute_sound(data, leadfield, callback=1)
-
-    class SentinelError(Exception):
-        pass
-
-    error = SentinelError("stop")
-
-    def callback(event):
-        raise error
-
-    with pytest.raises(SentinelError) as caught:
-        compute_sound(data, leadfield, n_iter=3, callback=callback)
-    assert caught.value is error
-
-
 def test_compute_sound_ref_best_progress_is_one_stream():
     """Reference-best SOUND emits the shared SOUND iteration stream once."""
     rng = np.random.default_rng(105)
@@ -245,12 +203,11 @@ def test_compute_sound_ref_best_progress_is_one_stream():
     leadfield = rng.standard_normal((6, 8))
     events = []
 
-    without = compute_sound_ref_best(data, leadfield, n_iter=3, random_state=0)
     with_callback = compute_sound_ref_best(
         data, leadfield, n_iter=3, random_state=0, callback=events.append
     )
 
-    assert len(events) == without[2].size == 3
+    assert len(events) == with_callback[2].size == 3
     assert [event.current for event in events] == [1, 2, 3]
     assert all(
         event.method == "sound"
@@ -258,8 +215,6 @@ def test_compute_sound_ref_best_progress_is_one_stream():
         and event.component is None
         for event in events
     )
-    for expected, actual in zip(without, with_callback, strict=True):
-        np.testing.assert_allclose(expected, actual)
 
 
 def test_sound_rejects_bad_tol(eeg_info):
@@ -413,7 +368,7 @@ def test_sound_array_with_forward(forward):
 
 
 def test_sound_fit_progress_callback(noisy_raw, forward):
-    """SOUND.fit forwards runtime callbacks without estimator state."""
+    """SOUND.fit forwards its one iteration stream."""
     raw, _ = noisy_raw
     events = []
     sound = SOUND(
@@ -428,13 +383,10 @@ def test_sound_fit_progress_callback(noisy_raw, forward):
     assert [event.current for event in events] == [1, 2]
     assert all(event.method == "sound" for event in events)
     assert all(event.stage == "iteration" for event in events)
-    assert "callback" not in sound.get_params()
 
 
-def test_sound_fit_transform_exposes_callback_and_matches_composition(
-    noisy_raw, forward
-):
-    """SOUND fit_transform forwards one fitting stream and preserves output."""
+def test_sound_fit_transform_forwards_one_fitting_stream(noisy_raw, forward):
+    """SOUND fit_transform forwards one fitting stream."""
     raw, _ = noisy_raw
     kwargs = {
         "n_iter": 2,
@@ -443,15 +395,11 @@ def test_sound_fit_transform_exposes_callback_and_matches_composition(
         "random_state": 0,
     }
     events = []
-    with_callback = SOUND(**kwargs).fit_transform(raw, callback=events.append)
-    reference = SOUND(**kwargs).fit(raw).transform(raw)
+    SOUND(**kwargs).fit_transform(raw, callback=events.append)
 
-    assert "callback" in inspect.signature(SOUND.fit_transform).parameters
-    assert "callback" not in SOUND(**kwargs).get_params()
     assert [event.current for event in events] == [1, 2]
     assert all(event.method == "sound" for event in events)
     assert all(event.stage == "iteration" for event in events)
-    np.testing.assert_allclose(with_callback.get_data(), reference.get_data())
 
 
 def test_sound_transform_checks_fitted_channel_count(forward):

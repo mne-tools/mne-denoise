@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import logging
 
 import numpy as np
@@ -187,6 +188,22 @@ def test_tqdm_progress_rejects_adapter_owned_kwargs(fake_tqdm):
         TqdmProgress(total=10)
     with pytest.raises(TypeError, match="controls tqdm's total and initial"):
         TqdmProgress(initial=10)
+
+
+def test_tqdm_progress_reports_missing_optional_dependency(monkeypatch):
+    """Construction gives actionable guidance when optional tqdm is unavailable."""
+    real_import = builtins.__import__
+
+    def blocked_import(name, *args, **kwargs):
+        if name == "tqdm.auto":
+            raise ImportError("tqdm intentionally unavailable")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", blocked_import)
+    with pytest.raises(ImportError, match="optional 'tqdm'") as caught:
+        TqdmProgress()
+
+    assert "mne-denoise[progress]" in str(caught.value)
 
 
 def test_compute_sns_weights_with_tqdm_progress():
