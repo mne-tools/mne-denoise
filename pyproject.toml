@@ -66,6 +66,10 @@ test = [
   "pytest-timeout>=2.2.0",
   "pandas>=1.5",
   "seaborn>=0.12",
+  "tqdm>=4.66",
+]
+progress = [
+  "tqdm>=4.66",
 ]
 dev = [
   "mne-denoise[test]",
@@ -88,7 +92,7 @@ docs = [
   "myst-parser>=2.0.0",
 ]
 all = [
-  "mne-denoise[dev,docs]",
+  "mne-denoise[dev,docs,progress]",
 ]
 
 [tool.setuptools]

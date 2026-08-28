@@ -34,6 +34,7 @@ Progress callbacks
    :nosignatures:
 
    mne_denoise.progress.ProgressEvent
+   mne_denoise.progress.TqdmProgress
 
 Callbacks provide synchronous, machine-readable progress. A callback receives
 one immutable :class:`~mne_denoise.progress.ProgressEvent` after a meaningful
@@ -51,6 +52,33 @@ For example:
 
    def report(event):
        print(event.method, event.stage, event.current, event.total)
+
+Optional tqdm UI
+~~~~~~~~~~~~~~~~
+
+The optional :class:`~mne_denoise.progress.TqdmProgress` adapter consumes the
+existing :class:`~mne_denoise.progress.ProgressEvent` objects and renders them
+with tqdm. Install the optional dependency with:
+
+.. code-block:: console
+
+   pip install "mne-denoise[progress]"
+
+Then use the adapter as a callback:
+
+.. code-block:: python
+
+   from mne_denoise.progress import TqdmProgress
+
+   with TqdmProgress() as progress:
+       cleaned = model.fit_transform(
+           data,
+           callback=progress,
+       )
+
+tqdm is optional, and no algorithm changes are required. Composed operations
+may open successive bars, while an early-converged iterative bar may close
+below its maximum total because it reports the work that actually completed.
 
 ``current`` is normally a 1-based completed-work count. ``total`` is the
 known number of work units, or ``None`` only when genuinely unknown.

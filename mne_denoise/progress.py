@@ -21,9 +21,9 @@ to additional semantic strings.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
-__all__ = ["ProgressEvent"]
+__all__ = ["ProgressEvent", "TqdmProgress"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,6 +83,90 @@ class ProgressEvent:
     total: int | None = None
     component: int | None = None
     metric: float | None = None
+
+
+def _load_tqdm() -> Any:
+    """Load the optional tqdm factory on demand."""
+    try:
+        from tqdm.auto import tqdm
+    except ImportError as error:
+        raise ImportError(
+            "TqdmProgress requires the optional 'tqdm' dependency. "
+            'Install it with `pip install "mne-denoise[progress]"`.'
+        ) from error
+    return tqdm
+
+
+class TqdmProgress:
+    """Render structured progress events with one optional tqdm bar.
+
+    Parameters
+    ----------
+    leave : bool
+        Whether completed bars should remain visible. Defaults to ``False``.
+    **tqdm_kwargs
+        Additional keyword arguments passed to tqdm. The adapter controls
+        ``total`` and ``initial`` from the first event of each stream.
+    """
+
+    def __init__(self, *, leave: bool = False, **tqdm_kwargs: Any) -> None:
+        if "total" in tqdm_kwargs or "initial" in tqdm_kwargs:
+            raise TypeError("TqdmProgress controls tqdm's total and initial")
+
+        self._tqdm = _load_tqdm()
+        self._tqdm_kwargs = {**tqdm_kwargs, "leave": leave}
+        self._bar: Any | None = None
+        self._previous_event: ProgressEvent | None = None
+
+    def __call__(self, event: ProgressEvent) -> None:
+        """Render one completed-work progress event."""
+        if self._starts_new_stream(event):
+            self.close()
+            bar_kwargs = dict(self._tqdm_kwargs)
+            bar_kwargs["total"] = event.total
+            bar_kwargs["initial"] = event.current if event.current is not None else 0
+            bar_kwargs.setdefault("desc", f"{event.method}: {event.stage}")
+            self._bar = self._tqdm(**bar_kwargs)
+
+        if event.current is None:
+            self._bar.update(1)
+        else:
+            delta = event.current - self._bar.n
+            if delta > 0:
+                self._bar.update(delta)
+
+        self._previous_event = event
+
+    def _starts_new_stream(self, event: ProgressEvent) -> bool:
+        """Return whether ``event`` starts a new semantic stream."""
+        if self._bar is None or self._previous_event is None:
+            return True
+
+        previous = self._previous_event
+        if event.method != previous.method or event.stage != previous.stage:
+            return True
+
+        return (
+            event.current is not None
+            and previous.current is not None
+            and event.current <= previous.current
+        )
+
+    def __enter__(self) -> "TqdmProgress":
+        """Return this callback for use in a context manager."""
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> bool:
+        """Close the active bar without suppressing exceptions."""
+        self.close()
+        return False
+
+    def close(self) -> None:
+        """Close the active bar and clear its state."""
+        if self._bar is not None:
+            self._bar.close()
+        self._bar = None
+        self._previous_event = None
 
 
 _ProgressCallback = Callable[[ProgressEvent], object]
