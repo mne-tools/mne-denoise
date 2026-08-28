@@ -64,6 +64,7 @@ from ._cca import canonical_correlation
 from ._data import extract_data_from_mne, reconstruct_mne_object
 from ._filtering import design_butter_sos
 from ._logging import logger, verbose
+from .progress import _emit_progress, _ProgressCallback, _validate_callback
 
 __all__ = ["ICanClean", "compute_icanclean"]
 
@@ -228,6 +229,7 @@ def _compute_icanclean_impl(
     reref_ref: bool | str = False,
     stats_segment_len: float | None = None,
     null_random_state: int | None = None,
+    callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     r"""Compute one iCanClean pass on continuous NumPy arrays.
 
@@ -297,6 +299,11 @@ def _compute_icanclean_impl(
         Average re-reference mode applied to reference channels for CCA only.
     stats_segment_len : float | None, default=None
         Broader stats-window duration in seconds for sliding mode.
+    callback : callable | None, default=None
+        Called synchronously after each completed cleaning window in
+        ``'sliding'`` and ``'calibrated'`` modes. Callback return values
+        are ignored and callback exceptions propagate unchanged. Pass by
+        keyword.
 
     Returns
     -------
@@ -440,7 +447,7 @@ def _compute_icanclean_impl(
         beta_global, *_ = la.lstsq(Z_global_mc, X_global_mc, lapack_driver="gelsy")
         n_global_comp = R_global.size
 
-    for start in starts:
+    for window_idx, start in enumerate(starts):
         end = min(start + win_samples, n_times)
         actual_len = end - start
 
@@ -560,6 +567,17 @@ def _compute_icanclean_impl(
 
         weights[start:end] += 1.0
 
+        if mode in ("sliding", "calibrated"):
+            _emit_progress(
+                callback,
+                method="icanclean",
+                stage="window",
+                current=window_idx + 1,
+                total=len(starts),
+                component=None,
+                metric=float(bad_idx.size),
+            )
+
     mask = weights > 0
     cleaned_primary[:, mask] /= weights[mask]
     if not mask.all():
@@ -651,8 +669,15 @@ def compute_icanclean(
     stats_segment_len: float | None = None,
     null_random_state: int | None = None,
     verbose: bool | str | int | None = None,
+    callback=None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Compute one iCanClean pass and emit one aggregate INFO summary."""
+    """Compute one iCanClean pass and emit one aggregate INFO summary.
+
+    ``callback`` is intended to be passed by keyword. It receives one
+    synchronous ``method="icanclean"``, ``stage="window"`` event after each
+    completed cleaning window in ``'sliding'`` and ``'calibrated'`` modes.
+    """
+    callback = _validate_callback(callback)
     cleaned, qc = _compute_icanclean_impl(
         X_primary,
         X_ref,
@@ -667,6 +692,7 @@ def compute_icanclean(
         reref_ref=reref_ref,
         stats_segment_len=stats_segment_len,
         null_random_state=null_random_state,
+        callback=callback,
     )
     _log_icanclean_summary(
         mode,
@@ -975,6 +1001,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         X: Any,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
         """Apply ICanClean artifact removal.
@@ -991,12 +1018,18 @@ class ICanClean(BaseEstimator, TransformerMixin):
 
         y : None
             Ignored.
+        callback : callable | None, default=None
+            Called synchronously after each completed continuous cleaning
+            window. Callback return values are ignored and callback exceptions
+            propagate unchanged. Epoched processing remains callback-silent
+            because epochs are cleaned by the existing threaded joblib path.
 
         Returns
         -------
         X_clean : Raw | Epochs | ndarray
             Cleaned data in the same format as the input.
         """
+        callback = _validate_callback(callback)
         self._reset_qc_attrs()
 
         data, sfreq_data, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
@@ -1012,7 +1045,9 @@ class ICanClean(BaseEstimator, TransformerMixin):
         if mne_type == "epochs":
             cleaned = self._transform_epochs(data, sfreq, primary_idx, ref_idx)
         else:
-            cleaned = self._clean_continuous(data, sfreq, primary_idx, ref_idx)
+            cleaned = self._clean_continuous(
+                data, sfreq, primary_idx, ref_idx, callback=callback
+            )
 
         summary_qc = {"n_removed_": self.n_removed_}
         if self.mode == "hybrid":
@@ -1095,6 +1130,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         X: Any,
         y=None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
         **fit_params,
     ) -> Any:
@@ -1106,6 +1142,9 @@ class ICanClean(BaseEstimator, TransformerMixin):
             Input data.
         y : None
             Ignored.
+        callback : callable | None, default=None
+            Called synchronously after each completed continuous cleaning
+            window. Epoched processing remains callback-silent.
         **fit_params
             Ignored.
 
@@ -1114,7 +1153,9 @@ class ICanClean(BaseEstimator, TransformerMixin):
         X_clean : Raw | Epochs | ndarray
             Cleaned data.
         """
-        return self.fit(X, y).transform(X)
+        callback = _validate_callback(callback)
+        self.fit(X, y)
+        return self.transform(X, callback=callback)
 
     # ------------------------------------------------------------------
     # Internal methods
@@ -1365,6 +1406,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         sfreq: float,
         primary_idx: np.ndarray,
         ref_idx: np.ndarray,
+        callback: _ProgressCallback | None = None,
     ) -> np.ndarray:
         """Orchestrate CCA cleaning based on mode.
 
@@ -1380,7 +1422,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         data_out : ndarray, shape (n_channels, n_times)
         """
         cleaned_primary, qc = self._compute_continuous_cleaning(
-            data, sfreq, primary_idx, ref_idx
+            data, sfreq, primary_idx, ref_idx, callback=callback
         )
         for key, value in qc.items():
             setattr(self, key, value)
@@ -1395,6 +1437,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
         sfreq: float,
         primary_idx: np.ndarray,
         ref_idx: np.ndarray,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         """Compute cleaned primary channels and QC without mutating state."""
         if self.mode == "hybrid":
@@ -1412,6 +1455,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
                 reref_ref=self.reref_ref,
                 stats_segment_len=None,
                 null_random_state=self.null_random_state,
+                callback=None,
             )
             cleaned_primary, qc = _compute_icanclean_impl(
                 cleaned_after_global,
@@ -1427,6 +1471,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
                 reref_ref=self.reref_ref,
                 stats_segment_len=self.stats_segment_len,
                 null_random_state=self.null_random_state,
+                callback=callback,
             )
             qc["global_correlations_"] = qc_global["correlations_"]
             qc["global_n_removed_"] = qc_global["n_removed_"]
@@ -1449,6 +1494,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
                 reref_ref=self.reref_ref,
                 stats_segment_len=self.stats_segment_len,
                 null_random_state=self.null_random_state,
+                callback=callback,
             )
         if self.mode == "hybrid":
             qc["sliding_correlations_"] = qc["correlations_"].copy()
