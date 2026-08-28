@@ -306,28 +306,6 @@ def compute_sound(
            109693.
     """
     callback = _validate_callback(callback)
-    return _compute_sound(
-        data,
-        leadfield,
-        lambda_=lambda_,
-        n_iter=n_iter,
-        tol=tol,
-        random_state=random_state,
-        callback=callback,
-    )
-
-
-def _compute_sound(
-    data: np.ndarray,
-    leadfield: np.ndarray,
-    *,
-    lambda_: float,
-    n_iter: int,
-    tol: float | None,
-    random_state,
-    callback: _ProgressCallback | None,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute SOUND after the callback has been validated."""
     data, leadfield = _validate_sound_inputs(
         data, leadfield, lambda_=lambda_, n_iter=n_iter, min_channels=3
     )
@@ -468,28 +446,6 @@ def compute_sound_ref_best(
            SOUND algorithm. NeuroImage, 166, 135-151.
     """
     callback = _validate_callback(callback)
-    return _compute_sound_ref_best(
-        data,
-        leadfield,
-        lambda_=lambda_,
-        n_iter=n_iter,
-        tol=tol,
-        random_state=random_state,
-        callback=callback,
-    )
-
-
-def _compute_sound_ref_best(
-    data: np.ndarray,
-    leadfield: np.ndarray,
-    *,
-    lambda_: float,
-    n_iter: int,
-    tol: float | None,
-    random_state,
-    callback: _ProgressCallback | None,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
-    """Compute reference-best SOUND after callback validation."""
     data, leadfield = _validate_sound_inputs(
         data, leadfield, lambda_=lambda_, n_iter=n_iter, min_channels=4
     )
@@ -722,7 +678,7 @@ class SOUND(BaseEstimator, TransformerMixin):
                 self.sigmas_,
                 self.convergence_,
                 self.best_channel_,
-            ) = _compute_sound_ref_best(
+            ) = compute_sound_ref_best(
                 fit_data,
                 self.leadfield_,
                 lambda_=self.lambda_,
@@ -732,7 +688,7 @@ class SOUND(BaseEstimator, TransformerMixin):
                 callback=callback,
             )
         else:
-            self.operator_, self.sigmas_, self.convergence_ = _compute_sound(
+            self.operator_, self.sigmas_, self.convergence_ = compute_sound(
                 fit_data,
                 self.leadfield_,
                 lambda_=self.lambda_,

@@ -408,44 +408,6 @@ def iterative_dss(
     .. [1] Särelä & Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.
     """
     callback = _validate_callback(callback)
-    return _iterative_dss(
-        data,
-        denoiser,
-        n_components,
-        method=method,
-        rank=rank,
-        reg=reg,
-        max_iter=max_iter,
-        tol=tol,
-        w_init=w_init,
-        verbose=verbose,
-        alpha=alpha,
-        beta=beta,
-        gamma=gamma,
-        random_state=random_state,
-        callback=callback,
-    )
-
-
-def _iterative_dss(
-    data: np.ndarray,
-    denoiser: Callable[[np.ndarray], np.ndarray],
-    n_components: int,
-    *,
-    method: str,
-    rank: int | None,
-    reg: float,
-    max_iter: int,
-    tol: float,
-    w_init: np.ndarray | None,
-    verbose: bool | str | int | None,
-    alpha: float | Callable | None,
-    beta: float | Callable | None,
-    gamma: float | Callable | None,
-    random_state: int | np.random.Generator | None,
-    callback: _ProgressCallback | None,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Run iterative DSS after the callback has been validated."""
     data_2d, _, _, _, _, _ = extract_data_from_mne(
         data,
         concatenate_epochs=True,
@@ -966,10 +928,6 @@ class IterativeDSS:
             The fitted transformer.
         """
         callback = _validate_callback(callback)
-        return self._fit(X, callback=callback)
-
-    def _fit(self, X, *, callback: _ProgressCallback | None) -> IterativeDSS:
-        """Fit the estimator after the callback has been validated."""
         # Validate and extract data using shared helper
         data, _, mne_type, mne_info, picks, ch_names = extract_data_from_mne(
             X,
@@ -992,15 +950,13 @@ class IterativeDSS:
             )
             data = data / self.channel_norms_[:, np.newaxis]
 
-        filters, sources, patterns, conv_info = _iterative_dss(
+        filters, sources, patterns, conv_info = iterative_dss(
             data,
             self.denoiser,
             self.n_components,
             method=self.method,
             rank=self.rank,
             reg=self.reg,
-            w_init=None,
-            verbose=None,
             max_iter=self.max_iter,
             tol=self.tol,
             alpha=self.alpha,
@@ -1158,6 +1114,4 @@ class IterativeDSS:
         sources : ndarray
             Extracted sources.
         """
-        callback = _validate_callback(callback)
-        self._fit(X, callback=callback)
-        return self.transform(X)
+        return self.fit(X, callback=callback).transform(X)
