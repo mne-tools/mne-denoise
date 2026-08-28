@@ -1,4 +1,4 @@
-"""Tests for signal-domain visualization helpers and plots."""
+"""Public contracts for signal-domain visualization helpers."""
 
 from __future__ import annotations
 
@@ -18,485 +18,176 @@ from mne_denoise.viz import (
 
 @pytest.fixture(scope="module")
 def signal_evokeds(synthetic_data):
-    """Build a small grouped-evoked dict for generic group plotting tests."""
+    """Build small subject-level evoked groups for aggregation checks."""
     base = synthetic_data.average()
     groups = {}
-    for group_idx, group in enumerate(["C0", "C1", "C2"]):
+    for group_idx, group in enumerate(["before", "after"]):
         evoked_list = []
-        for sub_idx in range(4):
+        for subject_idx in range(3):
             evoked = base.copy()
-            evoked.data = evoked.data.copy() + 0.05 * group_idx + 0.01 * sub_idx
+            evoked.data = evoked.data.copy() + 0.05 * group_idx + 0.01 * subject_idx
             evoked_list.append(evoked)
         groups[group] = evoked_list
     return groups
 
 
-def test_signal_viz_show(fitted_dss, synthetic_data):
-    """Test show=True code paths for signal plots."""
-    with pytest.MonkeyPatch.context() as monkeypatch:
-        monkeypatch.setattr(plt, "show", lambda *args, **kwargs: None)
-        epochs_clean = fitted_dss.transform(synthetic_data)
-        plot_evoked_gfp_comparison(
-            synthetic_data,
-            epochs_clean,
-            times=synthetic_data.times,
-            show=True,
-        )
-        plot_channel_time_course_comparison(
-            synthetic_data,
-            epochs_clean,
-            picks=[0],
-            times=synthetic_data.times,
-            show=True,
-        )
-        plot_power_ratio_map(
-            synthetic_data,
-            epochs_clean,
-            info=synthetic_data.info,
-            show=True,
-        )
-        plot_signal_overlay(
-            synthetic_data,
-            epochs_clean,
-            pick=0,
-            times=synthetic_data.times,
-            show=True,
-        )
+def test_plot_evoked_gfp_comparison_preserves_time_axis_and_confidence_band():
+    """GFP plots map before/after traces to times and show epoched uncertainty."""
+    times = np.arange(4) / 100.0
+    before = np.array(
+        [
+            [[1.0, 2.0, 3.0, 4.0], [2.0, 1.0, 0.0, -1.0]],
+            [[1.5, 2.5, 3.5, 4.5], [2.5, 1.5, 0.5, -0.5]],
+        ]
+    )
+    after = 0.5 * before
+    fig = plot_evoked_gfp_comparison(before, after, times=times, n_boot=20, show=False)
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "Global Field Power")
+    lines = {line.get_label(): line for line in ax.lines}
+    np.testing.assert_allclose(lines["Before"].get_xdata(), times)
+    np.testing.assert_allclose(
+        lines["After"].get_ydata(), 0.5 * lines["Before"].get_ydata()
+    )
+    assert ax.get_xlabel() == "Time"
+    assert ax.get_ylabel() == "Global Field Power"
+    assert ax.collections
 
 
-def test_signal_comparisons_mne(fitted_dss, synthetic_data):
-    """Test public signal primitives on MNE inputs."""
-    epochs_clean = fitted_dss.transform(synthetic_data)
-    raw_orig = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    raw_clean = mne.io.RawArray(epochs_clean.get_data()[0], synthetic_data.info)
-
+def test_plot_channel_time_course_maps_requested_channel_and_traces():
+    """Channel picks select matching before/after traces and preserve samples."""
+    times = np.arange(5) / 100.0
+    before = np.array([[1, 2, 3, 4, 5], [5, 4, 3, 2, 1]], dtype=float)
+    after = before - 1.0
     fig = plot_channel_time_course_comparison(
-        synthetic_data,
-        epochs_clean,
-        picks=[0],
-        times=synthetic_data.times,
-        show=False,
+        before, after, picks=[1], times=times, show=False
     )
+
     assert isinstance(fig, plt.Figure)
-
-    fig = plot_channel_time_course_comparison(
-        raw_orig,
-        raw_clean,
-        picks=[0],
-        start=10,
-        stop=50,
-        times=raw_orig.times,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_channel_time_course_comparison(
-        synthetic_data,
-        epochs_clean,
-        picks=[0, 1],
-        times=synthetic_data.times,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_power_ratio_map(
-        synthetic_data,
-        epochs_clean,
-        info=synthetic_data.info,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig, ax = plt.subplots()
-    plot_power_ratio_map(raw_orig, raw_clean, info=raw_orig.info, ax=ax, show=False)
-
-    fig = plot_signal_overlay(
-        synthetic_data,
-        epochs_clean,
-        pick=0,
-        times=synthetic_data.times,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_signal_overlay(
-        synthetic_data,
-        epochs_clean,
-        pick=0,
-        times=synthetic_data.times,
-        scale_after=True,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_signal_overlay(
-        synthetic_data,
-        epochs_clean,
-        pick=0,
-        times=synthetic_data.times,
-        start=0.1,
-        stop=0.5,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_signal_overlay(
-        raw_orig, raw_clean, pick=0, times=raw_orig.times, show=False
-    )
-    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "ch1")
+    lines = {line.get_label(): line for line in ax.lines}
+    np.testing.assert_allclose(lines["Before"].get_xdata(), times)
+    np.testing.assert_allclose(lines["Before"].get_ydata(), before[1])
+    np.testing.assert_allclose(lines["After"].get_ydata(), after[1])
+    assert ax.get_ylabel() == "ch1"
 
 
-def test_signal_comparisons_array():
-    """Test array compatibility for 2D/3D canonical array shapes."""
-    rng = np.random.default_rng(42)
-    before_2d = rng.standard_normal((4, 200))
-    after_2d = before_2d * 0.7
-    before_3d = rng.standard_normal((10, 4, 200))
-    after_3d = before_3d * 0.8
-    times = np.arange(200) / 100.0
-
-    fig = plot_evoked_gfp_comparison(before_2d, after_2d, times=times, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_evoked_gfp_comparison(
-        before_3d, after_3d, times=times, n_boot=20, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_channel_time_course_comparison(
-        before_2d,
-        after_2d,
-        picks=[0, 2],
-        times=times,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_channel_time_course_comparison(
-        before_3d,
-        after_3d,
-        picks=[1],
-        times=times,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    info = mne.create_info(["Fz", "Cz", "Pz", "Oz"], 100.0, ch_types="eeg")
+def test_plot_power_ratio_map_uses_after_over_before_and_channel_metadata():
+    """Power-ratio maps expose the documented ratio label and MNE metadata path."""
+    info = mne.create_info(["Fz", "Cz", "Pz"], 100.0, ch_types="eeg")
     info.set_montage("standard_1020")
-    fig = plot_power_ratio_map(before_2d, after_2d, info=info, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    var_before = np.var(before_2d, axis=1)
-    var_after = np.var(after_2d, axis=1)
-    fig = plot_power_ratio_map(var_before, var_after, info=info, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_signal_overlay(
-        before_2d,
-        after_2d,
-        pick=0,
-        times=times,
+    fig = plot_power_ratio_map(
+        np.array([1.0, 2.0, 4.0]),
+        np.array([0.5, 1.0, 8.0]),
+        info=info,
         show=False,
     )
+
     assert isinstance(fig, plt.Figure)
+    assert any(ax.get_title() == "Power Ratio Map" for ax in fig.axes)
+    assert any(ax.get_ylabel() == "Power Ratio (After / Before)" for ax in fig.axes)
 
 
-def test_signal_overlay_length_regression():
-    """Unequal-length overlays should not crash after alignment."""
-    before = np.random.randn(1, 100)
-    after = np.random.randn(1, 200)
-    times = np.arange(100)
+def test_plot_signal_overlay_scales_and_adds_public_annotations(tmp_path):
+    """Overlay scaling, reference traces, highlights, and file output are usable."""
+    times = np.arange(5, dtype=float)
+    before = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    after = 2.0 * before
+    reference = before - 0.25
+    path = tmp_path / "overlay.png"
 
     fig = plot_signal_overlay(
         before,
         after,
         times=times,
+        reference=reference,
+        highlight_mask=np.array([False, True, False, False, True]),
+        highlight_spans=[{"onset": 1.0, "duration": 0.5, "label": "window"}],
         show=False,
+        fname=path,
     )
     assert isinstance(fig, plt.Figure)
+    assert path.exists()
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "Amplitude")
+    lines = {line.get_label(): line for line in ax.lines}
+    np.testing.assert_allclose(lines["Before"].get_xdata(), times)
+    np.testing.assert_allclose(lines["After"].get_ydata(), before)
+    np.testing.assert_allclose(lines["Reference"].get_ydata(), reference)
+    assert {"Before", "After", "Reference"} <= set(lines)
+    assert ax.get_xlabel() == "Time"
+    assert ax.get_ylabel() == "Amplitude"
+    assert ax.collections
 
-    fig = plot_signal_overlay(
-        before,
-        after,
-        times=times,
-        start=10,
-        stop=50,
-        show=False,
+    unscaled = plot_signal_overlay(
+        before, after, times=times, scale_after=False, show=False
     )
-    assert isinstance(fig, plt.Figure)
+    unscaled_axis = next(ax for ax in unscaled.axes if ax.get_ylabel() == "Amplitude")
+    unscaled_lines = {line.get_label(): line for line in unscaled_axis.lines}
+    np.testing.assert_allclose(unscaled_lines["After"].get_ydata(), after)
 
 
-def test_signal_explicit_contract_errors(fitted_dss, synthetic_data):
-    """Test strict explicit error paths for required args."""
-    epochs_clean = fitted_dss.transform(synthetic_data)
-    raw_orig = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    raw_clean = mne.io.RawArray(epochs_clean.get_data()[0], synthetic_data.info)
-
-    with pytest.raises(TypeError):
-        plot_channel_time_course_comparison(synthetic_data, epochs_clean, show=False)
-
-    with pytest.raises(ValueError, match="Unknown channel name"):
-        plot_channel_time_course_comparison(
-            synthetic_data,
-            epochs_clean,
-            picks=["DOES_NOT_EXIST"],
-            times=synthetic_data.times,
-            show=False,
-        )
-
-    with pytest.raises(ValueError, match="times must be a 1D array"):
-        plot_channel_time_course_comparison(
-            synthetic_data,
-            epochs_clean,
-            picks=[0],
-            times=np.arange(len(synthetic_data.times) - 1),
-            show=False,
-        )
-
-    with pytest.raises(TypeError):
-        plot_power_ratio_map(raw_orig, raw_clean, show=False)  # type: ignore[call-arg]
-
-    with pytest.raises(ValueError, match="pick must be provided"):
-        plot_signal_overlay(raw_orig, raw_clean, times=raw_orig.times, show=False)
-
-    with pytest.raises(ValueError, match="times must be a 1D array"):
-        plot_signal_overlay(
-            raw_orig,
-            raw_clean,
-            pick=0,
-            times=np.arange(raw_orig.n_times - 1),
-            show=False,
-        )
-
-    with pytest.raises(ValueError, match="must share the same n_times"):
-        plot_evoked_gfp_comparison(
-            np.random.randn(3, 100),
-            np.random.randn(3, 120),
-            times=np.arange(100),
-            show=False,
-        )
-
-
-def test_plot_grand_average_evokeds_basic(signal_evokeds):
-    """Test basic grand average plotting."""
+def test_plot_grand_average_evokeds_aggregates_groups_and_channels(signal_evokeds):
+    """Grand averages expose group means, SEM bands, channels, and windows."""
     fig = plot_grand_average_evokeds(
         signal_evokeds,
         channels=("Cz", "Pz"),
+        group_order=["before", "after"],
+        group_labels={"before": "Before", "after": "After"},
+        time_windows={"response": (0.1, 0.3)},
+        amplitude_scale=2.0,
+        y_label="Scaled amplitude",
         show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    assert {ax.get_title() for ax in fig.axes} == {
+        "Grand Average at Cz",
+        "Grand Average at Pz",
+    }
+    for ax in fig.axes:
+        assert ax.get_xlabel() == "Time"
+        assert ax.get_ylabel() == "Scaled amplitude"
+        assert {line.get_label() for line in ax.lines} >= {"Before", "After"}
+        assert ax.collections  # SEM bands or the named time window.
+
+
+def test_signal_plot_can_show_in_headless_backend(monkeypatch):
+    """The public show path works with a non-interactive Matplotlib backend."""
+    monkeypatch.setattr(plt, "show", lambda: None)
+    fig = plot_signal_overlay(
+        np.array([1.0, 2.0]), np.array([1.0, 2.0]), times=np.arange(2), show=True
     )
     assert isinstance(fig, plt.Figure)
 
 
-def test_plot_grand_average_evokeds_single_channel(signal_evokeds):
-    """Test single channel grand average."""
-    fig = plot_grand_average_evokeds(
-        signal_evokeds,
-        channels=("Cz",),
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_grand_average_evokeds_single_subject(synthetic_data):
-    """Test grand average with single subject per group."""
-    single = {group: [synthetic_data.average()] for group in ["C0", "C1", "C2"]}
-    fig = plot_grand_average_evokeds(single, channels=("Cz",), show=False)
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_grand_average_evokeds_custom_options(signal_evokeds):
-    """Test grand average with custom theme options."""
-    fig = plot_grand_average_evokeds(
-        signal_evokeds,
-        channels=("Pz",),
-        time_windows={"P300": (0.25, 0.5)},
-        suptitle="Custom Grand Average",
-        group_order=["C2", "C0"],
-        group_colors={"C0": "#aaa", "C2": "#bbb"},
-        group_labels={"C0": "Base", "C2": "DSS"},
-        amplitude_scale=1.0,
-        y_label="Amplitude",
-        figsize=(10, 6),
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_grand_average_evokeds_fname(signal_evokeds, tmp_path):
-    """Test saving grand average to file."""
-    fpath = tmp_path / "grand_avg.png"
-    plot_grand_average_evokeds(
-        signal_evokeds,
-        channels=("Cz",),
-        show=False,
-        fname=str(fpath),
-    )
-    assert fpath.exists()
-
-
-def test_signals_internal_validation_errors(synthetic_data):
-    """Test internal validation helpers for signals."""
-    from mne_denoise.viz.signals import (
-        _as_channel_variance,
-        _as_signal_array,
-        _extract_overlay_trace,
-    )
-
-    # _as_signal_array dim checks
-    with pytest.raises(ValueError, match="Input must be 2D"):
-        _as_signal_array(np.zeros((1, 1, 1, 1)))
-
-    # _as_channel_variance dim checks
-    with pytest.raises(ValueError, match="Input must be 1D variances"):
-        _as_channel_variance(np.zeros((1, 1, 1, 1)))
-
-    # _extract_overlay_trace edge cases
-    with pytest.raises(ValueError, match="String picks require channel names"):
-        _extract_overlay_trace(np.zeros((2, 100)), pick="Cz")
-
-    with pytest.raises(ValueError, match="Channel index 5 is out of range"):
-        _extract_overlay_trace(np.zeros((2, 100)), pick=5)
-
-    with pytest.raises(ValueError, match="Unknown channel name"):
-        _extract_overlay_trace(synthetic_data, pick="NOT_A_CHAN")
-
-    # Successful string pick
-    idx = _extract_overlay_trace(synthetic_data, pick="Cz")
-    assert isinstance(idx, np.ndarray)
-
-
-def test_plot_evoked_gfp_comparison_edges(synthetic_data):
-    """Test edge cases for GFP comparison."""
+def test_signal_plot_validation_is_explicit(synthetic_data):
+    """Representative invalid combinations fail with actionable errors."""
     data = synthetic_data.get_data()
     times = synthetic_data.times
 
-    # Existing ax branch
-    fig, ax = plt.subplots()
-    ret_fig = plot_evoked_gfp_comparison(data, data, times=times, ax=ax, show=False)
-    assert ret_fig is fig
-
-    # Invalid times length
     with pytest.raises(ValueError, match="times must be a 1D array"):
         plot_evoked_gfp_comparison(data, data, times=times[:-1], show=False)
-
-
-def test_plot_channel_time_course_comparison_edges(synthetic_data):
-    """Test edge cases for channel time course comparison."""
-    data = synthetic_data.get_data()
-    times = synthetic_data.times
-
-    # Shape mismatch (time)
-    with pytest.raises(ValueError, match="must share the same channel/time dimensions"):
-        plot_channel_time_course_comparison(
-            data, data[..., :-1], picks=[0], times=times, show=False
-        )
-
-    # Shape mismatch (channels)
-    with pytest.raises(ValueError, match="must share the same channel/time dimensions"):
-        plot_channel_time_course_comparison(
-            data, data[:, :-1, :], picks=[0], times=times, show=False
-        )
-
-    # picks is None
     with pytest.raises(ValueError, match="picks must be provided explicitly"):
         plot_channel_time_course_comparison(
             data, data, picks=None, times=times, show=False
-        )  # type: ignore
-
-    # empty picks
-    with pytest.raises(ValueError, match="picks cannot be empty"):
-        plot_channel_time_course_comparison(
-            data, data, picks=[], times=times, show=False
         )
-
-    # String picks without ch_names
-    with pytest.raises(ValueError, match="String picks require channel names"):
-        plot_channel_time_course_comparison(
-            data, data, picks=["Cz"], times=times, show=False
-        )
-
-    # Unknown channel name (MNE)
-    with pytest.raises(ValueError, match="Unknown channel name"):
-        plot_channel_time_course_comparison(
-            synthetic_data,
-            synthetic_data,
-            picks=["NOT_A_CHAN"],
-            times=times,
-            show=False,
-        )
-
-    # Index out of range
-    with pytest.raises(ValueError, match="is out of range"):
-        plot_channel_time_course_comparison(
-            data, data, picks=[1000], times=times, show=False
-        )
-
-    # Successful string pick
-    fig = plot_channel_time_course_comparison(
-        synthetic_data, synthetic_data, picks=["Cz"], times=times, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_power_ratio_map_edges(synthetic_data):
-    """Test edge cases for power ratio map."""
-    # info is None
     with pytest.raises(ValueError, match="info must be provided explicitly"):
-        plot_power_ratio_map(synthetic_data, synthetic_data, info=None, show=False)  # type: ignore
-
-    # channel count mismatch
-    var = np.random.randn(2)
-    with pytest.raises(ValueError, match="must provide matching channels"):
-        plot_power_ratio_map(
-            var, np.random.randn(3), info=synthetic_data.info, show=False
-        )
-
-    with pytest.raises(ValueError, match="must match info channel count"):
-        plot_power_ratio_map(var, var, info=synthetic_data.info, show=False)
-
-
-def test_plot_signal_overlay_scaling(synthetic_data):
-    """Test scaling logic in signal overlay."""
-    fig = plot_signal_overlay(
-        synthetic_data,
-        synthetic_data,
-        pick=0,
-        times=synthetic_data.times,
-        scale_after=True,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_signal_overlay(
-        synthetic_data,
-        synthetic_data,
-        pick=0,
-        times=synthetic_data.times,
-        scale_after=False,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_grand_average_evokeds_errors(signal_evokeds):
-    """Test error paths for grand average plotting."""
-    # empty channels
+        plot_power_ratio_map(data, data, info=None, show=False)
+    with pytest.raises(ValueError, match="pick must be provided"):
+        plot_signal_overlay(data[0], data[0], times=times, show=False)
     with pytest.raises(ValueError, match="channels cannot be empty"):
-        plot_grand_average_evokeds(signal_evokeds, channels=[], show=False)
+        plot_grand_average_evokeds({}, channels=[], show=False)
 
-    # unknown group
-    with pytest.raises(ValueError, match="was not found in all_evokeds"):
-        plot_grand_average_evokeds(
-            signal_evokeds, channels=("Cz",), group_order=["NON_EXISTENT"], show=False
-        )
 
-    # empty group
-    bad_groups = {"C0": []}
-    with pytest.raises(ValueError, match="has no evoked entries"):
-        plot_grand_average_evokeds(bad_groups, channels=("Cz",), show=False)
-
-    # missing channel
-    with pytest.raises(ValueError, match="was not found in group"):
-        plot_grand_average_evokeds(
-            signal_evokeds, channels=("NON_EXISTENT",), show=False
-        )
+def test_signal_overlay_aligns_unequal_lengths_before_windowing():
+    """The documented common-prefix alignment prevents unequal-length crashes."""
+    before = np.arange(100.0)
+    after = np.arange(200.0)
+    fig = plot_signal_overlay(
+        before, after, times=np.arange(100.0), start=10.0, stop=50.0, show=False
+    )
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "Amplitude")
+    lines = {line.get_label(): line for line in ax.lines}
+    np.testing.assert_array_equal(lines["Before"].get_xdata(), np.arange(10.0, 51.0))

@@ -22,6 +22,8 @@ def test_identity_filter_is_lossless(leadfield):
     np.testing.assert_allclose(m["correlation"], 1.0, atol=1e-12)
     np.testing.assert_allclose(m["relative_error"], 0.0, atol=1e-12)
     np.testing.assert_allclose(m["goodness_of_fit"], 1.0, atol=1e-12)
+    assert np.all(m["correlation"] >= -1.0 - 1e-12)
+    assert np.all(m["correlation"] <= 1.0 + 1e-12)
 
 
 def test_zero_filter_deletes_everything(leadfield):
@@ -51,6 +53,25 @@ def test_projection_attenuates_the_projected_direction(leadfield):
     assert m["amplitude_change"][0] == pytest.approx(-1.0)
     # Other sources survive far better.
     assert np.nanmedian(m["goodness_of_fit"][1:]) > 0.5
+
+
+def test_target_projection_preserves_orthogonal_neural_source():
+    """Removing a target direction has low neural overcorrection when orthogonal."""
+    artifact = np.array([1.0, 0.0, 0.0, 0.0])
+    neural = np.array([0.0, 1.0, 0.0, 0.0])
+    leadfield = np.column_stack([artifact, neural])
+
+    remove_artifact = np.eye(4) - np.outer(artifact, artifact)
+    target_metrics = quantify_overcorrection(remove_artifact, leadfield)
+    np.testing.assert_allclose(target_metrics["relative_error"], [1.0, 0.0])
+    np.testing.assert_allclose(target_metrics["goodness_of_fit"], [0.0, 1.0])
+
+    remove_neural = np.eye(4) - np.outer(neural, neural)
+    non_target_metrics = quantify_overcorrection(remove_neural, leadfield)
+    assert non_target_metrics["relative_error"][1] > target_metrics["relative_error"][1]
+    assert (
+        non_target_metrics["goodness_of_fit"][1] < target_metrics["goodness_of_fit"][1]
+    )
 
 
 def test_metrics_match_their_definitions(leadfield):
@@ -88,22 +109,17 @@ def test_amplifying_filter_gives_negative_goodness_of_fit(leadfield):
     np.testing.assert_allclose(m["amplitude_change"], 1.0)
 
 
-def test_metrics_emit_no_numpy_warnings(leadfield):
-    """Degenerate sources must not trigger divide-by-zero warnings."""
+def test_metrics_handle_degenerate_sources_without_warnings(leadfield):
+    """Zero-norm sources produce NaN without divide-by-zero warnings."""
     lf = leadfield.copy()
     lf[:, 2] = 0.0
+    lf[:, 3] = 0.0
     with np.errstate(all="raise"):
         metrics = quantify_overcorrection(np.zeros((16, 16)), lf)
     assert np.isnan(metrics["amplitude_change"][2])
-
-
-def test_degenerate_source_is_nan_not_error(leadfield):
-    """A zero-norm topography yields NaN rather than a divide-by-zero."""
-    lf = leadfield.copy()
-    lf[:, 3] = 0.0
-    m = quantify_overcorrection(np.eye(16), lf)
-    assert np.isnan(m["amplitude_change"][3])
-    assert np.isfinite(m["amplitude_change"][0])
+    assert np.isnan(metrics["amplitude_change"][3])
+    assert np.isnan(metrics["correlation"][2])
+    assert np.isfinite(metrics["amplitude_change"][0])
 
 
 def test_shape_validation():

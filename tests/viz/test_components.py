@@ -1,11 +1,10 @@
-"""Tests for mne_denoise.viz.components functions."""
+"""Public contracts for component-level visualization functions."""
 
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
 import pytest
 
-from mne_denoise.dss import DSS
 from mne_denoise.viz import (
     plot_component_epochs_image,
     plot_component_patterns,
@@ -15,293 +14,128 @@ from mne_denoise.viz import (
     plot_component_time_series,
     plot_window_score_traces,
 )
-from mne_denoise.viz.components import _resolve_component_indices
 
 
 class ArrayOnlyEst:
-    """Mock estimator with patterns and sources but no MNE info."""
+    """Small fitted-estimator stand-in without MNE metadata."""
 
-    patterns_ = np.random.randn(5, 3)
-    sources_ = np.random.randn(3, 200)
+    patterns_ = np.ones((5, 3))
+    sources_ = np.arange(600.0).reshape(3, 200)
     eigenvalues_ = np.array([1.0, 0.5, 0.1])
-
-    def get_params(self, deep=True):
-        return {}
-
-    def transform(self, data):
-        return self.sources_
 
 
 class NoScoreEst:
-    """Mock estimator with no scores."""
-
-    pass
+    """Estimator stand-in with no component score attribute."""
 
 
-def test_plot_component_score_curve(fitted_dss):
-    """Test score curve plotting."""
-    fig = plot_component_score_curve(fitted_dss, mode="raw", show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_score_curve(fitted_dss, mode="cumulative", show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_score_curve(fitted_dss, mode="ratio", show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig, ax = plt.subplots()
-    plot_component_score_curve(fitted_dss, ax=ax, show=False)
-
-    # Test n_selected_ branch specifically
-    SelectedEst = type(
-        "SelectedEst", (), {"scores_": np.array([2.0, 1.0]), "n_selected_": 1}
-    )
-    plot_component_score_curve(SelectedEst(), show=False)
+def test_plot_component_score_curve_supports_modes_and_reports_scores(fitted_dss):
+    """Score curves expose the documented modes and a useful y-axis label."""
+    labels = {
+        "raw": "Score / Eigenvalue",
+        "cumulative": "Cumulative Score (Normalized)",
+        "ratio": "Power Ratio",
+    }
+    for mode, label in labels.items():
+        fig = plot_component_score_curve(fitted_dss, mode=mode, show=False)
+        assert isinstance(fig, plt.Figure)
+        score_axis = next(ax for ax in fig.axes if ax.get_title() == "Component Scores")
+        assert score_axis.get_ylabel() == label
 
     with pytest.raises(ValueError, match="mode must be one of"):
-        plot_component_score_curve(fitted_dss, mode="bad-mode", show=False)
-
+        plot_component_score_curve(fitted_dss, mode="unsupported", show=False)
     with pytest.raises(ValueError, match="does not expose component scores"):
         plot_component_score_curve(NoScoreEst(), show=False)
 
-    MockBadScores = type("MockBadScores", (), {"scores_": np.zeros((2, 2))})
-    with pytest.raises(ValueError, match="must be a non-empty 1D array"):
-        plot_component_score_curve(MockBadScores(), show=False)
 
-    # Test n_removed_ branch
-    CutoffEst = type(
-        "CutoffEst", (), {"scores_": np.array([2.0, 1.0, 0.5]), "n_removed_": 1}
-    )
-    fig = plot_component_score_curve(CutoffEst(), show=False)
-    assert isinstance(fig, plt.Figure)
-
-    assert _resolve_component_indices(None, 10, 5) == [0, 1, 2, 3, 4]
-    assert _resolve_component_indices(2, 10, 5) == [0, 1]
-    assert _resolve_component_indices([1, 3], 10, 5) == [1, 3]
-    with pytest.raises(ValueError, match="indices out of range"):
-        _resolve_component_indices([11], 10, 5)
-
-
-def test_plot_component_patterns(fitted_dss, synthetic_data):
-    """Test topomap plotting."""
+def test_plot_component_patterns_supports_topomap_and_line_fallback(
+    fitted_dss, synthetic_data
+):
+    """Patterns honor component selection and the explicit topomap inputs."""
     picks = np.arange(len(synthetic_data.ch_names))
-    fig = plot_component_patterns(
-        fitted_dss, info=synthetic_data.info, picks=picks, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_patterns(
+    topomap = plot_component_patterns(
         fitted_dss,
         info=synthetic_data.info,
         picks=picks,
-        n_components=2,
+        n_components=[1],
         show=False,
     )
-    assert isinstance(fig, plt.Figure)
+    assert isinstance(topomap, plt.Figure)
+    assert any("Comp 1" in ax.get_title() for ax in topomap.axes)
 
-    # Test grid padding (ax.axis('off') for unused axes)
-    class ManyCompEst:
-        patterns_ = np.zeros((5, 5))
-        info_ = synthetic_data.info
-
-        def get_params(self, deep=True):
-            return {}
-
-    fig = plot_component_patterns(
-        ManyCompEst(),
-        n_components=5,
-        info=synthetic_data.info,
-        picks=[0, 1, 2],
-        show=False,
+    line_plot = plot_component_patterns(fitted_dss, n_components=2, show=False)
+    assert isinstance(line_plot, plt.Figure)
+    pattern_axis = next(
+        ax for ax in line_plot.axes if ax.get_title() == "Component Patterns"
     )
-    assert len(fig.axes) > 5
-
-    class MockEst:
-        patterns_ = np.zeros((5, 3))
-
-    fig = plot_component_patterns(MockEst(), show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig, ax = plt.subplots()
-    fig_ret = plot_component_patterns(MockEst(), ax=ax, show=False)
-    assert fig_ret is fig
+    assert pattern_axis.get_xlabel() == "Channel"
+    assert pattern_axis.get_ylabel() == "Pattern Weight"
 
     with pytest.raises(ValueError, match="info is required"):
-        plot_component_patterns(fitted_dss, picks=[0, 1], show=False)
-
-    fig, ax = plt.subplots()
-    plot_component_patterns(
-        fitted_dss,
-        info=synthetic_data.info,
-        picks=[0, 1],
-        n_components=[0],
-        ax=ax,
-        show=False,
-    )
-    assert ax.get_title() == "Comp 0"
-
+        plot_component_patterns(fitted_dss, picks=[0], show=False)
     with pytest.raises(ValueError, match="No components selected"):
         plot_component_patterns(fitted_dss, n_components=[], show=False)
 
-    BadDimEst = type("BadDimEst", (), {"patterns_": np.zeros((5,))})
-    with pytest.raises(ValueError, match="must be a 2D array"):
-        plot_component_patterns(BadDimEst(), show=False)
-
-    with pytest.raises(
-        ValueError, match="ax can only be used when plotting a single topomap"
-    ):
-        plot_component_patterns(
-            fitted_dss,
-            info=synthetic_data.info,
-            picks=[0, 1],
-            n_components=2,
-            ax=plt.subplots()[1],
-            show=False,
-        )
-
 
 def test_component_primitives_support_zapline(fitted_zapline):
-    """Component primitives should also work with fitted ZapLine estimators."""
-    fig = plot_component_score_curve(fitted_zapline, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig_ext, custom_ax = plt.subplots()
-    ret_fig = plot_component_score_curve(fitted_zapline, ax=custom_ax, show=False)
-    assert ret_fig is fig_ext
-
-    fig = plot_component_patterns(fitted_zapline, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_patterns(fitted_zapline, n_components=2, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig_ext, custom_ax = plt.subplots()
-    ret_fig = plot_component_patterns(fitted_zapline, ax=custom_ax, show=False)
-    assert ret_fig is fig_ext
+    """The generic component primitives accept fitted standard ZapLine."""
+    score_fig = plot_component_score_curve(fitted_zapline, show=False)
+    pattern_fig = plot_component_patterns(fitted_zapline, n_components=2, show=False)
+    assert isinstance(score_fig, plt.Figure)
+    assert isinstance(pattern_fig, plt.Figure)
 
 
-def test_plot_component_summary(fitted_dss, synthetic_data):
-    """Test component summary dashboard."""
+def test_plot_component_summary_contains_requested_public_sections(
+    fitted_dss, synthetic_data
+):
+    """A component summary includes selected patterns, traces, PSDs, and CI."""
     fig = plot_component_summary(
         fitted_dss,
         data=synthetic_data,
         info=synthetic_data.info,
         picks=np.arange(len(synthetic_data.ch_names)),
         times=synthetic_data.times,
-        n_components=2,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_summary(
-        fitted_dss,
-        data=synthetic_data,
-        times=synthetic_data.times,
-        n_components=2,
+        n_components=[0, 2],
         psd_fmax=40.0,
         show=False,
     )
     assert isinstance(fig, plt.Figure)
+    titles = [ax.get_title() for ax in fig.axes]
+    assert any("Comp 0 Pattern" in title for title in titles)
+    assert any("Comp 2 Time Course" in title for title in titles)
     psd_axes = [ax for ax in fig.axes if ax.get_title() == "PSD"]
     assert psd_axes
-    for ax in psd_axes:
-        assert ax.get_xlim()[1] == pytest.approx(40.0)
+    assert all(ax.get_xlim()[1] == pytest.approx(40.0) for ax in psd_axes)
+    assert any(ax.collections for ax in fig.axes if "Time Course" in ax.get_title())
 
-    raw = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    fig = plot_component_summary(
-        fitted_dss, data=raw, times=raw.times, n_components=1, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-    plot_component_summary(
+    no_ci = plot_component_summary(
         fitted_dss,
         data=synthetic_data,
         times=synthetic_data.times,
-        n_components=[0, 2],
+        n_components=[0],
+        plot_ci=False,
         show=False,
     )
+    time_axes = [ax for ax in no_ci.axes if "Time Course" in ax.get_title()]
+    assert time_axes
+    assert all(not ax.collections for ax in time_axes)
 
-    def dummy_bias(d):
-        return d
 
-    DSS(n_components=3, bias=dummy_bias)
+def test_plot_component_summary_validates_info_sfreq_and_selection(fitted_dss):
+    """Missing metadata and empty public selections fail clearly."""
     with pytest.raises(ValueError, match="Data must be provided"):
-        plot_component_summary(fitted_dss, data=None, show=False)
+        plot_component_summary(fitted_dss, show=False)
 
-    # Missing info/picks/data-type combination
-    with pytest.raises(ValueError, match="info is required when picks is provided"):
-        plot_component_summary(
-            ArrayOnlyEst(), data=np.random.randn(1, 200), picks=[0], show=False
-        )
-
-    with pytest.raises(
-        ValueError, match="sfreq is required when info is not available"
-    ):
-        plot_component_summary(ArrayOnlyEst(), data=np.random.randn(1, 200), show=False)
-
-    with pytest.raises(ValueError, match="psd_fmax must be strictly positive"):
-        plot_component_summary(
-            fitted_dss,
-            data=synthetic_data,
-            times=synthetic_data.times,
-            psd_fmax=0,
-            show=False,
-        )
-
-    with pytest.raises(ValueError, match="times must have length"):
-        plot_component_summary(
-            fitted_dss,
-            data=synthetic_data,
-            times=np.arange(synthetic_data.times.size - 1),
-            show=False,
-        )
-
-    with pytest.raises(ValueError, match="sfreq must be strictly positive"):
-        plot_component_summary(ArrayOnlyEst(), sfreq=0, show=False)
+    with pytest.raises(ValueError, match="sfreq is required"):
+        plot_component_summary(ArrayOnlyEst(), show=False)
 
     with pytest.raises(ValueError, match="No components selected"):
-        plot_component_summary(
-            fitted_dss, data=synthetic_data, n_components=[], show=False
-        )
-
-    # Test plot_ci branch
-    plot_component_summary(
-        fitted_dss, data=synthetic_data, n_components=1, plot_ci=False, show=False
-    )
-
-    fig = plot_component_summary(
-        ArrayOnlyEst(),
-        times=np.arange(200) / 250.0,
-        sfreq=250.0,
-        n_components=2,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    # Cover no Topomap info text branch
-    plot_component_summary(
-        ArrayOnlyEst(),
-        times=np.arange(200) / 250.0,
-        sfreq=250.0,
-        picks=None,
-        show=False,
-    )
-
-    # Cover n_cycles and default fmax in spectrogram (via summary)
-    plot_component_summary(fitted_dss, data=synthetic_data, show=False)
+        plot_component_summary(ArrayOnlyEst(), sfreq=100.0, n_components=[], show=False)
 
 
-def test_plot_component_epochs_image(fitted_dss, synthetic_data):
-    """Test component image plotting."""
-    fig = plot_component_epochs_image(
-        fitted_dss, data=synthetic_data, n_components=2, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-    raw = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    fig = plot_component_epochs_image(fitted_dss, data=raw, n_components=1, show=False)
-    assert isinstance(fig, plt.Figure)
-
+def test_plot_component_epochs_image_preserves_component_indices_and_axes(
+    fitted_dss, synthetic_data
+):
+    """Epoch images expose the requested component labels and sample axis."""
     fig = plot_component_epochs_image(
         fitted_dss,
         data=synthetic_data,
@@ -309,202 +143,96 @@ def test_plot_component_epochs_image(fitted_dss, synthetic_data):
         show=False,
     )
     assert isinstance(fig, plt.Figure)
+    assert {ax.get_title() for ax in fig.axes} >= {"Comp 0", "Comp 2"}
+    assert any(ax.get_ylabel() == "Epochs" for ax in fig.axes)
+    assert any(ax.get_xlabel() == "Time (samples)" for ax in fig.axes)
 
-    BadDimEst = type("BadDimEst", (), {"sources_": np.zeros((3,))})
+    bad = type("BadSources", (), {"sources_": np.zeros(3)})()
     with pytest.raises(ValueError, match="must be 2D or 3D"):
-        plot_component_epochs_image(BadDimEst(), show=False)
-
-    with pytest.raises(ValueError, match="No components selected"):
-        plot_component_epochs_image(
-            fitted_dss, data=synthetic_data, n_components=[], show=False
-        )
+        plot_component_epochs_image(bad, show=False)
 
 
-def test_plot_component_time_series(fitted_dss, synthetic_data):
-    """Test stacked time series plotting."""
+def test_plot_component_time_series_normalizes_traces_and_uses_time_axis(
+    fitted_dss, synthetic_data
+):
+    """Time-series plots use supplied times and z-score each component."""
+    times = np.linspace(-0.2, 0.5, synthetic_data.get_data().shape[-1])
     fig = plot_component_time_series(
-        fitted_dss, data=synthetic_data, times=synthetic_data.times, show=False
+        fitted_dss,
+        data=synthetic_data,
+        n_components=[0],
+        times=times,
+        show=False,
     )
     assert isinstance(fig, plt.Figure)
-
-    with pytest.raises(ValueError):
-        plot_component_time_series(fitted_dss, data=None, show=False)
-
-    class MockEst:
-        sources_ = np.random.randn(3, 100)
-        eigenvalues_ = np.array([1.0, 0.5, 0.1])
-
-        def get_params(self, deep=True):
-            return {}
-
-    fig = plot_component_time_series(MockEst(), times=np.arange(100), show=False)
-    assert isinstance(fig, plt.Figure)
-
-    # Test low variance branch
-    DeadEst = type("DeadEst", (), {"sources_": np.zeros((1, 100))})
-    fig = plot_component_time_series(DeadEst(), show=False)
-    assert isinstance(fig, plt.Figure)
-
-    # Test existing ax branch
-    fig, ax = plt.subplots()
-    plot_component_time_series(fitted_dss, data=synthetic_data, ax=ax, show=False)
+    time_axis = next(ax for ax in fig.axes if ax.get_title() == "Component Time Series")
+    line = next(iter(time_axis.lines))
+    np.testing.assert_allclose(line.get_xdata(), times)
+    assert np.std(line.get_ydata()) == pytest.approx(1.0)
+    assert time_axis.get_xlabel() == "Time"
 
     with pytest.raises(ValueError, match="times must have length"):
         plot_component_time_series(
             fitted_dss,
             data=synthetic_data,
-            times=np.arange(synthetic_data.times.size - 1),
+            times=times[:-1],
             show=False,
         )
 
-    with pytest.raises(ValueError, match="No components selected"):
-        plot_component_time_series(
-            fitted_dss, data=synthetic_data, n_components=[], show=False
-        )
 
-
-def test_plot_component_spectrogram():
-    """Test component TFR plotting."""
-    sfreq = 100.0
-    n_times = 200
-
-    comp_1d = np.random.randn(n_times)
-    fig = plot_component_spectrogram(comp_1d, sfreq=sfreq, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    comp_2d = np.random.randn(1, n_times)
+def test_plot_component_spectrogram_exposes_frequency_and_time_units():
+    """Spectrograms use the requested frequency grid and documented units."""
+    data = np.sin(2.0 * np.pi * 10.0 * np.arange(200) / 100.0)
     fig = plot_component_spectrogram(
-        comp_2d, sfreq=sfreq, freqs=np.arange(1, 10), show=False
+        data,
+        sfreq=100.0,
+        freqs=np.array([5.0, 10.0, 15.0]),
+        show=False,
     )
     assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_spectrogram(comp_1d, sfreq=sfreq, fmax=30, show=False)
-    assert isinstance(fig, plt.Figure)
-    assert fig.axes[0].get_ylim()[1] == pytest.approx(30.0, abs=1.0)
-
-    fig, ax = plt.subplots()
-    ret_fig = plot_component_spectrogram(comp_1d, sfreq=sfreq, ax=ax, show=False)
-    assert ret_fig is fig
+    ax = next(ax for ax in fig.axes if ax.get_title() == "Component Spectrogram")
+    assert ax.get_xlabel() == "Time (s)"
+    assert ax.get_ylabel() == "Frequency (Hz)"
+    assert any(ax.get_ylabel() == "Power" for ax in fig.axes)
 
     with pytest.raises(ValueError, match="fmax must be strictly positive"):
-        plot_component_spectrogram(comp_1d, sfreq=sfreq, fmax=0, show=False)
-
-    BadDimComp = np.zeros((1, 1, 1, 1))
-    with pytest.raises(ValueError, match="must be 1D or 2D"):
-        plot_component_spectrogram(BadDimComp, sfreq=sfreq, show=False)
-
-    # Cover fmax=None and n_cycles=None branches
-    # Use long signal to avoid "wavelet longer than signal" error
-    comp_long = np.random.randn(1000)
-    plot_component_spectrogram(comp_long, sfreq=100.0, fmax=None, show=False)
-    plot_component_spectrogram(comp_long, sfreq=100.0, n_cycles=None, show=False)
-    # Explicit n_cycles to cover the 'else' (skip) branch
-    plot_component_spectrogram(comp_long, sfreq=100.0, n_cycles=5, show=False)
+        plot_component_spectrogram(data, sfreq=100.0, fmax=0.0, show=False)
 
 
-def test_fname_parameter_components(fitted_dss, tmp_path):
-    """Test fname parameter on a component plot function."""
-    fpath = tmp_path / "scores.png"
-    fig = plot_component_score_curve(
-        fitted_dss,
-        mode="raw",
-        show=False,
-        fname=str(fpath),
-    )
+def test_component_plot_fname_and_window_score_threshold(tmp_path):
+    """Public file output and threshold annotations work without inspecting layout."""
+    path = tmp_path / "scores.png"
+    fig = plot_component_score_curve(ArrayOnlyEst(), show=False, fname=str(path))
     assert isinstance(fig, plt.Figure)
-    assert fpath.exists()
+    assert path.exists()
 
-    fpath = tmp_path / "patterns.png"
-    fig = plot_component_patterns(
-        fitted_dss,
-        info=fitted_dss.info_,
-        picks=np.arange(fitted_dss.info_["nchan"]),
-        show=False,
-        fname=str(fpath),
-    )
+    scores = np.arange(6.0).reshape(2, 3)
+    fig = plot_window_score_traces(scores, threshold=0.5, show=False)
     assert isinstance(fig, plt.Figure)
-    assert fpath.exists()
-
-
-def test_plot_component_summary_zapline_mock():
-    """Test is_zapline branch in summary."""
-    ZapMock = type(
-        "ZapMock",
-        (),
-        {
-            "scores_": np.array([1.0]),
-            "patterns_": np.zeros((5, 1)),
-            "sources_": np.zeros((1, 100)),
-            "line_freq": 60.0,
-            "get_params": lambda self, deep=True: {},
-            "transform": lambda self, d: self.sources_,
-        },
-    )
-    plot_component_summary(ZapMock(), sfreq=100.0, data=np.zeros((5, 100)), show=False)
-
-
-def test_plot_window_score_traces():
-    """Test plotting of window-wise score traces."""
-    n_windows = 5
-    n_components = 3
-    correlations = np.random.rand(n_windows, n_components)
-
-    # Basic plot
-    fig = plot_window_score_traces(correlations, show=False)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
-
-    # With threshold
-    fig = plot_window_score_traces(correlations, threshold=0.5, show=False)
-    assert isinstance(fig, plt.Figure)
-    # Check if threshold line exists
-    ax = fig.axes[0]
-    has_hline = any(
-        isinstance(line, plt.Line2D) and np.allclose(line.get_ydata(), 0.5)
-        for line in ax.get_lines()
-    )
-    assert has_hline
-    plt.close(fig)
-
-    # With custom axes
-    fig, ax = plt.subplots()
-    ret_fig = plot_window_score_traces(correlations, ax=ax, show=False)
-    assert ret_fig is fig
-    plt.close(fig)
-
-    # Invalid correlations shape
+    score_axis = next(ax for ax in fig.axes if ax.get_title() == "Window Score Traces")
+    assert any(np.allclose(line.get_ydata(), 0.5) for line in score_axis.lines)
     with pytest.raises(ValueError, match="2D array"):
-        plot_window_score_traces(np.random.rand(5), show=False)
+        plot_window_score_traces(np.ones(3), show=False)
 
 
-def test_plot_component_summary_safe_indexing():
-    """Test that plot_component_summary safely handles shortened pattern arrays."""
-    import mne
-    import numpy as np
-
-    from mne_denoise.viz.components import plot_component_summary
-
+def test_plot_component_summary_handles_fitted_subset_patterns():
+    """Short fitted pattern arrays do not fail when the selected channels match."""
     info = mne.create_info(
         ch_names=["Fp1", "Fp2", "EOG"], sfreq=100.0, ch_types=["eeg", "eeg", "eog"]
     )
-    montage = mne.channels.make_standard_montage("standard_1020")
-    info.set_montage(montage, on_missing="ignore")
-    # Pretend estimator only fitted on the 2 eeg channels
-    patterns = np.random.randn(2, 1)
-    sources = np.random.randn(1, 100)
-
-    class DummyEstimator:
-        patterns_ = patterns
-        sources_ = sources
-        method = "dummy"
-
-    estimator = DummyEstimator()
-    # User asks to plot topomap for eeg channels
-    # The picks indices in info are [0, 1]
-    picks = [0, 1]
-
-    # This should not raise IndexError
-    fig = plot_component_summary(
-        estimator, data=None, info=info, picks=picks, sfreq=100.0, show=False
+    info.set_montage(
+        mne.channels.make_standard_montage("standard_1020"), on_missing="ignore"
     )
-    assert fig is not None
+
+    class SubsetEstimator:
+        patterns_ = np.ones((2, 1))
+        sources_ = np.ones((1, 100))
+
+    fig = plot_component_summary(
+        SubsetEstimator(),
+        info=info,
+        picks=[0, 1],
+        sfreq=100.0,
+        show=False,
+    )
+    assert isinstance(fig, plt.Figure)

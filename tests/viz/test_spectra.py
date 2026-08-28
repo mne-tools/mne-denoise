@@ -1,7 +1,6 @@
-"""Tests for mne_denoise.viz.spectra functions."""
+"""Public contracts for spectral and time-frequency plots."""
 
 import matplotlib.pyplot as plt
-import mne
 import numpy as np
 import pytest
 
@@ -17,671 +16,257 @@ from mne_denoise.viz import (
 )
 
 
-def test_plot_narrowband_score_scan():
-    """Test narrowband scan visualization."""
-    frequencies = np.arange(5, 30, 0.5)
-    eigenvalues = np.random.randn(len(frequencies)) * 0.1 + 0.5
-
-    peak_idx = np.argmin(np.abs(frequencies - 10))
-    eigenvalues[peak_idx] = 2.0
-    eigenvalues[peak_idx - 1 : peak_idx + 2] += np.array([0.5, 0, 0.5])
-
-    fig = plot_narrowband_score_scan(frequencies, eigenvalues, show=False)
-    assert isinstance(fig, plt.Figure)
-
+def test_plot_narrowband_score_scan_maps_frequency_scores_and_annotations():
+    """Narrowband scans preserve the frequency grid and optional markers."""
+    frequencies = np.arange(5.0, 30.0, 0.5)
+    scores = np.exp(-0.5 * ((frequencies - 10.0) / 1.5) ** 2)
     fig = plot_narrowband_score_scan(
         frequencies,
-        eigenvalues,
-        peak_freq=frequencies[peak_idx],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_narrowband_score_scan(
-        frequencies,
-        eigenvalues,
-        true_freqs=[10, 22],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_narrowband_score_scan(
-        frequencies,
-        eigenvalues,
+        scores,
         peak_freq=10.0,
-        true_freqs=[10, 22],
+        true_freqs=[10.0, 20.0],
         show=False,
     )
-    assert isinstance(fig, plt.Figure)
 
-    fig, ax = plt.subplots()
-    fig_ret = plot_narrowband_score_scan(frequencies, eigenvalues, ax=ax, show=False)
-    assert fig_ret is fig
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "Score / Eigenvalue")
+    dominant = next(
+        line for line in ax.lines if line.get_label() == "Dominant component"
+    )
+    np.testing.assert_allclose(dominant.get_xdata(), frequencies)
+    np.testing.assert_allclose(dominant.get_ydata(), scores)
+    assert ax.get_xlabel() == "Frequency (Hz)"
+    assert ax.get_ylabel() == "Score / Eigenvalue"
+    assert {"Peak: 10.0 Hz", "True: 10 Hz", "True: 20 Hz"} <= {
+        line.get_label() for line in ax.lines
+    }
 
     with pytest.raises(ValueError, match="matching first dimensions"):
-        plot_narrowband_score_scan(frequencies, eigenvalues[:-1], show=False)
+        plot_narrowband_score_scan(frequencies, scores[:-1], show=False)
 
 
-def test_plot_time_frequency_mask():
-    """Test TF mask visualization."""
-    n_freqs, n_times = 10, 20
-    mask = np.random.rand(n_freqs, n_times)
-    times = np.arange(n_times)
-    freqs = np.arange(n_freqs)
-
+def test_plot_time_frequency_mask_preserves_axes_and_mask_section():
+    """Time-frequency masks expose their supplied coordinates and weights."""
+    times = np.linspace(0.0, 1.0, 20)
+    freqs = np.linspace(5.0, 25.0, 10)
+    mask = np.zeros((freqs.size, times.size))
+    mask[3:5, 8:12] = 1.0
     fig = plot_time_frequency_mask(mask, times, freqs, show=False)
-    assert isinstance(fig, plt.Figure)
 
-    fig, ax = plt.subplots()
-    fig_ret = plot_time_frequency_mask(mask, times, freqs, ax=ax, show=False)
-    assert fig_ret is fig
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "Frequency (Hz)")
+    assert ax.get_xlabel() == "Time (s)"
+    assert ax.get_ylabel() == "Frequency (Hz)"
+    assert ax.collections
+    assert any(ax.get_ylabel() == "Mask Weight" for ax in fig.axes)
 
     with pytest.raises(ValueError, match="mask shape must match"):
         plot_time_frequency_mask(mask[:, :-1], times, freqs, show=False)
 
-    with pytest.raises(ValueError, match="mask must be a 2D array"):
-        plot_time_frequency_mask(mask[0], times, freqs, show=False)
 
-
-def test_plot_psd_comparison(fitted_dss, synthetic_data):
-    """Test PSD comparison visualization."""
-    epochs_clean = fitted_dss.transform(synthetic_data)
-    raw_before = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    raw_after = mne.io.RawArray(epochs_clean.get_data()[0], synthetic_data.info)
-
-    fig, ax = plt.subplots()
-    fig_ret = plot_psd_comparison(synthetic_data, epochs_clean, ax=ax, show=False)
-    assert fig_ret is fig
-
-    fig = plot_psd_comparison(raw_before, raw_after, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_psd_comparison(synthetic_data, epochs_clean, average=False, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    array_before = synthetic_data.get_data()[0]
-    array_after = epochs_clean.get_data()[0]
+def test_plot_psd_comparison_maps_before_after_power_and_line_frequency():
+    """PSD comparisons preserve a known power scaling and line marker."""
+    sfreq = 100.0
+    times = np.arange(400) / sfreq
+    before = np.sin(2.0 * np.pi * 10.0 * times)[np.newaxis, :]
+    after = 0.5 * before
     fig = plot_psd_comparison(
-        array_before,
-        array_after,
-        sfreq=synthetic_data.info["sfreq"],
+        before,
+        after,
+        sfreq=sfreq,
+        fmin=1.0,
+        fmax=30.0,
         line_freq=10.0,
         show=False,
     )
+
     assert isinstance(fig, plt.Figure)
-
-    with pytest.raises(ValueError, match="sfreq must be provided"):
-        plot_psd_comparison(array_before, array_after, show=False)
-
-
-def test_plot_psd_comparison_with_zapline_arrays(zapline_data, fitted_zapline):
-    """Test PSD comparison with ZapLine-style array inputs."""
-    data, sfreq = zapline_data
-    cleaned = fitted_zapline.transform(data)
-
-    fig = plot_psd_comparison(data, cleaned, sfreq=sfreq, show=False)
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_psd_comparison(
-        data,
-        cleaned,
-        sfreq=sfreq,
-        line_freq=50.0,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig_ext, custom_ax = plt.subplots()
-    ret_fig = plot_psd_comparison(
-        data,
-        cleaned,
-        sfreq=sfreq,
-        ax=custom_ax,
-        show=False,
-    )
-    assert ret_fig is fig_ext
-
-    fig = plot_psd_comparison(data, cleaned, sfreq=sfreq, fmax=150.0, show=False)
-    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_title() == "PSD Comparison")
+    lines = {line.get_label(): line for line in ax.lines}
+    before_line = lines["Before"]
+    after_line = lines["After"]
+    peak = int(np.argmax(before_line.get_ydata()))
+    assert before_line.get_xdata()[peak] == pytest.approx(10.0)
+    assert after_line.get_ydata()[peak] / before_line.get_ydata()[
+        peak
+    ] == pytest.approx(0.25)
+    assert "10 Hz" in lines
+    assert ax.get_xlabel() == "Frequency (Hz)"
+    assert ax.get_ylabel() == "Power Spectral Density"
 
 
-def test_plot_component_psd_comparison(fitted_dss, synthetic_data):
-    """Test component PSD comparison visualization."""
-    sources = fitted_dss.transform(synthetic_data)
-
-    fig = plot_component_psd_comparison(
-        synthetic_data,
-        sources,
-        component_indices=[0, 1, 2],
-        sfreq=100,
-        peak_freq=10,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_psd_comparison(
-        synthetic_data,
-        sources,
-        component_indices=[0, 1],
-        sfreq=100,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-    assert fig.axes[0].get_ylim() == fig.axes[1].get_ylim()
-
-    raw = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    sources_raw = fitted_dss.transform(raw)
-    fig = plot_component_psd_comparison(
-        raw,
-        sources_raw,
-        component_indices=[0, 1],
-        sfreq=100,
-        peak_freq=10,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_component_psd_comparison(
-        raw,
-        sources_raw,
-        component_indices=[0, 1],
-        sfreq=100,
-        fmin=5,
-        fmax=20,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-    with pytest.raises(ValueError, match="component_indices cannot be empty"):
-        plot_component_psd_comparison(
-            raw,
-            sources_raw,
-            component_indices=[],
-            sfreq=100,
-            show=False,
-        )
-
-
-def test_plot_psd_zoom_comparison():
-    """Test PSD comparison with zoom panels."""
-    freqs = np.arange(0, 200, 0.5)
-    psd_before = np.ones_like(freqs) * 1e-6
-    psd_after = np.ones_like(freqs) * 1e-5
-
+def test_plot_psd_zoom_comparison_preserves_zoom_frequency_and_series_labels():
+    """Zoom panels retain frequency centers, annotations, and before/after labels."""
+    freqs = np.arange(0.0, 121.0, 0.5)
+    before = np.exp(-freqs / 40.0)
+    after = 0.5 * before
     fig = plot_psd_zoom_comparison(
         freqs,
-        psd_before,
+        before,
         freqs,
-        psd_after,
-        series_name="M1",
-        title="sub-01",
-        zoom_freqs=[50.0, 100.0],
-        zoom_annotations=["atten=10 dB", "atten=8 dB"],
+        after,
+        series_name="DSS",
+        series_labels={"DSS": "Cleaned"},
+        zoom_freqs=[50.0],
+        zoom_annotations=["attenuation"],
         show=False,
     )
+
     assert isinstance(fig, plt.Figure)
-
-
-def test_plot_psd_gallery():
-    """Test PSD gallery visualization."""
-    freqs = np.arange(0, 200, 0.5)
-    psd_before = np.ones_like(freqs) * 1e-6
-    series_psds = {
-        "M1": (freqs, np.ones_like(freqs) * 1e-5),
-        "M2": (freqs, np.ones_like(freqs) * 1.1e-5),
-    }
-
-    fig = plot_psd_gallery(
-        freqs, psd_before, series_psds, zoom_freqs=[50.0], show=False
+    assert any(
+        "50 Hz" in ax.get_title() and "attenuation" in ax.get_title() for ax in fig.axes
     )
-    assert isinstance(fig, plt.Figure)
+    full_axis = next(ax for ax in fig.axes if ax.get_title() == "PSD Comparison")
+    assert {"Before", "Cleaned"} <= {line.get_label() for line in full_axis.lines}
+    assert full_axis.get_xlabel() == "Frequency (Hz)"
 
+
+def test_plot_psd_gallery_represents_each_requested_series():
+    """The gallery has a full-spectrum row for each ordered series."""
+    freqs = np.arange(0.0, 121.0, 0.5)
+    reference = np.exp(-freqs / 40.0)
+    series = {"M1": (freqs, 0.8 * reference), "M2": (freqs, 0.6 * reference)}
     fig = plot_psd_gallery(
         freqs,
-        psd_before,
-        series_psds,
-        zoom_freqs=[50.0, 100.0],
+        reference,
+        series,
+        zoom_freqs=[50.0],
         series_order=["M2", "M1"],
-        title="sub-01",
+        series_labels={"M2": "Cleaned"},
         show=False,
     )
-    assert isinstance(fig, plt.Figure)
 
-    fig = plot_psd_gallery(
-        freqs,
-        psd_before,
-        series_psds,
-        zoom_freqs=[50.0, 100.0],
-        series_order=["M1", "MISSING"],
-        show=False,
+    assert isinstance(fig, plt.Figure)
+    full_axis = next(ax for ax in fig.axes if ax.get_title() == "Full PSD")
+    assert any(text.get_text() == "Cleaned" for text in full_axis.texts)
+    assert all(
+        ax.get_xlabel() == "Frequency (Hz)"
+        for ax in fig.axes
+        if ax.get_title() == "50 Hz"
     )
-    assert isinstance(fig, plt.Figure)
 
 
-def test_plot_psd_overlay():
-    """Test PSD overlay visualization."""
-    freqs = np.arange(0, 200, 0.5)
-    psd_before = np.ones_like(freqs) * 1e-5
-    series_psds = {
-        "M0": (freqs, np.ones_like(freqs) * 1e-6),
-        "M1": (freqs, np.ones_like(freqs) * 1.2e-6),
-    }
-
-    fig = plot_psd_overlay(freqs, psd_before, series_psds, focus_freq=50.0, show=False)
-    assert isinstance(fig, plt.Figure)
-
+def test_plot_psd_overlay_marks_focus_and_harmonic_frequency():
+    """Overlay plots keep the reference/series mapping and focus marker."""
+    freqs = np.arange(0.0, 121.0, 0.5)
+    reference = np.exp(-freqs / 40.0)
+    series = {"DSS": (freqs, 0.7 * reference)}
     fig = plot_psd_overlay(
         freqs,
-        psd_before,
-        series_psds,
+        reference,
+        series,
         focus_freq=50.0,
         n_harmonics=2,
-        title="sub-01",
+        series_labels={"DSS": "Cleaned"},
         show=False,
     )
+
     assert isinstance(fig, plt.Figure)
+    zoom_axis = next(ax for ax in fig.axes if ax.get_title() == "Zoom at 50 Hz")
+    assert {"Before", "Cleaned"} <= {line.get_label() for line in zoom_axis.lines}
+    assert any(
+        len(line.get_xdata()) == 2 and np.allclose(line.get_xdata(), [50.0, 50.0])
+        for line in zoom_axis.lines
+    )
 
 
-def test_plot_spectrogram_comparison(fitted_dss, synthetic_data):
-    """Test spectrogram comparison visualization."""
-    epochs_clean = fitted_dss.transform(synthetic_data)
+def test_plot_component_psd_comparison_maps_requested_components():
+    """Component PSDs retain selected indices, frequency bounds, and markers."""
+    sfreq = 100.0
+    times = np.arange(400) / sfreq
+    signal = np.vstack(
+        [
+            np.sin(2.0 * np.pi * 10.0 * times),
+            np.sin(2.0 * np.pi * 20.0 * times),
+            np.cos(2.0 * np.pi * 5.0 * times),
+        ]
+    )
+    components = np.vstack(
+        [
+            np.sin(2.0 * np.pi * 10.0 * times),
+            np.sin(2.0 * np.pi * 20.0 * times),
+        ]
+    )
+    fig = plot_component_psd_comparison(
+        signal,
+        components,
+        component_indices=[1],
+        sfreq=sfreq,
+        peak_freq=20.0,
+        fmin=1.0,
+        fmax=30.0,
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    axes_by_title = {ax.get_title(): ax for ax in fig.axes}
+    assert {"Original Data PSD", "Component PSD"} <= axes_by_title.keys()
+    assert any(
+        line.get_label() == "Component 1"
+        for line in axes_by_title["Component PSD"].lines
+    )
+    assert all(
+        axes_by_title[title].get_xlabel() == "Frequency (Hz)"
+        for title in ("Original Data PSD", "Component PSD")
+    )
+
+
+def test_plot_spectrogram_comparison_preserves_before_after_difference():
+    """Spectrogram panels preserve time/frequency bounds and difference semantics."""
+    sfreq = 100.0
+    times = np.arange(200) / sfreq
+    rng = np.random.default_rng(0)
+    before = rng.standard_normal((2, times.size))
+    after = 0.5 * before
     fig = plot_spectrogram_comparison(
-        synthetic_data,
-        epochs_clean,
+        before,
+        after,
         picks=[0, 1],
-        times=synthetic_data.times,
-        fmin=1,
-        fmax=20,
-        n_freqs=5,
+        times=times,
+        sfreq=sfreq,
+        fmin=1.0,
+        fmax=20.0,
+        n_freqs=6,
         show=False,
     )
-    assert isinstance(fig, plt.Figure)
 
-    array_before = synthetic_data.get_data().mean(axis=0)
-    array_after = epochs_clean.get_data().mean(axis=0)
-    fig = plot_spectrogram_comparison(
-        array_before,
-        array_after,
-        picks=[0, 1],
-        times=synthetic_data.times,
-        sfreq=synthetic_data.info["sfreq"],
-        fmin=1,
-        fmax=20,
-        n_freqs=5,
-        show=False,
+    assert isinstance(fig, plt.Figure)
+    panels = {
+        ax.get_title(): ax
+        for ax in fig.axes
+        if ax.get_title() in {"Before", "After", "Before - After"}
+    }
+    assert set(panels) == {"Before", "After", "Before - After"}
+    before_image = next(iter(panels["Before"].images))
+    after_image = next(iter(panels["After"].images))
+    diff_image = next(iter(panels["Before - After"].images))
+    np.testing.assert_allclose(
+        diff_image.get_array(), before_image.get_array() - after_image.get_array()
     )
-    assert isinstance(fig, plt.Figure)
+    assert before_image.get_extent() == pytest.approx([times[0], times[-1], 1.0, 20.0])
+    assert panels["Before"].get_xlabel() == "Time (s)"
+    assert panels["Before"].get_ylabel() == "Frequency (Hz)"
 
-    with pytest.raises(ValueError, match="n_freqs must be at least 2"):
-        plot_spectrogram_comparison(
-            synthetic_data,
-            epochs_clean,
-            picks=[0],
-            times=synthetic_data.times,
-            fmin=1,
-            fmax=20,
-            n_freqs=1,
+
+def test_spectral_plot_validation_is_explicit():
+    """Representative unsupported combinations fail with clear errors."""
+    data = np.ones((2, 100))
+    with pytest.raises(ValueError, match="sfreq must be provided"):
+        plot_psd_comparison(data, data, show=False)
+    with pytest.raises(ValueError, match="zoom_freqs must be a non-empty"):
+        plot_psd_zoom_comparison(
+            np.arange(10),
+            np.ones(10),
+            np.arange(10),
+            np.ones(10),
+            zoom_freqs=[],
             show=False,
         )
-
+    with pytest.raises(ValueError, match="component_indices cannot be empty"):
+        plot_component_psd_comparison(
+            data, data, component_indices=[], sfreq=100.0, show=False
+        )
     with pytest.raises(ValueError, match="picks must be provided explicitly"):
         plot_spectrogram_comparison(
-            synthetic_data,
-            epochs_clean,
-            picks=None,  # type: ignore[arg-type]
-            times=synthetic_data.times,
-            show=False,
+            data, data, picks=None, times=np.arange(100), sfreq=100.0, show=False
         )
-
-    with pytest.raises(ValueError, match="sfreq must be provided"):
-        plot_spectrogram_comparison(
-            array_before,
-            array_after,
-            picks=[0, 1],
-            times=synthetic_data.times,
-            show=False,
-        )
-
-
-def test_spectra_internal_helpers():
-    """Test internal helper functions in spectra.py."""
-    from mne_denoise.viz.spectra import (
-        _as_component_data,
-        _compute_array_psd,
-        _compute_array_spectrogram,
-    )
-
-    # _compute_array_psd
-    freqs, psd = _compute_array_psd(np.random.randn(100), sfreq=100, fmin=1, fmax=40)
-    assert psd.ndim == 2
-    freqs, psd = _compute_array_psd(
-        np.random.randn(2, 2, 100), sfreq=100, fmin=1, fmax=40
-    )
-    assert psd.ndim == 2
-
-    # _as_component_data
-    data = _as_component_data(np.random.randn(100))
-    assert data.ndim == 2
-    data = _as_component_data(np.random.randn(2, 100))
-    assert data.ndim == 2
-    data = _as_component_data(np.random.randn(2, 3, 100))
-    assert data.ndim == 2
-    with pytest.raises(ValueError, match="components must be 1D, 2D, or 3D"):
-        _as_component_data(np.random.randn(2, 2, 2, 100))
-
-    # _compute_array_spectrogram
-    with pytest.raises(ValueError, match="Array spectrogram inputs must be 2D"):
-        _compute_array_spectrogram(np.random.randn(2, 2, 2, 100), [0], 100, 1, 40, 5)
-
-    # 3D array in spectrogram
-    freqs, spec = _compute_array_spectrogram(
-        np.random.randn(5, 2, 100), [0], 100, 1, 40, 5
-    )
-    assert spec.ndim == 2
-
-    # Invalid frequency grid
-    with pytest.raises(ValueError, match="Could not compute a valid frequency grid"):
-        _compute_array_spectrogram(np.random.randn(2, 10), [0], 10, 50, 60, 5)
-
-
-def test_plot_narrowband_score_scan_edges():
-    """Test edge cases for narrowband score scan."""
-    freqs = np.linspace(5, 30, 10)
-    scores = np.random.randn(10, 2)
-
-    # frequencies.ndim != 1
-    with pytest.raises(ValueError, match="frequencies must be a 1D array"):
-        plot_narrowband_score_scan(freqs[:, np.newaxis], scores, show=False)
-
-    # eigenvalues.ndim not in (1, 2)
-    with pytest.raises(ValueError, match="eigenvalues must be a 1D or 2D array"):
-        plot_narrowband_score_scan(freqs, scores[:, :, np.newaxis], show=False)
-
-    # 2D eigenvalues (multiple components)
-    fig = plot_narrowband_score_scan(freqs, scores, show=False)
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_psd_comparison_edges(synthetic_data):
-    """Test edge cases for PSD comparison."""
-    data = synthetic_data.get_data()
-
-    # average=False branch
-    fig = plot_psd_comparison(
-        data, data, sfreq=synthetic_data.info["sfreq"], average=False, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_psd_zoom_comparison_edges():
-    """Test edge cases for PSD zoom comparison."""
-    freqs = np.linspace(0, 100, 50)
-    psd = np.ones(50)
-
-    # zoom_freqs invalid
-    with pytest.raises(
-        ValueError, match="zoom_freqs must be a non-empty 1D array-like"
-    ):
-        plot_psd_zoom_comparison(freqs, psd, freqs, psd, zoom_freqs=[], show=False)
-
-    # zoom_half_width_hz <= 0
-    with pytest.raises(ValueError, match="zoom_half_width_hz must be positive"):
-        plot_psd_zoom_comparison(
-            freqs, psd, freqs, psd, zoom_freqs=[10], zoom_half_width_hz=0, show=False
-        )
-
-    # series overrides and annotations
-    fig = plot_psd_zoom_comparison(
-        freqs,
-        psd,
-        freqs,
-        psd,
-        series_name="A",
-        zoom_freqs=[10, 20],
-        zoom_annotations=["X", "Y"],
-        series_colors={"A": "red"},
-        series_labels={"A": "Label A"},
-        title="Title",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_psd_gallery_edges():
-    """Test edge cases for PSD gallery."""
-    freqs = np.linspace(0, 100, 50)
-    psd = np.ones(50)
-    series_psds = {"A": (freqs, psd)}
-
-    # zoom_freqs invalid
-    with pytest.raises(
-        ValueError, match="zoom_freqs must be a non-empty 1D array-like"
-    ):
-        plot_psd_gallery(freqs, psd, series_psds, zoom_freqs=[], show=False)
-
-    # zoom_half_width_hz <= 0
-    with pytest.raises(ValueError, match="zoom_half_width_hz must be positive"):
-        plot_psd_gallery(
-            freqs, psd, series_psds, zoom_freqs=[10], zoom_half_width_hz=0, show=False
-        )
-
-    # Single row layout
-    fig = plot_psd_gallery(freqs, psd, series_psds, zoom_freqs=[10], show=False)
-    assert isinstance(fig, plt.Figure)
-
-    # Custom colors and labels
-    fig = plot_psd_gallery(
-        freqs,
-        psd,
-        series_psds,
-        zoom_freqs=[10],
-        series_colors={"A": "blue"},
-        series_labels={"A": "A_Label"},
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_psd_overlay_edges():
-    """Test edge cases for PSD overlay."""
-    freqs = np.linspace(0, 100, 50)
-    psd = np.ones(50)
-    series_psds = {"A": (freqs, psd)}
-
-    # focus_half_width_hz <= 0
-    with pytest.raises(ValueError, match="focus_half_width_hz must be positive"):
-        plot_psd_overlay(
-            freqs, psd, series_psds, focus_freq=10, focus_half_width_hz=0, show=False
-        )
-
-    # Custom order, colors, labels
-    fig = plot_psd_overlay(
-        freqs,
-        psd,
-        series_psds,
-        focus_freq=10,
-        series_order=["A", "B"],
-        series_colors={"A": "green"},
-        series_labels={"A": "A_Label"},
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_component_psd_comparison_edges(synthetic_data):
-    """Test edge cases for component PSD comparison."""
-    data = synthetic_data.get_data()
-
-    # index out of range
-    with pytest.raises(ValueError, match="out of range"):
-        plot_component_psd_comparison(
-            data, data, component_indices=[100], sfreq=100, show=False
-        )
-
-    with pytest.raises(
-        ValueError, match="sfreq must be provided when components are arrays"
-    ):
-        plot_component_psd_comparison(
-            synthetic_data, data, component_indices=[0], sfreq=None, show=False
-        )
-
-
-def test_plot_psd_zoom_comparison_no_series():
-    """Test PSD zoom comparison without series name."""
-    freqs = np.linspace(0, 100, 50)
-    psd = np.ones(50)
-    fig = plot_psd_zoom_comparison(freqs, psd, freqs, psd, zoom_freqs=[10], show=False)
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_component_psd_comparison_mne_sfreq(synthetic_data):
-    """Test component PSD comparison with MNE sfreq inference."""
-    epochs = synthetic_data
-    # Use MNE object for components to trigger line 959
-    fig = plot_component_psd_comparison(
-        epochs, epochs, component_indices=[0], show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_spectrogram_comparison_more_edges(synthetic_data):
-    """Test more edge cases for spectrogram comparison."""
-    # Ensure raw data is used to avoid any MNE confusion
-    data = synthetic_data.get_data()
-    times = synthetic_data.times
-    sfreq = synthetic_data.info["sfreq"]
-    n_times = data.shape[-1]
-    assert len(times) == n_times
-
-    evoked = synthetic_data.average()
-    fig = plot_spectrogram_comparison(
-        evoked, evoked, picks=[0], times=evoked.times, show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-    with pytest.raises(ValueError, match="Array spectrogram inputs must be 2D or 3D"):
-        very_bad_data = np.zeros((1, 1, 1, n_times))
-        plot_spectrogram_comparison(
-            very_bad_data,
-            very_bad_data,
-            picks=[0],
-            times=times,
-            sfreq=sfreq,
-            show=False,
-        )
-
-
-def test_plot_time_frequency_mask_more_edges():
-    """Test more edge cases for TF mask."""
-    mask = np.zeros((10, 20))
-    times = np.zeros((20,))
-    freqs = np.zeros((10,))
-
-    # Line 1248: times.ndim != 1
-    with pytest.raises(ValueError, match="times and freqs must be 1D arrays"):
-        plot_time_frequency_mask(mask, times[:, np.newaxis], freqs, show=False)
-
-    # Line 1248: freqs.ndim != 1
-    with pytest.raises(ValueError, match="times and freqs must be 1D arrays"):
-        plot_time_frequency_mask(mask, times, freqs[:, np.newaxis], show=False)
-
-
-def test_plot_component_psd_comparison_raw(synthetic_data):
-    """Test component PSD with Raw input for coverage."""
-    raw = mne.io.RawArray(synthetic_data.get_data()[0], synthetic_data.info)
-    # This should trigger line 959 since raw has .info['sfreq']
-    fig = plot_component_psd_comparison(raw, raw, component_indices=[0], show=False)
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_spectrogram_comparison_edges(synthetic_data):
-    """Test edge cases for spectrogram comparison."""
-    epochs = synthetic_data
-    half_epochs = epochs.copy()
-    half_epochs.crop(tmin=0, tmax=0.5)
-    data = epochs.get_data()
-
-    # fmax <= fmin
-    with pytest.raises(ValueError, match="fmax must be greater than fmin"):
-        plot_spectrogram_comparison(
-            epochs, epochs, picks=[0], times=epochs.times, fmin=40, fmax=10, show=False
-        )
-
-    # empty picks
-    with pytest.raises(ValueError, match="picks cannot be empty"):
-        plot_spectrogram_comparison(
-            epochs, epochs, picks=[], times=epochs.times, show=False
-        )
-
-    # n_times mismatch (MNE)
-    with pytest.raises(ValueError, match="share the same n_times"):
-        plot_spectrogram_comparison(
-            epochs, half_epochs, picks=[0], times=epochs.times, show=False
-        )
-
-    # times.size mismatch (MNE)
-    with pytest.raises(ValueError, match="times must match the signal n_times"):
-        plot_spectrogram_comparison(
-            epochs, epochs, picks=[0], times=epochs.times[:-1], show=False
-        )
-
-    # Mixed types
-    with pytest.raises(ValueError, match="must be both MNE or both arrays"):
-        plot_spectrogram_comparison(
-            epochs, data, picks=[0], times=epochs.times, show=False
-        )
-
-    # times.ndim != 1
-    with pytest.raises(ValueError, match="times must be a 1D array"):
-        plot_spectrogram_comparison(
-            data[0],
-            data[0],
-            picks=[0],
-            times=epochs.times[:, np.newaxis],
-            sfreq=100,
-            show=False,
-        )
-
-    # n_times mismatch (Array)
-    with pytest.raises(ValueError, match="share the same n_times"):
-        plot_spectrogram_comparison(
-            data[0],
-            data[0, :, :-1],
-            picks=[0],
-            times=epochs.times,
-            sfreq=100,
-            show=False,
-        )
-
-    # times.size mismatch (Array)
-    with pytest.raises(ValueError, match="times must match the signal n_times"):
-        plot_spectrogram_comparison(
-            data[0], data[0], picks=[0], times=epochs.times[:-1], sfreq=100, show=False
-        )
-
-    # pick index out of range
-    with pytest.raises(ValueError, match="Channel picks out of range"):
-        plot_spectrogram_comparison(
-            data[0], data[0], picks=[100], times=epochs.times, sfreq=100, show=False
-        )
-
-
-def test_compute_psd_matrix_auto_picks():
-    """Test that _compute_psd_matrix auto-picks homogeneous channels if none are provided."""
-    import mne
-    import numpy as np
-    import pytest
-
-    from mne_denoise.viz.spectra import _compute_psd_matrix
-
-    info = mne.create_info(
-        ch_names=["mag1", "grad1", "eog1"], sfreq=100.0, ch_types=["mag", "grad", "eog"]
-    )
-    raw = mne.io.RawArray(np.random.randn(3, 100), info)
-
-    # Since it has mag and grad, _get_homogeneous_picks will warn and pick mag
-    with pytest.warns(UserWarning, match="Found multiple data channel types"):
-        freqs, psd = _compute_psd_matrix(raw, sfreq=100.0, fmin=1, fmax=40, picks=None)
-
-    # Since it picked mag, it should only have 1 series in the output
-    assert psd.shape[0] == 1

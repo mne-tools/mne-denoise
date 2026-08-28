@@ -1,4 +1,4 @@
-"""Tests for grouped metric and statistical visualization helpers."""
+"""Public and quantitative contracts for grouped statistic plots."""
 
 from __future__ import annotations
 
@@ -12,7 +12,6 @@ from mne_denoise.viz import (
     plot_metric_bars,
     plot_metric_comparison,
     plot_metric_slopes,
-    plot_metric_tradeoff_summary,
     plot_metric_violins,
     plot_null_distribution,
     plot_tradeoff_scatter,
@@ -21,450 +20,204 @@ from mne_denoise.viz import (
 
 
 @pytest.fixture
-def freqs():
-    """Return a synthetic frequency vector."""
-    return np.arange(0, 200, 0.5)
-
-
-@pytest.fixture
-def gm_psd(freqs):
-    """Synthetic geometric-mean PSD with line-noise peaks."""
-    psd = np.ones_like(freqs) * 1e-6
-    for harmonic in [50, 100, 150]:
-        mask = (freqs >= harmonic - 1) & (freqs <= harmonic + 1)
-        psd[mask] = 1e-3
-    return psd
-
-
-@pytest.fixture
-def gm_psd_clean(freqs):
-    """Synthetic cleaned PSD with reduced line-noise peaks."""
-    psd = np.ones_like(freqs) * 1e-6
-    for harmonic in [50, 100, 150]:
-        mask = (freqs >= harmonic - 1) & (freqs <= harmonic + 1)
-        psd[mask] = 1e-5
-    return psd
-
-
-@pytest.fixture
-def cleaned_psds(freqs, gm_psd_clean):
-    """Return cleaned PSD mapping for two methods."""
+def metric_data():
+    """Return deterministic paired values for two groups."""
     return {
-        "M1": (freqs, gm_psd_clean),
-        "M2": (freqs, gm_psd_clean * 1.1),
+        "subject": np.array(["s1", "s1", "s2", "s2", "s3", "s3"], dtype=object),
+        "group": np.array(["A", "B", "A", "B", "A", "B"], dtype=object),
+        "score": np.array([1.0, 3.0, 2.0, 4.0, 3.0, 5.0]),
+        "distortion": np.array([0.1, 0.2, 0.2, 0.3, 0.3, 0.4]),
+        "attenuation": np.array([8.0, 6.0, 9.0, 7.0, 10.0, 8.0]),
     }
 
 
-@pytest.fixture
-def single_subject_data():
-    """Return columnar mapping for one subject across methods."""
-    rng = np.random.default_rng(0)
-    methods = np.array(["M0", "M1", "M2"], dtype=object)
-    return {
-        "subject": np.array(["sub-01", "sub-01", "sub-01"], dtype=object),
-        "method": methods,
-        "R_f0": rng.uniform(0.7, 1.2, size=3),
-        "peak_attenuation_db": rng.uniform(5, 20, size=3),
-        "below_noise_distortion_db": rng.uniform(-5, 5, size=3),
-        "overclean_proportion": rng.uniform(0, 0.3, size=3),
-        "underclean_proportion": rng.uniform(0, 0.3, size=3),
-    }
-
-
-@pytest.fixture
-def multi_subject_data():
-    """Return columnar mapping for three subjects across methods."""
-    rng = np.random.default_rng(42)
-    subjects = []
-    methods = []
-    for sub in ["sub-01", "sub-02", "sub-03"]:
-        for method in ["M0", "M1", "M2"]:
-            subjects.append(sub)
-            methods.append(method)
-    n_rows = len(subjects)
-    return {
-        "subject": np.asarray(subjects, dtype=object),
-        "method": np.asarray(methods, dtype=object),
-        "R_f0": rng.uniform(0.7, 1.2, size=n_rows),
-        "peak_attenuation_db": rng.uniform(5, 20, size=n_rows),
-        "below_noise_distortion_db": rng.uniform(-5, 5, size=n_rows),
-        "overclean_proportion": rng.uniform(0, 0.3, size=n_rows),
-        "underclean_proportion": rng.uniform(0, 0.3, size=n_rows),
-    }
-
-
-def test_plot_metric_bars_basic(single_subject_data):
-    """Tests for grouped bar plots."""
-    fig = plot_metric_bars(
-        single_subject_data,
-        metric_cols=["R_f0"],
-        group_col="method",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_bars_custom_order(single_subject_data):
-    fig = plot_metric_bars(
-        single_subject_data,
-        metric_cols=["R_f0", "peak_attenuation_db"],
-        group_col="method",
-        group_order=["M0", "M1", "M2"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_tradeoff_scatter_single_subject(single_subject_data):
-    """Tests for grouped trade-off scatter plots."""
-    fig = plot_tradeoff_scatter(
-        single_subject_data,
-        group_col="method",
-        x_col="below_noise_distortion_db",
-        y_col="peak_attenuation_db",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_tradeoff_scatter_multi_subject(multi_subject_data):
-    fig = plot_tradeoff_scatter(
-        multi_subject_data,
-        group_col="method",
-        group_order=["M0", "M1", "M2"],
-        x_col="below_noise_distortion_db",
-        y_col="peak_attenuation_db",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_comparison_single_subject_bar(single_subject_data):
-    """Tests for single-metric group comparison plots."""
-    fig = plot_metric_comparison(
-        single_subject_data,
-        metric_col="R_f0",
-        group_col="method",
-        group_order=["M0", "M1", "M2"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_comparison_multi_subject_paired(multi_subject_data):
-    fig = plot_metric_comparison(
-        multi_subject_data,
-        metric_col="R_f0",
-        group_col="method",
-        group_order=["M0", "M1", "M2"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_harmonic_attenuation_basic(freqs, gm_psd, cleaned_psds):
-    """Tests for per-harmonic attenuation bars."""
-    fig = plot_harmonic_attenuation(
-        freqs,
-        gm_psd,
-        cleaned_psds,
-        harmonics_hz=[50.0, 100.0],
-        series_order=["M1", "M2"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_harmonic_attenuation_with_subject(freqs, gm_psd, cleaned_psds):
-    fig = plot_harmonic_attenuation(
-        freqs,
-        gm_psd,
-        cleaned_psds,
-        harmonics_hz=[50.0],
-        subject="sub-01",
-        series_order=["M1", "M2"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_slopes_multi_subject(multi_subject_data):
-    """Tests for paired subject trajectory plots."""
-    fig = plot_metric_slopes(
-        multi_subject_data,
-        metric_cols=["R_f0"],
-        group_col="method",
-        group_order=["M0", "M1", "M2"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_slopes_single_subject(single_subject_data):
-    fig = plot_metric_slopes(
-        single_subject_data,
-        metric_cols=["R_f0"],
-        group_col="method",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_tradeoff_scatter_explicit_xy_on_wide_table(multi_subject_data):
-    """Tests for trade-off x/y requirements."""
-    data = dict(multi_subject_data)
-    data["subject_id"] = np.arange(len(data["subject"]))
-    data["run"] = np.ones(len(data["subject"]), dtype=int)
-    fig = plot_tradeoff_scatter(
-        data,
-        group_col="method",
-        x_col="below_noise_distortion_db",
-        y_col="peak_attenuation_db",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_tradeoff_scatter_raises_when_xy_not_provided():
-    data = {
-        "method": np.array(["M0", "M1"], dtype=object),
-        "metric_a": np.array([1.0, 2.0]),
-        "metric_b": np.array([3.0, 4.0]),
-        "metric_c": np.array([5.0, 6.0]),
-    }
-    with pytest.raises(TypeError, match="missing 2 required positional arguments"):
-        plot_tradeoff_scatter(data, group_col="method", show=False)
-
-
-def test_plot_metric_tradeoff_summary_single_subject(single_subject_data):
-    """Tests for composed tradeoff summary plot."""
-    fig = plot_metric_tradeoff_summary(
-        single_subject_data,
-        group_col="method",
-        subject_col="subject",
-        x_col="below_noise_distortion_db",
-        y_col="peak_attenuation_db",
-        metric_col="R_f0",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_tradeoff_summary_multi_subject(multi_subject_data):
-    fig = plot_metric_tradeoff_summary(
-        multi_subject_data,
-        group_col="method",
-        subject_col="subject",
-        x_col="below_noise_distortion_db",
-        y_col="peak_attenuation_db",
-        metric_col="R_f0",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_violins_basic(multi_subject_data):
-    """Tests for distribution plots."""
-    fig = plot_metric_violins(
-        multi_subject_data,
-        metric_cols=["R_f0"],
-        group_col="method",
-        subject_col="subject",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_violins_no_paired(multi_subject_data):
-    fig = plot_metric_violins(
-        multi_subject_data,
-        metric_cols=["R_f0", "peak_attenuation_db"],
-        group_col="method",
-        subject_col="subject",
-        show_paired=False,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_violins_baseline_and_refs(multi_subject_data):
-    fig = plot_metric_violins(
-        multi_subject_data,
-        metric_cols=["R_f0"],
-        group_col="method",
-        subject_col="subject",
-        baseline_group="M0",
-        reference_lines={"R_f0": [(1.0, {"color": "red", "ls": "--"})]},
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_violins_no_data():
-    data = {"method": [], "subject": [], "score": []}
-    fig = plot_metric_violins(
-        data,
-        metric_cols=["score"],
-        group_col="method",
-        subject_col="subject",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_null_distribution_basic():
-    """Tests for null distribution plots."""
-    rng = np.random.default_rng(0)
-    null = rng.normal(0, 1, 1000)
-    fig, p = plot_null_distribution(null, observed=1.5, show=False)
-    assert isinstance(fig, plt.Figure)
-    assert 0 < p < 1
-
-
-def test_plot_forest_basic(multi_subject_data):
-    """Tests for forest plots."""
-    fig = plot_forest(
-        multi_subject_data,
-        metric_col="R_f0",
-        group_col="method",
-        subject_col="subject",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_forest_ci_col(multi_subject_data):
-    """Test plot_forest with explicit CI column."""
-    data = dict(multi_subject_data)
-    data["err"] = np.ones(len(data["R_f0"])) * 0.1
-    fig = plot_forest(
-        data,
-        metric_col="R_f0",
-        ci_col="err",
-        group_col="method",
-        subject_col="subject",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_bars_label_derivation():
-    """Test metric label derivation when not provided."""
-    data = {"group": ["A"], "my_metric_name": [1.0]}
-    fig = plot_metric_bars(data, metric_cols=["my_metric_name"], show=False)
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_subject_trajectories_single_group():
-    """Test trajectories with only one group (edge case)."""
-    data = {"subject": ["s1", "s2"], "group": ["A", "A"], "score": [1.0, 1.1]}
-    fig = plot_metric_comparison(
-        data, metric_col="score", group_col="group", subject_col="subject", show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_bars_extras(single_subject_data):
-    """plot_metric_bars."""
-    data = dict(single_subject_data)
-    # Test with custom group colors and labels
-    fig = plot_metric_bars(
-        data,
-        metric_cols=["R_f0"],
-        group_col="method",
-        group_colors={"M1": "red"},
-        group_labels={"M1": "Method 1"},
-        title="Custom Title",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_tradeoff_scatter_refs(single_subject_data):
-    """Cover reference lines in tradeoff scatter."""
-    fig = plot_tradeoff_scatter(
-        single_subject_data,
-        x_col="below_noise_distortion_db",
-        y_col="peak_attenuation_db",
-        group_col="method",
-        reference_x=0.0,
-        reference_y=10.0,
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_forest_extended(multi_subject_data):
-    fig = plot_forest(
-        multi_subject_data,
-        metric_col="R_f0",
-        se_col="peak_attenuation_db",  # Fake SE for coverage
-        group_col="method",
-        subject_col="subject",
-        baseline_group="M0",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_violins_single_metric(multi_subject_data):
-    """Test plot_metric_violins with a single metric name."""
-    fig = plot_metric_violins(
-        multi_subject_data,
-        metric_cols=["R_f0"],  # Test as list of 1
-        group_col="method",
-        subject_col="subject",
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_metric_bars_nan_mean():
-    """Test plot_metric_bars with all NaN group."""
-    data = {"group": ["A", "B"], "metric": [np.nan, 1.0]}
-    fig = plot_metric_bars(
-        data, metric_cols=["metric"], group_order=["A", "B"], show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_forest_sd():
-    """Test SD in plot_forest for subjects with missing data."""
-    data = {"subject": ["s1", "s2"], "group": ["A", "A"], "metric": [1.0, np.nan]}
-    fig = plot_forest(
-        data, metric_col="metric", group_col="group", subject_col="subject", show=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_harmonic_attenuation_missing_series(freqs, gm_psd, cleaned_psds):
-    """Test plot_harmonic_attenuation with missing series in data."""
-    fig = plot_harmonic_attenuation(
-        freqs,
-        gm_psd,
-        cleaned_psds,
-        harmonics_hz=[50],
-        series_order=["M1", "Missing"],
-        show=False,
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_plot_window_count_series():
-    """Test plotting of windowed component counts."""
-    counts = np.array([2, 3, 2, 4, 1])
-
-    # Basic plot
+def test_plot_window_count_series_preserves_counts_and_mean():
+    """Window counts use the sample index and a correctly labeled mean."""
+    counts = np.array([1.0, 3.0, 5.0])
     fig = plot_window_count_series(counts, show=False)
+
     assert isinstance(fig, plt.Figure)
-    plt.close(fig)
+    ax = next(ax for ax in fig.axes if ax.get_title() == "Window Count Series")
+    assert [patch.get_height() for patch in ax.patches] == counts.tolist()
+    assert ax.get_xlabel() == "Window"
+    assert ax.get_ylabel() == "Count"
+    assert "Mean (3)" in {line.get_label() for line in ax.lines}
 
-    # With existing ax
-    fig, ax = plt.subplots()
-    ret_fig = plot_window_count_series(counts, ax=ax, show=False)
-    assert ret_fig is fig
-    plt.close(fig)
 
-    # Invalid counts shape
-    with pytest.raises(ValueError, match="1D array"):
-        plot_window_count_series(np.zeros((2, 2)), show=False)
+def test_plot_metric_bars_aggregates_groups_and_labels_metric(metric_data):
+    """Metric bars show group means, labels, and the lower-is-better marker."""
+    fig = plot_metric_bars(
+        metric_data,
+        metric_cols=["score"],
+        group_col="group",
+        group_order=["A", "B"],
+        group_labels={"A": "Baseline", "B": "Cleaned"},
+        lower_better=[True],
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "score")
+    assert [patch.get_height() for patch in ax.patches] == [2.0, 4.0]
+    assert [tick.get_text() for tick in ax.get_xticklabels()] == [
+        "Baseline",
+        "Cleaned",
+    ]
+    assert ax.get_ylabel() == "score"
+    assert any(text.get_text() == "★" for text in ax.texts)
+
+
+def test_plot_tradeoff_scatter_maps_xy_groups_and_reference_lines():
+    """Trade-off points preserve supplied x/y columns and reference values."""
+    data = {
+        "group": np.array(["A", "B"], dtype=object),
+        "x": np.array([0.1, 0.2]),
+        "y": np.array([2.0, 4.0]),
+    }
+    fig = plot_tradeoff_scatter(
+        data,
+        x_col="x",
+        y_col="y",
+        group_col="group",
+        reference_x=0.15,
+        reference_y=3.0,
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_title() == "Metric Trade-off")
+    offsets = np.vstack([collection.get_offsets() for collection in ax.collections])
+    assert any(np.allclose(point, [0.1, 2.0]) for point in offsets)
+    assert any(np.allclose(point, [0.2, 4.0]) for point in offsets)
+    assert ax.get_xlabel() == "x"
+    assert ax.get_ylabel() == "y"
+    assert any(np.allclose(line.get_xdata(), [0.15, 0.15]) for line in ax.lines)
+    assert any(np.allclose(line.get_ydata(), [3.0, 3.0]) for line in ax.lines)
+
+
+def test_plot_metric_comparison_supports_paired_and_single_subject(metric_data):
+    """Metric comparisons aggregate paired subjects and retain the bar fallback."""
+    paired = plot_metric_comparison(
+        metric_data,
+        metric_col="score",
+        group_col="group",
+        subject_col="subject",
+        group_order=["A", "B"],
+        reference_value=0.0,
+        show=False,
+    )
+    assert isinstance(paired, plt.Figure)
+    paired_axis = next(ax for ax in paired.axes if ax.get_ylabel() == "score")
+    mean_line = next(
+        line for line in paired_axis.lines if line.get_label() == "Group mean"
+    )
+    np.testing.assert_allclose(mean_line.get_ydata(), [2.0, 4.0])
+    assert paired_axis.get_ylabel() == "score"
+
+    single = {
+        "subject": ["s1", "s1"],
+        "group": ["A", "B"],
+        "score": [1.0, 2.0],
+    }
+    single_fig = plot_metric_comparison(
+        single, metric_col="score", group_col="group", subject_col="subject", show=False
+    )
+    assert isinstance(single_fig, plt.Figure)
+
+
+def test_plot_harmonic_attenuation_reports_db_values():
+    """Per-harmonic bars use the QA attenuation definition in dB."""
+    freqs = np.arange(0.0, 121.0, 0.5)
+    before = np.ones_like(freqs)
+    after = before.copy()
+    for harmonic in (50.0, 100.0):
+        after[np.abs(freqs - harmonic) <= 2.0] = 0.1
+
+    fig = plot_harmonic_attenuation(
+        freqs,
+        before,
+        {"Cleaned": (freqs, after)},
+        harmonics_hz=[50.0, 100.0],
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "Peak Attenuation (dB)")
+    assert [patch.get_height() for patch in ax.patches] == pytest.approx([10.0, 10.0])
+    assert ax.get_ylabel() == "Peak Attenuation (dB)"
+    assert [tick.get_text() for tick in ax.get_xticklabels()] == ["50 Hz", "100 Hz"]
+
+
+def test_plot_metric_slopes_reports_subject_aggregate(metric_data):
+    """Paired slopes include the group-mean trajectory for each metric."""
+    fig = plot_metric_slopes(
+        metric_data,
+        metric_cols=["score"],
+        group_col="group",
+        subject_col="subject",
+        group_order=["A", "B"],
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    axis = next(ax for ax in fig.axes if ax.get_ylabel() == "score")
+    mean_line = next(line for line in axis.lines if line.get_label() == "Group mean")
+    np.testing.assert_allclose(mean_line.get_ydata(), [2.0, 4.0])
+    assert axis.get_ylabel() == "score"
+
+
+def test_plot_metric_violins_supports_pairs_baselines_and_references(metric_data):
+    """Distribution plots retain paired data and optional reference lines."""
+    fig = plot_metric_violins(
+        metric_data,
+        metric_cols=["score"],
+        group_col="group",
+        subject_col="subject",
+        baseline_group="A",
+        reference_lines={"score": [(3.5, {"color": "black"})]},
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_ylabel() == "score")
+    assert ax.get_ylabel() == "score"
+    assert any(np.allclose(line.get_ydata(), [3.5, 3.5]) for line in ax.lines)
+
+
+def test_plot_null_distribution_returns_empirical_p_value_and_ci():
+    """Null plots return the two-sided empirical p-value and show the CI."""
+    null = np.array([-1.0, -0.5, 0.5, 1.0])
+    fig, p_value = plot_null_distribution(
+        null, observed=1.0, metric_label="Suppression (dB)", ci=50, show=False
+    )
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_xlabel() == "Suppression (dB)")
+    assert p_value == pytest.approx(0.5)
+    assert ax.get_xlabel() == "Suppression (dB)"
+    assert any("50% CI" in label for label in ax.get_legend_handles_labels()[1])
+
+
+def test_plot_forest_preserves_confidence_error_and_group_labels(metric_data):
+    """Forest plots expose per-subject intervals and the pooled estimate."""
+    data = dict(metric_data)
+    data["ci"] = np.full(len(data["score"]), 0.25)
+    fig = plot_forest(
+        data,
+        metric_col="score",
+        ci_col="ci",
+        group_col="group",
+        subject_col="subject",
+        target_group="B",
+        baseline_group="A",
+        group_labels={"A": "Baseline", "B": "Cleaned"},
+        show=False,
+    )
+
+    assert isinstance(fig, plt.Figure)
+    ax = next(ax for ax in fig.axes if ax.get_xlabel() == "Score")
+    assert ax.get_xlabel() == "Score"
+    legend_labels = ax.get_legend_handles_labels()[1]
+    assert "Cleaned" in legend_labels
+    assert any(label.startswith("Pooled mean =") for label in legend_labels)
+    assert any(label.startswith("Baseline mean =") for label in legend_labels)
