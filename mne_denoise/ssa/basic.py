@@ -27,6 +27,7 @@ from .._validation import (
     check_positive_integer,
     check_positive_real,
 )
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._common import (
     _BaseSSATransformer,
     _diagonal_average,
@@ -354,6 +355,7 @@ def compute_basic_ssa(
     max_window: int = 100,
     *,
     window_seconds: float | None = None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Apply frequency-guided Basic SSA independently to every channel.
@@ -379,6 +381,10 @@ def compute_basic_ssa(
     window_seconds : float | None, default=None
         Embedding duration in seconds, mutually exclusive with
         ``window_length``.
+    callback : callable | None, default=None
+        Called synchronously after each completed channel with a structured
+        ``basic_ssa`` channel progress event. Callback return values are
+        ignored and callback exceptions propagate unchanged.
     verbose : bool | str | int | None
         MNE-style logging level. Channel helpers remain silent; this function
         reports one aggregate result at INFO.
@@ -408,6 +414,7 @@ def compute_basic_ssa(
     This function calls :func:`ssa_clean_channel` independently for every
     channel. It implements repeated univariate SSA, not multivariate SSA.
     """
+    callback = _validate_callback(callback)
     X = check_channel_first_data(
         X, name="SSA", allow_epochs=False, min_channels=1, min_times=2
     )
@@ -415,7 +422,7 @@ def compute_basic_ssa(
         raise ValueError("SSA requires at least 3 time samples")
     cleaned = np.empty_like(X)
     records = []
-    for channel in X:
+    for channel_idx, channel in enumerate(X):
         result, info = ssa_clean_channel(
             channel,
             sfreq,
@@ -427,8 +434,17 @@ def compute_basic_ssa(
             window_seconds=window_seconds,
             return_info=True,
         )
-        cleaned[len(records)] = result
+        cleaned[channel_idx] = result
         records.append(info)
+        _emit_progress(
+            callback,
+            method="basic_ssa",
+            stage="channel",
+            current=channel_idx + 1,
+            total=X.shape[0],
+            component=None,
+            metric=float(len(info["dropped_indices"])),
+        )
     info = {
         "method": "basic-frequency",
         "dropped_counts": np.array(
@@ -540,6 +556,7 @@ class SingularSpectrumAnalysis(_BaseSSATransformer):
     """
 
     _requires_sfreq = True
+    _progress_method = "basic_ssa"
 
     def __init__(
         self,
@@ -575,7 +592,11 @@ class SingularSpectrumAnalysis(_BaseSSATransformer):
         )
 
     def _compute_record(
-        self, data: np.ndarray, sfreq: float
+        self,
+        data: np.ndarray,
+        sfreq: float,
+        *,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         # The estimator owns one aggregate SSA report; suppress the core's
         # standalone summary for each record while retaining its computation.
@@ -588,6 +609,7 @@ class SingularSpectrumAnalysis(_BaseSSATransformer):
             self.n_check,
             self.max_window,
             window_seconds=self.window_seconds,
+            callback=callback,
             verbose="WARNING",
         )
 

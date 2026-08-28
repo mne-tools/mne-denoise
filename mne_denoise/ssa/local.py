@@ -32,6 +32,7 @@ from .._validation import (
     check_positive_integer,
     check_positive_real,
 )
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._common import (
     _BaseSSATransformer,
     _diagonal_average,
@@ -310,6 +311,7 @@ def compute_local_ssa(
     max_clusters: int = 10,
     max_window: int = 100,
     random_state: int | None = 0,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Apply local SSA independently to every input channel.
@@ -339,6 +341,10 @@ def compute_local_ssa(
         Maximum delay-vector dimension used by automatic window selection.
     random_state : int | None, default=0
         Random seed passed to k-means.
+    callback : callable | None, default=None
+        Called synchronously after each completed channel with a structured
+        ``local_ssa`` channel progress event. Callback return values are
+        ignored and callback exceptions propagate unchanged.
     verbose : bool | str | int | None
         MNE-style logging level. Channel helpers remain silent; this function
         reports one aggregate result at INFO.
@@ -386,12 +392,13 @@ def compute_local_ssa(
     >>> info["n_clusters"].shape
     (2,)
     """
+    callback = _validate_callback(callback)
     X = check_channel_first_data(
         X, name="local SSA", allow_epochs=False, min_channels=1, min_times=3
     )
     cleaned = np.empty_like(X)
     records = []
-    for channel in X:
+    for channel_idx, channel in enumerate(X):
         result, info = local_ssa_clean_channel(
             channel,
             window_length,
@@ -403,8 +410,17 @@ def compute_local_ssa(
             random_state=random_state,
             return_info=True,
         )
-        cleaned[len(records)] = result
+        cleaned[channel_idx] = result
         records.append(info)
+        _emit_progress(
+            callback,
+            method="local_ssa",
+            stage="channel",
+            current=channel_idx + 1,
+            total=X.shape[0],
+            component=None,
+            metric=float(info["n_clusters"]),
+        )
     info = {
         "method": "local-mdl",
         "window_length": records[0]["window_length"],
@@ -516,6 +532,8 @@ class LocalSingularSpectrumAnalysis(_BaseSSATransformer):
     (2, 500)
     """
 
+    _progress_method = "local_ssa"
+
     def __init__(
         self,
         window_length: int | None = None,
@@ -548,7 +566,11 @@ class LocalSingularSpectrumAnalysis(_BaseSSATransformer):
         )
 
     def _compute_record(
-        self, data: np.ndarray, sfreq: float | None
+        self,
+        data: np.ndarray,
+        sfreq: float | None,
+        *,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         # The estimator owns one aggregate SSA report; suppress the core's
         # standalone summary for each record while retaining its computation.
@@ -561,6 +583,7 @@ class LocalSingularSpectrumAnalysis(_BaseSSATransformer):
             max_clusters=self.max_clusters,
             max_window=self.max_window,
             random_state=self.random_state,
+            callback=callback,
             verbose="WARNING",
         )
 
