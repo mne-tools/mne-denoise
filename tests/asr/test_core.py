@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import inspect
+
 import numpy as np
 import pytest
 
@@ -43,6 +45,121 @@ def test_asrcore_numpy_qc_and_no_repair_cap(synthetic_burst_data):
     assert asr.n_components_reconstructed_.shape == (asr.n_windows_,)
     assert asr.n_components_reconstructed_.sum() == 0
     assert asr.get_calibration_mask().shape == asr.clean_window_mask_.shape
+
+
+def test_asr_fit_progress_is_shared_calibration_stream(synthetic_burst_data):
+    """ASR.fit exposes one calibration event per fitted threshold component."""
+    data, _, _, sfreq = synthetic_burst_data
+    events = []
+    asr = ASR(
+        sfreq=sfreq,
+        cutoff=3.0,
+        calibration="manual",
+        filter_kind="none",
+        verbose=False,
+    )
+    asr.fit(data, callback=events.append)
+
+    assert len(events) == asr.thresholds_.size
+    assert all(event.method == "asr" for event in events)
+    assert all(event.stage == "calibration" for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events], asr.thresholds_, rtol=0.0, atol=1e-12
+    )
+    assert "callback" not in inspect.signature(ASR.__init__).parameters
+    assert "callback" not in vars(asr)
+
+
+def test_asr_continuous_transform_progress_is_numerically_transparent(
+    synthetic_burst_data,
+):
+    """ASR.transform reports windows without changing its numerical output."""
+    data, _, _, sfreq = synthetic_burst_data
+    kwargs = {
+        "sfreq": sfreq,
+        "cutoff": 3.0,
+        "calibration": "manual",
+        "filter_kind": "none",
+        "max_dims": 0.5,
+        "lookahead": 0.0,
+        "verbose": False,
+    }
+    with_callback_model = ASR(**kwargs).fit(data)
+    without_callback_model = ASR(**kwargs).fit(data)
+
+    events = []
+    cleaned, diagnostics = with_callback_model.transform(
+        data,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+    reference_cleaned, reference_diagnostics = without_callback_model.transform(
+        data,
+        return_diagnostics=True,
+    )
+
+    assert len(events) == diagnostics["n_windows"]
+    assert all(event.method == "asr" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert all(event.component is None for event in events)
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert [event.total for event in events] == [len(events)] * len(events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        diagnostics["n_components_reconstructed"],
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
+def test_asr_epoched_transform_reports_epochs_without_inner_windows(
+    synthetic_burst_data,
+):
+    """Epoched transforms emit one outer event per finished epoch."""
+    mne = pytest.importorskip("mne")
+    data, _, _, sfreq = synthetic_burst_data
+    n_epochs = 3
+    n_times = data.shape[1] // n_epochs
+    info = mne.create_info(data.shape[0], sfreq, "eeg")
+    epochs = mne.EpochsArray(
+        data.reshape(data.shape[0], n_epochs, n_times).transpose(1, 0, 2),
+        info,
+        verbose=False,
+    )
+    asr = ASR(
+        sfreq=sfreq,
+        cutoff=3.0,
+        calibration="manual",
+        filter_kind="none",
+        lookahead=0.0,
+        verbose=False,
+    ).fit(epochs)
+
+    events = []
+    _, diagnostics = asr.transform(
+        epochs,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+
+    assert len(events) == n_epochs
+    assert [event.method for event in events] == ["asr"] * n_epochs
+    assert [event.stage for event in events] == ["epoch"] * n_epochs
+    assert [event.current for event in events] == list(range(1, n_epochs + 1))
+    assert [event.total for event in events] == [n_epochs] * n_epochs
+    assert [event.component for event in events] == [None] * n_epochs
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        [
+            diag["fraction_reconstructed_samples"]
+            for diag in diagnostics["epoch_diagnostics"]
+        ],
+    )
 
 
 def test_asr_cleaning_is_invariant_to_eeg_unit_scaling(synthetic_burst_data):

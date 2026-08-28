@@ -38,6 +38,94 @@ def test_calibrate_asr_returns_state_and_diagnostics(synthetic_burst_data):
     assert diagnostics["threshold_fit_interval"].shape == (data.shape[0], 2)
 
 
+def test_calibrate_asr_progress_reports_fitted_component_thresholds():
+    """Calibration emits one completed event for each fitted component."""
+    events = []
+    state, _ = calibrate_asr(
+        _eeg(),
+        SFREQ,
+        cutoff=5.0,
+        calibration="manual",
+        filter_kind="none",
+        callback=events.append,
+    )
+
+    assert len(events) == state.thresholds.size
+    assert [event.method for event in events] == ["asr"] * state.thresholds.size
+    assert [event.stage for event in events] == ["calibration"] * state.thresholds.size
+    assert [event.current for event in events] == list(
+        range(1, state.thresholds.size + 1)
+    )
+    assert [event.total for event in events] == [state.thresholds.size] * len(events)
+    assert [event.component for event in events] == list(
+        range(1, state.thresholds.size + 1)
+    )
+    np.testing.assert_allclose(
+        [event.metric for event in events], state.thresholds, rtol=0.0, atol=1e-12
+    )
+
+
+def test_calibrate_asr_callback_is_numerically_transparent():
+    """A calibration callback does not alter fitted state or diagnostics."""
+    data = _eeg()
+    without_callback, without_diag = calibrate_asr(
+        data,
+        SFREQ,
+        cutoff=5.0,
+        calibration="manual",
+        filter_kind="none",
+    )
+    with_callback, with_diag = calibrate_asr(
+        data,
+        SFREQ,
+        cutoff=5.0,
+        calibration="manual",
+        filter_kind="none",
+        callback=lambda event: None,
+    )
+
+    for name in ("M", "T", "thresholds", "calibration_patterns", "cov"):
+        np.testing.assert_allclose(
+            getattr(without_callback, name), getattr(with_callback, name)
+        )
+    assert without_callback.rank == with_callback.rank
+    for name in (
+        "threshold_mu",
+        "threshold_sigma",
+        "threshold_beta",
+        "threshold_fit_error",
+        "threshold_fit_interval",
+    ):
+        np.testing.assert_allclose(without_diag[name], with_diag[name])
+
+
+def test_calibrate_asr_callback_validation_and_exceptions():
+    """Calibration validates callbacks and propagates callback exceptions."""
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        calibrate_asr(
+            _eeg(), SFREQ, calibration="manual", filter_kind="none", callback=1
+        )
+
+    class CalibrationCallbackError(RuntimeError):
+        pass
+
+    expected = CalibrationCallbackError("calibration callback failed")
+
+    def callback(event):
+        del event
+        raise expected
+
+    with pytest.raises(CalibrationCallbackError) as caught:
+        calibrate_asr(
+            _eeg(),
+            SFREQ,
+            calibration="manual",
+            filter_kind="none",
+            callback=callback,
+        )
+    assert caught.value is expected
+
+
 def test_calibrate_asr_low_memory_handles_remainder_two(rng):
     """Low-memory calibration handles the ASRpy block remainder edge case."""
     sfreq = 250.0

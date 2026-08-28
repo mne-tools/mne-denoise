@@ -35,6 +35,7 @@ import numpy as np
 
 from .._data import extract_data_from_mne
 from .._logging import logger, verbose
+from ..progress import _ProgressCallback, _validate_callback
 from ._covariance import (
     _covariance_stack_bytes,
     _process_memory_info,
@@ -77,6 +78,7 @@ def process_guided_asr(
     max_mem_mb: int | None = 512,
     lookahead: float | None = None,
     stepsize: int | None = None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """
@@ -127,6 +129,10 @@ def process_guided_asr(
     stepsize : int | None
         Samples between reconstruction-matrix updates. ``None`` uses half a
         window.
+    callback : callable | None
+        Called synchronously after each completed reconstruction-matrix update
+        with a GuidedASR window progress event. Callback return values are
+        ignored and callback exceptions propagate unchanged.
     verbose : bool | str | int | None
         MNE-style logging level. Guided reconstruction details are emitted at
         DEBUG; the estimator owns the user-facing INFO report.
@@ -165,6 +171,7 @@ def process_guided_asr(
     ...     data, sfreq=250.0, state=state, reconstruction="soft"
     ... )
     """
+    callback = _validate_callback(callback)
     if reconstruction not in ("soft", "hard"):
         raise ValueError("reconstruction must be 'soft' or 'hard'")
     if not np.isfinite(guidance_strength) or not 0 <= guidance_strength <= 1:
@@ -276,6 +283,8 @@ def process_guided_asr(
         use_rolling_covariance=use_rolling_covariance,
         component_weight_function=component_weight_function,
         return_component_weights=True,
+        callback=callback,
+        progress_method="guided_asr",
     )
     weights = diagnostics.pop("component_weights")
     diagnostics.update(
@@ -427,6 +436,8 @@ class GuidedASR(ASR):
     >>> guided = GuidedASR(sfreq=250.0, experimental=True)
     """
 
+    _progress_method = "guided_asr"
+
     def __init__(
         self,
         sfreq: float | None = None,
@@ -512,6 +523,7 @@ class GuidedASR(ASR):
         *,
         calibration=None,
         calibration_mask=None,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> GuidedASR:
         """
@@ -533,6 +545,10 @@ class GuidedASR(ASR):
         calibration_mask : ndarray | None, default=None
             Optional boolean sample mask for two-dimensional calibration data
             or Raw input after annotation exclusion.
+        callback : callable | None
+            Called synchronously after each shared ASR threshold calibration
+            component completes. Callback return values are ignored and
+            callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -555,6 +571,7 @@ class GuidedASR(ASR):
 
         >>> guided.fit(target_raw, calibration=clean_raw)
         """
+        callback = _validate_callback(callback)
         if self.reconstruction not in ("soft", "hard"):
             raise ValueError("reconstruction must be 'soft' or 'hard'")
         if (
@@ -577,7 +594,13 @@ class GuidedASR(ASR):
         if self.reconstruction == "soft":
             warnings.warn(_EXPERIMENTAL_DISCLAIMER, UserWarning, stacklevel=2)
 
-        super().fit(X, y=y, calibration=calibration, calibration_mask=calibration_mask)
+        super().fit(
+            X,
+            y=y,
+            calibration=calibration,
+            calibration_mask=calibration_mask,
+            callback=callback,
+        )
 
         # Bias operators define artifact / brain *subspaces*, so they are
         # estimated from the primary recording ``X`` (which contains those
@@ -628,7 +651,13 @@ class GuidedASR(ASR):
 
     # -- transform ---------------------------------------------------------
 
-    def _process(self, selected: np.ndarray, sfreq: float):
+    def _process(
+        self,
+        selected: np.ndarray,
+        sfreq: float,
+        *,
+        callback: _ProgressCallback | None = None,
+    ):
         return process_guided_asr(
             selected,
             sfreq,
@@ -645,4 +674,5 @@ class GuidedASR(ASR):
             max_mem_mb=self.max_mem_mb,
             lookahead=self.lookahead,
             stepsize=self.stepsize,
+            callback=callback,
         )

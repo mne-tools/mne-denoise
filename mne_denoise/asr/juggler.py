@@ -25,6 +25,7 @@ from scipy import spatial, stats
 
 from .._data import extract_data_from_mne
 from .._logging import logger, verbose
+from ..progress import _validate_callback
 from ._calibration import calibrate_asr
 from ._filters import _design_statistics_filter, _lfilter_channels
 from ._validation import (
@@ -356,6 +357,7 @@ class JugglerASR(ASR):
         calibration: BaseRaw | BaseEpochs | np.ndarray | None = None,
         calibration_mask: np.ndarray | None = None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> JugglerASR:
         """Fit JugglerASR from a contaminated or clean calibration stream.
@@ -374,6 +376,10 @@ class JugglerASR(ASR):
             Separate calibration dataset. If None, `X` is used.
         calibration_mask : np.ndarray | None, default=None
             Optional boolean mask shape `(n_times,)` to pre-select samples.
+        callback : callable | None
+            Called synchronously after each shared ASR threshold calibration
+            component completes. Callback return values are ignored and
+            callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -381,6 +387,7 @@ class JugglerASR(ASR):
             The fitted instance.
         """
         del y
+        callback = _validate_callback(callback)
         _validate_backend_params(
             method=self.method,
             experimental=self.experimental,
@@ -472,6 +479,7 @@ class JugglerASR(ASR):
             filter_kind="none",
             method="standard",
             max_mem_mb=self.max_mem_mb,
+            callback=callback,
         )
         state.filter_b = np.asarray(reference_info["selection_filter_b"]).copy()
         state.filter_a = np.asarray(reference_info["selection_filter_a"]).copy()

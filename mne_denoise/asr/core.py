@@ -28,6 +28,7 @@ from .. import _mne
 from .._data import extract_data_from_mne, reconstruct_mne_object
 from .._logging import logger, verbose
 from .._validation import check_channel_layout
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._annotations import (
     _calibration_annotations,
     _rejection_annotations,
@@ -235,6 +236,8 @@ class ASR(BaseEstimator, TransformerMixin):
     >>> clean_target_raw = asr.transform(target_raw)
     """
 
+    _progress_method = "asr"
+
     def __init__(
         self,
         sfreq: float | None = None,
@@ -309,6 +312,7 @@ class ASR(BaseEstimator, TransformerMixin):
         *,
         calibration: BaseRaw | BaseEpochs | np.ndarray | None = None,
         calibration_mask: np.ndarray | None = None,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> ASR:
         """Fit ASR calibration state.
@@ -325,6 +329,10 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration_mask : ndarray | None, default=None
             Optional boolean sample mask for 2D calibration arrays or Raw
             inputs after annotation exclusion.
+        callback : callable | None
+            Called synchronously after each fitted principal-component threshold
+            with an ASR calibration progress event. Callback return values are
+            ignored and callback exceptions propagate unchanged.
 
         Returns
         -------
@@ -348,6 +356,7 @@ class ASR(BaseEstimator, TransformerMixin):
         >>> clean_target = asr.transform(target_raw)
         """
         del y
+        callback = _validate_callback(callback)
         _validate_backend_params(
             method=self.method,
             experimental=self.experimental,
@@ -409,6 +418,7 @@ class ASR(BaseEstimator, TransformerMixin):
             filter_kind=self.filter_kind,
             method=self.method,
             max_mem_mb=self.max_mem_mb,
+            callback=callback,
         )
 
         self.state_ = state
@@ -453,6 +463,8 @@ class ASR(BaseEstimator, TransformerMixin):
         self,
         data: np.ndarray,
         sfreq: float,
+        *,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         """Process one continuous channel-by-time array.
 
@@ -473,6 +485,7 @@ class ASR(BaseEstimator, TransformerMixin):
             lookahead=self.lookahead,
             stepsize=self.stepsize,
             method=self.method,
+            callback=callback,
         )
 
     @verbose
@@ -483,6 +496,7 @@ class ASR(BaseEstimator, TransformerMixin):
         copy: bool | None = None,
         return_diagnostics: bool = False,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
         """Apply the fitted ASR model.
@@ -497,6 +511,11 @@ class ASR(BaseEstimator, TransformerMixin):
             Reserved API flag. Transform returns a new object/array.
         return_diagnostics : bool, default=False
             If True, return ``(cleaned, diagnostics)``.
+        callback : callable | None
+            Called synchronously after each completed reconstruction window for
+            continuous input, or after each completed epoch for epoched input.
+            Callback return values are ignored and callback exceptions propagate
+            unchanged.
 
         Returns
         -------
@@ -517,6 +536,7 @@ class ASR(BaseEstimator, TransformerMixin):
         >>> clean_data, diagnostics = asr.transform(data, return_diagnostics=True)
         """
         del y, copy
+        callback = _validate_callback(callback)
         self._check_is_fitted()
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
             X, auto_pick=True
@@ -541,10 +561,18 @@ class ASR(BaseEstimator, TransformerMixin):
         self._warn_preprocessing_state(orig_inst, mne_type)
 
         if mne_type == "epochs":
-            cleaned_data, diagnostics = self._transform_epochs(data, sfreq)
+            cleaned_data, diagnostics = self._transform_epochs(
+                data,
+                sfreq,
+                callback=callback,
+            )
         else:
             selected = np.asarray(data, dtype=np.float64)
-            selected_clean, diagnostics = self._process(selected, sfreq)
+            selected_clean, diagnostics = self._process(
+                selected,
+                sfreq,
+                callback=callback,
+            )
             if mne_type == "raw" and self.reject_by_annotation:
                 good_mask = _create_good_sample_mask_from_mne(
                     orig_inst, self.skip_by_annotation
@@ -807,6 +835,8 @@ class ASR(BaseEstimator, TransformerMixin):
         self,
         data: np.ndarray,
         sfreq: float,
+        *,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         """Apply ASR reconstruction to epoched data.
 
@@ -819,6 +849,9 @@ class ASR(BaseEstimator, TransformerMixin):
             The epoched data array to reconstruct.
         sfreq : float
             The sampling frequency of the data in Hz.
+        callback : callable | None
+            Called once after each epoch has completed reconstruction and any
+            optional rejection-mask work.
 
         Returns
         -------
@@ -838,9 +871,10 @@ class ASR(BaseEstimator, TransformerMixin):
         rejection_keep_masks: list[np.ndarray] = []
         rejection_remove_masks: list[np.ndarray] = []
         counts: list[np.ndarray] = []
-        for epoch_idx in range(cleaned.shape[0]):
+        n_epochs = cleaned.shape[0]
+        for epoch_idx in range(n_epochs):
             selected = cleaned[epoch_idx, :, :]
-            selected_clean, diag = self._process(selected, sfreq)
+            selected_clean, diag = self._process(selected, sfreq, callback=None)
             cleaned[epoch_idx, :, :] = selected_clean
             if self.window_criterion is not None:
                 rejection_mask, rejection_diag = compute_clean_window_mask(
@@ -877,6 +911,15 @@ class ASR(BaseEstimator, TransformerMixin):
                 rejection_keep_masks.append(diag["rejection_window_keep_mask"])
                 rejection_remove_masks.append(diag["rejection_window_remove_mask"])
             counts.append(diag["n_components_reconstructed"])
+            _emit_progress(
+                callback,
+                method=self._progress_method,
+                stage="epoch",
+                current=epoch_idx + 1,
+                total=n_epochs,
+                component=None,
+                metric=float(diag["fraction_reconstructed_samples"]),
+            )
         diagnostics: dict[str, Any] = {
             "epoch_diagnostics": epoch_diags,
             "window_starts": np.concatenate(starts_all)

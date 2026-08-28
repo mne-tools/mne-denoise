@@ -256,6 +256,64 @@ def test_juggler_asr_dbscan_fit_transform_round_trip():
     assert np.var(cleaned) <= np.var(contaminated) * 1.05
 
 
+def test_juggler_fit_progress_only_reports_shared_asr_calibration(
+    synthetic_burst_data,
+):
+    """Juggler selection is silent; shared threshold fitting reports ASR events."""
+    data, _, _, sfreq = synthetic_burst_data
+    events = []
+    asr = JugglerASR(
+        sfreq=sfreq,
+        cutoff=3.0,
+        strategy="dbscan",
+        filter_kind="none",
+        selection_filter_kind="none",
+        verbose=False,
+    )
+    asr.fit(data, callback=events.append)
+
+    assert len(events) == asr.thresholds_.size
+    assert all(event.method == "asr" for event in events)
+    assert all(event.stage == "calibration" for event in events)
+    assert not any(event.stage in {"selection", "dbscan", "gev"} for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events], asr.thresholds_, rtol=0.0, atol=1e-12
+    )
+
+
+def test_juggler_transform_progress_uses_standard_asr_windows(synthetic_burst_data):
+    """Juggler inherits standard ASR reconstruction progress semantics."""
+    data, _, _, sfreq = synthetic_burst_data
+    asr = JugglerASR(
+        sfreq=sfreq,
+        cutoff=3.0,
+        strategy="dbscan",
+        filter_kind="none",
+        selection_filter_kind="none",
+        lookahead=0.0,
+        verbose=False,
+    ).fit(data)
+    events = []
+    _, diagnostics = asr.transform(
+        data,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+
+    assert len(events) == diagnostics["n_windows"]
+    assert all(event.method == "asr" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert [event.total for event in events] == [len(events)] * len(events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        diagnostics["n_components_reconstructed"],
+        rtol=0.0,
+        atol=0.0,
+    )
+
+
 def test_juggler_asr_gev_fit_transform_round_trip():
     """JugglerASR(gev) should fit + transform end-to-end on synthetic data."""
     sfreq = 250.0

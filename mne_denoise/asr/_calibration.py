@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 
 from .._logging import logger, verbose
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._covariance import _aggregate_block_covariances
 from ._distribution import fit_rms_distribution
 from ._filters import _design_statistics_filter, _lfilter_channels
@@ -61,6 +62,7 @@ def calibrate_asr(
     filter_kind: str = "none",
     method: str = "standard",
     max_mem_mb: int | None = 512,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[ASRState, dict[str, Any]]:
     """Calibrate a standard ASR model from continuous data.
@@ -106,6 +108,10 @@ def calibrate_asr(
         high-pass filter, and ``'none'`` avoids implicit filtering.
     max_mem_mb : int | None
         Reserved memory limit for future chunking. Present for API stability.
+    callback : callable | None
+        Called synchronously after each principal-component threshold is fitted
+        with an ASR calibration progress event. Callback return values are
+        ignored and callback exceptions propagate unchanged.
     verbose : bool | str | int | None
         MNE-style logging level. Calibration details are emitted at DEBUG;
         the owning estimator reports the user-facing calibration result.
@@ -129,6 +135,7 @@ def calibrate_asr(
     >>> print(f"Threshold matrix shape: {state.T.shape}")
     Threshold matrix shape: (10, 10)
     """
+    callback = _validate_callback(callback)
     _validate_common_params(
         sfreq=sfreq,
         cutoff=cutoff,
@@ -229,6 +236,7 @@ def calibrate_asr(
         cutoff=cutoff,
         min_clean_fraction=min_clean_fraction,
         max_dropout_fraction=max_dropout_fraction,
+        callback=callback,
     )
     T = np.diag(thresholds) @ V.T
 
@@ -295,6 +303,7 @@ def _fit_component_thresholds(
     cutoff: float,
     min_clean_fraction: float,
     max_dropout_fraction: float,
+    callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Fit threshold statistics for all principal components.
 
@@ -356,6 +365,15 @@ def _fit_component_thresholds(
         fit_errors[comp_idx] = info["fit_error"]
         fit_intervals[comp_idx] = info["fit_interval"]
         thresholds[comp_idx] = mu + cutoff * sigma
+        _emit_progress(
+            callback,
+            method="asr",
+            stage="calibration",
+            current=comp_idx + 1,
+            total=projected.shape[0],
+            component=comp_idx + 1,
+            metric=float(thresholds[comp_idx]),
+        )
     info = {
         "mu": mu_values,
         "sigma": sigma_values,

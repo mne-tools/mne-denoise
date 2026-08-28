@@ -37,6 +37,117 @@ def test_process_asr_reduces_synthetic_bursts(synthetic_burst_data, method):
     assert after < before
 
 
+@pytest.mark.parametrize("method", ["standard", "riemannian", "riemannian_windowed"])
+def test_process_asr_progress_is_one_ordered_stream_per_backend(
+    synthetic_burst_data, method
+):
+    """Each ASR backend reports completed reconstruction updates once."""
+    data, _, _, sfreq = synthetic_burst_data
+    calibration_method = "riemannian" if method.startswith("riemannian") else "standard"
+    state, _ = calibrate_asr(
+        data,
+        sfreq,
+        cutoff=3.0,
+        calibration="manual",
+        filter_kind="none",
+        method=calibration_method,
+    )
+
+    events = []
+    cleaned, diagnostics = process_asr(
+        data,
+        sfreq,
+        state,
+        window_length=0.5,
+        max_dims=0.5,
+        lookahead=0.0,
+        method=method,
+        callback=events.append,
+    )
+    reference_cleaned, reference_diagnostics = process_asr(
+        data,
+        sfreq,
+        state,
+        window_length=0.5,
+        max_dims=0.5,
+        lookahead=0.0,
+        method=method,
+    )
+
+    assert len(events) == diagnostics["n_windows"]
+    assert [event.method for event in events] == ["asr"] * len(events)
+    assert [event.stage for event in events] == ["window"] * len(events)
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert [event.total for event in events] == [len(events)] * len(events)
+    assert [event.component for event in events] == [None] * len(events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        diagnostics["n_components_reconstructed"],
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
+def test_process_asr_callback_exception_propagates_unchanged(synthetic_burst_data):
+    """A reconstruction callback exception is not caught by ASR."""
+    data, _, _, sfreq = synthetic_burst_data
+    state, _ = calibrate_asr(
+        data,
+        sfreq,
+        cutoff=3.0,
+        calibration="manual",
+        filter_kind="none",
+    )
+
+    class ReconstructionCallbackError(RuntimeError):
+        pass
+
+    expected = ReconstructionCallbackError("reconstruction callback failed")
+
+    def callback(event):
+        del event
+        raise expected
+
+    with pytest.raises(ReconstructionCallbackError) as caught:
+        process_asr(
+            data,
+            sfreq,
+            state,
+            max_dims=0.5,
+            lookahead=0.0,
+            callback=callback,
+        )
+    assert caught.value is expected
+
+
+def test_process_asr_identity_path_emits_no_progress(synthetic_burst_data):
+    """The continuous identity path has no reconstruction updates."""
+    data, _, _, sfreq = synthetic_burst_data
+    state, _ = calibrate_asr(
+        data,
+        sfreq,
+        calibration="manual",
+        filter_kind="none",
+    )
+    events = []
+    cleaned, diagnostics = process_asr(
+        data,
+        sfreq,
+        state,
+        max_dims=0.0,
+        callback=events.append,
+    )
+
+    assert events == []
+    np.testing.assert_array_equal(cleaned, data)
+    assert diagnostics["memory_mode"] == "identity"
+
+
 def test_process_asr_low_memory_matches_full_path(synthetic_burst_data):
     """Low-memory rolling covariance processing matches the full path."""
     data, _, _, sfreq = synthetic_burst_data

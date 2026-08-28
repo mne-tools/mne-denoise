@@ -425,6 +425,121 @@ def test_process_guided_asr_validates_public_parameters():
         process_guided_asr(X, SFREQ, fitted.state_, guidance_strength=1.1)
 
 
+def test_process_guided_asr_progress_is_numerically_transparent():
+    """Guided soft reconstruction emits one ordered event per update."""
+    X = _eeg()
+    fitted = ASR(
+        sfreq=SFREQ,
+        cutoff=20.0,
+        calibration="manual",
+        filter_kind="none",
+        picks=None,
+        verbose=False,
+    ).fit(X)
+
+    events = []
+    cleaned, diagnostics = process_guided_asr(
+        X,
+        SFREQ,
+        fitted.state_,
+        reconstruction="soft",
+        max_dims=0.5,
+        lookahead=0.0,
+        callback=events.append,
+    )
+    reference_cleaned, reference_diagnostics = process_guided_asr(
+        X,
+        SFREQ,
+        fitted.state_,
+        reconstruction="soft",
+        max_dims=0.5,
+        lookahead=0.0,
+    )
+
+    assert len(events) == diagnostics["n_windows"]
+    assert all(event.method == "guided_asr" for event in events)
+    assert all(event.stage == "window" for event in events)
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert [event.total for event in events] == [len(events)] * len(events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        diagnostics["n_components_reconstructed"],
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_allclose(cleaned, reference_cleaned)
+    np.testing.assert_array_equal(
+        diagnostics["n_components_reconstructed"],
+        reference_diagnostics["n_components_reconstructed"],
+    )
+
+
+def test_guided_fit_progress_is_shared_asr_calibration():
+    """GuidedASR.fit emits only the shared ASR calibration stream."""
+    X = _eeg(n_times=4000)
+    events = []
+    guided = GuidedASR(
+        sfreq=SFREQ,
+        cutoff=20.0,
+        calibration="manual",
+        filter_kind="none",
+        reconstruction="hard",
+        picks=None,
+        verbose=False,
+    )
+    guided.fit(X, callback=events.append)
+
+    assert len(events) == guided.thresholds_.size
+    assert all(event.method == "asr" for event in events)
+    assert all(event.stage == "calibration" for event in events)
+    assert not any(event.method == "guided_asr" for event in events)
+
+
+def test_guided_epoched_transform_reports_outer_epochs_only():
+    """Guided epoch transforms do not expose nested reconstruction windows."""
+    mne = pytest.importorskip("mne")
+    X = _eeg(n_times=6000)
+    n_epochs = 3
+    info = mne.create_info(8, SFREQ, "eeg")
+    epochs = mne.EpochsArray(
+        X.reshape(8, n_epochs, -1).transpose(1, 0, 2) * 1e-6,
+        info,
+        verbose=False,
+    )
+    guided = GuidedASR(
+        sfreq=SFREQ,
+        cutoff=20.0,
+        calibration="manual",
+        filter_kind="none",
+        reconstruction="hard",
+        picks=None,
+        lookahead=0.0,
+        verbose=False,
+    ).fit(epochs)
+
+    events = []
+    _, diagnostics = guided.transform(
+        epochs,
+        callback=events.append,
+        return_diagnostics=True,
+    )
+
+    assert len(events) == n_epochs
+    assert [event.method for event in events] == ["guided_asr"] * n_epochs
+    assert [event.stage for event in events] == ["epoch"] * n_epochs
+    assert [event.current for event in events] == list(range(1, n_epochs + 1))
+    assert [event.total for event in events] == [n_epochs] * n_epochs
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        [
+            diag["fraction_reconstructed_samples"]
+            for diag in diagnostics["epoch_diagnostics"]
+        ],
+    )
+
+
 # ---------------------------------------------------------------------------
 # Diagnostics / annotations / guards
 # ---------------------------------------------------------------------------

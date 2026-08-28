@@ -16,6 +16,7 @@ import numpy as np
 
 from .._blending import raised_cosine_ramp
 from .._logging import logger, verbose
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 from ._covariance import (
     _ChunkedMovingCovariances,
     _covariance_chunk_blocks,
@@ -191,6 +192,7 @@ def process_asr(
     lookahead: float | None = None,
     stepsize: int | None = None,
     method: str | None = None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Apply a calibrated ASR model to continuous data.
@@ -226,6 +228,10 @@ def process_asr(
         ``floor(sfreq * window_length / 2)``, matching the standard algorithm defaults.
     method : {'standard', 'riemannian'} | None
         Covariance geometry for processing. If ``None``, use ``state.method``.
+    callback : callable | None
+        Called synchronously after each completed reconstruction-matrix update
+        with an ASR window progress event. Callback return values are ignored
+        and callback exceptions propagate unchanged.
     verbose : bool | str | int | None
         MNE-style logging level. Processing details are emitted at DEBUG; the
         owning estimator reports the user-facing result at INFO.
@@ -250,6 +256,7 @@ def process_asr(
     >>> print(f"Cleaned data shape: {cleaned_data.shape}")
     Cleaned data shape: (10, 2000)
     """
+    callback = _validate_callback(callback)
     if method is None:
         method = state.method
     if method not in ("standard", "riemannian", "riemannian_windowed"):
@@ -318,6 +325,7 @@ def process_asr(
             win_len=win_len,
             regularization=regularization,
             store_reconstruction_matrices=store_reconstruction_matrices,
+            callback=callback,
         )
         diagnostics.update(
             _process_memory_info(
@@ -354,6 +362,7 @@ def process_asr(
             win_len=win_len,
             store_reconstruction_matrices=store_reconstruction_matrices,
             use_rolling_covariance=use_rolling_covariance,
+            callback=callback,
         )
         diagnostics.update(
             _process_memory_info(
@@ -401,7 +410,7 @@ def process_asr(
     last_R = eye
     last_trivial = True
     last_n = 0
-    for n in update_at:
+    for progress_idx, n in enumerate(update_at, start=1):
         if covariance_iter is None:
             assert Xcov_flat is not None
             Cw = Xcov_flat[:, n - 1].reshape(n_channels, n_channels, order="F")
@@ -451,6 +460,15 @@ def process_asr(
         last_n = int(n)
         last_R = R
         last_trivial = trivial
+        _emit_progress(
+            callback,
+            method="asr",
+            stage="window",
+            current=progress_idx,
+            total=len(update_at),
+            component=None,
+            metric=float(n_bad),
+        )
 
     X_clean = data_stream[:, lookahead_samples : lookahead_samples + n_times].copy()
 
@@ -557,6 +575,7 @@ def _process_asr_riemannian(
     win_len: int,
     regularization: float,
     store_reconstruction_matrices: bool,
+    callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Apply the standard Riemannian chunk covariance backend.
 
@@ -623,7 +642,7 @@ def _process_asr_riemannian(
     last_R = eye
     last_trivial = True
     last_n = 0
-    for n in update_at:
+    for progress_idx, n in enumerate(update_at, start=1):
         applied = (not trivial) or (not last_trivial)
         if applied and n > last_n:
             subrange = slice(last_n, n)
@@ -649,6 +668,15 @@ def _process_asr_riemannian(
         last_n = int(n)
         last_R = R
         last_trivial = trivial
+        _emit_progress(
+            callback,
+            method="asr",
+            stage="window",
+            current=progress_idx,
+            total=len(update_at),
+            component=None,
+            metric=float(n_bad),
+        )
 
     X_clean = data_stream[:, lookahead_samples : lookahead_samples + n_times].copy()
     n_reconstructed_arr = np.asarray(n_reconstructed, dtype=int)
@@ -702,6 +730,8 @@ def _process_asr_windowed(
     win_len: int,
     store_reconstruction_matrices: bool,
     use_rolling_covariance: bool,
+    callback: _ProgressCallback | None = None,
+    progress_method: str = "asr",
     component_weight_function: Callable[
         [np.ndarray, np.ndarray, np.ndarray, np.ndarray], np.ndarray
     ]
@@ -779,7 +809,7 @@ def _process_asr_windowed(
     last_R = eye
     last_trivial = True
     last_n = 0
-    for n in update_at:
+    for progress_idx, n in enumerate(update_at, start=1):
         if covariance_iter is None:
             assert Xcov_flat is not None
             Cw = Xcov_flat[:, n - 1].reshape(n_channels, n_channels, order="F")
@@ -859,6 +889,15 @@ def _process_asr_windowed(
         last_n = int(n)
         last_R = R
         last_trivial = trivial
+        _emit_progress(
+            callback,
+            method=progress_method,
+            stage="window",
+            current=progress_idx,
+            total=len(update_at),
+            component=None,
+            metric=float(n_bad),
+        )
 
     X_clean = data_stream[:, lookahead_samples : lookahead_samples + n_times].copy()
     n_reconstructed_arr = np.asarray(n_reconstructed, dtype=int)
@@ -904,6 +943,7 @@ def _process_asr_riemannian_windowed(
     win_len: int,
     store_reconstruction_matrices: bool,
     use_rolling_covariance: bool,
+    callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Run standard cutoff-sensitive per-window Riemannian ASR."""
     return _process_asr_windowed(
@@ -919,6 +959,7 @@ def _process_asr_riemannian_windowed(
         win_len=win_len,
         store_reconstruction_matrices=store_reconstruction_matrices,
         use_rolling_covariance=use_rolling_covariance,
+        callback=callback,
     )
 
 
