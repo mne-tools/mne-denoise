@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import numpy as np
@@ -667,6 +668,17 @@ def test_one_block_covering_everything_equals_the_global_fit(rng):
     np.testing.assert_allclose(blocked, globally, atol=1e-10)
     assert info["n_blocks"] == 1
 
+    events = []
+    blocked_with_callback, _ = compute_bss_cca(
+        data,
+        sfreq=SFREQ,
+        segment_len=1000.0,
+        n_remove=2,
+        callback=events.append,
+    )
+    assert events == []
+    np.testing.assert_allclose(blocked_with_callback, blocked, atol=1e-10)
+
 
 def test_block_wise_diagnostics_are_per_block(rng):
     """Blocked mode reports one operator and span per block."""
@@ -676,6 +688,120 @@ def test_block_wise_diagnostics_are_per_block(rng):
     assert len(info["cleaning_matrix"]) == 3
     assert len(info["correlations"]) == 3
     assert info["spans"] == ((0, 2500), (2500, 5000), (5000, 7500))
+
+
+@pytest.mark.parametrize("overlap", [0.0, 0.5])
+def test_segmented_callback_reports_completed_operator_blocks(rng, overlap):
+    """Segmented progress follows fitted operators, including overlap."""
+    data = rng.standard_normal((5, 1500))
+    events = []
+    cleaned, info = compute_bss_cca(
+        data,
+        sfreq=SFREQ,
+        segment_len=2.0,
+        overlap=overlap,
+        n_remove=1,
+        callback=events.append,
+    )
+
+    n_block = int(SFREQ * 2.0)
+    hop = max(1, n_block - int(np.floor(overlap * n_block + 0.5)))
+    bounds = _segment_bounds(data.shape[-1], n_block=n_block, hop=hop)
+
+    assert len(events) == len(bounds) == info["n_blocks"]
+    assert [(event.current, event.total) for event in events] == [
+        (index, len(bounds)) for index in range(1, len(bounds) + 1)
+    ]
+    assert all(event.method == "bss_cca" for event in events)
+    assert all(event.stage == "block" for event in events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        [float(np.mean(correlations)) for correlations in info["correlations"]],
+    )
+    assert info["spans"] == tuple(bound[:2] for bound in bounds)
+    assert cleaned.shape == data.shape
+
+
+@pytest.mark.parametrize("shape", [(6, 1000), (4, 3, 250)])
+def test_global_callback_is_silent_and_numerically_transparent(rng, shape):
+    """A global BSS-CCA fit accepts callbacks but emits no events."""
+    data = rng.standard_normal(shape)
+    reference, reference_info = compute_bss_cca(data, n_remove=2)
+    events = []
+    cleaned, info = compute_bss_cca(data, n_remove=2, callback=events.append)
+
+    assert events == []
+    np.testing.assert_allclose(cleaned, reference, atol=1e-12)
+    np.testing.assert_allclose(info["correlations"], reference_info["correlations"])
+    np.testing.assert_allclose(info["filters"], reference_info["filters"])
+    np.testing.assert_allclose(info["patterns"], reference_info["patterns"])
+    np.testing.assert_array_equal(info["kept_mask"], reference_info["kept_mask"])
+    assert info["spans"] == reference_info["spans"]
+
+
+def test_segmented_callback_is_numerically_transparent(rng):
+    """Adding a segmented callback does not change BSS-CCA results."""
+    data = rng.standard_normal((5, 1500))
+    kwargs = {
+        "sfreq": SFREQ,
+        "segment_len": 2.0,
+        "overlap": 0.5,
+        "n_remove": 1,
+    }
+    reference, reference_info = compute_bss_cca(data, **kwargs)
+    events = []
+    cleaned, info = compute_bss_cca(data, callback=events.append, **kwargs)
+
+    np.testing.assert_allclose(cleaned, reference, atol=1e-12)
+    for key in (
+        "cleaning_matrix",
+        "filters",
+        "patterns",
+        "correlations",
+        "autocorrelations",
+        "filter_asymmetry",
+        "kept_mask",
+        "training_mean",
+    ):
+        for expected, actual in zip(reference_info[key], info[key], strict=True):
+            np.testing.assert_allclose(actual, expected, atol=1e-12)
+    assert info["spans"] == reference_info["spans"]
+    assert len(events) == info["n_blocks"]
+
+
+def test_segmented_callback_exception_propagates_unchanged(rng):
+    """A callback error aborts BSS-CCA without scientific error handling."""
+    data = rng.standard_normal((5, 1500))
+
+    class CallbackSentinel(RuntimeError):
+        pass
+
+    error = CallbackSentinel("BSS-CCA callback failed")
+    events = []
+
+    def callback(event):
+        events.append(event)
+        raise error
+
+    with pytest.raises(CallbackSentinel) as caught:
+        compute_bss_cca(
+            data,
+            sfreq=SFREQ,
+            segment_len=2.0,
+            n_remove=1,
+            callback=callback,
+        )
+
+    assert caught.value is error
+    assert len(events) == 1
+    assert events[0].current == 1
+
+
+def test_callback_is_validated_at_the_compute_boundary(rng):
+    """The public BSS-CCA function rejects non-callable callbacks."""
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        compute_bss_cca(rng.standard_normal((5, 1000)), n_remove=1, callback=1)
 
 
 def test_block_wise_estimator_is_tied_to_its_timeline(rng):
@@ -689,6 +815,49 @@ def test_block_wise_estimator_is_tied_to_its_timeline(rng):
     )
     with pytest.raises(ValueError, match="tied to the timeline"):
         estimator.transform(data[:, :1000])
+
+
+def test_estimator_segmented_callback_matches_fitted_operators(rng):
+    """Estimator fitting delegates segmented progress to compute_bss_cca."""
+    data = rng.standard_normal((5, 1500))
+    events = []
+    estimator = BSSCCA(sfreq=SFREQ, segment_len=2.0, overlap=0.5, n_remove=1).fit(
+        data, callback=events.append
+    )
+
+    assert len(events) == estimator.n_blocks_ == len(estimator._operators)
+    assert [(event.current, event.total) for event in events] == [
+        (index, estimator.n_blocks_) for index in range(1, estimator.n_blocks_ + 1)
+    ]
+    assert all(event.method == "bss_cca" for event in events)
+    assert all(event.stage == "block" for event in events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_allclose(
+        [event.metric for event in events],
+        [float(np.mean(correlations)) for correlations in estimator.correlations_],
+    )
+
+    fit_transform_events = []
+    cleaned = BSSCCA(
+        sfreq=SFREQ, segment_len=2.0, overlap=0.5, n_remove=1
+    ).fit_transform(data, callback=fit_transform_events.append)
+    assert len(fit_transform_events) == estimator.n_blocks_
+    np.testing.assert_allclose(cleaned, estimator.transform(data), atol=1e-12)
+
+
+def test_global_estimator_callback_is_silent(rng):
+    """A global estimator fit does not fabricate a progress event."""
+    events = []
+    BSSCCA(n_remove=1).fit(rng.standard_normal((5, 1000)), callback=events.append)
+    assert events == []
+
+
+def test_estimator_callback_is_not_constructor_or_transform_state():
+    """Callbacks belong to fitting operations, not estimator state."""
+    assert "callback" not in inspect.signature(BSSCCA).parameters
+    assert "callback" not in inspect.signature(BSSCCA.transform).parameters
+    with pytest.raises(TypeError, match="unexpected keyword argument 'callback'"):
+        BSSCCA(n_remove=1, callback=lambda event: None)
 
 
 def test_segment_len_is_rejected_for_epoched_input(rng):
