@@ -18,6 +18,7 @@ from .._validation import (
     check_positive_real,
     resolve_sfreq,
 )
+from ..progress import _emit_progress, _ProgressCallback, _validate_callback
 
 
 def _resolve_window_length(
@@ -88,7 +89,11 @@ class _BaseSSATransformer(BaseEstimator, TransformerMixin):
         raise NotImplementedError
 
     def _compute_record(
-        self, data: np.ndarray, sfreq: float | None
+        self,
+        data: np.ndarray,
+        sfreq: float | None,
+        *,
+        callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         raise NotImplementedError
 
@@ -115,8 +120,9 @@ class _BaseSSATransformer(BaseEstimator, TransformerMixin):
         return self
 
     @verbose
-    def transform(self, X: Any, y=None) -> Any:
+    def transform(self, X: Any, y=None, *, callback=None) -> Any:
         """Apply the transductive SSA decomposition to the supplied records."""
+        callback = _validate_callback(callback)
         check_is_fitted(self, "is_fitted_")
         data, data_sfreq, kind, original, picks, names = extract_data_from_mne(
             X, auto_pick=True
@@ -139,17 +145,43 @@ class _BaseSSATransformer(BaseEstimator, TransformerMixin):
             fitted_ch_names=self.ch_names_in_,
         )
         if data.ndim == 2:
-            cleaned, info = self._compute_record(data, sfreq)
+            cleaned, info = self._compute_record(data, sfreq, callback=callback)
             records = [info]
         else:
             cleaned = np.empty_like(data)
             records = []
-            for epoch, values in enumerate(data):
-                cleaned[epoch], info = self._compute_record(values, sfreq)
+            for epoch_idx, values in enumerate(data):
+                cleaned[epoch_idx], info = self._compute_record(
+                    values, sfreq, callback=None
+                )
                 records.append(info)
+                _emit_progress(
+                    callback,
+                    method=self._progress_method,
+                    stage="epoch",
+                    current=epoch_idx + 1,
+                    total=data.shape[0],
+                    component=None,
+                    metric=None,
+                )
         self.diagnostics_ = records[0] if data.ndim == 2 else records
         self._set_diagnostic_attributes(records, epoched=data.ndim == 3)
         return reconstruct_mne_object(cleaned, original, kind, picks=picks)
+
+    def fit_transform(
+        self,
+        X: Any,
+        y=None,
+        *,
+        callback=None,
+        **fit_params,
+    ) -> Any:
+        """Fit the transductive estimator and transform ``X`` with progress."""
+        if fit_params:
+            unexpected = ", ".join(sorted(fit_params))
+            raise TypeError(f"Unexpected fit parameters: {unexpected}")
+        self.fit(X, y)
+        return self.transform(X, callback=callback)
 
     def _set_diagnostic_attributes(
         self, records: list[dict[str, Any]], *, epoched: bool

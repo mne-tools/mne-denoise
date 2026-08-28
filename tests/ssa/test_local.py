@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import numpy as np
@@ -14,7 +15,7 @@ from mne_denoise.ssa import (
     compute_local_ssa,
     local_ssa_clean_channel,
 )
-from mne_denoise.ssa.local import _mdl_order
+from mne_denoise.ssa.local import _fit_local_clusters, _mdl_order
 
 from ._utils import band_power
 
@@ -50,6 +51,50 @@ def test_local_ssa_reconstructs_artifact_plus_residual(rng):
     assert info["n_clusters"].tolist() == [2]
     assert all(size >= 20 for size in info["cluster_sizes"][0])
     assert len(info["subspace_dimensions"][0]) == 2
+
+
+def test_compute_local_ssa_progress_callback(rng):
+    """Local SSA reports the selected cluster count per completed channel."""
+    X = rng.standard_normal((3, 120))
+    events = []
+    cleaned, info = compute_local_ssa(
+        X,
+        window_length=10,
+        n_clusters=2,
+        random_state=0,
+        callback=events.append,
+    )
+
+    assert cleaned.shape == X.shape
+    assert len(events) == X.shape[0]
+    assert all(event.method == "local_ssa" for event in events)
+    assert all(event.stage == "channel" for event in events)
+    assert [event.current for event in events] == list(range(1, X.shape[0] + 1))
+    assert all(event.total == X.shape[0] for event in events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_array_equal(
+        [event.metric for event in events], info["n_clusters"].astype(float)
+    )
+
+
+def test_compute_local_ssa_callback_is_numerically_transparent(rng):
+    """Local SSA callbacks do not alter deterministic clustering results."""
+    X = rng.standard_normal((3, 120))
+    without, without_info = compute_local_ssa(
+        X, window_length=10, n_clusters=2, random_state=0
+    )
+    events = []
+    with_callback, with_info = compute_local_ssa(
+        X,
+        window_length=10,
+        n_clusters=2,
+        random_state=0,
+        callback=events.append,
+    )
+
+    np.testing.assert_allclose(with_callback, without)
+    np.testing.assert_array_equal(with_info["n_clusters"], without_info["n_clusters"])
+    np.testing.assert_array_equal(with_info["artifacts"], without_info["artifacts"])
 
 
 def test_local_ssa_attenuates_artifact_and_preserves_broadband_eeg(rng):
@@ -122,3 +167,56 @@ def test_local_estimator_contract_and_mne_roundtrip(drift_data, caplog):
     assert len(summaries) == 1
     for token in ("window=", "channels=", "mean clusters=", "mean subspace dimension="):
         assert token in summaries[0].message
+
+
+def test_local_continuous_transform_progress_callback(rng):
+    """Continuous local SSA emits one channel event per transformed record."""
+    X = rng.standard_normal((2, 120))
+    estimator = LocalSingularSpectrumAnalysis(
+        window_length=10, n_clusters=2, random_state=0
+    ).fit(X)
+    events = []
+    cleaned = estimator.transform(X, callback=events.append)
+
+    assert cleaned.shape == X.shape
+    assert len(events) == X.shape[0]
+    assert all(event.method == "local_ssa" for event in events)
+    assert all(event.stage == "channel" for event in events)
+    assert [event.current for event in events] == [1, 2]
+    assert all(event.total == X.shape[0] for event in events)
+    np.testing.assert_array_equal(
+        [event.metric for event in events], estimator.n_clusters_.astype(float)
+    )
+
+
+def test_local_epoched_transform_reports_epochs_only(rng):
+    """Epoched local SSA suppresses nested channel progress events."""
+    epochs = rng.standard_normal((2, 2, 120))
+    estimator = LocalSingularSpectrumAnalysis(
+        window_length=10, n_clusters=2, random_state=0
+    ).fit(epochs)
+    events = []
+    cleaned = estimator.transform(epochs, callback=events.append)
+
+    assert cleaned.shape == epochs.shape
+    assert len(events) == epochs.shape[0]
+    assert all(event.method == "local_ssa" for event in events)
+    assert [event.stage for event in events] == ["epoch", "epoch"]
+    assert [event.current for event in events] == [1, 2]
+    assert all(event.total == epochs.shape[0] for event in events)
+    assert all(event.component is None for event in events)
+    assert all(event.metric is None for event in events)
+
+
+def test_local_ssa_callback_api_is_runtime_only():
+    """Local SSA fit and single-channel internals remain callback-free."""
+    assert (
+        "callback"
+        not in inspect.signature(LocalSingularSpectrumAnalysis.__init__).parameters
+    )
+    assert (
+        "callback"
+        not in inspect.signature(LocalSingularSpectrumAnalysis.fit).parameters
+    )
+    for function in (local_ssa_clean_channel, _fit_local_clusters, _mdl_order):
+        assert "callback" not in inspect.signature(function).parameters

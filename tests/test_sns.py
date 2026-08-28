@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import numpy as np
@@ -84,6 +85,25 @@ def test_compute_sns_recovers_analytical_projection():
     cov = np.array([[5.0, 1.0, 2.0], [1.0, 1.0, 0.0], [2.0, 0.0, 1.0]])
     weights, _k, _ranks = compute_sns_weights(cov, n_neighbors=2)
     np.testing.assert_allclose(weights[0], [0.0, 1.0, 2.0], atol=1e-12)
+
+
+def test_compute_sns_weights_progress_callback():
+    """Standalone SNS weights report each completed channel solve."""
+    cov = np.array([[5.0, 1.0, 2.0], [1.0, 1.0, 0.0], [2.0, 0.0, 1.0]])
+    events = []
+    _weights, _n_neighbors, ranks = compute_sns_weights(
+        cov, n_neighbors=2, callback=events.append
+    )
+
+    assert len(events) == cov.shape[0]
+    assert all(event.method == "sns" for event in events)
+    assert all(event.stage == "channel" for event in events)
+    assert [event.current for event in events] == [1, 2, 3]
+    assert all(event.total == cov.shape[0] for event in events)
+    assert all(event.component is None for event in events)
+    np.testing.assert_array_equal(
+        [event.metric for event in events], ranks.astype(float)
+    )
 
 
 def test_compute_sns_neighbor_selection_and_skip():
@@ -219,6 +239,50 @@ def test_compute_sns_iterations_compose_exactly(rng):
     assert len(info["neighbor_ranks_per_iteration"]) == 3
 
 
+@pytest.mark.parametrize("n_iter", [1, 2])
+def test_compute_sns_progress_callback_has_flat_iteration_counter(rng, n_iter):
+    """SNS channel events use one counter across all learning iterations."""
+    X = rng.standard_normal((3, 180))
+    events = []
+    _cleaned, info = compute_sns(
+        X, n_neighbors=1, n_iter=n_iter, callback=events.append
+    )
+
+    n_channels = X.shape[0]
+    total = n_iter * n_channels
+    assert len(events) == total
+    assert [event.current for event in events] == list(range(1, total + 1))
+    assert [event.total for event in events] == [total] * total
+    assert all(event.method == "sns" for event in events)
+    assert all(event.stage == "channel" for event in events)
+    expected_metrics = np.concatenate(info["neighbor_ranks_per_iteration"])
+    np.testing.assert_array_equal(
+        [event.metric for event in events], expected_metrics.astype(float)
+    )
+
+
+def test_compute_sns_callback_is_numerically_transparent(rng):
+    """SNS callbacks do not alter the learned operator or cleaned output."""
+    X = rng.standard_normal((4, 180))
+    without, without_info = compute_sns(X, n_neighbors=2, n_iter=2)
+    events = []
+    with_callback, with_info = compute_sns(
+        X, n_neighbors=2, n_iter=2, callback=events.append
+    )
+
+    np.testing.assert_allclose(with_callback, without)
+    np.testing.assert_allclose(with_info["weights"], without_info["weights"])
+    np.testing.assert_allclose(
+        with_info["training_mean"], without_info["training_mean"]
+    )
+    for expected, actual in zip(
+        without_info["neighbor_ranks_per_iteration"],
+        with_info["neighbor_ranks_per_iteration"],
+        strict=True,
+    ):
+        np.testing.assert_array_equal(actual, expected)
+
+
 def test_compute_sns_iterations_have_diminishing_changes(sensor_noise_data):
     """Successive projections converge on representative redundant data."""
     X, _ = sensor_noise_data
@@ -336,6 +400,74 @@ def test_sns_estimator_uses_public_compute_sns(monkeypatch, rng):
     monkeypatch.setattr(sns_core, "compute_sns", recording_compute_sns)
     SNS(n_neighbors=4, n_iter=2).fit(rng.standard_normal((8, 500)))
     assert calls == [(8, 500)]
+
+
+def test_sns_fit_progress_callback_matches_fitted_diagnostics(rng):
+    """SNS.fit forwards channel progress and leaves fitted state unchanged."""
+    X = rng.standard_normal((4, 180))
+    events = []
+    estimator = SNS(n_neighbors=2, n_iter=2).fit(X, callback=events.append)
+    reference = SNS(n_neighbors=2, n_iter=2).fit(X)
+
+    total = X.shape[0] * 2
+    assert len(events) == total
+    assert [event.current for event in events] == list(range(1, total + 1))
+    assert all(event.total == total for event in events)
+    expected_metrics = np.concatenate(estimator.neighbor_ranks_per_iteration_)
+    np.testing.assert_array_equal(
+        [event.metric for event in events], expected_metrics.astype(float)
+    )
+    np.testing.assert_allclose(estimator.denoising_matrix_, reference.denoising_matrix_)
+    np.testing.assert_allclose(estimator.training_mean_, reference.training_mean_)
+
+
+def test_sns_fit_transform_progress_callback_emits_during_fit_only(rng):
+    """SNS.fit_transform forwards callbacks to fit and not to transform."""
+    X = rng.standard_normal((4, 180))
+    events = []
+    with_callback = SNS(n_neighbors=2, n_iter=2).fit_transform(
+        X, callback=events.append
+    )
+    without_callback = SNS(n_neighbors=2, n_iter=2).fit_transform(X)
+
+    assert len(events) == X.shape[0] * 2
+    assert [event.current for event in events] == list(range(1, len(events) + 1))
+    assert all(event.stage == "channel" for event in events)
+    np.testing.assert_allclose(with_callback, without_callback)
+
+
+def test_sns_callback_exception_propagates_unchanged(rng):
+    """An SNS callback exception aborts later channel solves unchanged."""
+    X = rng.standard_normal((4, 180))
+
+    class SentinelError(RuntimeError):
+        pass
+
+    error = SentinelError("stop SNS")
+    seen = []
+
+    def callback(event):
+        seen.append(event.current)
+        raise error
+
+    with pytest.raises(SentinelError) as caught:
+        compute_sns(X, n_neighbors=2, n_iter=2, callback=callback)
+    assert caught.value is error
+    assert seen == [1]
+
+
+def test_sns_callback_api_is_runtime_only():
+    """SNS does not expose callbacks on construction or transform."""
+    assert "callback" not in inspect.signature(SNS.__init__).parameters
+    assert "callback" in inspect.signature(SNS.fit).parameters
+    assert "callback" in inspect.signature(SNS.fit_transform).parameters
+    assert "callback" not in inspect.signature(SNS.transform).parameters
+
+
+def test_compute_sns_rejects_invalid_callback():
+    """SNS validates callbacks at its public functional boundary."""
+    with pytest.raises(TypeError, match="callback must be callable or None"):
+        compute_sns(np.ones((3, 100)), callback=1)
 
 
 def test_sns_suppresses_independent_sensor_noise(sensor_noise_data):

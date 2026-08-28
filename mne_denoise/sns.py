@@ -40,6 +40,7 @@ from ._validation import (
     check_channel_layout,
     check_chunk_size,
 )
+from .progress import _emit_progress, _ProgressCallback, _validate_callback
 
 _DEFAULT_RCOND = 1e-12
 
@@ -66,12 +67,15 @@ def _automatic_sample_mask(
     return (max_abs_z <= threshold).astype(np.float64)
 
 
-def compute_sns_weights(
+def _compute_sns_weights(
     cov: np.ndarray,
     n_neighbors: int = 0,
     skip: int = 0,
     *,
     rcond: float = _DEFAULT_RCOND,
+    callback: _ProgressCallback | None = None,
+    progress_offset: int = 0,
+    progress_total: int | None = None,
 ) -> tuple[np.ndarray, int, np.ndarray]:
     """Compute the SNS spatial operator from a channel covariance matrix.
 
@@ -151,6 +155,8 @@ def compute_sns_weights(
         raise ValueError("rcond must be finite and strictly between 0 and 1")
 
     n_channels = cov.shape[0]
+    if progress_total is None:
+        progress_total = n_channels
     if skip > n_channels - 2:
         raise ValueError("skip must leave at least one candidate neighbor")
     max_neighbors = n_channels - int(skip) - 1
@@ -176,7 +182,65 @@ def compute_sns_weights(
             np.linalg.pinv(neighbor_cov, rcond=rcond, hermitian=True)
             @ cov[neighbors, channel]
         )
+        _emit_progress(
+            callback,
+            method="sns",
+            stage="channel",
+            current=progress_offset + channel + 1,
+            total=progress_total,
+            component=None,
+            metric=float(neighbor_ranks[channel]),
+        )
     return weights, k_neighbors, neighbor_ranks
+
+
+def compute_sns_weights(
+    cov: np.ndarray,
+    n_neighbors: int = 0,
+    skip: int = 0,
+    *,
+    rcond: float = _DEFAULT_RCOND,
+    callback=None,
+) -> tuple[np.ndarray, int, np.ndarray]:
+    """Compute the SNS spatial operator from a channel covariance matrix.
+
+    Parameters
+    ----------
+    cov : ndarray, shape (n_channels, n_channels)
+        Finite, symmetric, positive-semidefinite channel covariance matrix.
+    n_neighbors : int, default=0
+        Number of neighbours used to regenerate each channel. Zero uses all
+        available channels after applying ``skip``.
+    skip : int, default=0
+        Number of the most-correlated neighbours to omit.
+    rcond : float, default=1e-12
+        Relative cutoff for the pseudoinverse of each neighbour covariance.
+    callback : callable | None, default=None
+        Called synchronously after each completed channel solve with a
+        ``sns`` channel progress event. Callback return values are ignored and
+        callback exceptions propagate unchanged.
+
+    Returns
+    -------
+    weights : ndarray, shape (n_channels, n_channels)
+        Spatial operator to apply to centered channel-first data.
+    n_neighbors_used : int
+        Effective number of neighbours after capping to those available.
+    neighbor_ranks : ndarray, shape (n_channels,)
+        Numerical rank of each selected neighbour covariance.
+    """
+    callback = _validate_callback(callback)
+    cov = np.asarray(cov, dtype=np.float64)
+    n_channels = cov.shape[0] if cov.ndim else 0
+    return _compute_sns_weights(
+        cov,
+        n_neighbors=n_neighbors,
+        skip=skip,
+        rcond=rcond,
+        callback=callback,
+        progress_offset=0,
+        progress_total=n_channels,
+    )
 
 
 @verbose
@@ -191,6 +255,7 @@ def compute_sns(
     outlier_threshold: float | None = None,
     chunk_size: int | None = None,
     sample_weight: np.ndarray | None = None,
+    callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Learn and apply Sensor Noise Suppression to a channel-first array.
@@ -223,6 +288,10 @@ def compute_sns(
     sample_weight : ndarray, shape (n_times,) | (n_epochs, n_times) | None
         Non-negative fitting weight for each sample. Zero excludes a sample
         when learning the mean and operator, but not when applying the operator.
+    callback : callable | None, default=None
+        Called synchronously after each completed channel solve across all SNS
+        iterations with a flat ``sns`` channel progress stream. Callback return
+        values are ignored and callback exceptions propagate unchanged.
     verbose : bool | str | int | None
         MNE-style logging level. The fitted summary is emitted at INFO and
         iteration details at DEBUG.
@@ -240,6 +309,7 @@ def compute_sns(
        suppression. Journal of Neuroscience Methods, 168(1), 195-202.
        https://doi.org/10.1016/j.jneumeth.2007.09.012
     """
+    callback = _validate_callback(callback)
     X = check_channel_first_data(X, name="SNS")
     if not isinstance(preserve_mean, bool):
         raise TypeError("preserve_mean must be a bool")
@@ -293,15 +363,23 @@ def compute_sns(
     matrices = []
     ranks = []
     effective_neighbors = 0
-    for iteration in range(int(n_iter)):
+    n_iter = int(n_iter)
+    n_channels = continuous.shape[0]
+    for iteration in range(n_iter):
         cov = compute_covariance(
             current,
             weights=combined_weight,
             assume_centered=True,
             chunk_size=chunk_size,
         )
-        matrix, effective_neighbors, iteration_ranks = compute_sns_weights(
-            cov, n_neighbors=n_neighbors, skip=skip, rcond=rcond
+        matrix, effective_neighbors, iteration_ranks = _compute_sns_weights(
+            cov,
+            n_neighbors=n_neighbors,
+            skip=skip,
+            rcond=rcond,
+            callback=callback,
+            progress_offset=iteration * n_channels,
+            progress_total=n_iter * n_channels,
         )
         matrices.append(matrix)
         ranks.append(iteration_ranks)
@@ -313,7 +391,7 @@ def compute_sns(
             effective_neighbors,
             float(np.median(iteration_ranks)),
         )
-        if iteration + 1 < int(n_iter):
+        if iteration + 1 < n_iter:
             current = apply_spatial_transform(matrix, current, chunk_size=chunk_size)
 
     cleaned = apply_spatial_transform(composite, centered, chunk_size=chunk_size)
@@ -330,7 +408,7 @@ def compute_sns(
         "skip": int(skip),
         "rcond": float(rcond),
         "preserve_mean": preserve_mean,
-        "n_iter": int(n_iter),
+        "n_iter": n_iter,
         "outlier_threshold": outlier_threshold,
         "chunk_size": chunk_size,
         "neighbor_ranks": ranks[-1],
@@ -424,6 +502,7 @@ class SNS(BaseEstimator, TransformerMixin):
         y=None,
         sample_weight: np.ndarray | None = None,
         *,
+        callback=None,
         verbose: bool | str | int | None = None,
     ) -> SNS:
         """Learn fitted means and SNS operators from ``X``.
@@ -437,12 +516,17 @@ class SNS(BaseEstimator, TransformerMixin):
         sample_weight : ndarray | None, default=None
             Non-negative fitting weights with shape ``(n_times,)`` for
             continuous data or ``(n_epochs, n_times)`` for epoched data.
+        callback : callable | None, default=None
+            Called synchronously after each completed channel solve while
+            learning the SNS operator. Callback return values are ignored and
+            callback exceptions propagate unchanged.
 
         Returns
         -------
         self : SNS
             Fitted estimator.
         """
+        callback = _validate_callback(callback)
         data, _sfreq, _mne_type, _orig, _picks, names = extract_data_from_mne(
             X, auto_pick=True
         )
@@ -456,6 +540,7 @@ class SNS(BaseEstimator, TransformerMixin):
             outlier_threshold=self.outlier_threshold,
             chunk_size=self.chunk_size,
             sample_weight=sample_weight,
+            callback=callback,
         )
         self.training_mean_ = info["training_mean"]
         self.denoising_matrix_ = info["denoising_matrix"]
@@ -526,6 +611,7 @@ class SNS(BaseEstimator, TransformerMixin):
         y=None,
         *,
         sample_weight: np.ndarray | None = None,
+        callback=None,
         verbose: bool | str | int | None = None,
         **fit_params,
     ) -> Any:
@@ -539,6 +625,9 @@ class SNS(BaseEstimator, TransformerMixin):
             Ignored. Included for scikit-learn compatibility.
         sample_weight : ndarray | None, default=None
             Non-negative fitting weights.
+        callback : callable | None, default=None
+            Forwarded to :meth:`fit` for channel-solve progress events. No
+            progress events are emitted by :meth:`transform`.
         **fit_params : dict
             Reserved for scikit-learn compatibility.
 
@@ -550,4 +639,6 @@ class SNS(BaseEstimator, TransformerMixin):
         if fit_params:
             unexpected = ", ".join(sorted(fit_params))
             raise TypeError(f"Unexpected fit parameters: {unexpected}")
-        return self.fit(X, y, sample_weight=sample_weight).transform(X)
+        return self.fit(X, y, sample_weight=sample_weight, callback=callback).transform(
+            X
+        )
