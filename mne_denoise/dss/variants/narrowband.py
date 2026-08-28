@@ -11,6 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..._logging import logger, verbose
+from ...progress import _emit_progress, _ProgressCallback, _validate_callback
 from ..denoisers.spectral import BandpassBias
 from ..linear import DSS
 
@@ -68,6 +69,7 @@ def narrowband_scan(
     freq_step: float = 1.0,
     bandwidth: float = 2.0,
     n_components: int = 1,
+    callback: _ProgressCallback | None = None,
     verbose: bool | str | int | None = None,
     **dss_kws,
 ) -> tuple[DSS, np.ndarray, np.ndarray]:
@@ -91,6 +93,13 @@ def narrowband_scan(
         Bandwidth of bandpass filter at each frequency. Default 2.0.
     n_components : int
         Number of DSS components to compute at each frequency. Default 1.
+    callback : callable | None
+        Called synchronously after each attempted candidate frequency with a
+        ProgressEvent. Successful candidates report their leading DSS
+        eigenvalue in ``metric``; failed candidates report ``metric=None``.
+        Callback return values are ignored and callback exceptions propagate
+        unchanged. Events use ``method="narrowband_scan"`` and
+        ``stage="frequency"``.
     verbose : bool | str | int | None
         MNE-style logging level. Per-frequency DSS fits are reported through
         this scan's aggregate result.
@@ -119,6 +128,7 @@ def narrowband_scan(
     >>> plt.xlabel("Frequency (Hz)")
     >>> plt.ylabel("DSS Eigenvalue")
     """
+    callback = _validate_callback(callback)
     data = np.asarray(data)
 
     if dss_kws.get("adaptive", False):
@@ -149,6 +159,7 @@ def narrowband_scan(
     best_index = None
 
     for i, freq in enumerate(frequencies):
+        metric = None
         try:
             candidate_kws = dict(dss_kws)
             # The scan owns the aggregate result; candidate DSS instances
@@ -163,6 +174,7 @@ def narrowband_scan(
             )
             dss.fit(data, verbose="WARNING")
             eigenvalues[i] = dss.eigenvalues_[0]
+            metric = float(eigenvalues[i])
 
             logger.debug(
                 "Narrowband DSS scan %d/%d: %.3g Hz eigenvalue=%.6g.",
@@ -186,7 +198,16 @@ def narrowband_scan(
                 freq,
                 exc,
             )
-            continue
+
+        _emit_progress(
+            callback,
+            method="narrowband_scan",
+            stage="frequency",
+            current=i + 1,
+            total=n_freqs,
+            component=None,
+            metric=metric,
+        )
 
     if best_dss is None:
         raise RuntimeError("Failed to fit DSS at any frequency")
