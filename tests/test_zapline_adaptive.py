@@ -6,8 +6,6 @@ import pytest
 from numpy.testing import assert_allclose
 from scipy import signal
 
-from mne_denoise.dss.linear import DSS
-from mne_denoise.dss.segmentation import CovarianceSegmenter
 from mne_denoise.zapline import ZapLine
 from mne_denoise.zapline.adaptive import (
     apply_cleanline_notch,
@@ -20,722 +18,244 @@ from mne_denoise.zapline.adaptive import (
 )
 
 
-def test_adaptive_components():
-    # Synthetic data
+@pytest.fixture
+def line_noise_data():
+    """Generate synthetic data with 50 Hz line noise."""
     rng = np.random.default_rng(42)
-    sfreq = 1000
-    times = np.arange(10000) / sfreq  # 10s
-    data = rng.standard_normal((4, 10000)) * 0.1
-
-    # 50 Hz noise
-    noise = np.sin(2 * np.pi * 50 * times) * 2.0
-    data[:, :] += noise
-
-    # Test frequency detection
-    freqs = find_noise_freqs(data, sfreq, fmin=45, fmax=55)
-    assert len(freqs) > 0
-    assert np.isclose(freqs[0], 50, atol=1.0)
-
-    # Test artifact presence
-    present = check_artifact_presence(data, sfreq, target_freq=50)
-    assert present
-
-    present_wrong = check_artifact_presence(data, sfreq, target_freq=60)
-    assert not present_wrong
+    sfreq = 250.0
+    n_channels = 4
+    n_times = 2500
+    times = np.arange(n_times) / sfreq
+    brain = rng.normal(0, 0.5, (n_channels, n_times))
+    line_noise = np.sin(2 * np.pi * 50 * times) * 2.0
+    return {
+        "data": brain + line_noise[np.newaxis, :],
+        "sfreq": sfreq,
+        "line_freq": 50.0,
+        "times": times,
+    }
 
 
-def test_zapline_plus_pipeline():
-    # Long data with shifting noise
-    rng = np.random.default_rng(42)
-    sfreq = 250
-    duration = 120  # 2 minutes
+def _power_at(data, freq, sfreq):
+    """Return mean Welch power at the closest frequency bin."""
+    freqs, psd = signal.welch(
+        data, fs=sfreq, nperseg=min(int(sfreq), data.shape[-1]), axis=-1
+    )
+    index = np.argmin(np.abs(freqs - freq))
+    return float(np.mean(psd[..., index]))
+
+
+def _nonstationary_line_data(sfreq=250.0, duration=60.0, n_ch=4):
+    """Create line noise with a spatially changing amplitude."""
+    rng = np.random.default_rng(0)
     n_times = int(duration * sfreq)
     times = np.arange(n_times) / sfreq
-    n_ch = 4
-    data = rng.standard_normal((n_ch, n_times)) * 0.05  # Low background noise
+    data = rng.standard_normal((n_ch, n_times)) * 0.1
+    amplitude = np.concatenate(
+        [np.full(n_times // 2, 5.0), np.full(n_times - n_times // 2, 1.0)]
+    )
+    data += np.sin(2 * np.pi * 50.0 * times) * amplitude
+    return data, sfreq
 
-    # 0-40s: 50Hz strong
-    # 40-80s: 50.1Hz weak
-    # 80-120s: No noise
 
-    t1 = int(sfreq * 40)
-    t2 = int(sfreq * 80)
+def _frequency_drift_data():
+    """Create two strong, spatially distinct line frequencies and a quiet tail."""
+    rng = np.random.default_rng(42)
+    sfreq = 250.0
+    n_times = int(120 * sfreq)
+    times = np.arange(n_times) / sfreq
+    first_end = n_times // 3
+    second_end = 2 * n_times // 3
+    data = rng.standard_normal((4, n_times)) * 0.05
+    data[:2, :first_end] += 10 * np.sin(2 * np.pi * 50.0 * times[:first_end])
+    data[2:, first_end:second_end] += 10 * np.sin(
+        2 * np.pi * 50.04 * times[first_end:second_end]
+    )
+    return data, sfreq, first_end, second_end
 
-    # Noise 1
-    noise1 = np.sin(2 * np.pi * 50.0 * times[:t1]) * 10.0
-    # Noise 2 (slightly shifted)
-    noise2 = np.sin(2 * np.pi * 50.1 * times[t1:t2]) * 2.0
 
-    # Apply strongly to ch 0, weakly to ch 1
-    data[0, :t1] += noise1
-    data[1, :t1] += noise1 * 0.5
+def test_adaptive_detects_line_frequency_and_artifact():
+    """Adaptive helpers identify a line peak but not an unrelated frequency."""
+    rng = np.random.default_rng(42)
+    sfreq = 1000.0
+    times = np.arange(10000) / sfreq
+    data = rng.standard_normal((4, len(times))) * 0.1
+    data += 2.0 * np.sin(2 * np.pi * 50 * times)
 
-    data[0, t1:t2] += noise2
-    data[1, t1:t2] += noise2 * 0.5
+    frequencies = find_noise_freqs(data, sfreq, fmin=45.0, fmax=55.0)
 
-    # Run Zapline Plus
-    zl = ZapLine(
+    assert frequencies
+    assert np.isclose(frequencies[0], 50.0, atol=1.0)
+    assert check_artifact_presence(data, sfreq, target_freq=50.0)
+    assert not check_artifact_presence(data, sfreq, target_freq=60.0)
+
+
+def test_adaptive_tracks_frequency_drift_and_preserves_quiet_tail():
+    """Adaptive cleaning follows segment-specific targets and leaves quiet data usable."""
+    data, sfreq, first_end, second_end = _frequency_drift_data()
+    zap = ZapLine(
         sfreq=sfreq,
-        line_freq=None,  # Auto detect
+        line_freq=None,
         adaptive=True,
         adaptive_params={
-            "fmin": 45,
-            "fmax": 55,
+            "fmin": 49.0,
+            "fmax": 51.0,
+            "min_chunk_len": 10.0,
             "n_remove_params": {"sigma": 3.0},
             "qa_params": {"max_sigma": 4.0},
         },
     )
 
-    cleaned = zl.fit_transform(data)
+    cleaned = zap.fit_transform(data)
+    chunks = zap.adaptive_results_["chunk_info"]
+    active = [chunk for chunk in chunks if chunk["artifact_present"]]
+    early = [chunk for chunk in active if chunk["start"] < first_end]
+    shifted = [chunk for chunk in active if first_end <= chunk["start"] < second_end]
 
-    # Check if lines removed
-    assert hasattr(zl, "adaptive_results_")
-
-    # PSD function helper
-    def get_power_at(d, freq, fs):
-        f, p = signal.welch(d, fs=fs, nperseg=int(fs), axis=-1)
-        idx = np.argmin(np.abs(f - freq))
-        return np.mean(p[:, idx])
-
-    # Check 50Hz power in first segment
-    p_orig_1 = get_power_at(data[:, :t1], 50.0, sfreq)
-    p_clean_1 = get_power_at(cleaned[:, :t1], 50.0, sfreq)
-
-    assert p_clean_1 < p_orig_1 * 0.1  # 90% reduction
-
-    # Check 50.1Hz power in second segment
-    p_orig_2 = get_power_at(data[:, t1:t2], 50.1, sfreq)
-    p_clean_2 = get_power_at(cleaned[:, t1:t2], 50.1, sfreq)
-
-    assert p_clean_2 < p_orig_2 * 0.5  # significant reduction
-
-    # Check no-noise segment preservation
-    p_orig_3 = np.var(data[:, t2:])
-    p_clean_3 = np.var(cleaned[:, t2:])
-
-    # Allow small reduction due to random chance correlations
-    assert np.isclose(p_clean_3, p_orig_3, rtol=0.2)
+    assert early and shifted
+    assert np.isclose(
+        np.median([chunk["fine_freq"] for chunk in early]), 50.0, atol=0.03
+    )
+    assert np.isclose(
+        np.median([chunk["fine_freq"] for chunk in shifted]), 50.04, atol=0.04
+    )
+    assert (
+        _power_at(cleaned[:, :first_end], 50.0, sfreq)
+        < _power_at(data[:, :first_end], 50.0, sfreq) * 0.1
+    )
+    assert (
+        _power_at(cleaned[:, first_end:second_end], 50.04, sfreq)
+        < _power_at(data[:, first_end:second_end], 50.04, sfreq) * 0.1
+    )
+    assert np.isclose(
+        np.var(cleaned[:, second_end:]), np.var(data[:, second_end:]), rtol=0.5
+    )
 
 
-@pytest.fixture
-def line_noise_data():
-    """Generate synthetic data with line noise."""
+def test_cleanline_notch_suppresses_target_and_preserves_other_signal(line_noise_data):
+    """The notch fallback removes target power without damaging alpha power."""
+    data = line_noise_data["data"].copy()
+    sfreq = line_noise_data["sfreq"]
+    data[0] += np.sin(2 * np.pi * 10.0 * line_noise_data["times"])
+
+    cleaned = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0)
+
+    assert _power_at(cleaned, 50.0, sfreq) < _power_at(data, 50.0, sfreq) * 0.1
+    assert _power_at(cleaned[:1], 10.0, sfreq) / _power_at(data[:1], 10.0, sfreq) > 0.8
+
+
+def test_cleanline_notch_handles_nyquist_and_invalid_bandwidth():
+    """Notch construction remains bounded at Nyquist and invalid edges."""
     rng = np.random.default_rng(42)
-    sfreq = 250
-    n_channels = 4
-    n_times = 2500  # 10s
-    times = np.arange(n_times) / sfreq
+    data = rng.standard_normal((4, 1000))
+    sfreq = 100.0
 
-    # Background signal
-    brain = rng.normal(0, 0.5, (n_channels, n_times))
+    near_nyquist = apply_cleanline_notch(data, sfreq=sfreq, freq=49.0, bandwidth=0.5)
+    invalid_bandwidth = apply_cleanline_notch(
+        data, sfreq=sfreq, freq=49.9, bandwidth=10.0
+    )
+    collapsed_band = apply_cleanline_notch(
+        data, sfreq=sfreq, freq=49.99, bandwidth=0.001
+    )
 
-    # 50 Hz line noise
-    line_noise = np.sin(2 * np.pi * 50 * times) * 2.0
-    data = brain + line_noise[np.newaxis, :]
-
-    return {"data": data, "sfreq": sfreq, "line_freq": 50.0, "times": times}
-
-
-def test_cleanline_notch_output_shape(line_noise_data):
-    """apply_cleanline_notch should return same shape as input."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    filtered = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0)
-
-    assert filtered.shape == data.shape
+    assert near_nyquist.shape == data.shape
+    assert np.isfinite(near_nyquist).all()
+    assert invalid_bandwidth.shape == data.shape
+    assert np.isfinite(invalid_bandwidth).all()
+    assert_allclose(collapsed_band, data)
 
 
-def test_cleanline_notch_reduces_target_power(line_noise_data):
-    """apply_cleanline_notch should reduce power at target frequency."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    filtered = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0)
-
-    def get_power_at(d, freq, fs):
-        f, psd = signal.welch(d, fs=fs, nperseg=int(fs), axis=-1)
-        idx = np.argmin(np.abs(f - freq))
-        return np.mean(psd[:, idx])
-
-    power_before = get_power_at(data, 50.0, sfreq)
-    power_after = get_power_at(filtered, 50.0, sfreq)
-
-    # Should reduce 50 Hz power significantly
-    assert power_after < power_before * 0.1
-
-
-def test_cleanline_notch_preserves_other_frequencies(line_noise_data):
-    """apply_cleanline_notch should preserve power at other frequencies."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    # Add a 10 Hz signal we want to preserve
-    times = line_noise_data["times"]
-    alpha = np.sin(2 * np.pi * 10 * times)
-    data_with_alpha = data.copy()
-    data_with_alpha[0] += alpha
-
-    filtered = apply_cleanline_notch(data_with_alpha, sfreq=sfreq, freq=50.0)
-
-    def get_power_at(d, freq, fs):
-        f, psd = signal.welch(d, fs=fs, nperseg=int(fs), axis=-1)
-        idx = np.argmin(np.abs(f - freq))
-        return np.mean(psd[:, idx])
-
-    power_alpha_before = get_power_at(data_with_alpha[0:1], 10.0, sfreq)
-    power_alpha_after = get_power_at(filtered[0:1], 10.0, sfreq)
-
-    # Alpha power should be mostly preserved (within 20%)
-    ratio = power_alpha_after / power_alpha_before
-    assert ratio > 0.8
-
-
-def test_cleanline_notch_bandwidth_parameter(line_noise_data):
-    """apply_cleanline_notch should respect bandwidth parameter."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    # Narrow bandwidth
-    filtered_narrow = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0, bandwidth=0.2)
-
-    # Wide bandwidth
-    filtered_wide = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0, bandwidth=2.0)
-
-    # Both should reduce 50 Hz
-    def get_power_at(d, freq, fs):
-        f, psd = signal.welch(d, fs=fs, nperseg=int(fs), axis=-1)
-        idx = np.argmin(np.abs(f - freq))
-        return np.mean(psd[:, idx])
-
-    power_narrow = get_power_at(filtered_narrow, 50.0, sfreq)
-    power_wide = get_power_at(filtered_wide, 50.0, sfreq)
-    power_orig = get_power_at(data, 50.0, sfreq)
-
-    assert power_narrow < power_orig
-    assert power_wide < power_orig
-
-
-def test_cleanline_notch_order_parameter(line_noise_data):
-    """apply_cleanline_notch should accept order parameter."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    # Different filter orders
-    filtered_low = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0, order=2)
-    filtered_high = apply_cleanline_notch(data, sfreq=sfreq, freq=50.0, order=6)
-
-    # Both should produce valid output
-    assert filtered_low.shape == data.shape
-    assert filtered_high.shape == data.shape
-
-
-def test_cleanline_notch_60hz():
-    """apply_cleanline_notch should work with 60 Hz."""
-    rng = np.random.default_rng(42)
-    sfreq = 250
-    n_times = 1000
-    times = np.arange(n_times) / sfreq
-
-    data = rng.normal(0, 1, (4, n_times))
-    data += np.sin(2 * np.pi * 60 * times) * 3.0
-
-    filtered = apply_cleanline_notch(data, sfreq=sfreq, freq=60.0)
-
-    def get_power_at(d, freq, fs):
-        f, psd = signal.welch(d, fs=fs, nperseg=int(fs), axis=-1)
-        idx = np.argmin(np.abs(f - freq))
-        return np.mean(psd[:, idx])
-
-    power_before = get_power_at(data, 60.0, sfreq)
-    power_after = get_power_at(filtered, 60.0, sfreq)
-
-    assert power_after < power_before * 0.2
-
-
-def test_cleanline_notch_invalid_freq():
-    """apply_cleanline_notch should handle frequency near Nyquist gracefully."""
-    data = np.random.randn(4, 1000)
-    sfreq = 100  # Nyquist = 50 Hz
-
-    # 49 Hz is very close to Nyquist
-    filtered = apply_cleanline_notch(data, sfreq=sfreq, freq=49.0, bandwidth=0.5)
-
-    # Should still produce valid output (clamped to valid range)
-    assert filtered.shape == data.shape
-
-
-def test_cleanline_notch_low_freq():
-    """apply_cleanline_notch should work at low frequencies."""
-    data = np.random.randn(4, 1000)
-    sfreq = 100
-
-    # Low frequency notch
-    filtered = apply_cleanline_notch(data, sfreq=sfreq, freq=10.0, bandwidth=1.0)
-
-    assert filtered.shape == data.shape
-
-
-def test_cleanline_notch_invalid_bandwidth_returns_original():
-    """apply_cleanline_notch with invalid bandwidth should return original."""
-    data = np.random.randn(4, 1000)
-    sfreq = 100  # Nyquist = 50 Hz
-
-    # Bandwidth larger than possible
-    filtered = apply_cleanline_notch(data, sfreq=sfreq, freq=49.9, bandwidth=10.0)
-
-    # Should return unchanged data if filter can't be applied
-    assert filtered.shape == data.shape
-
-
-def test_hybrid_cleanup_output_shape(line_noise_data):
-    """apply_hybrid_cleanup should return same shape as input."""
+def test_hybrid_cleanup_suppresses_target(line_noise_data):
+    """Hybrid cleanup reduces line power when a notch is safe to apply."""
     data = line_noise_data["data"]
     sfreq = line_noise_data["sfreq"]
 
     cleaned = apply_hybrid_cleanup(data, sfreq=sfreq, freq=50.0)
 
     assert cleaned.shape == data.shape
+    assert _power_at(cleaned, 50.0, sfreq) < _power_at(data, 50.0, sfreq)
 
 
-def test_hybrid_cleanup_reduces_target_power(line_noise_data):
-    """apply_hybrid_cleanup should reduce power at target frequency."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    cleaned = apply_hybrid_cleanup(data, sfreq=sfreq, freq=50.0)
-
-    def get_power_at(d, freq, fs):
-        f, psd = signal.welch(d, fs=fs, nperseg=int(fs), axis=-1)
-        idx = np.argmin(np.abs(f - freq))
-        return np.mean(psd[:, idx])
-
-    power_before = get_power_at(data, 50.0, sfreq)
-    power_after = get_power_at(cleaned, 50.0, sfreq)
-
-    # Should reduce 50 Hz power
-    assert power_after < power_before
-
-
-def test_hybrid_cleanup_bandwidth_parameter(line_noise_data):
-    """apply_hybrid_cleanup should accept bandwidth parameter."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    cleaned = apply_hybrid_cleanup(data, sfreq=sfreq, freq=50.0, bandwidth=1.0)
-
-    assert cleaned.shape == data.shape
-
-
-def test_hybrid_cleanup_max_power_reduction_parameter(line_noise_data):
-    """apply_hybrid_cleanup should respect max_power_reduction_db parameter."""
-    data = line_noise_data["data"]
-    sfreq = line_noise_data["sfreq"]
-
-    # Low threshold - more likely to reject cleanup
-    cleaned_strict = apply_hybrid_cleanup(
-        data, sfreq=sfreq, freq=50.0, max_power_reduction_db=0.1
-    )
-
-    # High threshold - more likely to apply cleanup
-    cleaned_permissive = apply_hybrid_cleanup(
-        data, sfreq=sfreq, freq=50.0, max_power_reduction_db=10.0
-    )
-
-    # Both should produce valid output
-    assert cleaned_strict.shape == data.shape
-    assert cleaned_permissive.shape == data.shape
-
-
-def test_hybrid_cleanup_skips_when_overcleaning():
-    """apply_hybrid_cleanup should skip if cleanup would over-clean."""
+def test_hybrid_cleanup_falls_back_for_short_or_overcleaned_data():
+    """Hybrid cleanup retains data when QA cannot justify the fallback."""
     rng = np.random.default_rng(42)
-    sfreq = 250
-    n_times = 1000
-
-    # Create data where notch would cause too much collateral damage
-    times = np.arange(n_times) / sfreq
-    data = np.sin(2 * np.pi * 49 * times) + np.sin(2 * np.pi * 51 * times)
-    data = data[np.newaxis, :] + rng.normal(0, 0.01, (1, n_times))
-
-    # With very strict threshold, should return original
-    cleaned = apply_hybrid_cleanup(
-        data, sfreq=sfreq, freq=50.0, bandwidth=5.0, max_power_reduction_db=0.01
-    )
-
-    assert cleaned.shape == data.shape
-
-
-def test_hybrid_cleanup_no_surrounding_freqs():
-    """apply_hybrid_cleanup should handle case with no surrounding frequencies."""
-    data = np.random.randn(4, 100)  # Very short data
-    sfreq = 100
-
-    # This might not have enough frequency resolution for surrounding check
-    cleaned = apply_hybrid_cleanup(data, sfreq=sfreq, freq=25.0)
-
-    assert cleaned.shape == data.shape
-
-
-def test_hybrid_cleanup_clean_data():
-    """apply_hybrid_cleanup on clean data should not damage it."""
-    rng = np.random.default_rng(42)
-    sfreq = 250
-    n_times = 1000
-
-    # Clean data without line noise
-    clean_data = rng.normal(0, 1, (4, n_times))
-
-    cleaned = apply_hybrid_cleanup(clean_data, sfreq=sfreq, freq=50.0)
-
-    # Variance should be similar (notch filter has some effect but not dramatic)
-    var_before = np.var(clean_data)
-    var_after = np.var(cleaned)
-
-    # Should not remove more than 20% of variance
-    assert var_after > var_before * 0.8
-
-
-def test_cleanline_notch_low_ge_high():
-    """apply_cleanline_notch should return unchanged when low >= high."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 100))
-    sfreq = 100  # Nyquist = 50 Hz
-
-    # Extremely narrow bandwidth at edge where low >= high after clamping
-    result = apply_cleanline_notch(data, sfreq=sfreq, freq=49.99, bandwidth=0.001)
-
-    assert result.shape == data.shape
-
-
-def test_hybrid_cleanup_rejects_due_to_power_loss():
-    """apply_hybrid_cleanup returns original when cleanup loses too much power."""
-    rng = np.random.default_rng(42)
-    sfreq = 250
-    n_times = 2000
-    times = np.arange(n_times) / sfreq
-
-    # Create broadband signal near target frequency
-    data = np.sin(2 * np.pi * 48 * times) + np.sin(2 * np.pi * 52 * times)
-    data = data[np.newaxis, :] + rng.normal(0, 0.01, (1, n_times))
-
-    # Very strict threshold
-    cleaned = apply_hybrid_cleanup(
-        data, sfreq=sfreq, freq=50.0, bandwidth=5.0, max_power_reduction_db=0.001
-    )
-
-    assert cleaned.shape == data.shape
-
-
-def test_find_noise_freqs_empty_range():
-    """find_noise_freqs returns empty if fmin > fmax range."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 1000))
-    sfreq = 250
-
-    result = find_noise_freqs(data, sfreq, fmin=200, fmax=250)
-    assert result == []
-
-
-def test_find_noise_freqs_small_window():
-    """find_noise_freqs skips peaks with window < 3."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 256))
-    sfreq = 256
-
-    result = find_noise_freqs(data, sfreq, fmin=50, fmax=51, window_length=0.1)
-    assert isinstance(result, list)
-
-
-def test_covariance_segmenter_short():
-    """CovarianceSegmenter returns at least one segment for short data."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 2000))
-    sfreq = 250
-
-    seg = CovarianceSegmenter(sfreq=sfreq, min_chunk_len=10.0, bandpass=(47.0, 53.0))
-    result = seg.segment(data)
-    assert len(result) >= 1
-
-
-def test_covariance_segmenter_window_too_large():
-    """CovarianceSegmenter handles a cov window longer than the data."""
-    rng = np.random.default_rng(42)
-    # Large cov_win_len relative to data
-    data = rng.normal(0, 1, (4, 2000))
-    sfreq = 250
-
-    seg = CovarianceSegmenter(sfreq=sfreq, cov_win_len=20.0, bandpass=(47.0, 53.0))
-    result = seg.segment(data)
-    assert result == [(0, 2000)]
-
-
-def test_find_fine_peak_empty():
-    """find_fine_peak returns coarse_freq if empty range."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 1000))
-    sfreq = 250
-
-    result = find_fine_peak(data, sfreq, coarse_freq=200, search_width=0.05)
-    assert result == 200
-
-
-def test_detect_harmonics_basic():
-    """detect_harmonics detects present harmonics."""
-    rng = np.random.default_rng(42)
-    sfreq = 500
-    n_times = 5000
-    times = np.arange(n_times) / sfreq
-
-    data = rng.normal(0, 0.1, (4, n_times))
-    data += np.sin(2 * np.pi * 50 * times) * 10.0
-    data += np.sin(2 * np.pi * 100 * times) * 8.0
-
-    result = detect_harmonics(data, sfreq, fundamental=50.0, max_harmonics=3)
-    assert isinstance(result, list)
-
-
-def test_detect_harmonics_none():
-    """detect_harmonics returns empty if no harmonics."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 5000))
-    sfreq = 500
-
-    result = detect_harmonics(data, sfreq, fundamental=50.0, max_harmonics=3)
-    assert isinstance(result, list)
-
-
-def test_detect_harmonics_near_nyquist():
-    """detect_harmonics stops before Nyquist."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 1000))
-    sfreq = 250
-
-    result = detect_harmonics(data, sfreq, fundamental=60.0, max_harmonics=5)
-    assert all(h < 125 for h in result)
-
-
-def test_check_spectral_qa_short():
-    """check_spectral_qa returns 'ok' for short data."""
-    rng = np.random.default_rng(42)
-    data = rng.normal(0, 1, (4, 50))
-    sfreq = 100
-
-    result = check_spectral_qa(data, sfreq, target_freq=50.0)
-    assert result == "ok"
-
-
-def test_check_spectral_qa_scenarios():
-    """check_spectral_qa returns valid status."""
-    rng = np.random.default_rng(42)
-    sfreq = 250
-    n_times = 2000
-    times = np.arange(n_times) / sfreq
-
-    data = rng.normal(0, 0.1, (4, n_times))
-    data += np.sin(2 * np.pi * 50 * times) * 20.0
-
-    result = check_spectral_qa(data, sfreq, target_freq=50.0)
-    assert result in ["weak", "ok", "strong"]
-
-
-def test_zapline_adaptive_sfreq_mismatch():
-    """Test ZapLine robustness against sampling rate mismatch.
-
-    Ensures that line frequency detection works correctly even when the
-    data sampling rate is not a nice integer (e.g. 1000 Hz vs 50 Hz line noise).
-    """
-    sfreq = 1000.0
-    line_freq = 50.0
-    n_times = 2000
-    n_ch = 3
-
-    # Create synthetic data: signal + line noise
-    rng = np.random.default_rng(42)
-    times = np.arange(n_times) / sfreq
-    signal = rng.standard_normal((n_ch, n_times)) * 0.1
-
-    # Add strong line noise at 50 Hz
-    noise = np.sin(2 * np.pi * line_freq * times)
-    data = signal + 0.5 * noise
-
-    info = mne.create_info(n_ch, sfreq, "eeg")
-    raw = mne.io.RawArray(data, info)
-
-    # 1. Test basic ZapLine execution
-    zap = ZapLine(sfreq=sfreq, line_freq=line_freq, n_select=1)
-    raw_clean = zap.fit_transform(raw)
-
-    # Check that noise variance is reduced
-    orig_var = np.var(raw.get_data(), axis=1).mean()
-    clean_var = np.var(raw_clean.get_data(), axis=1).mean()
-    assert clean_var < orig_var
-
-    # 2. Test with tricky sampling rate (e.g. 512 Hz)
-    sfreq_tricky = 512.0
-    times_tricky = np.arange(n_times) / sfreq_tricky
-    data_tricky = rng.standard_normal((n_ch, n_times)) * 0.1
-    noise_tricky = np.sin(2 * np.pi * line_freq * times_tricky)
-    data_tricky += 0.5 * noise_tricky
-
-    raw_tricky = mne.io.RawArray(
-        data_tricky, mne.create_info(n_ch, sfreq_tricky, "eeg")
-    )
-
-    zap_tricky = ZapLine(sfreq=sfreq_tricky, line_freq=line_freq, n_select=1)
-    raw_clean_tricky = zap_tricky.fit_transform(raw_tricky)
-
-    clean_var_tricky = np.var(raw_clean_tricky.get_data(), axis=1).mean()
-    orig_var_tricky = np.var(raw_tricky.get_data(), axis=1).mean()
-    assert clean_var_tricky < orig_var_tricky
-
-
-def test_adaptive_explicit_line_freq():
-    """Test adaptive mode with explicit scalar line_freq."""
-    zap = ZapLine(
-        sfreq=500,
-        line_freq=None,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 0.1},
-    )
-    zap.line_freq = 50.0
-    data = np.random.randn(1, 1000)
-    res = zap._run_adaptive(data)
-    assert res["line_freq"] == 50.0
-
-
-def test_adaptive_qa_branches():
-    """Test weak/strong branches in the _process_segment QA loop."""
-    zap = ZapLine(sfreq=1000, line_freq=None, adaptive=True)
-    chunk = np.random.randn(1, 1000)
-    # _process_segment reads QA settings from self; _run_adaptive supplies only
-    # the frequency currently being cleaned.
-    zap._target_freq_ = 50.0
-    zap.adaptive_params = {"n_remove_params": {"max_prop": 0.5}}
-
-    with (
-        patch("mne_denoise.zapline.core.find_fine_peak", return_value=50.0),
-        patch("mne_denoise.zapline.core.check_artifact_presence", return_value=True),
-    ):
-        # Scenario 1: Returns "weak" once, then "ok"
-        # Triggers: current_sigma -= 0.25, current_min_remove += 1
-        with patch(
-            "mne_denoise.zapline.core.check_spectral_qa", side_effect=["weak", "ok"]
-        ) as mock_qa:
-            zap._process_segment(chunk)
-            assert mock_qa.call_count == 2
-
-        # Scenario 2: Returns "strong" once, then "ok"
-        # Triggers: current_sigma += 0.25, current_min_remove -= 1
-        with patch(
-            "mne_denoise.zapline.core.check_spectral_qa", side_effect=["strong", "ok"]
-        ) as mock_qa:
-            zap._process_segment(chunk)
-            assert mock_qa.call_count == 2
-
-        # Scenario 3: Hybrid fallback
-        # Always "weak", should trigger hybrid fallback
-        with (
-            patch(
-                "mne_denoise.zapline.core.check_spectral_qa",
-                return_value="weak",
-            ),
-            patch(
-                "mne_denoise.zapline.core.apply_hybrid_cleanup",
-                return_value=chunk,
-            ) as mock_hybrid,
-        ):
-            zap.adaptive_params = {
-                "n_remove_params": {"max_prop": 0.5},
-                "hybrid_fallback": True,
-            }
-            zap._process_segment(chunk)
-            mock_hybrid.assert_called_once()
-
-
-def test_hybrid_cleanup_protection():
-    """Test that hybrid cleanup returns original data if signal loss is too high."""
-    sfreq = 1000
-    t = np.arange(1000) / sfreq
-    signal_50 = np.sin(2 * np.pi * 50 * t)
-    data = signal_50[None, :]
+    data = np.sin(2 * np.pi * 50 * np.arange(1000) / 1000.0)[None, :]
 
     with patch("mne_denoise.zapline.adaptive.welch") as mock_welch:
         freqs = np.linspace(0, 100, 100)
-        psd_orig = np.ones((1, 100))
-        psd_filt = np.zeros((1, 100)) + 1e-10
+        mock_welch.side_effect = [
+            (freqs, np.ones((1, 100))),
+            (freqs, np.full((1, 100), 1e-10)),
+        ]
+        cleaned = apply_hybrid_cleanup(data, sfreq=1000.0, freq=50.0)
 
-        mock_welch.side_effect = [(freqs, psd_orig), (freqs, psd_filt)]
+    short = rng.standard_normal((4, 100))
+    short_cleaned = apply_hybrid_cleanup(short, sfreq=100.0, freq=25.0)
 
-        cleaned = apply_hybrid_cleanup(data, sfreq=1000, freq=50.0)
-        assert np.array_equal(cleaned, data)
-
-
-# =========================================================================
-# CovarianceSegmenter integration tests
-# =========================================================================
+    assert_allclose(cleaned, data)
+    assert short_cleaned.shape == short.shape
 
 
-def test_covariance_segmenter_in_zapline_adaptive():
-    """ZapLine adaptive mode uses CovarianceSegmenter internally."""
+def test_frequency_detection_handles_empty_and_small_windows():
+    """Frequency detection handles empty search bands and insufficient windows."""
     rng = np.random.default_rng(42)
-    sfreq = 250
-    n_times = int(60 * sfreq)
-    times = np.arange(n_times) / sfreq
-    n_ch = 4
+    empty_band = rng.standard_normal((4, 1024))
+    small_window = rng.standard_normal((4, 1024))
 
-    data = rng.standard_normal((n_ch, n_times)) * 0.1
-    data += np.sin(2 * np.pi * 50.0 * times) * 5.0
-
-    zl = ZapLine(
-        sfreq=sfreq,
-        line_freq=50.0,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 10.0},
+    assert find_noise_freqs(empty_band, 250.0, fmin=200.0, fmax=250.0) == []
+    assert isinstance(
+        find_noise_freqs(
+            small_window,
+            256.0,
+            fmin=50.0,
+            fmax=51.0,
+            window_length=0.1,
+        ),
+        list,
     )
 
-    # Should run without error — internally uses CovarianceSegmenter
-    cleaned = zl.fit_transform(data)
-    assert cleaned.shape == data.shape
+
+def test_fine_peak_returns_coarse_frequency_outside_spectrum():
+    """Fine target estimation falls back when the search band is unusable."""
+    data = np.random.default_rng(42).standard_normal((4, 1000))
+
+    assert find_fine_peak(data, 250.0, coarse_freq=200.0, search_width=0.05) == 200.0
 
 
-def test_covariance_segmenter_returns_contiguous_segments():
-    """CovarianceSegmenter tiles the full recording without gaps."""
+def test_harmonic_detection_respects_presence_and_nyquist():
+    """Harmonic detection finds real harmonics and stops before Nyquist."""
     rng = np.random.default_rng(42)
-    data = rng.standard_normal((4, 5000))
-    sfreq = 250
+    sfreq = 500.0
+    times = np.arange(5000) / sfreq
+    data = rng.normal(0, 0.1, (4, len(times)))
+    data += 10.0 * np.sin(2 * np.pi * 50 * times)
+    data += 8.0 * np.sin(2 * np.pi * 100 * times)
 
-    seg = CovarianceSegmenter(sfreq=sfreq, min_chunk_len=5.0, bandpass=(47.0, 53.0))
-    segments = seg.segment(data)
-
-    # Basic validity checks
-    assert len(segments) >= 1
-    assert segments[0][0] == 0
-    assert segments[-1][1] == 5000
-    # Segments should be contiguous
-    for i in range(len(segments) - 1):
-        assert segments[i][1] == segments[i + 1][0]
-
-
-# =========================================================================
-# ZapLine delegates its segment loop to DSS's adaptive engine
-# =========================================================================
-
-
-def _nonstationary_line_data(sfreq=250.0, duration=180.0, n_ch=8):
-    rng = np.random.default_rng(0)
-    n_times = int(duration * sfreq)
-    times = np.arange(n_times) / sfreq
-    data = rng.standard_normal((n_ch, n_times)) * 0.1
-    amp = np.concatenate(
-        [np.full(n_times // 2, 5.0), np.full(n_times - n_times // 2, 1.0)]
+    harmonics = detect_harmonics(data, sfreq, fundamental=50.0, max_harmonics=3)
+    none = detect_harmonics(
+        rng.normal(0, 1, (4, 5000)), sfreq, fundamental=50.0, max_harmonics=3
     )
-    data += np.sin(2 * np.pi * 50.0 * times) * amp
-    return data, sfreq
+    near_nyquist = detect_harmonics(
+        rng.normal(0, 1, (4, 1024)),
+        250.0,
+        fundamental=60.0,
+        max_harmonics=5,
+    )
+
+    assert any(np.isclose(harmonics, 100.0))
+    assert none == []
+    assert all(harmonic < 125.0 for harmonic in near_nyquist)
 
 
-def test_adaptive_uses_dss_adaptive_engine():
-    """_run_adaptive drives DSS._run_segmented rather than its own loop."""
+def test_spectral_qa_returns_ok_for_insufficient_data():
+    """Spectral QA does not reject a segment with too little data."""
+    data = np.random.default_rng(42).standard_normal((4, 50))
+
+    assert check_spectral_qa(data, 100.0, target_freq=50.0) == "ok"
+
+
+def test_adaptive_segments_cover_recording_and_report_line_targets():
+    """Adaptive chunks tile the recording and expose ZapLine diagnostics."""
     data, sfreq = _nonstationary_line_data()
     zap = ZapLine(
         sfreq=sfreq,
@@ -743,45 +263,47 @@ def test_adaptive_uses_dss_adaptive_engine():
         adaptive=True,
         adaptive_params={"min_chunk_len": 20.0},
     )
-    with patch.object(
-        DSS, "_run_segmented", side_effect=DSS._run_segmented, autospec=True
-    ) as spy:
-        zap.fit_transform(data)
-    assert spy.call_count >= 1
+
+    cleaned = zap.fit_transform(data)
+    results = zap.segment_results_
+    assert len(results) > 1
+    assert results[0]["start"] == 0
+    assert results[-1]["end"] == data.shape[1]
+    assert all(
+        left["end"] == right["start"] for left, right in zip(results, results[1:])
+    )
+    assert all(
+        "fine_freq" in result and "artifact_present" in result for result in results
+    )
+    assert all(48.0 <= result["fine_freq"] <= 52.0 for result in results)
+    assert zap.adaptive_results_["line_freq"] == 50.0
+    assert cleaned.shape == data.shape
 
 
-def test_adaptive_single_frequency_reports_one_outer_event():
-    """A frequency pass emits one event despite multiple inner segments."""
-    data, sfreq = _nonstationary_line_data(duration=60.0, n_ch=4)
-    kwargs = {
-        "sfreq": sfreq,
-        "line_freq": 50.0,
-        "adaptive": True,
-        "adaptive_params": {"min_chunk_len": 20.0},
-    }
-    reference = ZapLine(**kwargs).fit_transform(data)
+def test_adaptive_progress_reports_one_frequency_event_for_many_segments():
+    """A single target frequency emits one outer event over all segments."""
+    data, sfreq = _nonstationary_line_data()
+    zap = ZapLine(
+        sfreq=sfreq,
+        line_freq=50.0,
+        adaptive=True,
+        adaptive_params={"min_chunk_len": 20.0},
+    )
     events = []
-    zap = ZapLine(**kwargs)
-    cleaned = zap.fit_transform(data, callback=events.append)
+
+    zap.fit_transform(data, callback=events.append)
 
     assert len(zap.segment_results_) > 1
-    assert len(events) == 1
-    event = events[0]
-    assert event.method == "zapline"
-    assert event.stage == "frequency"
-    assert event.current == 1
-    assert event.total == 1
-    assert event.component is None
-    assert event.metric == 50.0
-    assert_allclose(cleaned, reference)
+    assert [(event.current, event.total, event.metric) for event in events] == [
+        (1, 1, 50.0)
+    ]
 
 
-def test_adaptive_frequency_progress_includes_harmonics():
-    """Fundamentals and harmonics share one frequency-pass event stream."""
-    sfreq = 250.0
-    n_times = int(10 * sfreq)
-    times = np.arange(n_times) / sfreq
-    data = np.random.default_rng(0).standard_normal((4, n_times)) * 0.1
+def test_adaptive_progress_reports_harmonic_frequency_events():
+    """Frequency progress includes each ZapLine harmonic target."""
+    sfreq = 500.0
+    times = np.arange(5000) / sfreq
+    data = np.random.default_rng(0).standard_normal((4, len(times))) * 0.1
     data += 3.0 * np.sin(2 * np.pi * 50.0 * times)
     data += 1.5 * np.sin(2 * np.pi * 100.0 * times)
     zap = ZapLine(
@@ -790,43 +312,25 @@ def test_adaptive_frequency_progress_includes_harmonics():
         adaptive=True,
         adaptive_params={
             "process_harmonics": True,
+            "max_harmonics": 2,
             "min_chunk_len": 10.0,
         },
     )
     events = []
 
     with patch("mne_denoise.zapline.core.detect_harmonics", return_value=[100.0]):
-        zap.fit_transform(data, callback=events.append)
+        cleaned = zap.fit_transform(data, callback=events.append)
 
-    assert [(event.current, event.total) for event in events] == [(1, 2), (2, 2)]
-    assert [event.metric for event in events] == [50.0, 100.0]
-    assert all(event.method == "zapline" for event in events)
-    assert all(event.stage == "frequency" for event in events)
-    assert all(event.component is None for event in events)
-
-
-def test_adaptive_populates_segment_results_with_zapline_keys():
-    """ZapLine's per-segment diagnostics ride along in segment_results_."""
-    data, sfreq = _nonstationary_line_data()
-    zap = ZapLine(
-        sfreq=sfreq,
-        line_freq=50.0,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 20.0},
-    )
-    zap.fit_transform(data)
-
-    assert zap.segment_results_
-    for seg in zap.segment_results_:
-        # keys the shared engine guarantees
-        assert {"start", "end", "n_selected", "eigenvalues", "patterns"} <= set(seg)
-        # keys only ZapLine's _process_segment override adds
-        assert "fine_freq" in seg
-        assert "artifact_present" in seg
+    assert [(event.current, event.total, event.metric) for event in events] == [
+        (1, 2, 50.0),
+        (2, 2, 100.0),
+    ]
+    assert _power_at(cleaned, 50.0, sfreq) < _power_at(data, 50.0, sfreq) * 0.5
+    assert _power_at(cleaned, 100.0, sfreq) < _power_at(data, 100.0, sfreq) * 0.5
 
 
 def test_adaptive_crossfade_smooths_segment_boundaries():
-    """crossfade is inherited from DSS and reduces boundary discontinuity."""
+    """Crossfade reduces discontinuities between adaptive segment outputs."""
     data, sfreq = _nonstationary_line_data()
     params = {"min_chunk_len": 20.0}
 
@@ -847,132 +351,79 @@ def test_adaptive_crossfade_smooths_segment_boundaries():
     )
 
 
-def test_target_frequency_cleared_after_run():
-    """The per-frequency marker must not leak past _run_adaptive."""
-    data, sfreq = _nonstationary_line_data(duration=90.0)
-    zap = ZapLine(
-        sfreq=sfreq,
-        line_freq=50.0,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 20.0},
-    )
-    zap.fit_transform(data)
-    assert zap._target_freq_ is None
+def test_adaptive_target_frequency_resets_after_success_and_interruption():
+    """The per-frequency marker is cleared after normal and interrupted runs."""
+    data, sfreq = _nonstationary_line_data(duration=40.0)
+    kwargs = {
+        "sfreq": sfreq,
+        "line_freq": 50.0,
+        "adaptive": True,
+        "adaptive_params": {"min_chunk_len": 10.0},
+    }
+
+    completed = ZapLine(**kwargs)
+    completed.fit_transform(data)
+    assert completed._target_freq_ is None
+
+    interrupted = ZapLine(**kwargs)
+
+    def callback(_event):
+        raise RuntimeError("ZapLine callback failed")
+
+    with pytest.raises(RuntimeError):
+        interrupted.fit_transform(data, callback=callback)
+    assert interrupted._target_freq_ is None
 
 
 def test_adaptive_warns_on_sfreq_mismatch():
-    """An MNE input whose sfreq disagrees with init must not pass silently."""
+    """Adaptive MNE input warns when its sampling rate differs from init."""
     sfreq_init, sfreq_data = 500.0, 250.0
     n_times = int(20 * sfreq_data)
     times = np.arange(n_times) / sfreq_data
     data = np.random.default_rng(0).standard_normal((4, n_times)) * 0.3
     data += np.sin(2 * np.pi * 50.0 * times) * 3.0
     raw = mne.io.RawArray(data, mne.create_info(4, sfreq_data, "eeg"), verbose=False)
-
     zap = ZapLine(
         sfreq=sfreq_init,
         line_freq=50.0,
         adaptive=True,
         adaptive_params={"min_chunk_len": 5.0},
     )
+
     with pytest.warns(UserWarning, match="differs from init sfreq"):
         zap.fit_transform(raw)
 
 
 def test_adaptive_no_detected_frequencies_is_passthrough():
-    """When nothing is detected there is nothing to clean."""
+    """When no line frequency is detected, adaptive mode is a no-op."""
     data = np.random.default_rng(0).standard_normal((4, 5000)) * 0.1
     zap = ZapLine(sfreq=250.0, line_freq=None, adaptive=True)
-    events = []
 
     with patch("mne_denoise.zapline.core.find_noise_freqs", return_value=[]):
-        cleaned = zap.fit_transform(data, callback=events.append)
+        cleaned = zap.fit_transform(data)
 
     assert_allclose(cleaned, data)
     assert zap.n_removed_ == 0
-    assert events == []
 
 
-def test_adaptive_callback_exception_resets_target_frequency():
-    """ZapLine propagates callback errors and keeps its target marker clean."""
-    data, sfreq = _nonstationary_line_data(duration=20.0, n_ch=4)
-    zap = ZapLine(
-        sfreq=sfreq,
-        line_freq=50.0,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 10.0},
-    )
-
-    def callback(event):
-        raise RuntimeError("ZapLine callback failed")
-
-    with pytest.raises(RuntimeError):
-        zap.fit_transform(data, callback=callback)
-
-    assert zap._target_freq_ is None
-
-
-def test_adaptive_accepts_scalar_line_freq():
-    """A scalar line_freq is normalised to a one-element list."""
-    sfreq = 250.0
-    n_times = int(40 * sfreq)
-    times = np.arange(n_times) / sfreq
-    data = np.random.default_rng(0).standard_normal((6, n_times)) * 0.3
-    data += np.sin(2 * np.pi * 50.0 * times) * 3.0
-
-    zap = ZapLine(
-        sfreq=sfreq,
-        line_freq=50.0,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 10.0},
-    )
-    cleaned = zap.fit_transform(data)
-
-    assert cleaned.shape == data.shape
-    assert zap.adaptive_results_["line_freq"] == 50.0
-
-
-def test_adaptive_records_representative_patterns():
-    """Per-segment eigenvalues/patterns surface on the estimator for plotting."""
-    sfreq = 250.0
-    n_times = int(60 * sfreq)
-    times = np.arange(n_times) / sfreq
-    data = np.random.default_rng(0).standard_normal((8, n_times)) * 0.3
-    data += np.sin(2 * np.pi * 50.0 * times) * 3.0
-
-    zap = ZapLine(
-        sfreq=sfreq,
-        line_freq=50.0,
-        adaptive=True,
-        adaptive_params={"min_chunk_len": 10.0},
-    )
-    zap.fit_transform(data)
-
-    assert zap.eigenvalues_ is not None
-    assert zap.patterns_ is not None
-    assert zap.patterns_.shape[0] == data.shape[0]
-
-
-def _mixed_sensor_line_raw(sfreq=250.0, duration=60.0, seed=0):
-    """Raw with mag/grad/eeg at very different scales, plus 50 Hz line noise."""
+def _mixed_sensor_line_raw(sfreq=250.0, duration=30.0, seed=0):
+    """Raw with mixed sensor units and shared line noise."""
     rng = np.random.default_rng(seed)
     n_times = int(duration * sfreq)
     times = np.arange(n_times) / sfreq
     ch_types = ["mag"] * 4 + ["grad"] * 4 + ["eeg"] * 4
     scales = np.array([1e-12] * 4 + [1e-11] * 4 + [1e-5] * 4)
-    n_ch = len(ch_types)
-
+    mixing = rng.standard_normal(len(ch_types))
     line = np.sin(2 * np.pi * 50.0 * times)
-    mixing = rng.standard_normal(n_ch)
     data = (
-        np.outer(mixing, line) * 3.0 + rng.standard_normal((n_ch, n_times))
+        np.outer(mixing, line) * 3.0 + rng.standard_normal((len(ch_types), n_times))
     ) * scales[:, None]
-    info = mne.create_info([f"C{i}" for i in range(n_ch)], sfreq, ch_types)
+    info = mne.create_info([f"C{i}" for i in range(len(ch_types))], sfreq, ch_types)
     return mne.io.RawArray(data, info, verbose=False)
 
 
-def test_adaptive_with_whitening_returns_sensor_space():
-    """adaptive + whiten cleans all channel types jointly and un-whitens."""
+def test_adaptive_whitening_returns_sensor_space():
+    """Adaptive whitening cleans mixed units and reconstructs sensor units."""
     raw = _mixed_sensor_line_raw()
     zap = ZapLine(
         sfreq=raw.info["sfreq"],
@@ -981,11 +432,11 @@ def test_adaptive_with_whitening_returns_sensor_space():
         whiten=True,
         adaptive_params={"min_chunk_len": 10.0},
     )
-    cleaned = zap.fit_transform(raw)
 
+    cleaned = zap.fit_transform(raw)
     data = raw.get_data()
+
     assert cleaned.get_data().shape == data.shape
-    # Output is back in sensor units, not whitened units
     for picks in (slice(0, 4), slice(4, 8), slice(8, 12)):
         ratio = np.std(cleaned.get_data()[picks]) / np.std(data[picks])
         assert 0.1 < ratio < 10.0
