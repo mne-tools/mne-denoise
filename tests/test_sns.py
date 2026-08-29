@@ -198,26 +198,26 @@ def test_compute_sns_iterations_compose_exactly(rng):
     assert len(info["neighbor_ranks_per_iteration"]) == 3
 
 
-@pytest.mark.parametrize("n_iter", [1, 2])
-def test_compute_sns_progress_callback_has_flat_iteration_counter(rng, n_iter):
+def test_compute_sns_progress_callback_has_flat_iteration_counter(rng):
     """SNS channel events use one counter across all learning iterations."""
     X = rng.standard_normal((3, 180))
-    events = []
-    _cleaned, info = compute_sns(
-        X, n_neighbors=1, n_iter=n_iter, callback=events.append
-    )
+    for n_iter in (1, 2):
+        events = []
+        _cleaned, info = compute_sns(
+            X, n_neighbors=1, n_iter=n_iter, callback=events.append
+        )
 
-    n_channels = X.shape[0]
-    total = n_iter * n_channels
-    assert len(events) == total
-    assert [event.current for event in events] == list(range(1, total + 1))
-    assert [event.total for event in events] == [total] * total
-    assert all(event.method == "sns" for event in events)
-    assert all(event.stage == "channel" for event in events)
-    expected_metrics = np.concatenate(info["neighbor_ranks_per_iteration"])
-    np.testing.assert_array_equal(
-        [event.metric for event in events], expected_metrics.astype(float)
-    )
+        n_channels = X.shape[0]
+        total = n_iter * n_channels
+        assert len(events) == total
+        assert [event.current for event in events] == list(range(1, total + 1))
+        assert [event.total for event in events] == [total] * total
+        assert all(event.method == "sns" for event in events)
+        assert all(event.stage == "channel" for event in events)
+        expected_metrics = np.concatenate(info["neighbor_ranks_per_iteration"])
+        np.testing.assert_array_equal(
+            [event.metric for event in events], expected_metrics.astype(float)
+        )
 
 
 def test_compute_sns_automatic_mask_is_fixed_across_iterations(rng):
@@ -332,25 +332,25 @@ def test_sns_leakage_split_applies_operator(rng):
     np.testing.assert_allclose(cleaned, expected)
 
 
-@pytest.mark.parametrize("preserve_mean", [False, True])
-def test_sns_continuous_transform_is_batch_invariant(rng, preserve_mean):
+def test_sns_continuous_transform_is_batch_invariant(rng):
     """Transforming a temporal chunk alone gives the same samples as a full call."""
     train = rng.standard_normal((8, 1000)) + np.arange(8)[:, None]
     evalu = rng.standard_normal((8, 400)) + 3.0
-    est = SNS(n_neighbors=5, preserve_mean=preserve_mean).fit(train)
-    full = est.transform(evalu)
-    np.testing.assert_allclose(est.transform(evalu[:, 100:250]), full[:, 100:250])
+    for preserve_mean in (False, True):
+        est = SNS(n_neighbors=5, preserve_mean=preserve_mean).fit(train)
+        full = est.transform(evalu)
+        np.testing.assert_allclose(est.transform(evalu[:, 100:250]), full[:, 100:250])
 
 
-@pytest.mark.parametrize("preserve_mean", [False, True])
-def test_sns_epoch_transform_is_batch_invariant(rng, preserve_mean):
+def test_sns_epoch_transform_is_batch_invariant(rng):
     """An epoch result is independent of the other epochs in the transform call."""
     train = rng.standard_normal((5, 7, 120))
     evalu = rng.standard_normal((4, 7, 80)) + 2.0
-    est = SNS(n_neighbors=4, preserve_mean=preserve_mean).fit(train)
-    full = est.transform(evalu)
-    one = est.transform(evalu[[2]])
-    np.testing.assert_allclose(one[0], full[2])
+    for preserve_mean in (False, True):
+        est = SNS(n_neighbors=4, preserve_mean=preserve_mean).fit(train)
+        full = est.transform(evalu)
+        one = est.transform(evalu[[2]])
+        np.testing.assert_allclose(one[0], full[2])
 
 
 def test_sns_preserve_mean_restores_training_mean(rng):

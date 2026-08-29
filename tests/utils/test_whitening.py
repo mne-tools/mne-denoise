@@ -16,45 +16,32 @@ from mne_denoise.dss._whitening import (
 )
 
 
-@pytest.mark.parametrize("shape", [(3, 20), (3, 10, 2)])
-def test_apply_spatial_transform_channel_axis(shape):
-    """Spatial matrices should be applied along the first axis."""
+def test_apply_spatial_transform_contract():
+    """Spatial transforms preserve layout, chunking, and reject bad matrices."""
     rng = np.random.default_rng(0)
-    data = rng.standard_normal(shape)
     matrix = np.diag([2.0, 3.0, 4.0])
+    for shape in ((3, 20), (3, 10, 2)):
+        data = rng.standard_normal(shape)
+        transformed = apply_spatial_transform(matrix, data)
+        for index, scale in enumerate((2.0, 3.0, 4.0)):
+            np.testing.assert_allclose(transformed[index], scale * data[index])
 
-    transformed = apply_spatial_transform(matrix, data)
-
-    np.testing.assert_allclose(transformed[0], 2.0 * data[0])
-    np.testing.assert_allclose(transformed[1], 3.0 * data[1])
-    np.testing.assert_allclose(transformed[2], 4.0 * data[2])
-
-
-def test_apply_spatial_transform_validates_shapes():
-    """Malformed matrices and channel mismatches should be rejected clearly."""
-    with pytest.raises(ValueError, match="matrix must be 2D"):
-        apply_spatial_transform(np.ones(3), np.ones((3, 10)))
-    with pytest.raises(ValueError, match="channel dimensions do not match"):
-        apply_spatial_transform(np.eye(2), np.ones((3, 10)))
-
-
-def test_apply_spatial_transform_chunked_matches_full():
-    """Chunking changes memory use without changing the spatial result."""
-    rng = np.random.default_rng(1)
-    matrix = rng.standard_normal((4, 3))
     data = rng.standard_normal((3, 7, 31))
-
-    full = apply_spatial_transform(matrix, data)
-    chunked = apply_spatial_transform(matrix, data, chunk_size=19)
-
-    np.testing.assert_allclose(chunked, full)
-
-
-@pytest.mark.parametrize("chunk_size", [0, -1, 2.5, True])
-def test_apply_spatial_transform_rejects_invalid_chunk_size(chunk_size):
-    """The shared chunk size has one validated contract."""
-    with pytest.raises((TypeError, ValueError), match="chunk_size"):
-        apply_spatial_transform(np.eye(3), np.ones((3, 10)), chunk_size=chunk_size)
+    rectangular = rng.standard_normal((4, 3))
+    np.testing.assert_allclose(
+        apply_spatial_transform(rectangular, data),
+        apply_spatial_transform(rectangular, data, chunk_size=19),
+    )
+    invalid = [
+        (np.ones(3), np.ones((3, 10)), "matrix must be 2D"),
+        (np.eye(2), np.ones((3, 10)), "channel dimensions do not match"),
+    ]
+    for bad_matrix, bad_data, message in invalid:
+        with pytest.raises(ValueError, match=message):
+            apply_spatial_transform(bad_matrix, bad_data)
+    for chunk_size in (0, -1, 2.5, True):
+        with pytest.raises((TypeError, ValueError), match="chunk_size"):
+            apply_spatial_transform(np.eye(3), np.ones((3, 10)), chunk_size=chunk_size)
 
 
 def test_fit_mixing_matrix_weighted_epoched_data():
@@ -65,54 +52,42 @@ def test_fit_mixing_matrix_weighted_epoched_data():
     data = np.einsum("cs,ste->cte", expected, sources)
     weights = np.ones((20, 4))
     weights[:3, 0] = 0.0
+    np.testing.assert_allclose(
+        fit_mixing_matrix(data, sources, sample_weight=weights), expected, atol=1e-12
+    )
 
-    mixing = fit_mixing_matrix(data, sources, sample_weight=weights)
 
-    np.testing.assert_allclose(mixing, expected, atol=1e-12)
-
-
-def test_apply_covariance_transform():
-    """Covariance transforms should apply a congruence transformation."""
+def test_apply_covariance_transform_contract():
+    """Covariance transforms use congruence multiplication and validate shapes."""
     matrix = np.array([[1.0, 2.0], [-1.0, 0.5]])
     covariance = np.array([[2.0, 0.5], [0.5, 1.0]])
-
     transformed = apply_covariance_transform(matrix, covariance)
-
     np.testing.assert_allclose(transformed, matrix @ covariance @ matrix.T)
     np.testing.assert_allclose(transformed, transformed.T)
 
+    invalid = [
+        (np.ones(2), np.eye(2), "matrix must be 2D"),
+        (np.eye(2), np.ones((2, 3)), "covariance must be square"),
+        (np.eye(2), np.eye(3), "dimensions do not match"),
+    ]
+    for bad_matrix, bad_covariance, message in invalid:
+        with pytest.raises(ValueError, match=message):
+            apply_covariance_transform(bad_matrix, bad_covariance)
 
-def test_apply_covariance_transform_validates_shapes():
-    """Malformed covariance transforms should be rejected clearly."""
-    with pytest.raises(ValueError, match="matrix must be 2D"):
-        apply_covariance_transform(np.ones(2), np.eye(2))
-    with pytest.raises(ValueError, match="covariance must be square"):
-        apply_covariance_transform(np.eye(2), np.ones((2, 3)))
-    with pytest.raises(ValueError, match="dimensions do not match"):
-        apply_covariance_transform(np.eye(2), np.eye(3))
 
-
-def test_map_spatial_matrices_to_sensor_space():
-    """Whitened filters and patterns should map to sensor coordinates."""
+def test_map_spatial_matrices_to_sensor_space_contract():
+    """Sensor mapping is numerically correct and rejects incompatible layouts."""
     filters = np.array([[1.0, 2.0], [3.0, 4.0]])
     patterns = np.array([[5.0, 6.0], [7.0, 8.0]])
     whitener = np.diag([0.5, 0.25])
     dewhitener = np.diag([2.0, 4.0])
-
     filters_sensor, patterns_sensor = map_spatial_matrices_to_sensor_space(
-        filters,
-        patterns,
-        whitener=whitener,
-        dewhitener=dewhitener,
+        filters, patterns, whitener=whitener, dewhitener=dewhitener
     )
-
     np.testing.assert_allclose(filters_sensor, filters @ whitener)
     np.testing.assert_allclose(patterns_sensor, dewhitener @ patterns)
 
-
-@pytest.mark.parametrize(
-    ("filters", "patterns", "whitener", "dewhitener", "error"),
-    [
+    invalid = [
         (np.ones(2), np.eye(2), np.eye(2), np.eye(2), "must be 2D"),
         (np.ones((2, 3)), np.eye(2), np.eye(2), np.eye(2), "filter and whitener"),
         (np.eye(2), np.ones((3, 2)), np.eye(2), np.eye(2), "dewhitener and pattern"),
@@ -123,30 +98,23 @@ def test_map_spatial_matrices_to_sensor_space():
             np.eye(2),
             "same number of components",
         ),
-    ],
-)
-def test_map_spatial_matrices_to_sensor_space_validates_shapes(
-    filters, patterns, whitener, dewhitener, error
-):
-    """Incompatible spatial matrices should fail before multiplication."""
-    with pytest.raises(ValueError, match=error):
-        map_spatial_matrices_to_sensor_space(
-            filters,
-            patterns,
-            whitener=whitener,
-            dewhitener=dewhitener,
-        )
+    ]
+    for bad_filters, bad_patterns, bad_whitener, bad_dewhitener, message in invalid:
+        with pytest.raises(ValueError, match=message):
+            map_spatial_matrices_to_sensor_space(
+                bad_filters,
+                bad_patterns,
+                whitener=bad_whitener,
+                dewhitener=bad_dewhitener,
+            )
 
 
-def test_compute_mne_sensor_whitener_scaling_and_requested_channel_order():
-    """Array scaling and MNE sensor scaling follow the supplied data order."""
+def test_compute_mne_sensor_whitener_contract():
+    """Sensor scaling pairs channel types with the supplied channel-name order."""
     rng = np.random.default_rng(0)
     data = rng.standard_normal((3, 1000)) * np.array([1.0, 10.0, 100.0])[:, None]
-
     whitener, colorer = compute_mne_sensor_whitener(data)
-    transformed = apply_spatial_transform(whitener, data)
-
-    np.testing.assert_allclose(transformed.std(axis=1), 1.0)
+    np.testing.assert_allclose(apply_spatial_transform(whitener, data).std(axis=1), 1.0)
     np.testing.assert_allclose(colorer @ whitener, np.eye(3))
 
     info = mne.create_info(
@@ -165,182 +133,100 @@ def test_compute_mne_sensor_whitener_scaling_and_requested_channel_order():
             np.std(data[[1, 3]]),
         ]
     )
-
-    whitener, colorer = compute_mne_sensor_whitener(
-        data,
-        info=info,
-        ch_names=ch_names,
-    )
-
+    whitener, colorer = compute_mne_sensor_whitener(data, info=info, ch_names=ch_names)
     np.testing.assert_allclose(np.diag(whitener), 1.0 / expected_scales)
     np.testing.assert_allclose(np.diag(colorer), expected_scales)
     np.testing.assert_allclose(
-        apply_spatial_transform(whitener, data),
-        data / expected_scales[:, None],
+        apply_spatial_transform(whitener, data), data / expected_scales[:, None]
     )
-
-    equivalent_info = mne.create_info(
-        ch_names,
-        100.0,
-        ["mag", "eeg", "mag", "eeg"],
+    equivalent_info = mne.create_info(ch_names, 100.0, ["mag", "eeg", "mag", "eeg"])
+    equivalent = compute_mne_sensor_whitener(
+        data, info=equivalent_info, ch_names=ch_names
     )
-    equivalent_whitener, equivalent_colorer = compute_mne_sensor_whitener(
-        data,
-        info=equivalent_info,
-        ch_names=ch_names,
-    )
-    np.testing.assert_allclose(equivalent_whitener, whitener)
-    np.testing.assert_allclose(equivalent_colorer, colorer)
+    np.testing.assert_allclose(equivalent[0], whitener)
+    np.testing.assert_allclose(equivalent[1], colorer)
 
-
-def test_compute_mne_sensor_whitener_rejects_nonfinite_data():
-    """Non-finite samples should fail before covariance processing."""
-    data = np.ones((2, 10))
-    data[0, 0] = np.nan
+    bad_data = np.ones((2, 10))
+    bad_data[0, 0] = np.nan
     with pytest.raises(ValueError, match="finite"):
-        compute_mne_sensor_whitener(data)
+        compute_mne_sensor_whitener(bad_data)
 
 
-def test_whiten_identity_covariance():
-    """Whitened data should have approximately identity covariance."""
+def test_whiten_from_data_covariance_contract():
+    """Data whitening produces identity covariance and preserves supported layouts."""
     rng = np.random.default_rng(42)
     n_channels, n_samples = 16, 5000
-
-    # Create correlated data
     mixing = rng.standard_normal((n_channels, n_channels))
-    sources = rng.standard_normal((n_channels, n_samples))
-    data = mixing @ sources
+    data = mixing @ rng.standard_normal((n_channels, n_samples))
+    whitened, _whitener, _dewhitener = whiten_from_data_covariance(data)
+    covariance = whitened @ whitened.T / n_samples
+    np.testing.assert_allclose(covariance, np.eye(whitened.shape[0]), atol=0.1)
 
-    whitened, W, D = whiten_from_data_covariance(data)
-
-    # Check covariance is approximately identity
-    cov = whitened @ whitened.T / n_samples
-    np.testing.assert_allclose(cov, np.eye(whitened.shape[0]), atol=0.1)
-
-
-def test_whiten_rank_deficient():
-    """Whitening should handle rank-deficient data."""
-    rng = np.random.default_rng(42)
-    n_channels, n_samples = 16, 1000
     true_rank = 8
+    rank_data = rng.standard_normal((true_rank, 1000))
+    rank_data = rng.standard_normal((16, true_rank)) @ rank_data
+    rank_whitened, _, _ = whiten_from_data_covariance(rank_data)
+    assert rank_whitened.shape[0] <= true_rank + 1
 
-    # Create rank-deficient data
-    sources = rng.standard_normal((true_rank, n_samples))
-    mixing = rng.standard_normal((n_channels, true_rank))
-    data = mixing @ sources
-
-    whitened, W, D = whiten_from_data_covariance(data)
-
-    # Should auto-detect reduced rank
-    assert whitened.shape[0] <= true_rank + 1
+    epoched = rng.standard_normal((8, 100, 20))
+    epoched_whitened, _, _ = whiten_from_data_covariance(epoched)
+    assert epoched_whitened.shape == epoched.shape
 
 
-def test_whiten_3d_data():
-    """Whitening should work on 3D epoched data."""
+def test_compute_data_covariance_whitener_numerical_contract():
+    """Whitening matrices are inverse pairs and honor explicit rank."""
     rng = np.random.default_rng(42)
-    n_channels, n_times, n_epochs = 8, 100, 20
+    A = rng.standard_normal((10, 10))
+    covariance = A @ A.T
+    whitener, dewhitener, eigenvalues = compute_data_covariance_whitener(covariance)
+    np.testing.assert_allclose(
+        whitener @ dewhitener, np.eye(whitener.shape[0]), atol=1e-10
+    )
 
-    data = rng.standard_normal((n_channels, n_times, n_epochs))
-    whitened, W, D = whiten_from_data_covariance(data)
-
-    assert whitened.ndim == 3
-    assert whitened.shape[1:] == (n_times, n_epochs)
-
-
-def test_compute_data_covariance_whitener_matrices():
-    """Whitener and dewhitener should be inverses."""
-    rng = np.random.default_rng(42)
-    n_channels = 8
-
-    # Create covariance
-    A = rng.standard_normal((n_channels, n_channels))
-    cov = A @ A.T
-
-    W, D, eigenvalues = compute_data_covariance_whitener(cov)
-
-    # W @ D should be approximately identity (up to truncation)
-    product = W @ D
-    np.testing.assert_allclose(product, np.eye(W.shape[0]), atol=1e-10)
+    rank_whitener, _rank_dewhitener, rank_eigenvalues = (
+        compute_data_covariance_whitener(covariance, rank=5)
+    )
+    assert rank_whitener.shape[0] == 5
+    assert len(rank_eigenvalues) == 5
+    assert len(eigenvalues) == 10
 
 
-def test_compute_data_covariance_whitener_with_rank():
-    """Test data-covariance whitening with explicit rank truncation."""
-    rng = np.random.default_rng(42)
-    n_channels = 10
-
-    # Create full rank covariance
-    A = rng.standard_normal((n_channels, n_channels))
-    cov = A @ A.T
-
-    W, D, eigenvalues = compute_data_covariance_whitener(cov, rank=5)
-
-    # Should truncate to specified rank
-    assert W.shape[0] == 5
-    assert len(eigenvalues) == 5
-
-
-def test_compute_data_covariance_whitener_no_variance_error():
-    """Test data-covariance whitening rejects a zero covariance."""
-    # All zeros = no variance
-    cov = np.zeros((5, 5))
-
+def test_compute_data_covariance_whitener_edge_contract():
+    """Zero/no-component cases fail while tiny SI-unit covariance remains valid."""
     with pytest.raises(ValueError, match="no significant variance"):
-        compute_data_covariance_whitener(cov)
+        compute_data_covariance_whitener(np.zeros((5, 5)))
+    with pytest.raises(ValueError, match="No components"):
+        compute_data_covariance_whitener(np.eye(3), reg=1.0)
 
-
-def test_compute_data_covariance_whitener_is_scale_invariant():
-    """Positive covariance magnitude should not determine numerical validity."""
     covariance = np.diag([3.0, 2.0, 1.0]) * 1e-35
-
     whitener, _, eigenvalues = compute_data_covariance_whitener(covariance)
-
     np.testing.assert_allclose(
         apply_covariance_transform(whitener, covariance), np.eye(3)
     )
     assert eigenvalues.shape == (3,)
 
 
-def test_compute_data_covariance_whitener_no_components_error():
-    """A cutoff that removes every component should fail explicitly."""
-    with pytest.raises(ValueError, match="No components"):
-        compute_data_covariance_whitener(np.eye(3), reg=1.0)
-
-
-@pytest.mark.parametrize(
-    ("covariance", "error"),
-    [
+def test_compute_data_covariance_whitener_validation_contract():
+    """Covariance, rank, regularization, and data dimensionality are validated."""
+    covariance_cases = [
         (np.ones(3), "must be square"),
         (np.ones((2, 3)), "must be square"),
         (np.array([[1.0, np.nan], [np.nan, 1.0]]), "finite"),
         (np.diag([1.0, -1.0]), "positive semi-definite"),
-    ],
-)
-def test_compute_data_covariance_whitener_validates_covariance(covariance, error):
-    """Only finite, square, positive semi-definite covariances are valid."""
-    with pytest.raises(ValueError, match=error):
-        compute_data_covariance_whitener(covariance)
-
-
-@pytest.mark.parametrize(
-    ("kwargs", "error"),
-    [
+    ]
+    for covariance, message in covariance_cases:
+        with pytest.raises(ValueError, match=message):
+            compute_data_covariance_whitener(covariance)
+    parameter_cases = [
         ({"rank": 0}, "rank must be positive"),
         ({"rank": 1.5}, "rank must be an int"),
         ({"rank": True}, "rank must be an int"),
         ({"reg": -1.0}, "reg must be a finite non-negative"),
         ({"reg": np.inf}, "reg must be a finite non-negative"),
         ({"reg": "small"}, "reg must be a real number"),
-    ],
-)
-def test_compute_data_covariance_whitener_validates_parameters(kwargs, error):
-    """Invalid rank and regularization settings should fail explicitly."""
-    with pytest.raises((TypeError, ValueError), match=error):
-        compute_data_covariance_whitener(np.eye(3), **kwargs)
-
-
-def test_whiten_from_data_covariance_invalid_ndim():
-    """Test data-covariance whitening rejects invalid dimensions."""
-    data = np.array([1, 2, 3, 4, 5])  # 1D
-
+    ]
+    for kwargs, message in parameter_cases:
+        with pytest.raises((TypeError, ValueError), match=message):
+            compute_data_covariance_whitener(np.eye(3), **kwargs)
     with pytest.raises(ValueError, match="must be 2D or 3D"):
-        whiten_from_data_covariance(data)
+        whiten_from_data_covariance(np.array([1, 2, 3, 4, 5]))

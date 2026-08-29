@@ -18,114 +18,38 @@ from mne_denoise.dss.segmentation import FixedWindowSegmenter
 # =============================================================================
 
 
-def test_compute_dss_identity_bias():
-    """With identity bias (cov0 == cov1), all eigenvalues should be ~1."""
-    rng = np.random.default_rng(42)
-    n_channels = 8
-
-    A = rng.standard_normal((n_channels, n_channels))
-    cov = A @ A.T
-
-    filters, patterns, eigenvalues = compute_dss(cov, cov)
-
-    # All eigenvalues should be approximately 1
-    assert_allclose(eigenvalues, np.ones(n_channels), atol=0.1)
-
-
-def test_compute_dss_known_signal():
-    """compute_dss should maximize biased/baseline variance ratio."""
-    np.random.default_rng(42)
-    n_channels = 4
-
-    # Create baseline covariance: isotropic (identity-like)
-    cov0 = np.eye(n_channels)
-
-    # Create biased covariance: high variance in first direction
-    cov1 = np.diag([10.0, 1.0, 1.0, 1.0])  # First component 10x stronger
-
-    filters, patterns, eigenvalues = compute_dss(cov0, cov1, n_components=1)
-
-    # Top filter should align with first basis vector (highest bias)
-    top_filter = filters[0]
-    expected_direction = np.array([1, 0, 0, 0])
-    alignment = np.abs(
-        np.dot(top_filter / np.linalg.norm(top_filter), expected_direction)
-    )
-    assert alignment > 0.95, f"Alignment {alignment} too low"
-
-    # Top eigenvalue should be ~10 (ratio of biased to baseline variance)
-    assert eigenvalues[0] > 5, f"Eigenvalue {eigenvalues[0]} too low"
-
-    # The ordered eigenspace is deterministic for a fixed pair of covariances.
-    filters_again, _, eigenvalues_again = compute_dss(cov0, cov1, n_components=1)
+def test_compute_dss_eigensystem_contract():
+    """DSS orders a known biased eigensystem and keeps its metric orthogonal."""
+    cov0 = np.eye(4)
+    cov1 = np.diag([10.0, 4.0, 1.0, 0.5])
+    filters, patterns, eigenvalues = compute_dss(cov0, cov1)
+    alignment = np.abs(filters[0] / np.linalg.norm(filters[0]))
+    assert alignment[0] > 0.95
+    assert eigenvalues[0] == pytest.approx(10.0)
+    assert np.all(eigenvalues[:-1] >= eigenvalues[1:])
+    gram = filters @ cov0 @ filters.T
+    off_diagonal = gram - np.diag(np.diag(gram))
+    assert np.max(np.abs(off_diagonal)) < 1e-10
+    filters_again, _, eigenvalues_again = compute_dss(cov0, cov1)
     assert_allclose(np.abs(filters_again), np.abs(filters))
     assert_allclose(eigenvalues_again, eigenvalues)
+    identity_values = compute_dss(np.eye(4), np.eye(4))[2]
+    assert_allclose(identity_values, np.ones(4), atol=1e-12)
+    assert patterns.shape == (4, 4)
 
 
-def test_compute_dss_eigenvalue_ordering():
-    """Eigenvalues should be in descending order."""
+def test_compute_dss_rank_and_reconstruction_contract():
+    """Component truncation, rank limits, and full reconstruction agree."""
     rng = np.random.default_rng(42)
-    n_channels = 6
-
-    A = rng.standard_normal((n_channels, n_channels))
-    B = rng.standard_normal((n_channels, n_channels))
-    cov0 = A @ A.T
-    cov1 = B @ B.T
-
-    _, _, eigenvalues = compute_dss(cov0, cov1)
-
-    # Check descending order
-    assert np.all(eigenvalues[:-1] >= eigenvalues[1:])
-
-
-def test_compute_dss_orthogonal_filters():
-    """DSS filters should be orthogonal in whitened space."""
-    rng = np.random.default_rng(42)
-    n_channels = 8
-
-    A = rng.standard_normal((n_channels, n_channels))
-    cov0 = A @ A.T
-    cov1 = cov0 * 1.1  # Slightly different
-
-    filters, _, _ = compute_dss(cov0, cov1)
-
-    # Filters should be approximately orthogonal when projected through cov0
-    gram = filters @ cov0 @ filters.T
-    off_diag = gram - np.diag(np.diag(gram))
-    assert np.max(np.abs(off_diag)) < 0.1
-
-
-def test_compute_dss_n_components():
-    """n_components should limit the output size."""
-    rng = np.random.default_rng(42)
-    n_channels = 10
-
-    A = rng.standard_normal((n_channels, n_channels))
+    A = rng.standard_normal((10, 10))
     cov = A @ A.T
+    filters, patterns, eigenvalues = compute_dss(cov, cov, n_components=3)
+    assert filters.shape == (3, 10)
+    assert patterns.shape == (10, 3)
+    assert eigenvalues.shape == (3,)
+    ranked_filters, _, _ = compute_dss(cov, cov, rank=5)
+    assert ranked_filters.shape[0] <= 5
 
-    for n_comp in [1, 3, 5]:
-        filters, patterns, eigenvalues = compute_dss(cov, cov, n_components=n_comp)
-        assert filters.shape[0] == n_comp
-        assert patterns.shape[1] == n_comp
-        assert len(eigenvalues) == n_comp
-
-
-def test_compute_dss_rank():
-    """Rank parameter should limit whitening dimensionality."""
-    rng = np.random.default_rng(42)
-    n_channels = 10
-
-    A = rng.standard_normal((n_channels, n_channels))
-    cov = A @ A.T
-
-    filters, _, _ = compute_dss(cov, cov, rank=5)
-
-    # Output should be at most rank dimensions
-    assert filters.shape[0] <= 5
-
-
-def test_compute_dss_reconstruction():
-    """Patterns @ (filters @ data) should reconstruct centered data."""
     rng = np.random.default_rng(42)
     n_channels, n_samples = 6, 500
 
@@ -148,29 +72,16 @@ def test_compute_dss_reconstruction():
 # =============================================================================
 
 
-def test_compute_dss_error_shape_mismatch():
-    """compute_dss should raise error when covariance shapes mismatch."""
-    c1 = np.eye(5)
-    c2 = np.eye(6)
-
-    with pytest.raises(ValueError, match="shapes mismatch"):
-        compute_dss(c1, c2)
-
-
-def test_compute_dss_error_not_square():
-    """compute_dss should raise error for non-square covariance."""
-    c = np.ones((5, 6))
-
-    with pytest.raises(ValueError, match="must be square"):
-        compute_dss(c, c)
-
-
-def test_compute_dss_error_no_variance():
-    """compute_dss should raise error when covariance has no variance."""
-    c = np.zeros((5, 5))
-
-    with pytest.raises(ValueError, match="no significant variance"):
-        compute_dss(c, c)
+def test_compute_dss_covariance_validation():
+    """Shape, square, and variance failures are one covariance contract."""
+    cases = [
+        (np.eye(5), np.eye(6), "shapes mismatch"),
+        (np.ones((5, 6)), np.ones((5, 6)), "must be square"),
+        (np.zeros((5, 5)), np.zeros((5, 5)), "no significant variance"),
+    ]
+    for cov0, cov1, message in cases:
+        with pytest.raises(ValueError, match=message):
+            compute_dss(cov0, cov1)
 
 
 def test_compute_dss_tiny_positive_covariance_is_scale_invariant():
@@ -320,79 +231,74 @@ def test_dss_array_evoked_extracts_known_erp():
     assert correlation > 0.9, f"ERP correlation {correlation} too low"
 
 
-@pytest.mark.parametrize("normalize_input", [False, True])
-def test_dss_raw_covariances_use_identical_sample_support(monkeypatch, normalize_input):
+def test_dss_raw_covariances_use_identical_sample_support(monkeypatch):
     """Baseline and biased Raw covariance must see identical sample support."""
-    rng = np.random.default_rng(42)
-    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
-    raw = mne.io.RawArray(
-        rng.standard_normal((3, 1000)),
-        info,
-        first_samp=1000,
-        verbose=False,
-    )
-    raw.set_annotations(
-        mne.Annotations(
-            onset=[2.0],
-            duration=[2.0],
-            description=["BAD_test"],
-        )
-    )
-    raw.set_eeg_reference(projection=True, verbose=False)
-
     original_compute = mne.compute_raw_covariance
-    calls = []
-
-    def _record_support(inst, *args, **kwargs):
-        cov = original_compute(inst, *args, **kwargs)
-        calls.append(
-            {
-                "first_samp": inst.first_samp,
-                "annotations": inst.annotations.copy(),
-                "nfree": cov.nfree,
-                "projectors": [
-                    (projector["desc"], projector["active"])
-                    for projector in inst.info["projs"]
-                ],
-            }
+    for normalize_input in (False, True):
+        rng = np.random.default_rng(42)
+        info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
+        raw = mne.io.RawArray(
+            rng.standard_normal((3, 1000)),
+            info,
+            first_samp=1000,
+            verbose=False,
         )
-        return cov
+        raw.set_annotations(
+            mne.Annotations(onset=[2.0], duration=[2.0], description=["BAD_test"])
+        )
+        raw.set_eeg_reference(projection=True, verbose=False)
 
-    monkeypatch.setattr(mne, "compute_raw_covariance", _record_support)
-    DSS(
-        bias=lambda data: data,
-        normalize_input=normalize_input,
-    ).fit(raw)
+        calls = []
 
-    assert len(calls) == 2
-    assert calls[0]["first_samp"] == calls[1]["first_samp"] == raw.first_samp
-    assert calls[0]["annotations"] == calls[1]["annotations"]
-    assert calls[0]["nfree"] == calls[1]["nfree"]
-    assert calls[0]["nfree"] < raw.n_times - 1
-    assert calls[0]["projectors"] == calls[1]["projectors"]
+        def _record_support(inst, *args, **kwargs):
+            cov = original_compute(inst, *args, **kwargs)
+            calls.append(
+                {
+                    "first_samp": inst.first_samp,
+                    "annotations": inst.annotations.copy(),
+                    "nfree": cov.nfree,
+                    "projectors": [
+                        (projector["desc"], projector["active"])
+                        for projector in inst.info["projs"]
+                    ],
+                }
+            )
+            return cov
+
+        monkeypatch.setattr(mne, "compute_raw_covariance", _record_support)
+        DSS(bias=lambda data: data, normalize_input=normalize_input).fit(raw)
+
+        assert len(calls) == 2
+        assert calls[0]["first_samp"] == calls[1]["first_samp"] == raw.first_samp
+        assert calls[0]["annotations"] == calls[1]["annotations"]
+        assert calls[0]["nfree"] == calls[1]["nfree"]
+        assert calls[0]["nfree"] < raw.n_times - 1
+        assert calls[0]["projectors"] == calls[1]["projectors"]
 
 
-@pytest.mark.parametrize("fit_kws", [{"smooth": 5}, {"whiten": True}])
-def test_dss_alternate_fit_paths_preserve_bad_raw_channels(fit_kws):
+def test_dss_alternate_fit_paths_preserve_bad_raw_channels():
     """Smoothing and whitening must follow the same good-channel contract."""
-    rng = np.random.default_rng(47)
-    info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
-    raw = mne.io.RawArray(rng.standard_normal((4, 1000)), info, verbose=False)
-    raw.info["bads"] = ["EEG3"]
+    for fit_kws in ({"smooth": 5}, {"whiten": True}):
+        rng = np.random.default_rng(47)
+        info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
+        raw = mne.io.RawArray(rng.standard_normal((4, 1000)), info, verbose=False)
+        raw.info["bads"] = ["EEG3"]
 
-    dss = DSS(
-        bias=lambda data: data,
-        n_components=3,
-        normalize_input=False,
-        component_action="retain",
-        **fit_kws,
-    ).fit(raw)
-    transformed = dss.transform(raw)
+        dss = DSS(
+            bias=lambda data: data,
+            n_components=3,
+            normalize_input=False,
+            component_action="retain",
+            **fit_kws,
+        ).fit(raw)
+        transformed = dss.transform(raw)
 
-    assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
-    assert dss.info_["ch_names"] == dss._mne_ch_names_
-    assert dss.filters_.shape == (3, 3)
-    assert_allclose(transformed.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"]))
+        assert dss._mne_ch_names_ == ["EEG0", "EEG1", "EEG2"]
+        assert dss.info_["ch_names"] == dss._mne_ch_names_
+        assert dss.filters_.shape == (3, 3)
+        assert_allclose(
+            transformed.get_data(picks=["EEG3"]), raw.get_data(picks=["EEG3"])
+        )
 
 
 def test_dss_transform_aligns_reordered_mne_channels_by_name():
@@ -426,8 +332,8 @@ def test_dss_fit_rejects_all_bad_data_channels():
         DSS(bias=lambda data: data, normalize_input=False).fit(raw)
 
 
-def test_dss_epochs_bad_channels_are_excluded_and_preserved():
-    """DSS must preserve bad Epochs channels and epoch bookkeeping."""
+def test_dss_mne_bad_channels_are_excluded_and_preserved():
+    """DSS excludes bad channels while preserving Raw, Epochs, and Evoked data."""
     pd = pytest.importorskip("pandas")
     rng = np.random.default_rng(45)
     info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
@@ -462,9 +368,6 @@ def test_dss_epochs_bad_channels_are_excluded_and_preserved():
     assert transformed.event_id == epochs.event_id
     assert transformed.metadata.equals(epochs.metadata)
 
-
-def test_dss_evoked_bad_channels_are_excluded_and_preserved():
-    """The NumPy Evoked path must honor the same fitted-channel contract."""
     rng = np.random.default_rng(46)
     info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
     evoked = mne.EvokedArray(
@@ -728,8 +631,8 @@ def test_dss_whiten_false_still_isolates_single_type():
     assert any("multiple data channel types" in str(w.message) for w in caught)
 
 
-def test_dss_whiten_noise_cov_missing_channels_raises():
-    """A noise_cov missing data channels is rejected."""
+def test_dss_whiten_noise_cov_validation():
+    """Noise covariance validation covers coverage, type, names, and data channels."""
     from mne_denoise.dss.denoisers import BandpassBias
 
     raw, _, _ = _mixed_sensor_raw()
@@ -744,11 +647,6 @@ def test_dss_whiten_noise_cov_missing_channels_raises():
     with pytest.raises(ValueError, match="noise_cov is missing required channels"):
         DSS(bias=bias, whiten=True, noise_cov=small).fit(raw)
 
-
-def test_dss_whiten_noise_cov_requires_mne_input():
-    """noise_cov cannot be aligned to a bare NumPy array."""
-    from mne_denoise.dss.denoisers import BandpassBias
-
     _, _, data = _mixed_sensor_raw()
     noise_cov = mne.Covariance(
         np.eye(18),
@@ -760,26 +658,12 @@ def test_dss_whiten_noise_cov_requires_mne_input():
     bias = BandpassBias(freq_band=(8, 12), sfreq=200.0)
     with pytest.raises(ValueError, match="named channels"):
         DSS(bias=bias, whiten=True, noise_cov=noise_cov).fit(data)
-
-
-def test_dss_whiten_rejects_non_mne_noise_covariance():
-    """noise_cov should use MNE's covariance type and semantics."""
-    from mne_denoise.dss.denoisers import BandpassBias
-
-    raw, _, _ = _mixed_sensor_raw()
-    bias = BandpassBias(freq_band=(8, 12), sfreq=raw.info["sfreq"])
     with pytest.raises(TypeError, match="mne.Covariance"):
         DSS(bias=bias, whiten=True, noise_cov=np.eye(18)).fit(raw)
-
-
-def test_dss_whiten_no_data_channels_raises():
-    """whiten=True needs at least one data channel."""
-    from mne_denoise.dss.denoisers import BandpassBias
 
     rng = np.random.default_rng(0)
     info = mne.create_info(["S0", "S1"], 200.0, ["stim", "stim"])
     raw = mne.io.RawArray(rng.standard_normal((2, 500)), info, verbose=False)
-    bias = BandpassBias(freq_band=(8, 12), sfreq=200.0)
     with pytest.raises(ValueError, match="No data channels"):
         DSS(bias=bias, whiten=True).fit(raw)
 

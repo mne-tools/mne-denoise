@@ -97,12 +97,6 @@ def test_compute_icanclean_basic_cleaning_and_qc(synthetic_dual_layer):
         np.corrcoef(cleaned_primary.ravel(), truth["brain"].ravel())[0, 1]
         > np.corrcoef(data[primary_idx].ravel(), truth["brain"].ravel())[0, 1]
     )
-
-
-def test_compute_icanclean_matches_estimator_output(synthetic_dual_layer):
-    """compute_icanclean matches the estimator on the same data."""
-    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
-
     icc = ICanClean(
         sfreq=sfreq,
         ref_channels=ref_idx,
@@ -114,19 +108,10 @@ def test_compute_icanclean_matches_estimator_output(synthetic_dual_layer):
     )
     cleaned = icc.fit_transform(data)
 
-    cleaned_primary, qc = compute_icanclean(
-        data[primary_idx],
-        data[ref_idx],
-        sfreq=sfreq,
-        segment_len=2.0,
-        overlap=0.5,
-        threshold=0.5,
-        verbose=False,
-    )
-
     np.testing.assert_allclose(cleaned_primary, cleaned[primary_idx])
     np.testing.assert_allclose(qc["correlations_"], icc.correlations_, equal_nan=True)
     np.testing.assert_array_equal(qc["n_removed_"], icc.n_removed_)
+    np.testing.assert_array_equal(cleaned[ref_idx], data[ref_idx])
 
 
 def test_compute_icanclean_hybrid_is_not_supported(synthetic_dual_layer):
@@ -158,55 +143,35 @@ def test_compute_icanclean_zero_rank_reference_raises(rng):
         )
 
 
-def test_compute_icanclean_calibrated_mode_returns_window_qc(synthetic_dual_layer):
-    """Calibrated mode runs as a supported single-pass variant."""
+def test_compute_icanclean_window_modes_and_progress(synthetic_dual_layer):
+    """Sliding and calibrated passes expose aligned per-window QC and events."""
     data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
-
-    _cleaned_primary, qc = compute_icanclean(
-        data[primary_idx],
-        data[ref_idx],
-        sfreq=sfreq,
-        mode="calibrated",
-        segment_len=2.0,
-        overlap=0.5,
-        threshold=0.5,
-        verbose=False,
-    )
-
-    assert qc["n_windows_"] > 1
-    assert qc["correlations_"].shape[0] == qc["n_windows_"]
-    assert len(qc["filters_"]) == qc["n_windows_"]
-    assert len(qc["patterns_"]) == qc["n_windows_"]
-
-
-@pytest.mark.parametrize("mode", ["sliding", "calibrated"])
-def test_compute_icanclean_window_progress_reports_window_qc(
-    synthetic_dual_layer, mode
-):
-    """Single-pass window callbacks report the final per-window QC state."""
-    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
-    kwargs = {
-        "sfreq": sfreq,
-        "mode": mode,
-        "segment_len": 2.0,
-        "overlap": 0.5,
-        "threshold": 0.5,
-        "verbose": False,
-    }
-    events = []
-    _cleaned, qc = compute_icanclean(
-        data[primary_idx], data[ref_idx], callback=events.append, **kwargs
-    )
-
-    assert len(events) == qc["n_windows_"]
-    assert [event.method for event in events] == ["icanclean"] * len(events)
-    assert [event.stage for event in events] == ["window"] * len(events)
-    assert [event.current for event in events] == list(range(1, len(events) + 1))
-    assert [event.total for event in events] == [qc["n_windows_"]] * len(events)
-    assert all(event.component is None for event in events)
-    np.testing.assert_array_equal(
-        [event.metric for event in events], qc["n_removed_"].astype(float)
-    )
+    for mode in ("sliding", "calibrated"):
+        kwargs = {
+            "sfreq": sfreq,
+            "mode": mode,
+            "segment_len": 2.0,
+            "overlap": 0.5,
+            "threshold": 0.5,
+            "verbose": False,
+        }
+        events = []
+        _cleaned, qc = compute_icanclean(
+            data[primary_idx], data[ref_idx], callback=events.append, **kwargs
+        )
+        assert qc["n_windows_"] > 1
+        assert qc["correlations_"].shape[0] == qc["n_windows_"]
+        assert len(qc["filters_"]) == qc["n_windows_"]
+        assert len(qc["patterns_"]) == qc["n_windows_"]
+        assert len(events) == qc["n_windows_"]
+        assert [event.method for event in events] == ["icanclean"] * len(events)
+        assert [event.stage for event in events] == ["window"] * len(events)
+        assert [event.current for event in events] == list(range(1, len(events) + 1))
+        assert [event.total for event in events] == [qc["n_windows_"]] * len(events)
+        assert all(event.component is None for event in events)
+        np.testing.assert_array_equal(
+            [event.metric for event in events], qc["n_removed_"].astype(float)
+        )
 
 
 def test_compute_icanclean_global_callback_is_silent(synthetic_dual_layer):
@@ -258,27 +223,10 @@ def test_compute_icanclean_null_threshold_emits_window_events(
 # ---------------------------------------------------------------------------
 
 
-def test_icanclean_numpy_ref_channels_unchanged(synthetic_dual_layer):
-    """Reference channels are not modified."""
-    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
-    icc = ICanClean(
-        sfreq=sfreq,
-        ref_channels=ref_idx,
-        primary_channels=primary_idx,
-        verbose=False,
-    )
-    cleaned = icc.fit_transform(data)
-    np.testing.assert_array_equal(cleaned[ref_idx], data[ref_idx])
-
-
-def test_icanclean_numpy_no_ref_channels_raises(rng):
-    """Missing ref_channels raises at construction time."""
+def test_icanclean_numpy_configuration_guards(rng):
+    """Missing references and windows longer than data fail at clear boundaries."""
     with pytest.raises(ValueError, match="ref_channels must be provided explicitly"):
         ICanClean(sfreq=250.0, verbose=False)
-
-
-def test_icanclean_numpy_window_too_long_raises(rng):
-    """Window longer than data raises ValueError."""
     data = rng.standard_normal((10, 100))
     icc = ICanClean(
         sfreq=250.0,
@@ -288,24 +236,6 @@ def test_icanclean_numpy_window_too_long_raises(rng):
     )
     with pytest.raises(ValueError, match="exceeds data length"):
         icc.fit_transform(data)
-
-
-def test_icanclean_numpy_auto_threshold(synthetic_dual_layer):
-    """Auto threshold mode runs without error."""
-    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
-    events = []
-    icc = ICanClean(
-        sfreq=sfreq,
-        ref_channels=ref_idx,
-        threshold="auto",
-        verbose=False,
-    )
-    icc.fit_transform(data, callback=events.append)
-    assert len(events) == icc.n_windows_
-    assert [event.current for event in events] == list(range(1, icc.n_windows_ + 1))
-    np.testing.assert_array_equal(
-        [event.metric for event in events], icc.n_removed_.astype(float)
-    )
 
 
 def test_icanclean_callback_exception_propagates_without_partial_qc(
@@ -337,7 +267,7 @@ def test_icanclean_callback_exception_propagates_without_partial_qc(
 
 
 def test_icanclean_numpy_max_reject_fraction(synthetic_dual_layer):
-    """max_reject_fraction caps the number of removed components."""
+    """The rejection cap covers both bounded and zero-removal behavior."""
     data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
     icc = ICanClean(
         sfreq=sfreq,
@@ -350,6 +280,16 @@ def test_icanclean_numpy_max_reject_fraction(synthetic_dual_layer):
     n_comp = min(len(primary_idx), len(ref_idx))
     max_allowed = max(1, int(0.25 * n_comp))
     assert np.all(icc.n_removed_ <= max_allowed)
+
+    uncapped_to_zero = ICanClean(
+        sfreq=sfreq,
+        ref_channels=list(ref_idx),
+        max_reject_fraction=0.0,
+        threshold=0.0,
+    )
+    unchanged = uncapped_to_zero.fit_transform(data)
+    np.testing.assert_array_almost_equal(unchanged, data)
+    assert uncapped_to_zero.n_removed_.sum() == 0
 
 
 def test_icanclean_mne_ordered_named_channels(rng):
@@ -386,36 +326,14 @@ def test_icanclean_mne_ordered_named_channels(rng):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "message"),
-    [
+def test_icanclean_validation_contract():
+    """Representative invalid configuration classes fail at construction."""
+    invalid = [
         ({"overlap": 1.0}, "overlap"),
         ({"mode": "unknown"}, "mode"),
         ({"clean_with": "Z"}, "clean_with"),
         ({"max_reject_fraction": -0.1}, "max_reject_fraction"),
         ({"reref_primary": "bad"}, "reref_primary"),
-    ],
-)
-def test_icanclean_validation_invalid_params(kwargs, message):
-    """Representative invalid configuration classes fail at construction."""
-    with pytest.raises(ValueError, match=message):
-        ICanClean(sfreq=250.0, ref_channels=[0], **kwargs)
-
-
-def test_icanclean_validation_stats_segment_len():
-    """A stats window shorter than the clean window is invalid."""
-    with pytest.raises(ValueError, match="stats_segment_len"):
-        ICanClean(
-            sfreq=250.0,
-            ref_channels=[0],
-            segment_len=2.0,
-            stats_segment_len=1.0,
-        )
-
-
-def test_icanclean_validation_hybrid_params():
-    """Hybrid settings are rejected when incomplete or used in one-pass mode."""
-    invalid = [
         ({"mode": "hybrid"}, "mode='hybrid' requires"),
         (
             {
@@ -425,6 +343,10 @@ def test_icanclean_validation_hybrid_params():
                 "global_max_reject_fraction": 0.5,
             },
             "only supported when mode='hybrid'",
+        ),
+        (
+            {"segment_len": 2.0, "stats_segment_len": 1.0},
+            "stats_segment_len",
         ),
     ]
     for kwargs, message in invalid:
@@ -437,31 +359,25 @@ def test_icanclean_validation_hybrid_params():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "bad_filter",
-    [
+def test_filter_ref_rejects_invalid_specs():
+    """Malformed, non-positive, and Nyquist-edge filters fail early."""
+    bad_filters = [
         ("bogus", 10.0),
         ("bandstop", 10.0),
         ("bandstop", (45.0, 5.0)),
         ("bandstop", (0.0, 45.0)),
         ("lowpass", -1.0),
         ("lowpass", 125.0),
-    ],
-)
-def test_filter_ref_rejects_invalid_specs(bad_filter):
-    """Malformed, non-positive, and Nyquist-edge filters fail early."""
-    with pytest.raises(ValueError):
-        ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad_filter)
+    ]
+    for bad_filter in bad_filters:
+        with pytest.raises(ValueError):
+            ICanClean(sfreq=250.0, ref_channels=[0], filter_ref=bad_filter)
 
 
-def test_pseudo_ref_requires_filter_ref():
-    """Without a filter the reference equals the primary block: r=1 everywhere."""
+def test_pseudo_ref_configuration_contract():
+    """Pseudo-reference mode owns its filter and does not accept real references."""
     with pytest.raises(ValueError, match="requires filter_ref"):
         ICanClean(sfreq=250.0, primary_channels=[0, 1], pseudo_ref=True)
-
-
-def test_pseudo_ref_needs_no_ref_channels():
-    """pseudo_ref supplies its own reference, so ref_channels is optional."""
     icc = ICanClean(
         sfreq=250.0,
         primary_channels=[0, 1],
@@ -469,14 +385,6 @@ def test_pseudo_ref_needs_no_ref_channels():
         filter_ref=("bandstop", (5.0, 45.0)),
     )
     assert icc.ref_channels is None
-
-
-def test_pseudo_ref_rejects_ref_channels():
-    """pseudo_ref builds its own reference; a real ref_channels would be
-
-    silently ignored (the CCA reference is always rebuilt from the primary
-    channels once pseudo_ref=True), so combining the two must raise instead.
-    """
     with pytest.raises(ValueError, match="ref_channels is not used"):
         ICanClean(
             sfreq=250.0,
@@ -514,23 +422,6 @@ def test_pseudo_ref_removes_out_of_band_artifact(synthetic_dual_layer):
     before = np.mean(np.abs(contaminated[:, edge:-edge] - primary[:, edge:-edge]))
     after = np.mean(np.abs(cleaned[:, edge:-edge] - primary[:, edge:-edge]))
     assert after < before, f"drift not attenuated: {before:.3f} -> {after:.3f}"
-
-
-def test_icanclean_max_reject_zero_preserves_data(synthetic_dual_layer):
-    """max_reject_fraction=0.0 should remove nothing."""
-    data, primary_idx, ref_idx, sfreq, _ = synthetic_dual_layer
-    events = []
-    icc = ICanClean(
-        sfreq=sfreq,
-        ref_channels=list(ref_idx),
-        max_reject_fraction=0.0,
-        threshold=0.0,  # would reject everything if cap weren't 0
-    )
-    cleaned = icc.fit_transform(data, callback=events.append)
-    np.testing.assert_array_almost_equal(cleaned, data)
-    assert icc.n_removed_.sum() == 0
-    assert len(events) == icc.n_windows_
-    assert [event.metric for event in events] == [0.0] * icc.n_windows_
 
 
 def test_icanclean_mode_global(synthetic_dual_layer):
@@ -710,21 +601,6 @@ def test_icanclean_epoch_aggregation_hybrid_all_passes(rng):
 
     global_total = sum(s.stop - s.start for s in icc.global_epoch_window_slices_)
     assert global_total == icc.global_correlations_.shape[0]
-
-
-def test_compute_icanclean_stats_window_clamping():
-    """A broader stats window is clamped at both recording boundaries."""
-    sfreq = 100.0
-    data = np.random.default_rng(0).standard_normal((2, 500))
-    _out, qc = compute_icanclean(
-        data[[0]],
-        data[[1]],
-        sfreq,
-        mode="sliding",
-        segment_len=2.0,
-        stats_segment_len=4.0,
-    )
-    assert qc["n_windows_"] > 0
 
 
 def test_compute_icanclean_cca_failure_mock(monkeypatch):

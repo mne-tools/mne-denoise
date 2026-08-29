@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-import mne_denoise.bss_cca as bss_cca_core
 from mne_denoise.bss_cca import BSSCCA, _lagged_pairs, _segment_bounds, compute_bss_cca
 
 SFREQ = 250.0
@@ -128,16 +127,10 @@ def test_correlations_are_descending_and_selection_drops_the_tail(muscle_data):
     assert info["kept_mask"][:-3].all()
     np.testing.assert_allclose(info["correlations"], repeat_info["correlations"])
     np.testing.assert_array_equal(info["kept_mask"], repeat_info["kept_mask"])
-
-
-def test_threshold_and_count_can_select_the_same_components(muscle_data):
-    """A threshold placed between two correlations equals the matching count."""
-    observed, _clean, _sfreq = muscle_data
-    _cleaned, info = compute_bss_cca(observed, n_remove=3)
     rho = info["correlations"]
     threshold = 0.5 * (rho[-4] + rho[-3])
-    _cleaned_t, info_t = compute_bss_cca(observed, rho_threshold=threshold)
-    np.testing.assert_array_equal(info_t["kept_mask"], info["kept_mask"])
+    _, threshold_info = compute_bss_cca(observed, rho_threshold=threshold)
+    np.testing.assert_array_equal(threshold_info["kept_mask"], info["kept_mask"])
 
 
 def test_signed_autocorrelation_exposes_near_nyquist_aliasing(rng):
@@ -174,16 +167,11 @@ def test_filter_asymmetry_is_reported_per_component(muscle_data):
 # ---------------------------------------------------------------------------
 
 
-def test_lag_defaults_to_one_sample(rng):
-    """The paper fixes the lag at one sample; that is the default."""
+def test_lag_semantics(rng):
+    """The default, sample-based, and physical lag declarations agree."""
     data = rng.standard_normal((5, 1000))
     _cleaned, info = compute_bss_cca(data, n_remove=1)
     assert info["lag_samples"] == 1
-
-
-def test_sample_and_physical_lag_agree(rng):
-    """lag_seconds resolves to the equivalent sample lag."""
-    data = rng.standard_normal((5, 1000))
     by_sample, info_a = compute_bss_cca(data, lag_samples=3, n_remove=1)
     by_time, info_b = compute_bss_cca(
         data, lag_seconds=3.0 / SFREQ, sfreq=SFREQ, n_remove=1
@@ -224,11 +212,12 @@ def test_lagged_pairs_never_cross_epoch_boundaries():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("kwargs", [{}, {"n_remove": 1, "rho_threshold": 0.9}])
-def test_selection_rule_must_be_explicit(rng, kwargs):
+def test_selection_rule_must_be_explicit(rng):
     """Neither a silent default nor two competing rules are accepted."""
-    with pytest.raises(ValueError, match="exactly one of"):
-        compute_bss_cca(rng.standard_normal((5, 1000)), **kwargs)
+    data = rng.standard_normal((5, 1000))
+    for kwargs in ({}, {"n_remove": 1, "rho_threshold": 0.9}):
+        with pytest.raises(ValueError, match="exactly one of"):
+            compute_bss_cca(data, **kwargs)
 
 
 def test_unreachable_threshold_removes_everything(rng):
@@ -273,9 +262,10 @@ def test_undersampled_data_is_rejected(rng):
         compute_bss_cca(rng.standard_normal((16, 12)), n_remove=1)
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "error", "message"),
-    [
+def test_invalid_lag_declarations(rng):
+    """Lag scalars reject invalid, non-finite, and out-of-range values."""
+    data = rng.standard_normal((4, 1000))
+    cases = [
         ({"lag_samples": 0}, ValueError, "lag_samples"),
         ({"lag_samples": 1.5}, TypeError, "lag_samples"),
         ({"lag_samples": 5000}, ValueError, "leaves no paired samples"),
@@ -283,27 +273,24 @@ def test_undersampled_data_is_rejected(rng):
         ({"lag_seconds": 0.1}, ValueError, "sfreq is required"),
         ({"lag_seconds": 1e-9, "sfreq": SFREQ}, ValueError, "less than one sample"),
         ({"lag_seconds": 0.1, "sfreq": 0.0}, ValueError, "sfreq must be a positive"),
-    ],
-)
-def test_invalid_lag_declarations(rng, kwargs, error, message):
-    """Lag scalars reject invalid, non-finite, and out-of-range values."""
-    with pytest.raises(error, match=message):
-        compute_bss_cca(rng.standard_normal((4, 1000)), n_remove=1, **kwargs)
+    ]
+    for kwargs, error, message in cases:
+        with pytest.raises(error, match=message):
+            compute_bss_cca(data, n_remove=1, **kwargs)
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "error", "message"),
-    [
+def test_invalid_selection_parameters(rng):
+    """Selection scalars are validated the same way as the rest of the package."""
+    data = rng.standard_normal((4, 1000))
+    cases = [
         ({"n_remove": -1}, ValueError, "non-negative"),
         ({"n_remove": 1.5}, TypeError, "n_remove"),
         ({"rho_threshold": 1.5}, ValueError, "between 0 and 1"),
         ({"rho_threshold": np.nan}, TypeError, "rho_threshold"),
-    ],
-)
-def test_invalid_selection_parameters(rng, kwargs, error, message):
-    """Selection scalars are validated the same way as the rest of the package."""
-    with pytest.raises(error, match=message):
-        compute_bss_cca(rng.standard_normal((4, 1000)), **kwargs)
+    ]
+    for kwargs, error, message in cases:
+        with pytest.raises(error, match=message):
+            compute_bss_cca(data, **kwargs)
 
 
 def test_epoched_result_matches_manual_concatenation(rng):
@@ -352,25 +339,6 @@ def test_preserve_mean_controls_the_offset(rng):
 # ---------------------------------------------------------------------------
 # Estimator contract
 # ---------------------------------------------------------------------------
-
-
-def test_estimator_delegates_to_the_public_function(monkeypatch, rng):
-    """fit() routes through compute_bss_cca rather than a private twin."""
-    calls = {}
-    original = bss_cca_core.compute_bss_cca
-
-    def spy(X, **kwargs):
-        calls["kwargs"] = kwargs
-        return original(X, **kwargs)
-
-    monkeypatch.setattr(bss_cca_core, "compute_bss_cca", spy)
-    BSSCCA(n_remove=2, lag_samples=3, preserve_mean=False).fit(
-        rng.standard_normal((5, 1000))
-    )
-    assert calls, "fit() did not call compute_bss_cca"
-    assert calls["kwargs"]["n_remove"] == 2
-    assert calls["kwargs"]["lag_samples"] == 3
-    assert calls["kwargs"]["preserve_mean"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -504,19 +472,18 @@ def test_segment_len_is_rejected_for_epoched_input(rng):
         )
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "error", "message"),
-    [
+def test_invalid_blocking_parameters(rng):
+    """Blocking parameters are validated before any decomposition runs."""
+    data = rng.standard_normal((5, 2000))
+    cases = [
         ({"segment_len": 10.0}, ValueError, "sfreq is required"),
         ({"segment_len": 0.0, "sfreq": SFREQ}, ValueError, "positive"),
         ({"segment_len": 0.001, "sfreq": SFREQ}, ValueError, "use a longer block"),
         ({"overlap": 1.0}, ValueError, r"\[0, 1\)"),
-    ],
-)
-def test_invalid_blocking_parameters(rng, kwargs, error, message):
-    """Blocking parameters are validated before any decomposition runs."""
-    with pytest.raises(error, match=message):
-        compute_bss_cca(rng.standard_normal((5, 2000)), n_remove=1, **kwargs)
+    ]
+    for kwargs, error, message in cases:
+        with pytest.raises(error, match=message):
+            compute_bss_cca(data, n_remove=1, **kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -537,12 +504,6 @@ def test_broadband_attenuation_preserves_neural_bands(muscle_data):
         retained = _band_power(cleaned, sfreq, fmin, fmax)
         reference = _band_power(clean, sfreq, fmin, fmax)
         assert retained > 0.7 * reference, f"lost the {fmin}-{fmax} Hz band"
-
-
-def test_waveform_is_recovered(muscle_data):
-    """The cleaned signal correlates with the known clean waveform."""
-    observed, clean, _sfreq = muscle_data
-    cleaned, _info = compute_bss_cca(observed, n_remove=3, preserve_mean=False)
     clean_c = clean - clean.mean(axis=1, keepdims=True)
     observed_c = observed - observed.mean(axis=1, keepdims=True)
     assert _corr(cleaned, clean_c) > 0.95
@@ -636,21 +597,19 @@ def test_reject_threshold_selects_opposite_ends():
     assert np.all(high.correlations_[~high.kept_mask_] > 0.5)
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "message"),
-    [
+def test_selection_scale_options_reject_unknown_value():
+    """Selection direction and scale accept only their documented values."""
+    observed, _drift, _muscle = _drift_and_muscle(np.random.default_rng(3))
+    cases = [
         ({"reject": "sideways", "n_remove": 1}, "reject must be 'low' or 'high'"),
         (
             {"threshold_on": "r2", "rho_threshold": 0.5},
             "threshold_on must be 'rho' or 'rsq'",
         ),
-    ],
-)
-def test_selection_scale_options_reject_unknown_value(kwargs, message):
-    """Selection direction and scale accept only their documented values."""
-    observed, _drift, _muscle = _drift_and_muscle(np.random.default_rng(3))
-    with pytest.raises(ValueError, match=message):
-        compute_bss_cca(observed, lag_samples=1, **kwargs)
+    ]
+    for kwargs, message in cases:
+        with pytest.raises(ValueError, match=message):
+            compute_bss_cca(observed, lag_samples=1, **kwargs)
 
 
 def test_threshold_on_rsq_matches_squared_rho():

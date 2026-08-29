@@ -51,40 +51,41 @@ def _make_synthetic(
     return data
 
 
-@pytest.mark.parametrize("variant", ["psp", "psw", "mw"])
-def test_adaptive_summary_identifies_variant_and_fit_state(variant, caplog):
-    """AdaptiveASR INFO includes the variant and fitted operating point."""
-    data = _make_synthetic(n_samples=4000, seed=101)
-    kwargs = {"mw_window_length": 20.0} if variant == "mw" else {}
-    estimator = AdaptiveASR(
-        sfreq=SFREQ,
-        cutoff=20.0,
-        variant=variant,
-        verbose=False,
-        **kwargs,
-    )
-    with caplog.at_level(logging.INFO, logger="mne_denoise"):
-        estimator.fit(data, verbose=True)
-    summaries = [
-        record
-        for record in caplog.records
-        if record.message.startswith("AdaptiveASR:")
-        and "clean calibration windows=" in record.message
-    ]
-    assert len(summaries) == 1
-    for token in (
-        f"variant={variant}",
-        "method=",
-        "channels=",
-        "sfreq=",
-        "cutoff=",
-        "rank=",
-    ):
-        assert token in summaries[0].message
-    if variant == "mw":
-        assert estimator.mw_diagnostics_
-    else:
-        assert estimator.mw_diagnostics_ == []
+def test_adaptive_summary_identifies_variant_and_fit_state(caplog):
+    """AdaptiveASR summaries identify each supported fitted variant."""
+    for variant in ("psp", "psw", "mw"):
+        data = _make_synthetic(n_samples=4000, seed=101)
+        kwargs = {"mw_window_length": 20.0} if variant == "mw" else {}
+        estimator = AdaptiveASR(
+            sfreq=SFREQ,
+            cutoff=20.0,
+            variant=variant,
+            verbose=False,
+            **kwargs,
+        )
+        with caplog.at_level(logging.INFO, logger="mne_denoise"):
+            estimator.fit(data, verbose=True)
+        summaries = [
+            record
+            for record in caplog.records
+            if record.message.startswith("AdaptiveASR:")
+            and "clean calibration windows=" in record.message
+        ]
+        assert len(summaries) == 1, variant
+        for token in (
+            f"variant={variant}",
+            "method=",
+            "channels=",
+            "sfreq=",
+            "cutoff=",
+            "rank=",
+        ):
+            assert token in summaries[0].message
+        if variant == "mw":
+            assert estimator.mw_diagnostics_
+        else:
+            assert estimator.mw_diagnostics_ == []
+        caplog.clear()
 
 
 def test_mw_single_window_equals_psp():
@@ -422,76 +423,85 @@ def test_adaptive_partial_fit_calibration_mask():
     assert aasr.calibration_mask_kind_ == "window"
 
 
-@pytest.mark.parametrize("variant", ["psp", "psw"])
-def test_adaptive_partial_fit_short_chunk_is_atomic(variant):
+def test_adaptive_partial_fit_short_chunk_is_atomic():
     """An incomplete update segment must not mutate the fitted adaptive state."""
-    X = _eeg(n_times=8000)
-    aasr = AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X[:, :4000])
-    state_before = {
-        "M": aasr.M_.copy(),
-        "T": aasr.T_.copy(),
-        "thresholds": aasr.thresholds_.copy(),
-        "learner_M": aasr.adaptive_learner_.M.copy(),
-        "learner_W": aasr.adaptive_learner_.W.copy(),
-        "learner_Minv": aasr.adaptive_learner_.Minv.copy(),
-    }
+    for variant in ("psp", "psw"):
+        X = _eeg(n_times=8000)
+        aasr = AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X[:, :4000])
+        state_before = {
+            "M": aasr.M_.copy(),
+            "T": aasr.T_.copy(),
+            "thresholds": aasr.thresholds_.copy(),
+            "learner_M": aasr.adaptive_learner_.M.copy(),
+            "learner_W": aasr.adaptive_learner_.W.copy(),
+            "learner_Minv": aasr.adaptive_learner_.Minv.copy(),
+        }
 
-    with pytest.raises(ValueError, match="requires at least 251 samples"):
-        aasr.partial_fit(X[:, 4000:4250])
+        with pytest.raises(ValueError, match="requires at least 251 samples"):
+            aasr.partial_fit(X[:, 4000:4250])
 
-    np.testing.assert_array_equal(aasr.M_, state_before["M"])
-    np.testing.assert_array_equal(aasr.T_, state_before["T"])
-    np.testing.assert_array_equal(aasr.thresholds_, state_before["thresholds"])
-    np.testing.assert_array_equal(aasr.adaptive_learner_.M, state_before["learner_M"])
-    np.testing.assert_array_equal(aasr.adaptive_learner_.W, state_before["learner_W"])
-    np.testing.assert_array_equal(
-        aasr.adaptive_learner_.Minv, state_before["learner_Minv"]
-    )
-
-
-@pytest.mark.parametrize("variant", ["psp", "psw"])
-def test_adaptive_fit_rejects_segment_without_clean_window(variant):
-    X = _eeg(n_times=250, bursts=0)
-    with pytest.raises(ValueError, match=r"fit\(\) requires at least 251 samples"):
-        AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X)
+        np.testing.assert_array_equal(aasr.M_, state_before["M"])
+        np.testing.assert_array_equal(aasr.T_, state_before["T"])
+        np.testing.assert_array_equal(aasr.thresholds_, state_before["thresholds"])
+        np.testing.assert_array_equal(
+            aasr.adaptive_learner_.M, state_before["learner_M"]
+        )
+        np.testing.assert_array_equal(
+            aasr.adaptive_learner_.W, state_before["learner_W"]
+        )
+        np.testing.assert_array_equal(
+            aasr.adaptive_learner_.Minv, state_before["learner_Minv"]
+        )
 
 
-@pytest.mark.parametrize("variant", ["psp", "psw"])
-def test_adaptive_partial_fit_threshold_failure_is_atomic(variant, monkeypatch):
+def test_adaptive_fit_rejects_segment_without_clean_window():
+    for variant in ("psp", "psw"):
+        X = _eeg(n_times=250, bursts=0)
+        with pytest.raises(ValueError, match=r"fit\(\) requires at least 251 samples"):
+            AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X)
+
+
+def test_adaptive_partial_fit_threshold_failure_is_atomic(monkeypatch):
     """A downstream fit failure must not commit the candidate learner update."""
-    X = _eeg(n_times=8000)
-    aasr = AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X[:, :4000])
-    state_before = {
-        "M": aasr.M_.copy(),
-        "T": aasr.T_.copy(),
-        "thresholds": aasr.thresholds_.copy(),
-        "learner_M": aasr.adaptive_learner_.M.copy(),
-        "learner_W": aasr.adaptive_learner_.W.copy(),
-        "learner_Minv": aasr.adaptive_learner_.Minv.copy(),
-    }
+    for variant in ("psp", "psw"):
+        X = _eeg(n_times=8000)
+        aasr = AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False).fit(X[:, :4000])
+        state_before = {
+            "M": aasr.M_.copy(),
+            "T": aasr.T_.copy(),
+            "thresholds": aasr.thresholds_.copy(),
+            "learner_M": aasr.adaptive_learner_.M.copy(),
+            "learner_W": aasr.adaptive_learner_.W.copy(),
+            "learner_Minv": aasr.adaptive_learner_.Minv.copy(),
+        }
 
-    def _fail_threshold_fit(*args, **kwargs):
-        raise RuntimeError("threshold fit failed")
+        def _fail_threshold_fit(*args, **kwargs):
+            raise RuntimeError("threshold fit failed")
 
-    monkeypatch.setattr(
-        "mne_denoise.asr.adaptive._fit_adaptive_thresholds", _fail_threshold_fit
-    )
-    with pytest.raises(RuntimeError, match="threshold fit failed"):
-        aasr.partial_fit(X[:, 4000:])
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                "mne_denoise.asr.adaptive._fit_adaptive_thresholds",
+                _fail_threshold_fit,
+            )
+            with pytest.raises(RuntimeError, match="threshold fit failed"):
+                aasr.partial_fit(X[:, 4000:])
 
-    np.testing.assert_array_equal(aasr.M_, state_before["M"])
-    np.testing.assert_array_equal(aasr.T_, state_before["T"])
-    np.testing.assert_array_equal(aasr.thresholds_, state_before["thresholds"])
-    np.testing.assert_array_equal(aasr.adaptive_learner_.M, state_before["learner_M"])
-    np.testing.assert_array_equal(aasr.adaptive_learner_.W, state_before["learner_W"])
-    np.testing.assert_array_equal(
-        aasr.adaptive_learner_.Minv, state_before["learner_Minv"]
-    )
+        np.testing.assert_array_equal(aasr.M_, state_before["M"])
+        np.testing.assert_array_equal(aasr.T_, state_before["T"])
+        np.testing.assert_array_equal(aasr.thresholds_, state_before["thresholds"])
+        np.testing.assert_array_equal(
+            aasr.adaptive_learner_.M, state_before["learner_M"]
+        )
+        np.testing.assert_array_equal(
+            aasr.adaptive_learner_.W, state_before["learner_W"]
+        )
+        np.testing.assert_array_equal(
+            aasr.adaptive_learner_.Minv, state_before["learner_Minv"]
+        )
 
 
-@pytest.mark.parametrize(
-    "variant,kwargs,msg",
-    [
+def test_adaptive_validate_param_guards():
+    cases = [
         ("psp", {"update_window_length": -1.0}, "update_window_length"),
         ("psp", {"calibration_window_length": -1.0}, "clean_window_length"),
         ("psp", {"calibration_window_overlap": 1.5}, "clean_window_overlap"),
@@ -500,11 +510,12 @@ def test_adaptive_partial_fit_threshold_failure_is_atomic(variant, monkeypatch):
         ("psp", {"tau": -1.0}, "tau must be positive"),
         ("mw", {"mw_window_length": -1.0}, "mw_window_length"),
         ("mw", {"mw_window_length": 8.0, "mw_mode": "bogus"}, "mw_mode"),
-    ],
-)
-def test_adaptive_validate_param_guards(variant, kwargs, msg):
-    with pytest.raises(ValueError, match=msg):
-        AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False, **kwargs).fit(_eeg())
+    ]
+    for variant, kwargs, message in cases:
+        with pytest.raises(ValueError, match=message):
+            AdaptiveASR(sfreq=SFREQ, variant=variant, verbose=False, **kwargs).fit(
+                _eeg()
+            )
 
 
 def test_adaptive_asr_psw_updates_and_reduces_bursts(synthetic_burst_data):

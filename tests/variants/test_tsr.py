@@ -38,9 +38,9 @@ def test_lag_augmentation_sign_and_epoch_isolation():
     assert_array_equal(augmented[2], [[0.0, 100.0], [1.0, 101.0]])
 
 
-@pytest.mark.parametrize(
-    "lag_kws, error, match",
-    [
+def test_invalid_lag_declarations():
+    """Lag declarations reject ambiguous, malformed, and non-finite grids."""
+    cases = [
         ({}, ValueError, "exactly one"),
         (
             {"lag_samples": [0, 1], "lag_times": [0.0, 0.01], "sfreq": 100.0},
@@ -56,33 +56,25 @@ def test_lag_augmentation_sign_and_epoch_isolation():
             TypeError,
             "one-dimensional sequence",
         ),
-        (
-            {"lag_times": [0.0, np.nan], "sfreq": 100.0},
-            ValueError,
-            "finite",
-        ),
-    ],
-)
-def test_invalid_lag_declarations(lag_kws, error, match):
-    """Lag declarations reject ambiguous, malformed, and non-finite grids."""
-    with pytest.raises(error, match=match):
-        TimeShiftDSS(n_components=1, rank=1, **lag_kws).fit(_data())
+        ({"lag_times": [0.0, np.nan], "sfreq": 100.0}, ValueError, "finite"),
+    ]
+    for lag_kws, error, match in cases:
+        with pytest.raises(error, match=match):
+            TimeShiftDSS(n_components=1, rank=1, **lag_kws).fit(_data())
 
 
-@pytest.mark.parametrize(
-    "data, match",
-    [
+def test_invalid_epoched_array_geometry():
+    """The repeated-trial array contract is checked before decomposition."""
+    cases = [
         (np.ones((3, 20)), "requires epoched data"),
         (np.empty((0, 20, 2)), "dimensions must be non-empty"),
         (np.ones((3, 1, 2)), "dimensions must be non-empty"),
         (np.ones((3, 20, 1)), "at least two repeated epochs"),
         (np.full((3, 20, 2), np.nan), "finite values"),
-    ],
-)
-def test_invalid_epoched_array_geometry(data, match):
-    """The repeated-trial array contract is checked before decomposition."""
-    with pytest.raises(ValueError, match=match):
-        _estimator().fit(data)
+    ]
+    for data, match in cases:
+        with pytest.raises(ValueError, match=match):
+            _estimator().fit(data)
 
 
 def test_lag_span_must_leave_two_common_samples():
@@ -156,25 +148,25 @@ def test_centering_is_training_fitted_and_transform_batch_invariant():
     assert not np.allclose(est.feature_mean_, 0.0)
 
 
-@pytest.mark.parametrize("center", [False, True])
-def test_full_rank_retain_reconstructs_valid_interval(center):
+def test_full_rank_retain_reconstructs_valid_interval():
     """Weighted least-squares patterns reconstruct the zero-lag sensor block."""
-    data = _data(shape=(3, 60, 8))
-    original = data.copy()
-    est = TimeShiftDSS(
-        lag_samples=[0, 1],
-        n_components=6,
-        rank=6,
-        n_select=6,
-        component_action="retain",
-        center=center,
-    )
+    for center in (False, True):
+        data = _data(shape=(3, 60, 8))
+        original = data.copy()
+        est = TimeShiftDSS(
+            lag_samples=[0, 1],
+            n_components=6,
+            rank=6,
+            n_select=6,
+            component_action="retain",
+            center=center,
+        )
 
-    retained = est.fit_transform(data)
+        retained = est.fit_transform(data)
 
-    assert_allclose(retained[:, 1:, :], data[:, 1:, :], rtol=1e-9, atol=1e-9)
-    assert_array_equal(retained[:, :1, :], data[:, :1, :])
-    assert_array_equal(data, original)
+        assert_allclose(retained[:, 1:, :], data[:, 1:, :], rtol=1e-9, atol=1e-9)
+        assert_array_equal(retained[:, :1, :], data[:, :1, :])
+        assert_array_equal(data, original)
 
 
 def test_subtract_matches_selected_sensor_projection():
@@ -204,19 +196,17 @@ def test_weight_broadcast_matches_explicit_time_epoch_matrix():
     assert_allclose(np.abs(time_fit.filters_), np.abs(matrix_fit.filters_))
 
 
-@pytest.mark.parametrize(
-    "weights, match",
-    [
+def test_invalid_sample_weights_are_rejected():
+    """Fit weights have an explicit time-by-epoch contract."""
+    cases = [
         (np.ones((8, 80)), "sample_weight"),
         (np.full(80, np.nan), "finite"),
         (np.r_[np.ones(79), -1.0], "non-negative"),
         (np.zeros(80), "no positive-weight"),
-    ],
-)
-def test_invalid_sample_weights_are_rejected(weights, match):
-    """Fit weights have an explicit time-by-epoch contract."""
-    with pytest.raises(ValueError, match=match):
-        _estimator().fit(_data(), sample_weight=weights)
+    ]
+    for weights, match in cases:
+        with pytest.raises(ValueError, match=match):
+            _estimator().fit(_data(), sample_weight=weights)
 
 
 def test_seconds_lags_resolve_against_sampling_grid():
@@ -261,9 +251,9 @@ def test_explicit_rank_and_selection_contracts():
     assert not hasattr(_estimator(), "auto_select")
 
 
-@pytest.mark.parametrize(
-    "kwargs, error, match",
-    [
+def test_invalid_estimator_parameters():
+    """Constructor choices fail explicitly before fitting numerical state."""
+    cases = [
         ({"component_action": "invalid"}, ValueError, "component_action"),
         ({"center": 1}, TypeError, "center"),
         ({"distortion_control": "invalid"}, ValueError, "distortion_control"),
@@ -275,12 +265,10 @@ def test_explicit_rank_and_selection_contracts():
         ({"reg": True}, TypeError, "reg"),
         ({"reg": 0.0}, ValueError, "reg"),
         ({"reg": np.nan}, ValueError, "reg"),
-    ],
-)
-def test_invalid_estimator_parameters(kwargs, error, match):
-    """Constructor choices fail explicitly before fitting numerical state."""
-    with pytest.raises(error, match=match):
-        _estimator(**kwargs).fit(_data())
+    ]
+    for kwargs, error, match in cases:
+        with pytest.raises(error, match=match):
+            _estimator(**kwargs).fit(_data())
 
 
 def test_high_parameter_ratio_warns_instead_of_auto_selecting():

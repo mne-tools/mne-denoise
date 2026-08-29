@@ -198,7 +198,7 @@ def test_resolve_leadfield_builds_sphere_without_forward(eeg_info):
     assert leadfield.shape == (24, 150)
 
 
-def test_resolve_leadfield_from_forward(eeg_info, forward):
+def test_resolve_leadfield_with_supplied_forward(eeg_info, forward):
     """An MNE object plus a forward takes the forward, channel-aligned."""
     gain_before = forward["sol"]["data"].copy()
     row_names_before = forward["sol"]["row_names"].copy()
