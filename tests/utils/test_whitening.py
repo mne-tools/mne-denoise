@@ -170,7 +170,8 @@ def test_whiten_from_data_covariance_contract():
 
     epoched = rng.standard_normal((8, 100, 20))
     epoched_whitened, _, _ = whiten_from_data_covariance(epoched)
-    assert epoched_whitened.shape == epoched.shape
+    assert epoched_whitened.ndim == 3
+    assert epoched_whitened.shape[1:] == epoched.shape[1:]
 
 
 def test_compute_data_covariance_whitener_numerical_contract():

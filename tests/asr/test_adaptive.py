@@ -116,7 +116,7 @@ def test_mw_single_window_equals_psp():
 
 
 def test_mw_three_windows_final_state_equals_psp_on_last_window():
-    """Final state equals PSP on the last window only (demo Cell 4)."""
+    """Default final-state mode equals PSP on the last calibration window."""
     sfreq = 250.0
     data = _make_synthetic(n_samples=6000, sfreq=sfreq, seed=22)
     win_s = (data.shape[1] / sfreq) / 3.0  # ~8 s -> 3 windows over 24 s
@@ -128,6 +128,7 @@ def test_mw_three_windows_final_state_equals_psp_on_last_window():
         mw_window_length=win_s,
         verbose=False,
     )
+    assert mw.mw_mode == "final_state"
     mw.fit(data)
 
     assert len(mw.mw_diagnostics_) == 3
@@ -371,29 +372,6 @@ def test_mw_sliding_single_window_equals_psp_fit_transform():
         f"sliding single-window output diverged from PSP fit_transform: "
         f"relerr={relerr:.3e}"
     )
-
-
-def test_mw_sliding_default_final_state_unchanged():
-    """Default mw_mode stays 'final_state' (sliding is opt-in).
-
-    Regression guard so the sliding implementation never silently becomes the
-    default behavior.
-    """
-    sfreq = 250.0
-    data = _make_synthetic(n_samples=4000, sfreq=sfreq, seed=99)
-
-    # No mw_mode specified -> default final_state.
-    asr = AdaptiveASR(
-        sfreq=sfreq,
-        cutoff=20.0,
-        variant="mw",
-        mw_window_length=8.0,
-        verbose=False,
-    )
-    asr.fit(data)
-
-    assert asr.calibration_info_.get("mw_mode", "final_state") != "sliding"
-    assert "mw_n_windows" in asr.calibration_info_
 
 
 def _eeg(n_channels=8, n_times=8000, seed=0, bursts=5):

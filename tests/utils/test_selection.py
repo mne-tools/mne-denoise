@@ -1,4 +1,4 @@
-"""Tests for component-selection helpers and the Issue #34 regression."""
+"""Tests for component-selection helpers and behavioral contracts."""
 
 from __future__ import annotations
 
@@ -11,10 +11,9 @@ from mne_denoise.dss.selection import (
     iterative_outlier_removal,
 )
 
-# Eigenvalue spectrum from the user-reported CTF MEG case (Issue #34):
-# 7 strong components corresponding to coherent line noise, followed by
-# 8 near-zero components in the noise tail.
-ISSUE_34_EIGENVALUES = np.array(
+# Realistic MEG-like spectrum: 7 strong components followed by a near-zero
+# noise tail.
+REALISTIC_MEG_EIGENVALUES = np.array(
     [
         9.88999359e-01,
         9.68951301e-01,
@@ -33,16 +32,6 @@ ISSUE_34_EIGENVALUES = np.array(
         3.18800906e-07,
     ]
 )
-
-
-def test_issue_34_selection_regression():
-    """The robust selector fixes Issue #34 without changing the old path."""
-    n_outlier = iterative_outlier_removal(ISSUE_34_EIGENVALUES, sigma=3.0)
-    n_knee = detect_eigenvalue_knee(ISSUE_34_EIGENVALUES)
-    n_robust = auto_select_components_robust(ISSUE_34_EIGENVALUES)
-    assert n_outlier == 0
-    assert n_knee == 7
-    assert n_robust == 7
 
 
 def test_detect_eigenvalue_knee_contract():
@@ -66,6 +55,13 @@ def test_detect_eigenvalue_knee_contract():
 
 def test_robust_component_selection_contract():
     """Robust selection combines its methods and forwards their controls."""
+    realistic_outlier = iterative_outlier_removal(REALISTIC_MEG_EIGENVALUES, sigma=3.0)
+    realistic_knee = detect_eigenvalue_knee(REALISTIC_MEG_EIGENVALUES)
+    realistic_robust = auto_select_components_robust(REALISTIC_MEG_EIGENVALUES)
+    assert realistic_outlier == 0
+    assert realistic_knee == 7
+    assert realistic_robust == 7
+
     evs = np.array([100.0, 0.1, 0.09, 0.08, 0.07, 0.06])
     n_outlier = iterative_outlier_removal(evs, sigma=3.0)
     n_knee = detect_eigenvalue_knee(evs)

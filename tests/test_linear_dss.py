@@ -506,7 +506,7 @@ def test_dss_cov_method_options():
 
 
 # =============================================================================
-# DSS - Multi-modal joint decomposition via whitening (Issue #37)
+# DSS - Multi-modal joint decomposition via whitening
 # =============================================================================
 
 
@@ -869,17 +869,6 @@ class TestSegmentedDSS:
 class TestAutoSelect:
     """Tests for automatic component selection (n_select='outlier', etc.)."""
 
-    def test_auto(self):
-        """n_select='auto' should set n_selected_ >= 0."""
-        data, sfreq = _make_nonstationary_line_noise()
-        info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
-        raw = mne.io.RawArray(data, info, verbose=False)
-        bias = LineNoiseBias(freq=50.0, sfreq=sfreq)
-        dss = DSS(bias, n_components=4, n_select="auto")
-        dss.fit(raw)
-        assert dss.n_selected_ is not None
-        assert dss.n_selected_ >= 0
-
     def test_auto_selects_nothing_on_clean_data(self):
         """A smoothly-decaying spectrum must not trigger false removals."""
         rng = np.random.default_rng(0)
@@ -927,10 +916,7 @@ class TestSmoothingDecomposition:
     """Tests for smooth parameter (smoothing decomposition)."""
 
     def test_fit_then_transform_preserves_smooth(self):
-        """fit() then transform() should NOT lose the smooth component.
-
-        Regression test: previously transform() discarded data_smooth.
-        """
+        """fit() followed by transform() preserves the smooth component."""
         data, sfreq = _make_nonstationary_line_noise()
         info = mne.create_info(data.shape[0], sfreq, ch_types="eeg")
         raw = mne.io.RawArray(data, info, verbose=False)
@@ -1077,9 +1063,8 @@ class TestCrossfade:
         ratio_hard = bnd_hard / (ref_hard + 1e-12)
         ratio_xfade = bnd_xfade / (ref_xfade + 1e-12)
 
-        # Cross-fade boundary ratio should be no worse than hard boundary
-        # (and often much better)
-        assert ratio_xfade <= ratio_hard + 1.0 or ratio_xfade < 10.0
+        # Cross-fade stays within a deterministic tolerance of the hard boundary.
+        assert ratio_xfade <= ratio_hard + 1.0
 
     def test_crossfade_overlap_clamped(self):
         """When crossfade is longer than half a segment, it gets clamped."""

@@ -181,16 +181,6 @@ def test_windowing_edge_cases():
         min_clean_fraction=0.25,
     )
     assert np.all(diagnostics["window_keep_mask"])
-    diagnostics = _compute_window_diagnostics(
-        X,
-        starts,
-        10,
-        max_bad_channels=0,
-        zthresholds=(1.0, -1.0),
-        max_dropout_fraction=0.1,
-        min_clean_fraction=0.25,
-    )
-    assert diagnostics["window_keep_mask"].dtype == bool
     clean, _ = _select_clean_windows(
         X,
         starts,

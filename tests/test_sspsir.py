@@ -73,12 +73,7 @@ def test_sspsir_removes_artifact_preserves_source(tms_epochs):
 
 
 def test_sspsir_blend_protects_outside_artifact_window(tms_epochs):
-    """The crossfade must leave the baseline closer to the unprojected SIR.
-
-    Without the TESA crossfade the artifact projection also strips brain signal
-    from the baseline and from late components; this is the regression that
-    motivated adding ``operator_orig_``.
-    """
+    """Time-varying blending preserves the baseline outside the artifact window."""
     epochs = tms_epochs[0]
     win = tms_epochs[3]
     blended = SSPSIR(n_components=3, blend="auto").fit(epochs)

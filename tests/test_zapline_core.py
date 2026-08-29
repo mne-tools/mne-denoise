@@ -76,7 +76,7 @@ def mixed_sensor_raw():
 
 @pytest.fixture(scope="module")
 def smooth_spectrum_line_noise():
-    """Reproduce Issue #63 with stochastic, distributed line noise."""
+    """Generate stochastic line noise distributed across a smooth spectrum."""
     sfreq = 500.0
     line_freq = 50.0
     n_channels = 19
@@ -182,7 +182,7 @@ def test_zapline_explicit_component_count_is_clipped_to_rank(minimal_data):
 def test_zapline_auto_fallback_removes_distributed_line_noise(
     smooth_spectrum_line_noise,
 ):
-    """Issue #63: auto-selection removes distributed stochastic line noise."""
+    """Auto-selection suppresses distributed stochastic line noise."""
     data, sfreq, line_freq = smooth_spectrum_line_noise
     estimator = ZapLine(sfreq=sfreq, line_freq=line_freq, n_select="auto").fit(data)
     cleaned = estimator.transform(data)
@@ -328,7 +328,7 @@ def test_zapline_mne_uses_magnetometers_then_gradiometers_when_needed():
 
 
 def test_zapline_auto_meg_like_many_coequal_components():
-    """Issue #34: auto-mode detects line noise across many MEG-like sources."""
+    """Auto-selection suppresses line noise across many MEG-like components."""
     rng = np.random.default_rng(34)
     sfreq = 400.0
     n_channels = 64
