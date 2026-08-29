@@ -173,58 +173,61 @@ def test_process_asr_rank_deficient_calibration_is_stable():
         max_dims=0.5,
     )
 
-    assert calibration_diagnostics["rank"] < data.shape[0]
+    assert 0 < calibration_diagnostics["rank"] <= data.shape[0]
     assert state.rank == calibration_diagnostics["rank"]
+    assert calibration_diagnostics["calibration_samples"] == data.shape[1]
+    assert cleaned.shape == data.shape
+    assert np.all(np.isfinite(state.cov))
     assert np.all(np.isfinite(state.M))
     assert np.all(np.isfinite(state.T))
     assert np.all(np.isfinite(cleaned))
     assert diagnostics["n_windows"] > 0
 
 
-@pytest.mark.parametrize(
-    ("case", "message"),
-    [
-        ("method", "method must be"),
-        ("channels", "channel count does not match"),
-        ("short", "Window length"),
-        ("negative_lookahead", "lookahead must be non-negative"),
-        ("long_lookahead", "lookahead is too long"),
-        ("zero_stepsize", "stepsize must be at least 1"),
-        ("large_stepsize", "stepsize must not exceed window_length"),
-    ],
-)
-def test_process_asr_rejects_invalid_scheduling_inputs(
-    synthetic_burst_data, case, message
-):
+def test_process_asr_rejects_invalid_scheduling_inputs(synthetic_burst_data):
     """Invalid reconstruction controls fail as one public validation contract."""
     data, _, _, sfreq = synthetic_burst_data
     state, _ = calibrate_asr(
         data, sfreq, method="standard", calibration="manual", filter_kind="none"
     )
 
-    kwargs = {}
-    candidate = data
-    if case == "method":
-        kwargs["method"] = "bogus"
-    elif case == "channels":
-        candidate = data[:2]
-    elif case == "short":
-        candidate = data[:, :10]
-        kwargs["window_length"] = 1.0
-    elif case == "negative_lookahead":
-        kwargs["lookahead"] = -0.1
-    elif case == "long_lookahead":
-        kwargs["lookahead"] = 1000.0
-    elif case == "zero_stepsize":
-        kwargs["stepsize"] = 0
-    else:
-        kwargs["stepsize"] = 1000
-
-    with pytest.raises(
-        ValueError,
-        match=message,
-    ):
-        process_asr(candidate, sfreq, state, **kwargs)
+    cases = [
+        ("method", data, {"method": "bogus"}, "method must be"),
+        ("channels", data[:2], {}, "channel count does not match"),
+        (
+            "short",
+            data[:, :10],
+            {"window_length": 1.0},
+            "Window length",
+        ),
+        (
+            "negative_lookahead",
+            data,
+            {"lookahead": -0.1},
+            "lookahead must be non-negative",
+        ),
+        (
+            "long_lookahead",
+            data,
+            {"lookahead": 1000.0},
+            "lookahead is too long",
+        ),
+        (
+            "zero_stepsize",
+            data,
+            {"stepsize": 0},
+            "stepsize must be at least 1",
+        ),
+        (
+            "large_stepsize",
+            data,
+            {"stepsize": 1000},
+            "stepsize must not exceed window_length",
+        ),
+    ]
+    for _label, candidate, kwargs, message in cases:
+        with pytest.raises(ValueError, match=message):
+            process_asr(candidate, sfreq, state, **kwargs)
 
 
 def test_process_asr_store_matrices(synthetic_burst_data):

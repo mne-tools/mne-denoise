@@ -119,11 +119,11 @@ def test_duplicate_events_are_deduplicated_deterministically():
         _bias([5, 5]).apply(data)
 
 
-@pytest.mark.parametrize("events", [[], [5]])
-def test_cycle_average_requires_multiple_unique_events(events):
+def test_cycle_average_requires_multiple_unique_events():
     """Empty and one-event inputs cannot define an event repeatability bias."""
-    with pytest.raises(ValueError, match="at least 2 unique complete events"):
-        _bias(events).apply(np.ones((2, 20)))
+    for _label, events in (("empty", []), ("one event", [5])):
+        with pytest.raises(ValueError, match="at least 2 unique complete events"):
+            _bias(events).apply(np.ones((2, 20)))
 
 
 def test_configured_minimum_may_be_stricter_but_never_one():
@@ -157,44 +157,52 @@ def test_supported_float_dtype_is_preserved(dtype):
     assert observed.dtype == dtype
 
 
-@pytest.mark.parametrize(
-    ("events", "match"),
-    [
-        ([1.5, 4], "integer coordinates"),
-        ([True, 4], "integer coordinates"),
-        ([[0, 1, 2], [1, 2, 3]], r"shape \(n_events, 2\)"),
-        ([2**63, 4], "signed 64-bit"),
-        ([-(2**63) - 1, 4], "signed 64-bit"),
-    ],
-)
-def test_cycle_average_rejects_invalid_event_coordinates(events, match):
+def test_cycle_average_rejects_invalid_event_coordinates():
     """Coordinates cannot truncate, wrap, or use an ambiguous shape."""
-    with pytest.raises(ValueError, match=match):
-        _bias(events)
+    cases = [
+        ("fractional", [1.5, 4], "integer coordinates"),
+        ("boolean", [True, 4], "integer coordinates"),
+        ("wrong shape", [[0, 1, 2], [1, 2, 3]], r"shape \(n_events, 2\)"),
+        ("positive overflow", [2**63, 4], "signed 64-bit"),
+        ("negative overflow", [-(2**63) - 1, 4], "signed 64-bit"),
+    ]
+    for _label, events, match in cases:
+        with pytest.raises(ValueError, match=match):
+            _bias(events)
 
 
-@pytest.mark.parametrize(
-    ("window", "unit", "sfreq", "match"),
-    [
-        ((-1.5, 2), "samples", None, "must be integers"),
-        ((2, -1), "samples", None, "strictly less"),
-        ((0, 0.001), "seconds", 100.0, "empty or reversed"),
-        ((-1, 2), "seconds", None, "sfreq is required"),
-        ((-1, 2), "minutes", None, "window_unit"),
-        ((-(2**63) - 1, 2), "samples", None, "signed 64-bit"),
-        ((-1e308, 1e308), "seconds", 1e308, "finite sample range"),
-    ],
-)
-def test_cycle_average_rejects_invalid_window_contracts(window, unit, sfreq, match):
+def test_cycle_average_rejects_invalid_window_contracts():
     """Window conversion fails before unsafe sample arithmetic."""
-    with pytest.raises(ValueError, match=match):
-        CycleAverageBias(
-            [5, 10],
-            window,
-            window_unit=unit,
-            sfreq=sfreq,
-            event_origin="data",
-        )
+    cases = [
+        ("fractional samples", (-1.5, 2), "samples", None, "must be integers"),
+        ("reversed samples", (2, -1), "samples", None, "strictly less"),
+        ("empty seconds", (0, 0.001), "seconds", 100.0, "empty or reversed"),
+        ("missing sfreq", (-1, 2), "seconds", None, "sfreq is required"),
+        ("unknown unit", (-1, 2), "minutes", None, "window_unit"),
+        (
+            "sample overflow",
+            (-(2**63) - 1, 2),
+            "samples",
+            None,
+            "signed 64-bit",
+        ),
+        (
+            "seconds overflow",
+            (-1e308, 1e308),
+            "seconds",
+            1e308,
+            "finite sample range",
+        ),
+    ]
+    for _label, window, unit, sfreq, match in cases:
+        with pytest.raises(ValueError, match=match):
+            CycleAverageBias(
+                [5, 10],
+                window,
+                window_unit=unit,
+                sfreq=sfreq,
+                event_origin="data",
+            )
 
 
 def test_out_of_range_and_boundary_crossing_windows_are_actionable():
@@ -208,14 +216,15 @@ def test_out_of_range_and_boundary_crossing_windows_are_actionable():
         _bias([[0, 5], [2, 5]]).apply(np.ones((2, 20, 2)))
 
 
-@pytest.mark.parametrize(
-    ("events", "window"),
-    [([-1, 10], (1, 3)), ([5, 20], (-3, -1))],
-)
-def test_event_itself_must_be_in_range_even_if_offset_window_would_fit(events, window):
+def test_event_itself_must_be_in_range_even_if_offset_window_would_fit():
     """An inward-offset window cannot legitimize an invalid event coordinate."""
-    with pytest.raises(ValueError, match=r"out of range.*\[0, 20\)"):
-        _bias(events, window=window).apply(np.ones((2, 20)))
+    cases = [
+        ("negative event", [-1, 10], (1, 3)),
+        ("event past end", [5, 20], (-3, -1)),
+    ]
+    for _label, events, window in cases:
+        with pytest.raises(ValueError, match=r"out of range.*\[0, 20\)"):
+            _bias(events, window=window).apply(np.ones((2, 20)))
 
 
 def test_exact_boundary_windows_are_valid():
@@ -259,16 +268,29 @@ def test_event_origin_contract_rejects_ambiguous_offsets_and_overflow():
         CycleAverageBias([np.iinfo(np.int64).min, 1], event_origin="raw", first_samp=1)
 
 
-@pytest.mark.parametrize(
-    ("data", "error", "match"),
-    [
-        (np.ones(10), ValueError, "2D or 3D"),
-        (np.array([["x", "y"]]), TypeError, "real numerical"),
-        (np.ones((1, 10), dtype=complex), TypeError, "real-valued"),
-        (np.array([[1.0, np.nan] * 5]), ValueError, "finite values"),
-    ],
-)
-def test_cycle_average_validates_public_numerical_input(data, error, match):
+def test_cycle_average_validates_public_numerical_input():
     """Unsupported dimensionality, dtype, and nonfinite values fail clearly."""
-    with pytest.raises(error, match=match):
-        _bias([2, 7], window=(-1, 2)).apply(data)
+    cases = [
+        ("wrong dimensionality", np.ones(10), ValueError, "2D or 3D"),
+        (
+            "non-numeric",
+            np.array([["x", "y"]]),
+            TypeError,
+            "real numerical",
+        ),
+        (
+            "complex",
+            np.ones((1, 10), dtype=complex),
+            TypeError,
+            "real-valued",
+        ),
+        (
+            "nonfinite",
+            np.array([[1.0, np.nan] * 5]),
+            ValueError,
+            "finite values",
+        ),
+    ]
+    for _label, data, error, match in cases:
+        with pytest.raises(error, match=match):
+            _bias([2, 7], window=(-1, 2)).apply(data)

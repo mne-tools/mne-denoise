@@ -118,19 +118,17 @@ def test_calibrate_asr_low_memory_matches_full_with_remainder_two(rng):
     assert state.rank == full_state.rank
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "message"),
-    [
-        ({"calibration": "bogus"}, "calibration must be"),
-        ({"cov_estimator": "bogus"}, "cov_estimator"),
-        ({"method": "bogus"}, "method must be"),
-        ({"blocksize": 0}, "blocksize"),
-    ],
-)
-def test_calibrate_asr_rejects_invalid_options(kwargs, message):
+def test_calibrate_asr_rejects_invalid_options():
     """Calibration-specific public options fail with useful errors."""
-    with pytest.raises(ValueError, match=message):
-        calibrate_asr(_eeg(), SFREQ, filter_kind="none", **kwargs)
+    cases = [
+        ("calibration", {"calibration": "bogus"}, "calibration must be"),
+        ("covariance", {"cov_estimator": "bogus"}, "cov_estimator"),
+        ("method", {"method": "bogus"}, "method must be"),
+        ("blocksize", {"blocksize": 0}, "blocksize"),
+    ]
+    for _label, kwargs, message in cases:
+        with pytest.raises(ValueError, match=message):
+            calibrate_asr(_eeg(), SFREQ, filter_kind="none", **kwargs)
 
 
 def test_calibrate_asr_riemannian_method():

@@ -44,18 +44,27 @@ def test_unknown_weighting_error():
         bias.apply(data)
 
 
-@pytest.mark.parametrize("lags", [0, -1, [], [0]])
-def test_invalid_lags(lags):
+def test_invalid_lags():
     """Reject empty or non-operational lag declarations."""
-    with pytest.raises(ValueError, match="lags must"):
-        LagAverageBias(lags=lags).apply(np.ones((2, 20)))
+    for _label, lags in (
+        ("zero", 0),
+        ("negative", -1),
+        ("empty", []),
+        ("zero list", [0]),
+    ):
+        with pytest.raises(ValueError, match="lags must"):
+            LagAverageBias(lags=lags).apply(np.ones((2, 20)))
 
 
-@pytest.mark.parametrize("lags", [True, [1.5], [False, 1]])
-def test_non_integer_lags(lags):
+def test_non_integer_lags():
     """Reject booleans and fractional lags."""
-    with pytest.raises(TypeError, match="lags must"):
-        LagAverageBias(lags=lags).apply(np.ones((2, 20)))
+    for _label, lags in (
+        ("boolean", True),
+        ("fractional", [1.5]),
+        ("boolean list", [False, 1]),
+    ):
+        with pytest.raises(TypeError, match="lags must"):
+            LagAverageBias(lags=lags).apply(np.ones((2, 20)))
 
 
 def test_shift_too_large_error():

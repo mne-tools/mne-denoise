@@ -37,10 +37,10 @@ def test_ramp_width_one():
     assert raised_cosine_ramp(1) == pytest.approx(np.array([1.0]))
 
 
-@pytest.mark.parametrize("width", [0, -5])
-def test_ramp_rejects_nonpositive_width(width):
-    with pytest.raises(ValueError, match="width must be positive"):
-        raised_cosine_ramp(width)
+def test_ramp_rejects_nonpositive_width():
+    for _label, width in (("zero", 0), ("negative", -5)):
+        with pytest.raises(ValueError, match="width must be positive"):
+            raised_cosine_ramp(width)
 
 
 def test_ramp_matches_reference_formula():

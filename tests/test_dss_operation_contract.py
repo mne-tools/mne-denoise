@@ -98,11 +98,16 @@ def test_subtract_without_selection_is_exact_copy(shape):
     assert_array_equal(data, original)
 
 
-@pytest.mark.parametrize("action", [None, "replace", "sources", "raw"])
-def test_invalid_component_action_is_rejected(action):
+def test_invalid_component_action_is_rejected():
     """Unknown operations fail before fitting any spatial model."""
-    with pytest.raises(ValueError, match="component_action"):
-        DSS(bias=_ranked_bias, component_action=action).fit(_array_data())
+    for _label, action in (
+        ("missing", None),
+        ("replace", "replace"),
+        ("sources", "sources"),
+        ("raw", "raw"),
+    ):
+        with pytest.raises(ValueError, match="component_action"):
+            DSS(bias=_ranked_bias, component_action=action).fit(_array_data())
 
 
 @pytest.mark.parametrize("action", ["retain", "subtract"])
@@ -154,14 +159,7 @@ def test_epochs_extract_and_subtract_layouts():
     assert cleaned.get_data().shape == data.shape
 
 
-@pytest.mark.parametrize(
-    "component_indices",
-    [
-        pytest.param(np.array([True, False, True, False]), id="boolean-mask"),
-        pytest.param(np.array([0, 2]), id="integer-indices"),
-    ],
-)
-def test_inverse_transform_uses_selected_component_indices(component_indices):
+def test_inverse_transform_uses_selected_component_indices():
     """Inverse reconstruction has one canonical boolean/integer index contract."""
     data = _array_data()
     est = DSS(
@@ -173,10 +171,17 @@ def test_inverse_transform_uses_selected_component_indices(component_indices):
     sources = est.transform(data)
     selected = np.array([0, 2])
 
-    reconstructed = est.inverse_transform(sources, component_indices=component_indices)
-    expected = est.mixing_[:, selected] @ sources[selected]
+    cases = (
+        ("boolean-mask", np.array([True, False, True, False])),
+        ("integer-indices", np.array([0, 2])),
+    )
+    for label, component_indices in cases:
+        reconstructed = est.inverse_transform(
+            sources, component_indices=component_indices
+        )
+        expected = est.mixing_[:, selected] @ sources[selected]
 
-    assert_allclose(reconstructed, expected, rtol=1e-12, atol=1e-12)
+        assert_allclose(reconstructed, expected, rtol=1e-12, atol=1e-12, err_msg=label)
 
 
 def test_inverse_transform_rejects_a_mask_with_the_wrong_length():

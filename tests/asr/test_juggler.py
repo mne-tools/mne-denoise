@@ -184,22 +184,24 @@ def test_juggler_get_calibration_mask_after_fit():
     assert mask.sum() == int(asr.calibration_info_["reference_selected_samples"])
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "message"),
-    [
-        ({"strategy": "bogus"}, "strategy must be"),
-        ({"dbscan_top_k": 0}, "dbscan_top_k"),
-        ({"gev_grid_size": 8}, "gev_grid_size"),
-        ({"min_reference_fraction": 1.5}, "min_reference_fraction"),
-    ],
-)
-def test_juggler_rejects_invalid_selection_parameters(kwargs, message):
+def test_juggler_rejects_invalid_selection_parameters():
     """Selector and estimator reject invalid Juggler-specific options."""
     data = _make_synthetic_eeg(sfreq=SFREQ, duration_s=20.0, n_channels=8)
-    with pytest.raises(ValueError, match=message):
-        select_juggler_reference_samples(data, SFREQ, **kwargs)
-    with pytest.raises(ValueError, match=message):
-        JugglerASR(sfreq=SFREQ, verbose=False, **kwargs).fit(data)
+    cases = [
+        ("strategy", {"strategy": "bogus"}, "strategy must be"),
+        ("dbscan_top_k", {"dbscan_top_k": 0}, "dbscan_top_k"),
+        ("gev_grid_size", {"gev_grid_size": 8}, "gev_grid_size"),
+        (
+            "min_reference_fraction",
+            {"min_reference_fraction": 1.5},
+            "min_reference_fraction",
+        ),
+    ]
+    for _label, kwargs, message in cases:
+        with pytest.raises(ValueError, match=message):
+            select_juggler_reference_samples(data, SFREQ, **kwargs)
+        with pytest.raises(ValueError, match=message):
+            JugglerASR(sfreq=SFREQ, verbose=False, **kwargs).fit(data)
 
 
 def test_juggler_dbscan_deterministic():

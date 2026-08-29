@@ -103,20 +103,18 @@ def test_weighted_cca_matches_repeated_observations(rng):
     )
 
 
-@pytest.mark.parametrize(
-    "weights, match",
-    [
-        (np.ones(9), "shape"),
-        (np.r_[np.ones(9), np.nan], "finite"),
-        (np.r_[np.ones(9), -1.0], "non-negative"),
-        (np.zeros(10), "positive sum"),
-    ],
-)
-def test_weighted_cca_rejects_invalid_weights(weights, match):
+def test_weighted_cca_rejects_invalid_weights():
     """Weighted CCA validates its observation measure."""
     X = np.arange(20.0).reshape(10, 2)
-    with pytest.raises(ValueError, match=match):
-        canonical_correlation(X, X, sample_weight=weights)
+    cases = [
+        ("wrong shape", np.ones(9), "shape"),
+        ("nonfinite", np.r_[np.ones(9), np.nan], "finite"),
+        ("negative", np.r_[np.ones(9), -1.0], "non-negative"),
+        ("zero sum", np.zeros(10), "positive sum"),
+    ]
+    for _label, weights, match in cases:
+        with pytest.raises(ValueError, match=match):
+            canonical_correlation(X, X, sample_weight=weights)
 
 
 # ---------------------------------------------------------------------------

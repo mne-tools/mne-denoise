@@ -187,10 +187,13 @@ def test_compute_sound_regularizes_rank_deficient_leadfield():
     )
 
     assert np.linalg.matrix_rank(leadfield) == 2
+    assert operator.shape == (data.shape[0], data.shape[0])
+    assert sigmas.shape == (data.shape[0],)
+    assert convergence.shape == (3,)
     assert np.isfinite(operator).all()
     assert np.isfinite(sigmas).all()
     assert np.isfinite(convergence).all()
-    with pytest.raises(ValueError, match="singular lead-field system"):
+    with pytest.raises(ValueError, match="positive lambda_"):
         compute_sound(data, leadfield, lambda_=0.0, n_iter=1, random_state=0)
 
 

@@ -68,15 +68,18 @@ def test_design_butter_sos_bandstop_blocks_band_keeps_outside():
     assert _kept_ratio(sosfiltfilt(sos, outside), outside) > 0.9
 
 
-@pytest.mark.parametrize("sfreq", [100.0, 250.0, 1000.0])
-def test_design_butter_sos_freqs_are_hz_not_prenormalized(sfreq):
+def test_design_butter_sos_freqs_are_hz_not_prenormalized():
     """``freqs`` is Hz, normalized internally via ``fs`` -- not pre-divided by
     Nyquist by the caller. Design a fixed fraction of Nyquist at several
     sampling rates and confirm the passband tracks ``sfreq`` rather than
     being fixed to whatever rate the caller's arithmetic assumed.
     """
-    target = sfreq / 10.0
-    sos = design_butter_sos(4, target, "lowpass", sfreq)
-    below, above = _tone(target * 0.3, sfreq=sfreq), _tone(target * 3.0, sfreq=sfreq)
-    assert _kept_ratio(sosfiltfilt(sos, below), below, sfreq=sfreq) > 0.9
-    assert _kept_ratio(sosfiltfilt(sos, above), above, sfreq=sfreq) < 0.05
+    for sfreq in (100.0, 250.0, 1000.0):
+        target = sfreq / 10.0
+        sos = design_butter_sos(4, target, "lowpass", sfreq)
+        below, above = (
+            _tone(target * 0.3, sfreq=sfreq),
+            _tone(target * 3.0, sfreq=sfreq),
+        )
+        assert _kept_ratio(sosfiltfilt(sos, below), below, sfreq=sfreq) > 0.9
+        assert _kept_ratio(sosfiltfilt(sos, above), above, sfreq=sfreq) < 0.05
