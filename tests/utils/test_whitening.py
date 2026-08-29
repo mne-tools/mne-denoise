@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import mne
 import numpy as np
 import pytest
 
@@ -137,8 +138,8 @@ def test_map_spatial_matrices_to_sensor_space_validates_shapes(
         )
 
 
-def test_compute_mne_sensor_whitener_numpy_scaling():
-    """The array fallback should scale every channel independently."""
+def test_compute_mne_sensor_whitener_scaling_and_requested_channel_order():
+    """Array scaling and MNE sensor scaling follow the supplied data order."""
     rng = np.random.default_rng(0)
     data = rng.standard_normal((3, 1000)) * np.array([1.0, 10.0, 100.0])[:, None]
 
@@ -147,6 +148,49 @@ def test_compute_mne_sensor_whitener_numpy_scaling():
 
     np.testing.assert_allclose(transformed.std(axis=1), 1.0)
     np.testing.assert_allclose(colorer @ whitener, np.eye(3))
+
+    info = mne.create_info(
+        ["EEG0", "MAG0", "EEG1", "MAG1"],
+        100.0,
+        ["eeg", "mag", "eeg", "mag"],
+    )
+    ch_names = ["MAG1", "EEG0", "MAG0", "EEG1"]
+    base = np.arange(1.0, 101.0)
+    data = np.vstack([base, 2.0 * base, 3.0 * base, 4.0 * base])
+    expected_scales = np.array(
+        [
+            np.std(data[[0, 2]]),
+            np.std(data[[1, 3]]),
+            np.std(data[[0, 2]]),
+            np.std(data[[1, 3]]),
+        ]
+    )
+
+    whitener, colorer = compute_mne_sensor_whitener(
+        data,
+        info=info,
+        ch_names=ch_names,
+    )
+
+    np.testing.assert_allclose(np.diag(whitener), 1.0 / expected_scales)
+    np.testing.assert_allclose(np.diag(colorer), expected_scales)
+    np.testing.assert_allclose(
+        apply_spatial_transform(whitener, data),
+        data / expected_scales[:, None],
+    )
+
+    equivalent_info = mne.create_info(
+        ch_names,
+        100.0,
+        ["mag", "eeg", "mag", "eeg"],
+    )
+    equivalent_whitener, equivalent_colorer = compute_mne_sensor_whitener(
+        data,
+        info=equivalent_info,
+        ch_names=ch_names,
+    )
+    np.testing.assert_allclose(equivalent_whitener, whitener)
+    np.testing.assert_allclose(equivalent_colorer, colorer)
 
 
 def test_compute_mne_sensor_whitener_rejects_nonfinite_data():

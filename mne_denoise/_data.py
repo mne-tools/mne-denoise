@@ -27,53 +27,17 @@ def _get_homogeneous_picks(
     if not isinstance(inst, mne_types):
         return None
 
-    ch_types = inst.get_channel_types()
-    pick_specs = [
-        (
-            "mag",
-            {
-                "meg": "mag",
-                "eeg": False,
-                "ref_meg": False,
-                "stim": False,
-                "misc": False,
-            },
-        ),
-        (
-            "grad",
-            {
-                "meg": "grad",
-                "eeg": False,
-                "ref_meg": False,
-                "stim": False,
-                "misc": False,
-            },
-        ),
-        (
-            "eeg",
-            {
-                "meg": False,
-                "eeg": True,
-                "ref_meg": False,
-                "stim": False,
-                "misc": False,
-            },
-        ),
+    indices_by_type = _mne.mne.channel_indices_by_type(inst.info, exclude=())
+    priority = ("mag", "grad", "eeg")
+    present_types = [
+        ch_type for ch_type in priority if len(indices_by_type[ch_type]) > 0
     ]
-
-    present_types = []
-    best_picks = None
-    best_type = None
-
-    for ch_type, pick_kws in pick_specs:
-        if ch_type not in ch_types:
-            continue
-        picks = _mne.mne.pick_types(inst.info, exclude=(), **pick_kws)
-        if len(picks) > 0:
-            present_types.append(ch_type)
-            if best_picks is None:
-                best_picks = np.asarray(picks, dtype=int)
-                best_type = ch_type
+    best_type = present_types[0] if present_types else None
+    best_picks = (
+        np.asarray(indices_by_type[best_type], dtype=int)
+        if best_type is not None
+        else None
+    )
 
     if len(present_types) > 1:
         msg = (
@@ -107,12 +71,11 @@ def _resolve_mne_picks(
 ) -> np.ndarray | None:
     """Resolve the channel-selection policy for an MNE instance."""
     if ch_names is not None:
-        missing = [ch for ch in ch_names if ch not in inst.ch_names]
-        if missing:
-            raise ValueError(
-                f"Input MNE object is missing required channels: {missing[:5]}"
-            )
-        return np.array([inst.ch_names.index(ch) for ch in ch_names])
+        return _mne.mne.pick_channels(
+            inst.ch_names,
+            include=ch_names,
+            ordered=True,
+        )
 
     if auto_pick == "data":
         picks = _mne.mne.pick_types(
@@ -142,9 +105,14 @@ def _resolve_mne_picks(
         if picks is None
         else np.asarray(picks, dtype=int)
     )
-    bads = set(inst.info["bads"])
+    candidate_names = [inst.ch_names[pick] for pick in candidate_picks]
     picks = np.asarray(
-        [pick for pick in candidate_picks if inst.ch_names[pick] not in bads],
+        _mne.mne.pick_channels(
+            inst.ch_names,
+            include=candidate_names,
+            exclude=inst.info["bads"],
+            ordered=True,
+        ),
         dtype=int,
     )
     if picks.size == 0:
