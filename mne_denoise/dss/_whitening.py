@@ -297,7 +297,11 @@ def compute_mne_sensor_whitener(
     scales = np.ones(n_channels, dtype=float)
     if info is not None and ch_names is not None:
         _mne.require_mne("DSS MNE sensor whitening")
-        indices = [info["ch_names"].index(name) for name in ch_names]
+        indices = _mne.mne.pick_channels(
+            info["ch_names"],
+            include=ch_names,
+            ordered=True,
+        )
         picked_info = _mne.mne.pick_info(info, indices)
         for picks in _mne.mne.channel_indices_by_type(picked_info, exclude=()).values():
             if len(picks):
