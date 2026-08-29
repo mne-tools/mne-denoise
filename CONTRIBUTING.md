@@ -237,6 +237,22 @@ pytest -k "zapline" -v
 - Pass `show=False` when testing plotting functions
 - For optional dependencies, prefer `pytest.importorskip(...)`
 
+#### Test design principles
+
+- Organize tests around scientific, public API, and integration contracts.
+- Keep historical bug scenarios when they protect a durable contract; give
+  them the contract's owner rather than a separate regression category.
+- Keep each test scenario coherent and meaningful. Parametrize independent
+  scientific modes or layouts, and use labelled loops for equivalent
+  validation spellings that do not need separate test nodes.
+- Prefer deterministic behavioral or numerical assertions over coverage-only
+  execution, private implementation details, and shape-only checks.
+- Keep shared estimator and MNE-container behavior in the central contract
+  suites. Test MNE metadata and lifecycle behavior at the public boundary,
+  and keep algorithm-specific numerical behavior with its algorithm tests.
+- Preserve distinct scientific regimes as separate scenarios, including
+  SSP-SIR's blended artifact-window behavior.
+
 Example test:
 
 ```python
@@ -252,18 +268,18 @@ def sample_epochs():
     return rng.standard_normal((10, 32, 1000))
 
 
-def test_dss_fit_transform_returns_correct_shape(sample_epochs):
-    """Test that DSS returns sources with expected shape."""
-    dss = DSS(bias=AverageBias(), n_components=5)
-    sources = dss.fit_transform(sample_epochs)
+def test_dss_retain_reconstructs_all_components(sample_epochs):
+    """Retaining every fitted component reconstructs the input."""
+    dss = DSS(bias=AverageBias(), component_action="retain")
+    retained = dss.fit_transform(sample_epochs)
 
-    assert sources.shape[0] == 5  # n_components
-    assert sources.shape[1] == sample_epochs.shape[2]  # n_times
+    np.testing.assert_allclose(retained, sample_epochs, rtol=1e-9, atol=1e-9)
 ```
 
-### Coverage Requirements
+### Coverage Reports
 
-- Aim for **100% coverage** on new code
+- Use coverage to find untested behavior, but treat it as a diagnostic rather
+  than a target that overrides meaningful contract tests.
 - The CI will report coverage; check the Codecov report on your PR
 - View local coverage report: `open htmlcov/index.html`
 
