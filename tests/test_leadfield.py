@@ -280,7 +280,7 @@ def test_spherical_leadfield_validates_n_dipoles(eeg_info, n_dipoles):
         make_spherical_leadfield(eeg_info, n_dipoles=n_dipoles)
 
 
-def test_forward_gain_is_validated(eeg_info):
+def test_resolve_leadfield_validates_supplied_gain(eeg_info):
     bad_forward = {
         "sol": {"data": np.ones(24), "row_names": list(eeg_info["ch_names"])}
     }

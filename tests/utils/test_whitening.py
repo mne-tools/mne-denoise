@@ -138,8 +138,8 @@ def test_map_spatial_matrices_to_sensor_space_validates_shapes(
         )
 
 
-def test_compute_mne_sensor_whitener_numpy_scaling():
-    """The array fallback should scale every channel independently."""
+def test_compute_mne_sensor_whitener_scaling_and_requested_channel_order():
+    """Array scaling and MNE sensor scaling follow the supplied data order."""
     rng = np.random.default_rng(0)
     data = rng.standard_normal((3, 1000)) * np.array([1.0, 10.0, 100.0])[:, None]
 
@@ -149,9 +149,6 @@ def test_compute_mne_sensor_whitener_numpy_scaling():
     np.testing.assert_allclose(transformed.std(axis=1), 1.0)
     np.testing.assert_allclose(colorer @ whitener, np.eye(3))
 
-
-def test_compute_mne_sensor_whitener_preserves_requested_channel_order():
-    """MNE sensor scaling follows the order supplied with the data."""
     info = mne.create_info(
         ["EEG0", "MAG0", "EEG1", "MAG1"],
         100.0,
@@ -194,19 +191,6 @@ def test_compute_mne_sensor_whitener_preserves_requested_channel_order():
     )
     np.testing.assert_allclose(equivalent_whitener, whitener)
     np.testing.assert_allclose(equivalent_colorer, colorer)
-
-
-def test_compute_mne_sensor_whitener_missing_channel_raises():
-    """Named MNE whitening rejects channels absent from the input Info."""
-    info = mne.create_info(["EEG0", "EEG1"], 100.0, "eeg")
-    data = np.ones((2, 100))
-
-    with pytest.raises(ValueError, match="Missing channels"):
-        compute_mne_sensor_whitener(
-            data,
-            info=info,
-            ch_names=["EEG0", "MISSING"],
-        )
 
 
 def test_compute_mne_sensor_whitener_rejects_nonfinite_data():

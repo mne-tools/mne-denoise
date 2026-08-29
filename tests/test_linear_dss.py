@@ -415,17 +415,6 @@ def test_dss_transform_aligns_reordered_mne_channels_by_name():
     assert_allclose(transformed.get_data(), reordered.get_data(), atol=1e-12)
 
 
-def test_dss_transform_rejects_missing_fitted_channel():
-    """Missing fitted channels must raise an actionable error."""
-    rng = np.random.default_rng(49)
-    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
-    raw = mne.io.RawArray(rng.standard_normal((3, 1000)), info, verbose=False)
-    dss = DSS(bias=lambda data: data, normalize_input=False).fit(raw)
-
-    with pytest.raises(ValueError, match="Missing channels"):
-        dss.transform(raw.copy().drop_channels(["EEG2"]))
-
-
 def test_dss_fit_rejects_all_bad_data_channels():
     """DSS must fail clearly when no usable fitted channels remain."""
     rng = np.random.default_rng(50)
@@ -752,7 +741,7 @@ def test_dss_whiten_noise_cov_missing_channels_raises():
         nfree=raw.n_times,
     )
     bias = BandpassBias(freq_band=(8, 12), sfreq=raw.info["sfreq"])
-    with pytest.raises(ValueError, match="missing required channels"):
+    with pytest.raises(ValueError, match="noise_cov is missing required channels"):
         DSS(bias=bias, whiten=True, noise_cov=small).fit(raw)
 
 

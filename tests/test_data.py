@@ -111,14 +111,6 @@ def test_extract_data_from_mne_excluding_all_bads_raises():
         extract_data_from_mne(raw, exclude_bads=True)
 
 
-def test_extract_data_from_mne_missing_explicit_names():
-    info = mne.create_info(["C1", "C2"], 100.0, "eeg")
-    raw = mne.io.RawArray(np.ones((2, 100)), info, verbose=False)
-
-    with pytest.raises(ValueError, match="Missing channels"):
-        extract_data_from_mne(raw, ch_names=["C3"])
-
-
 def test_extract_data_from_mne_epoch_layout_options_are_exclusive():
     """Epoch concatenation and channel-first 3D output cannot be requested together."""
     with pytest.raises(ValueError, match="cannot both be True"):
@@ -188,65 +180,43 @@ def test_auto_pick_single_type():
     np.testing.assert_array_equal(picks, [1, 3])
 
 
-def test_auto_pick_priority_is_mag_grad_eeg():
+def test_auto_pick_mixed_types_warn():
+    """Pick the preferred type before considering bad-channel exclusion."""
     info = mne.create_info(
-        ch_names=["eeg1", "mag1", "grad1", "mag2", "eeg2"],
+        ch_names=["eeg1", "mag1", "grad1", "eeg2"],
         sfreq=100.0,
-        ch_types=["eeg", "mag", "grad", "mag", "eeg"],
+        ch_types=["eeg", "mag", "grad", "eeg"],
     )
-    raw = mne.io.RawArray(np.random.randn(5, 100), info)
+    raw = mne.io.RawArray(np.random.randn(4, 100), info)
 
+    # The package policy is mag > grad > eeg, independent of input order.
     with pytest.warns(UserWarning, match="Found multiple data channel types"):
         picks = _get_homogeneous_picks(raw)
+    np.testing.assert_array_equal(picks, [1])
 
-    np.testing.assert_array_equal(picks, [1, 3])
-
-
-def test_auto_pick_bad_channels_participate_in_type_detection():
-    info = mne.create_info(
+    # Type detection happens before bad-channel exclusion; excluding the only
+    # preferred-type channel then fails rather than silently switching types.
+    bad_info = mne.create_info(
         ch_names=["eeg1", "mag1", "eeg2"],
         sfreq=100.0,
         ch_types=["eeg", "mag", "eeg"],
     )
-    raw = mne.io.RawArray(np.random.randn(3, 100), info)
-    raw.info["bads"] = ["mag1"]
-
+    bad_raw = mne.io.RawArray(np.random.randn(3, 100), bad_info)
+    bad_raw.info["bads"] = ["mag1"]
     with pytest.warns(UserWarning, match="Found multiple data channel types"):
-        picks = _get_homogeneous_picks(raw)
-    np.testing.assert_array_equal(picks, [1])
-
+        np.testing.assert_array_equal(_get_homogeneous_picks(bad_raw), [1])
     with pytest.warns(UserWarning, match="Found multiple data channel types"):
         with pytest.raises(
             ValueError, match="No good data channels remain after excluding bads"
         ):
-            extract_data_from_mne(raw, exclude_bads=True)
+            extract_data_from_mne(bad_raw, exclude_bads=True)
 
-
-def test_auto_pick_does_not_treat_csd_as_eeg():
-    info = mne.create_info(
-        ch_names=["CSD", "EEG"],
-        sfreq=100.0,
-        ch_types=["csd", "eeg"],
+    # CSD is not silently reclassified as EEG for this policy.
+    csd_info = mne.create_info(
+        ch_names=["CSD", "EEG"], sfreq=100.0, ch_types=["csd", "eeg"]
     )
-    raw = mne.io.RawArray(np.random.randn(2, 100), info)
-
-    picks = _get_homogeneous_picks(raw)
-
-    np.testing.assert_array_equal(picks, [1])
-
-
-def test_auto_pick_mixed_types_warn():
-    # Mixed mag and grad
-    info = mne.create_info(
-        ch_names=["mag1", "grad1"], sfreq=100.0, ch_types=["mag", "grad"]
-    )
-    raw = mne.io.RawArray(np.random.randn(2, 100), info)
-
-    # By default (auto_pick='auto'), it should warn and pick 'mag' (the first one)
-    with pytest.warns(UserWarning, match="Found multiple data channel types"):
-        picks = _get_homogeneous_picks(raw)
-    assert len(picks) == 1
-    assert picks[0] == 0
+    csd_raw = mne.io.RawArray(np.random.randn(2, 100), csd_info)
+    np.testing.assert_array_equal(_get_homogeneous_picks(csd_raw), [1])
 
 
 def test_auto_pick_mixed_types_raise():

@@ -352,6 +352,35 @@ def test_icanclean_numpy_max_reject_fraction(synthetic_dual_layer):
     assert np.all(icc.n_removed_ <= max_allowed)
 
 
+def test_icanclean_mne_ordered_named_channels(rng):
+    """Public MNE fitting preserves deliberately ordered channel names."""
+    mne = pytest.importorskip("mne")
+    sfreq = 250.0
+    raw_names = ["P-Y", "R-B", "P-Z", "R-A", "P-X", "P-W"]
+    primary_names = ["P-W", "P-X", "P-Z", "P-Y"]
+    ref_names = ["R-A", "R-B"]
+    raw = mne.io.RawArray(
+        rng.standard_normal((len(raw_names), int(6 * sfreq))),
+        mne.create_info(raw_names, sfreq, ["eeg"] * len(raw_names)),
+        verbose=False,
+    )
+
+    icc = ICanClean(
+        sfreq=sfreq,
+        primary_channels=primary_names,
+        ref_channels=ref_names,
+        segment_len=1.0,
+        verbose=False,
+    )
+    cleaned = icc.fit_transform(raw)
+
+    assert isinstance(cleaned, mne.io.BaseRaw)
+    assert cleaned.get_data().shape == raw.get_data().shape
+    assert np.isfinite(cleaned.get_data()).all()
+    assert icc.primary_channels_ == primary_names
+    assert icc.ref_channels_ == ref_names
+
+
 # ---------------------------------------------------------------------------
 # Validation & Edge cases
 # ---------------------------------------------------------------------------
