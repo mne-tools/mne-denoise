@@ -23,7 +23,7 @@ This project follows the [MNE-Python Code of Conduct](https://github.com/mne-too
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.11 or higher
 - Git
 - A GitHub account
 

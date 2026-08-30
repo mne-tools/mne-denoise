@@ -37,10 +37,40 @@
 
 ## Installation
 
-### From PyPI (recommended)
+### Numerical / NumPy workflows
 
 ```bash
 pip install mne-denoise
+```
+
+### MNE-Python objects
+
+```bash
+pip install "mne-denoise[mne]"
+```
+
+### Visualization
+
+```bash
+pip install "mne-denoise[viz]"
+```
+
+### tqdm progress bars
+
+```bash
+pip install "mne-denoise[progress]"
+```
+
+### Everything runtime-related
+
+```bash
+pip install "mne-denoise[all]"
+```
+
+Extras can be combined when needed:
+
+```bash
+pip install "mne-denoise[mne,viz,progress]"
 ```
 
 ### From source (development)
