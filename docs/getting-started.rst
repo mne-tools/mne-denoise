@@ -24,7 +24,7 @@ dependency group:
 
    python -m pip install --upgrade pip
    python -m pip install -e . --group dev
-   prek install
+   pre-commit install
 
 Basic usage
 -----------

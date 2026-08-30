@@ -1,6 +1,6 @@
 # mne-denoise
 
-[![Tests](https://github.com/mne-tools/mne-denoise/actions/workflows/tests.yml/badge.svg)](https://github.com/mne-tools/mne-denoise/actions/workflows/tests.yml)
+[![CI](https://github.com/mne-tools/mne-denoise/actions/workflows/ci.yml/badge.svg)](https://github.com/mne-tools/mne-denoise/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/mne-tools/mne-denoise/branch/main/graph/badge.svg)](https://codecov.io/gh/mne-tools/mne-denoise)
 [![PyPI version](https://img.shields.io/pypi/v/mne-denoise.svg)](https://pypi.org/project/mne-denoise/)
 [![Python versions](https://img.shields.io/pypi/pyversions/mne-denoise.svg)](https://pypi.org/project/mne-denoise/)
@@ -198,7 +198,7 @@ git clone https://github.com/<your-username>/mne-denoise.git
 cd mne-denoise
 python -m pip install --upgrade pip
 python -m pip install -e . --group dev
-prek install
+pre-commit install
 ```
 
 ## References
