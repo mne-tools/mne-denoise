@@ -31,16 +31,10 @@ jobs:
           python-version: "3.12"
           cache: pip
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
-      - name: Checkout shared MNE-tools checker
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          repository: mne-tools/mne-tools
-          ref: 2e7c4b5469ef311a169e16c7f97cd0ce68508a61
-          path: .ci/mne-tools
-          fetch-depth: 1
-          persist-credentials: false
       - name: Install shared lockfile checker
-        run: python -m pip install -e "$GITHUB_WORKSPACE/.ci/mne-tools"
+        run: >-
+          python -m pip install
+          "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
       - name: Install maintenance tools
         run: |
           python -m pip install --upgrade pip
@@ -82,6 +76,13 @@ jobs:
             --groups lockfile_extras
       - name: Run repository hooks
         run: prek run --all-files
+      - name: Verify autofix working tree
+        run: |
+          git status --short
+          if git status --short | grep -F -- '.ci/mne-tools'; then
+            echo 'Unexpected nested mne-tools repository in the working tree.' >&2
+            exit 1
+          fi
       - name: Apply fixes through autofix.ci
         if: success() || failure()
         uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a  # v1.3.4

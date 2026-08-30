@@ -97,16 +97,10 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             tools/pylock.ci-old.toml
-      - name: Checkout shared MNE-tools checker
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          repository: mne-tools/mne-tools
-          ref: 2e7c4b5469ef311a169e16c7f97cd0ce68508a61
-          path: .ci/mne-tools
-          fetch-depth: 1
-          persist-credentials: false
       - name: Install shared lockfile checker
-        run: uv pip install -e "$GITHUB_WORKSPACE/.ci/mne-tools"
+        run: >-
+          uv pip install
+          "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
       - name: Validate lower-bound lockfile
         run: |
           python -m mne_tools.check_lockfile \
