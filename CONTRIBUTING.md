@@ -23,7 +23,7 @@ This project follows the [MNE-Python Code of Conduct](https://github.com/mne-too
 
 ### Prerequisites
 
-- Python 3.11 or higher
+- Python 3.12 or higher
 - Git
 - A GitHub account
 
@@ -66,8 +66,8 @@ python -m pip install --upgrade pip
 # Install in editable mode with the development dependency group
 python -m pip install -e . --group dev
 
-# Install pre-commit hooks
-pre-commit install
+# Install the repository hooks
+prek install
 ```
 
 ### Using conda
@@ -80,8 +80,26 @@ conda activate mne-denoise
 # Install in editable mode
 python -m pip install --upgrade pip
 python -m pip install -e . --group dev
-pre-commit install
+prek install
 ```
+
+### Development commands
+
+The development dependency group includes `uv`-compatible project tooling,
+`spin`, and `prek`. Spin is the project task interface, not an environment
+manager:
+
+```bash
+spin test                 # run pytest
+spin test -- -k asr       # forward arguments to pytest
+spin lint                 # run every repository hook
+spin docs                 # build docs with warnings as errors
+spin build                # build and validate distributions
+spin check                # lint, test, and validate distributions
+```
+
+Use `prek install` once to install the local Git hooks, and
+`prek run --all-files` to run them directly.
 
 ## Workflow
 
@@ -135,7 +153,11 @@ git rebase upstream/main
 
 We use [towncrier](https://towncrier.readthedocs.io/) to manage our changelog. This prevents merge conflicts and ensures standardized release notes.
 
-When you create a Pull Request, please add a changelog entry file in `docs/changes/devel/`. The file name should be the change type (e.g., `feature.rst`, `bugfix.rst`).
+When you create a Pull Request, add a changelog fragment in
+`docs/changes/devel/`. Name it `<PR>.<type>.rst`, for example
+`123.feature.rst`. During local development, an unnumbered `feature.rst` or
+`bugfix.rst` can be renamed with `python scripts/rename_towncrier.py
+--pr-number 123`; the pull-request automation performs the same conversion.
 
 For detailed instructions and available types, see [docs/changes/README.md](https://github.com/mne-tools/mne-denoise/blob/main/docs/changes/README.md).
 
@@ -147,20 +169,14 @@ We use **Ruff** for linting and formatting, configured to follow PEP 8 with NumP
 
 ### Automatic Formatting
 
-Pre-commit hooks will automatically format your code on commit. To run manually:
+Repository hooks automatically format your code on commit. To run them manually:
 
 ```bash
-# Check for linting errors
-ruff check .
+# Run the complete repository quality suite
+spin lint
 
-# Auto-fix linting errors
-ruff check . --fix
-
-# Format code
-ruff format .
-
-# Run all pre-commit hooks
-pre-commit run --all-files
+# Run hooks directly
+prek run --all-files
 ```
 
 ### Docstring Style
@@ -291,8 +307,8 @@ Documentation is built with Sphinx and hosted on GitHub Pages.
 ### Building Docs Locally
 
 ```bash
-# Build HTML documentation
-make -C docs html
+# Build HTML documentation with warnings as errors
+spin docs
 
 # Populate the real-data cache before a full gallery build
 python scripts/prefetch_docs_data.py
@@ -400,13 +416,12 @@ a documented deprecation process.
 
 Before submitting, ensure:
 
-- [ ] Code follows the project style (`ruff check .` passes)
-- [ ] Code is formatted (`ruff format .` produces no changes)
+- [ ] Code follows the project style (`spin lint` passes)
 - [ ] All tests pass (`pytest` exits cleanly)
 - [ ] New code has tests with good coverage
 - [ ] Documentation is updated if needed
-- [ ] Documentation builds cleanly (`make -C docs html`)
-- [ ] CHANGELOG.md is updated for user-facing changes
+- [ ] Documentation builds cleanly (`spin docs`)
+- [ ] A numbered Towncrier fragment is included for user-facing changes
 - [ ] Commit messages are clear and descriptive
 
 ## Issue Guidelines
