@@ -106,7 +106,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Install shared lockfile checker
-        run: python -m pip install -e "$GITHUB_WORKSPACE/.ci/mne-tools"
+        run: uv pip install -e "$GITHUB_WORKSPACE/.ci/mne-tools"
       - name: Validate lower-bound lockfile
         run: |
           python -m mne_tools.check_lockfile \
