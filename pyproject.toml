@@ -7,7 +7,7 @@ name = "mne-denoise"
 dynamic = ["version"]
 description = "Artifact removal and signal denoising for EEG and MEG."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [
@@ -37,7 +37,6 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -46,9 +45,9 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=1.26,<3",
-  "scipy>=1.13",
+  "scipy>=1.17.1",
   "scikit-learn>=1.5",
-  "joblib>=1.2",
+  "joblib>=1.4",
 ]
 
 [project.urls]
@@ -93,7 +92,7 @@ doc = [
   "sphinx>=7.2.0",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.5.0",
-  "sphinx-gallery>=0.15.0",
+  "sphinx-gallery>=0.21.0",
   "myst-parser>=2.0.0",
 ]
 build = [
@@ -103,12 +102,8 @@ build = [
 ]
 
 lint = [
-  "ruff>=0.16.0",
-  "pre-commit>=3.6.0",
-]
-
-typecheck = [
-  "mypy>=1.8.0",
+  "prek>=0.5",
+  "spin>=0.18",
 ]
 
 changelog = [
@@ -121,7 +116,6 @@ dev = [
   { include-group = "doc" },
   { include-group = "build" },
   { include-group = "lint" },
-  { include-group = "typecheck" },
   { include-group = "changelog" },
 ]
 
@@ -131,7 +125,7 @@ raw-options = { version_scheme = "guess-next-dev" }
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -199,18 +193,9 @@ exclude_lines = [
   "raise NotImplementedError",
 ]
 
-[tool.mypy]
-python_version = "3.11"
-warn_unused_configs = true
-ignore_missing_imports = true
-show_error_codes = true
-pretty = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-
 [tool.codespell]
 skip = "*.html,*.css,*.js,*.svg,*.lock,.git,__pycache__,*.egg-info,build,dist,docs/_build,*.map"
-ignore-words-list = "nd,ot,fro"
+ignore-words-list = "nd,ot,fro,sems,pre-select,Disjointness"
 
 [tool.towncrier]
 package = "mne_denoise"
@@ -220,6 +205,13 @@ title_format = "## [{version}] - {project_date}"
 issue_format = "[#{issue}](https://github.com/mne-tools/mne-denoise/issues/{issue})"
 template = "docs/changes/template.jinja"
 underlines = ["", "", ""]
+
+[tool.changelog-bot]
+
+[tool.changelog-bot.towncrier_changelog]
+enabled = true
+verify_pr_number = true
+changelog_skip_label = "no-changelog-entry-needed"
 
 [[tool.towncrier.type]]
 directory = "feature"
@@ -245,3 +237,15 @@ showcontent = true
 directory = "misc"
 name = "Internal"
 showcontent = true
+
+[tool.spin]
+package = "mne_denoise"
+
+[tool.spin.commands]
+"Development" = [
+  ".spin/cmds.py:test",
+  ".spin/cmds.py:lint",
+  ".spin/cmds.py:docs",
+  ".spin/cmds.py:build",
+  ".spin/cmds.py:check",
+]

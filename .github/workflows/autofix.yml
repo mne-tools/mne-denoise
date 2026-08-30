@@ -1,0 +1,88 @@
+name: autofix.ci
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, labeled, unlabeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  autofix:
+    name: Apply repository fixes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      - name: Install shared lockfile checker
+        run: >-
+          python -m pip install
+          "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
+      - name: Install maintenance tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --group lint --group changelog
+      - name: Number the changelog fragment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python scripts/rename_towncrier.py --pr-number "$PR_NUMBER"
+      - name: Detect dependency changes
+        id: changed
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          changed_files="$(gh api --paginate \
+            --header 'Accept: application/vnd.github+json' \
+            "repos/${GH_REPO}/pulls/${GH_PR_NUMBER}/files?per_page=100" \
+            --jq '.[].filename')"
+          if grep -Eq '^(pyproject\.toml|tools/pylock\.ci-old\.toml|\.github/workflows/autofix\.yml)$' <<<"$changed_files"; then
+            echo "dependencies=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "dependencies=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Regenerate lower-bound lockfile
+        if: steps.changed.outputs.dependencies == 'true'
+        run: >-
+          uv pip compile pyproject.toml --python "3.12"
+          --python-platform "x86_64-unknown-linux-gnu" --group test
+          --group lockfile_extras --resolution lowest-direct --format pylock.toml
+          --output-file tools/pylock.ci-old.toml --no-cache
+      - name: Validate lower-bound lockfile
+        if: steps.changed.outputs.dependencies == 'true'
+        run: |
+          python -m mne_tools.check_lockfile \
+            "$GITHUB_WORKSPACE" \
+            tools/pylock.ci-old.toml \
+            --groups lockfile_extras
+      - name: Run repository hooks
+        run: prek run --all-files
+      - name: Verify autofix working tree
+        run: |
+          git status --short
+          if git status --short | grep -F -- '.ci/mne-tools'; then
+            echo 'Unexpected nested mne-tools repository in the working tree.' >&2
+            exit 1
+          fi
+      - name: Apply fixes through autofix.ci
+        if: success() || failure()
+        uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a  # v1.3.4
