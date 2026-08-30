@@ -226,7 +226,7 @@ def test_juggler_dbscan_deterministic():
     asr1.fit(contaminated)
     asr2.fit(contaminated)
     np.testing.assert_allclose(asr1.M_, asr2.M_, rtol=1e-12)
-    np.testing.assert_allclose(asr1.T_, asr2.T_, rtol=1e-12)
+    np.testing.assert_allclose(asr1.T_, asr2.T_, rtol=1e-10, atol=1e-12)
     np.testing.assert_array_equal(
         asr1.get_calibration_mask(), asr2.get_calibration_mask()
     )

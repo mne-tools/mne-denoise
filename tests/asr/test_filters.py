@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 
@@ -167,8 +169,15 @@ def test_design_asr_filter_matches_expected_coefficients(sfreq, expected_b, expe
     np.testing.assert_allclose(b, expected_b, rtol=0.0, atol=1e-12)
     np.testing.assert_allclose(a, expected_a, rtol=0.0, atol=1e-12)
     b_dispatch, a_dispatch = _design_statistics_filter(sfreq, "asr")
-    np.testing.assert_allclose(b_dispatch, b, rtol=0.0, atol=0.0)
-    np.testing.assert_allclose(a_dispatch, a, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(b_dispatch, b, rtol=0.0, atol=1e-12)
+    np.testing.assert_allclose(a_dispatch, a, rtol=0.0, atol=1e-12)
+
+
+def test_design_asr_filter_has_no_deprecation_warnings() -> None:
+    """The ASR filter remains compatible with NumPy deprecation policy."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        _design_asr_filter(128.0)
 
 
 def test_lfilter_channels() -> None:

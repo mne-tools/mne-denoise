@@ -40,6 +40,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
 ]
@@ -69,15 +70,19 @@ viz = [
 ]
 
 [dependency-groups]
+lockfile_extras = [
+  "mne>=1.12.1",
+  "matplotlib>=3.8",
+  "tqdm>=4.66",
+]
+
 test = [
   "pytest>=7.4.0",
   "pytest-cov>=4.1.0",
   "pytest-timeout>=2.2.0",
-  "mne>=1.12.1",
-  "matplotlib>=3.8",
   "pandas>=1.5",
   "seaborn>=0.12",
-  "tqdm>=4.66",
+  { include-group = "lockfile_extras" },
 ]
 
 doc = [
@@ -169,8 +174,15 @@ minversion = "7.0"
 addopts = "-ra --strict-markers --strict-config"
 testpaths = ["tests"]
 filterwarnings = [
-  "ignore::DeprecationWarning",
-  "ignore::PendingDeprecationWarning",
+  "error::DeprecationWarning",
+  "error::PendingDeprecationWarning",
+  # Matplotlib 3.8 calls pyparsing's deprecated parser during import.
+  "ignore:^'[^']+' deprecated - use '[^']+'$:pyparsing.warnings.PyparsingDeprecationWarning:matplotlib\\._(fontconfig_pattern|mathtext)",
+  "ignore:.*argument is deprecated.*:pyparsing.warnings.PyparsingDeprecationWarning:matplotlib\\._(fontconfig_pattern|mathtext)",
+  # pyparsing's parseAll warning reports its own helper as the source.
+  "ignore:.*argument is deprecated.*:pyparsing.warnings.PyparsingDeprecationWarning:pyparsing\\.util",
+  # Seaborn 0.12 reaches NumPy's deprecated compatibility helper.
+  "ignore:^np\\.find_common_type is deprecated\\.:DeprecationWarning:pandas\\.core\\.algorithms",
 ]
 
 [tool.coverage.run]

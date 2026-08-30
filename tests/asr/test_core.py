@@ -323,6 +323,8 @@ def test_asr_warns_for_unfiltered_projected_input(synthetic_burst_data):
     with raw_warn.info._unlock():
         raw_warn.info["projs"] = [proj]
 
-    with pytest.warns(UserWarning, match="highpass"):
-        with pytest.warns(UserWarning, match="projectors"):
-            ASR(sfreq=sfreq).fit(raw_warn)
+    with pytest.warns(UserWarning) as caught:
+        ASR(sfreq=sfreq).fit(raw_warn)
+    messages = [str(warning.message) for warning in caught]
+    assert any("highpass" in message for message in messages)
+    assert any("projectors" in message for message in messages)

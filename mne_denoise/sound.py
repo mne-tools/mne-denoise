@@ -124,10 +124,11 @@ def _validate_sound_inputs(
         isinstance(lambda_, (bool, np.bool_))
         or not isinstance(lambda_, Real)
         or not np.isfinite(lambda_)
-        or lambda_ < 0
+        or lambda_ <= 0
     ):
         raise ValueError(
-            f"lambda_ must be a finite non-negative number, got {lambda_!r}."
+            f"lambda_ must be a positive finite number; positive lambda_ required, "
+            f"got {lambda_!r}."
         )
     if (
         isinstance(n_iter, (bool, np.bool_))

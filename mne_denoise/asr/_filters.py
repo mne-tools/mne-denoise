@@ -243,7 +243,7 @@ def _yulewalk(
     F = np.asarray(F, dtype=np.float64)
     M = np.asarray(M, dtype=np.float64)
     npt = 513
-    lap = int(np.fix((npt - 1) / 25))
+    lap = int(np.trunc((npt - 1) / 25))
     Ht = np.zeros(npt, dtype=np.float64)
     Ht[0] = M[0]
     df = np.diff(F)
@@ -254,7 +254,7 @@ def _yulewalk(
             nb = nb - int(lap / 2)
             ne = nb + lap
         else:
-            ne = int(np.fix(F[idx + 1] * npt)) - 1
+            ne = int(np.trunc(F[idx + 1] * npt)) - 1
         j = np.arange(nb, ne + 1)
         inc = 0.0 if ne == nb else (j - nb) / (ne - nb)
         Ht[nb : ne + 1] = inc * M[idx + 1] + (1.0 - inc) * M[idx]
@@ -262,7 +262,7 @@ def _yulewalk(
 
     Ht = np.concatenate([Ht, Ht[-2:0:-1]])
     n = Ht.size
-    n2 = int(np.fix((n + 1) / 2))
+    n2 = int(np.trunc((n + 1) / 2))
     nr = 4 * order
     nt = np.arange(nr, dtype=np.float64)
 
