@@ -46,7 +46,7 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=1.26,<3",
-  "scipy>=1.13",
+  "scipy>=1.17.1",
   "scikit-learn>=1.5",
   "joblib>=1.2",
 ]
