@@ -83,6 +83,6 @@ def build() -> None:
 @click.command()
 def check() -> None:
     """Run hooks, tests, and distribution validation."""
-    _run("spin", "lint")
-    _run("spin", "test")
-    _run("spin", "build")
+    _run(sys.executable, "-m", "spin", "lint")
+    _run(sys.executable, "-m", "spin", "test")
+    _run(sys.executable, "-m", "spin", "build")
