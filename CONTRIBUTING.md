@@ -63,8 +63,8 @@ source .venv/bin/activate
 # Upgrade pip
 python -m pip install --upgrade pip
 
-# Install in editable mode with all dev dependencies
-pip install -e ".[dev,docs]"
+# Install in editable mode with the development dependency group
+python -m pip install -e . --group dev
 
 # Install pre-commit hooks
 pre-commit install
@@ -78,7 +78,8 @@ conda create -n mne-denoise python=3.12
 conda activate mne-denoise
 
 # Install in editable mode
-pip install -e ".[dev,docs]"
+python -m pip install --upgrade pip
+python -m pip install -e . --group dev
 pre-commit install
 ```
 

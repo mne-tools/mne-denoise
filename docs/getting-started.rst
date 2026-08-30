@@ -17,11 +17,13 @@ The example below works with NumPy arrays. To use MNE-Python ``Raw``,
 
    pip install "mne-denoise[mne]"
 
-For development work, clone the repository and install the optional extras:
+For development work, clone the repository and install the development
+dependency group:
 
 .. code-block:: console
 
-   pip install -e ".[dev,docs]"
+   python -m pip install --upgrade pip
+   python -m pip install -e . --group dev
    pre-commit install
 
 Basic usage

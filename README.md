@@ -73,7 +73,8 @@ pip install "mne-denoise[mne,viz,progress]"
 ```bash
 git clone https://github.com/mne-tools/mne-denoise.git
 cd mne-denoise
-pip install -e ".[dev]"
+python -m pip install --upgrade pip
+python -m pip install -e . --group dev
 ```
 
 ## Quick Start
@@ -195,7 +196,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 # Development setup
 git clone https://github.com/<your-username>/mne-denoise.git
 cd mne-denoise
-pip install -e ".[dev,docs]"
+python -m pip install --upgrade pip
+python -m pip install -e . --group dev
 pre-commit install
 ```
 
