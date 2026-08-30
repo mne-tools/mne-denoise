@@ -19,12 +19,16 @@ OPTIONAL_REQUIREMENTS = {
     "viz": "matplotlib",
 }
 DEVELOPMENT_REQUIREMENTS = {
+    "build",
     "pytest",
     "sphinx",
     "ruff",
-    "pre-commit",
-    "mypy",
-    "build",
+    "prek",
+    "spin",
+    "yamllint",
+    "zizmor",
+    "codespell",
+    "pre-commit-hooks",
     "twine",
     "towncrier",
 }
@@ -84,7 +88,7 @@ def _check_wheel(wheel: Path) -> Version:
 
         _, metadata = _wheel_metadata(archive)
         assert metadata["Name"] == "mne-denoise"
-        assert metadata["Requires-Python"] == ">=3.11"
+        assert metadata["Requires-Python"] == ">=3.12"
         assert metadata["License-Expression"] == "BSD-3-Clause"
         assert "LICENSE" in metadata.get_all("License-File", [])
 

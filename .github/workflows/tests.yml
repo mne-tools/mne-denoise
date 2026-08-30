@@ -1,6 +1,6 @@
 name: Tests
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
@@ -26,11 +26,11 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.14"
           cache: pip
@@ -38,15 +38,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --group lint
-      - name: Run ruff check
-        run: ruff check .
-      - name: Run ruff format check
-        run: ruff format --check .
-      - name: Run pre-commit
-        run: pre-commit run --all-files
+      - name: Run repository checks
+        run: spin lint
 
   base-install:
-    name: Base install / Python 3.11
+    name: Base install / Python 3.12
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -54,13 +50,13 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - name: Validate base installation
         run: |
           base_python="$RUNNER_TEMP/mne-denoise-base/bin/python"
@@ -89,28 +85,32 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
         with:
           version: ">=0.9"
-          python-version: "3.11"
+          python-version: "3.12"
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
             tools/pylock.ci-old.toml
+      - name: Install shared lockfile checker
+        run: >-
+          uv pip install
+          "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
       - name: Validate lower-bound lockfile
-        uses: mne-tools/mne-tools/actions/check-lockfile@main
-        with:
-          project-root: ${{ github.workspace }}
-          lockfile-path: tools/pylock.ci-old.toml
-          groups: lockfile_extras
+        run: |
+          python -m mne_tools.check_lockfile \
+            "$GITHUB_WORKSPACE" \
+            tools/pylock.ci-old.toml \
+            --groups lockfile_extras
       - name: Restore lower-bound Python environment
         run: |
           minimum_env="$RUNNER_TEMP/mne-denoise-minimum"
-          uv venv --python 3.11 "$minimum_env"
+          uv venv --python 3.12 "$minimum_env"
           echo "VIRTUAL_ENV=$minimum_env" >> "$GITHUB_ENV"
           echo "$minimum_env/bin" >> "$GITHUB_PATH"
       - name: Install lower-bound environment
@@ -120,7 +120,7 @@ jobs:
           uv pip install --python "$minimum_python" pip
           uv pip install --python "$minimum_python" -e . --no-deps
       - name: Check declared lower bounds
-        uses: mne-tools/mne-tools/actions/check-environment@main
+        uses: mne-tools/mne-tools/actions/check-environment@2e7c4b5469ef311a169e16c7f97cd0ce68508a61  # audited mne-tools main
         with:
           project-root: ${{ github.workspace }}
           groups: lockfile_extras
@@ -157,10 +157,6 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: "3.12"
-            name: Python 3.12
-            coverage: "false"
-          - os: ubuntu-latest
             python-version: "3.13"
             name: Python 3.13
             coverage: "false"
@@ -180,11 +176,11 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -231,7 +227,7 @@ jobs:
         run: pytest --cov=mne_denoise --cov-report=xml -q
       - name: Upload coverage to Codecov
         if: matrix.coverage == 'true'
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@a99c28d3f0da835de33ff2feb2e15691c7b9641f  # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -246,11 +242,11 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.14"
           cache: pip
@@ -259,7 +255,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e . --group test
           python -c "import mne; print(mne.__version__)" > "$RUNNER_TEMP/mne-stable-version"
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           repository: mne-tools/mne-python
           path: .ci/mne-python
@@ -319,11 +315,11 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.14"
           cache: pip
