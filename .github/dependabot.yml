@@ -1,13 +1,20 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "05:17"
+      timezone: "UTC"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "[dependabot]"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "no-changelog-entry-needed"
     open-pull-requests-limit: 10

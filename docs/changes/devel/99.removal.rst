@@ -1,0 +1,2 @@
+Python 3.11 support has been removed. Python 3.12 is now the minimum
+supported Python version.

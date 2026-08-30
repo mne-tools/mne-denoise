@@ -130,7 +130,8 @@ After the GitHub Release is published:
 3. `Publish to PyPI` waits for the `pypi` GitHub Environment rules, if any.
    A required reviewer may approve the deployment.
 4. The job downloads `release-dists` and invokes
-   `pypa/gh-action-pypi-publish@release/v1` with GitHub OIDC. It does not
+   `pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33`
+   (v1.14.2) with GitHub OIDC. It does not
    rebuild the package.
 
 The workflow uses no PyPI API token or stored upload credentials, and it does
