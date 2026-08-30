@@ -1,3 +1,0 @@
-Developer tooling and CI maintenance now use Spin, prek, immutable GitHub
-Actions, automated lower-bound dependency validation, dependency review, and
-security-focused repository checks.
