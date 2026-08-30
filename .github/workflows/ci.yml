@@ -6,27 +6,35 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Keep the trusted documentation dataset cache warm.
-    - cron: "17 5 * * 1,4"
+    - cron: "17 5 * * 1"
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   lint:
     name: Lint
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
-      - name: Install dependencies
+          python-version: "3.14"
+          cache: pip
+      - name: Install lint dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install --group lint
@@ -37,73 +45,390 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files
 
-  test:
-    name: "Test (py${{ matrix.python-version }}, ${{ matrix.os }})"
-    needs: lint
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.12", "3.13"]
+  check-lockfile:
+    name: Check minimum lockfile
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v7
+          persist-credentials: false
+      - name: Validate lower-bound lockfile
+        uses: mne-tools/mne-tools/actions/check-lockfile@main
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e . --group test
-      - name: Run tests
-        run: pytest --cov=mne_denoise --cov-report=xml -v
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          flags: unittests
-          fail_ci_if_error: false
+          project-root: ${{ github.workspace }}
+          lockfile-path: tools/pylock.ci-old.toml
+          groups: lockfile_extras
 
   base-install:
-    name: Base install
+    name: Base install / Python 3.11
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Validate base installation
         run: |
+          base_python="$RUNNER_TEMP/mne-denoise-base/bin/python"
           python -m venv "$RUNNER_TEMP/mne-denoise-base"
-          "$RUNNER_TEMP/mne-denoise-base/bin/python" -m pip install -e .
-          "$RUNNER_TEMP/mne-denoise-base/bin/python" scripts/check_base_install.py
+          "$base_python" -m pip install --upgrade pip
+          "$base_python" -m pip install -e .
+          "$base_python" -m pip check
+          "$base_python" scripts/check_base_install.py
+      - name: Display environment information
+        run: |
+          base_python="$RUNNER_TEMP/mne-denoise-base/bin/python"
+          "$base_python" --version
+          "$base_python" - <<'PY'
+          from importlib.metadata import version
 
-  docs:
-    name: Documentation
+          for package in ("mne-denoise", "numpy", "scipy", "scikit-learn", "joblib"):
+              print(package, version(package))
+          PY
+
+  package:
+    name: Package
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
-    env:
-      MNE_DATA: ${{ github.workspace }}/.mne-data
-    permissions:
-      contents: write
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.11"
+      - name: Build and validate distributions
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --group build
+          rm -rf dist/
+          python -m build
+          python -m twine check --strict dist/*
+          python scripts/check_dist.py dist
+      - name: Validate installed wheel
+        run: |
+          wheel_test="$RUNNER_TEMP/mne-denoise-wheel-test"
+          python -m venv "$wheel_test"
+          wheel="$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)"
+          "$wheel_test/bin/python" -m pip install "$wheel"
+          cd "$RUNNER_TEMP"
+          "$wheel_test/bin/python" "$GITHUB_WORKSPACE/scripts/check_base_install.py"
+          "$wheel_test/bin/python" -m pip check
+
+  minimum:
+    name: Minimum dependencies
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: ">=0.9"
+          python-version: "3.11"
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+            tools/pylock.ci-old.toml
+      - name: Install lower-bound environment
+        run: |
+          uv pip sync tools/pylock.ci-old.toml
+          uv pip install pip
+          uv pip install -e . --no-deps
+      - name: Check declared lower bounds
+        uses: mne-tools/mne-tools/actions/check-environment@main
+        with:
+          project-root: ${{ github.workspace }}
+          groups: lockfile_extras
+      - name: Display environment information
+        run: |
+          python --version
+          python - <<'PY'
+          from importlib.metadata import version
+
+          for package in (
+              "mne-denoise",
+              "numpy",
+              "scipy",
+              "scikit-learn",
+              "joblib",
+              "mne",
+              "matplotlib",
+              "tqdm",
+          ):
+              print(package, version(package))
+          PY
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Run tests
+        run: pytest -q
+
+  stable:
+    name: ${{ matrix.name }}
+    if: github.event_name != 'schedule'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+            name: Python 3.12
+            coverage: "false"
+          - os: ubuntu-latest
+            python-version: "3.13"
+            name: Python 3.13
+            coverage: "false"
+          - os: ubuntu-latest
+            python-version: "3.14"
+            name: Latest
+            coverage: "true"
+          - os: windows-latest
+            python-version: "3.14"
+            name: Windows
+            coverage: "false"
+          - os: macos-latest
+            python-version: "3.14"
+            name: macOS ARM
+            coverage: "false"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install stable test environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+      - name: Verify macOS ARM runner
+        if: matrix.name == 'macOS ARM'
+        run: |
+          python - <<'PY'
+          import platform
+
+          print("machine:", platform.machine())
+          print("platform:", platform.platform())
+          if platform.machine() != "arm64":
+              raise SystemExit("macOS compatibility job is not running on arm64")
+          PY
+      - name: Display environment information
+        run: |
+          python --version
+          python - <<'PY'
+          from importlib.metadata import version
+
+          for package in (
+              "mne-denoise",
+              "numpy",
+              "scipy",
+              "scikit-learn",
+              "joblib",
+              "mne",
+              "matplotlib",
+              "tqdm",
+          ):
+              print(package, version(package))
+          PY
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Run tests
+        if: matrix.coverage == 'false'
+        run: pytest -q
+      - name: Run tests with coverage
+        if: matrix.coverage == 'true'
+        run: pytest --cov=mne_denoise --cov-report=xml -q
+      - name: Upload coverage to Codecov
+        if: matrix.coverage == 'true'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+  mne-main:
+    name: MNE main
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install stable mne-denoise test environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+          python -c "import mne; print(mne.__version__)" > "$RUNNER_TEMP/mne-stable-version"
+      - uses: actions/checkout@v7
+        with:
+          repository: mne-tools/mne-python
+          path: .ci/mne-python
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install MNE-Python main
+        run: python -m pip install --upgrade ./.ci/mne-python
+      - name: Verify MNE-Python main installation
+        run: |
+          git -C .ci/mne-python rev-parse HEAD
+          python - <<'PY'
+          import os
+          from importlib.metadata import version
+
+          import mne
+
+          stable_version = open(
+              os.path.join(os.environ["RUNNER_TEMP"], "mne-stable-version"),
+              encoding="utf-8",
+          ).read().strip()
+          print("mne.__version__:", mne.__version__)
+          print("mne metadata:", version("mne"))
+          print("mne path:", mne.__file__)
+          if mne.__version__ == stable_version:
+              raise SystemExit("MNE main installation did not replace stable MNE")
+          PY
+      - name: Display environment information
+        run: |
+          python --version
+          echo "MNE git SHA: $(git -C .ci/mne-python rev-parse HEAD)"
+          python - <<'PY'
+          from importlib.metadata import version
+
+          for package in (
+              "mne-denoise",
+              "numpy",
+              "scipy",
+              "scikit-learn",
+              "joblib",
+              "mne",
+              "matplotlib",
+              "tqdm",
+          ):
+              print(package, version(package))
+          PY
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Run tests
+        run: pytest -q
+
+  prerelease:
+    name: Prerelease dependencies
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install stable test environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+      - name: Upgrade scientific dependencies to prereleases
+        run: |
+          python -m pip install --upgrade --pre \
+            numpy scipy scikit-learn joblib matplotlib tqdm
+      - name: Display environment information
+        run: |
+          python --version
+          python - <<'PY'
+          from importlib.metadata import version
+
+          for package in (
+              "mne-denoise",
+              "numpy",
+              "scipy",
+              "scikit-learn",
+              "joblib",
+              "mne",
+              "matplotlib",
+              "tqdm",
+          ):
+              print(package, version(package))
+          PY
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Run tests
+        run: pytest -q
+
+  docs-stable:
+    name: Docs (MNE stable)
+    env:
+      MNE_DATA: ${{ github.workspace }}/.mne-data
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
           cache: pip
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e . --group doc
+      - name: Display MNE and package versions
+        run: |
+          python - <<'PY'
+          import mne
+          import mne_denoise
+
+          print("MNE:", mne.__version__)
+          print("mne-denoise:", mne_denoise.__version__)
+          PY
+      - name: Check installed requirements
+        run: python -m pip check
       - name: Restore documentation datasets
         id: docs-data-cache
         uses: actions/cache/restore@v6
@@ -137,42 +462,109 @@ jobs:
           test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
           echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: docs-html
+          name: docs-html-stable-mne
+          path: docs/_build/html/
+          if-no-files-found: error
+
+  docs-main:
+    name: Docs (MNE main)
+    env:
+      MNE_DATA: ${{ github.workspace }}/.mne-data
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group doc
+          python -c "import mne; print(mne.__version__)" > "$RUNNER_TEMP/docs-mne-stable-version"
+      - uses: actions/checkout@v7
+        with:
+          repository: mne-tools/mne-python
+          path: .ci/mne-python
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install MNE-Python main
+        run: python -m pip install --upgrade ./.ci/mne-python
+      - name: Display MNE-Python main information
+        run: |
+          echo "MNE git SHA: $(git -C .ci/mne-python rev-parse HEAD)"
+          python - <<'PY'
+          import os
+          from importlib.metadata import version
+
+          import mne
+
+          stable_version = open(
+              os.path.join(os.environ["RUNNER_TEMP"], "docs-mne-stable-version"),
+              encoding="utf-8",
+          ).read().strip()
+          print("MNE:", mne.__version__)
+          print("MNE metadata:", version("mne"))
+          print("MNE path:", mne.__file__)
+          if mne.__version__ == stable_version:
+              raise SystemExit("MNE main installation did not replace stable MNE")
+          PY
+      - name: Restore documentation datasets
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.MNE_DATA }}
+          key: docs-data-${{ runner.os }}-${{ hashFiles('scripts/prefetch_docs_data.py', 'pyproject.toml') }}
+          restore-keys: |
+            docs-data-${{ runner.os }}-
+      - name: Prefetch and verify documentation datasets
+        run: python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Build documentation
+        run: make -C docs html SPHINXOPTS="-W --keep-going"
+      - name: Add .nojekyll to the build
+        run: touch docs/_build/html/.nojekyll
+      - name: Verify the build produced a complete site
+        run: |
+          set -e
+          test -s docs/_build/html/index.html
+          test -s docs/_build/html/auto_examples/index.html
+          test -s docs/_build/html/auto_examples/zapline/plot_02_parameter_tuning.html
+          test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
+          echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-html-mne-main
+          path: docs/_build/html/
+          if-no-files-found: error
+
+  deploy-docs:
+    name: Deploy docs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docs-stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download stable-MNE documentation
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-html-stable-mne
           path: docs/_build/html/
       - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/_build/html/
           force_orphan: true
-
-  package:
-    name: Package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-      - name: Build and validate distributions
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --group build
-          rm -rf dist/
-          python -m build
-          python -m twine check --strict dist/*
-          python scripts/check_dist.py dist
-      - name: Validate installed wheel
-        run: |
-          wheel_test="$RUNNER_TEMP/mne-denoise-wheel-test"
-          python -m venv "$wheel_test"
-          wheel="$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)"
-          "$wheel_test/bin/python" -m pip install "$wheel"
-          cd "$RUNNER_TEMP"
-          "$wheel_test/bin/python" "$GITHUB_WORKSPACE/scripts/check_base_install.py"
-          "$wheel_test/bin/python" -m pip check
