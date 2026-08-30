@@ -122,7 +122,7 @@ dev = [
 
 [tool.hatch.version]
 source = "vcs"
-raw-options = { version_scheme = "release-branch-semver" }
+raw-options = { version_scheme = "guess-next-dev" }
 
 [tool.ruff]
 line-length = 88

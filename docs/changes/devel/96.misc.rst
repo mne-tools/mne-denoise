@@ -1,0 +1,2 @@
+Package builds now use Hatchling with Git-derived versioning and modern
+distribution metadata.

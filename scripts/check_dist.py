@@ -99,8 +99,8 @@ def _check_wheel(wheel: Path) -> None:
             for requirement in requirements
             if requirement.marker is None
         }
-        assert base_requirements >= CORE_REQUIREMENTS, (
-            f"missing base requirements: {CORE_REQUIREMENTS - base_requirements}"
+        assert base_requirements == CORE_REQUIREMENTS, (
+            f"unexpected base requirements: {base_requirements}"
         )
 
         for extra, expected_requirement in OPTIONAL_REQUIREMENTS.items():
