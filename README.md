@@ -82,6 +82,8 @@ pip install -e ".[dev]"
 
 DSS finds spatial filters that maximize the ratio of reproducible (evoked) to total power:
 
+The example below uses the optional MNE-Python integration.
+
 ```python
 import mne
 from mne_denoise.dss import DSS, AverageBias

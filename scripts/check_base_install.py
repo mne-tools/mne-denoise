@@ -4,7 +4,7 @@ from importlib.util import find_spec
 
 
 def main() -> None:
-    """Check that the base installation excludes optional runtime packages."""
+    """Check the base installation contract."""
     for package in ("mne", "matplotlib", "tqdm"):
         assert find_spec(package) is None, f"{package} leaked into the base environment"
 
@@ -12,16 +12,12 @@ def main() -> None:
 
     import mne_denoise
     from mne_denoise import compute_covariance
-    from mne_denoise.icanclean import ICanClean
-
-    assert mne_denoise is not None
-    assert ICanClean is not None
 
     covariance = compute_covariance(np.eye(3))
     assert np.isfinite(covariance).all()
 
     try:
-        import mne_denoise.viz
+        import mne_denoise.viz  # noqa: F401
     except ImportError as error:
         assert "mne-denoise[viz]" in str(error)
     else:

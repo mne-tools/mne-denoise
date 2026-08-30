@@ -1,0 +1,3 @@
+The base installation no longer requires MNE-Python or Matplotlib. Install the
+``mne`` extra for MNE objects and the ``viz`` extra for plotting; tqdm remains
+available through the existing ``progress`` extra.
