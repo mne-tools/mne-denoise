@@ -9,9 +9,10 @@
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://mne.tools/mne-denoise/)
 [![Downloads](https://pepy.tech/badge/mne-denoise)](https://pepy.tech/project/mne-denoise)
 
-**Advanced denoising algorithms for M/EEG data in MNE-Python.**
+**Artifact removal and signal denoising for EEG and MEG.**
 
-`mne-denoise` provides powerful signal denoising techniques for the MNE-Python ecosystem, including **Denoising Source Separation (DSS)** and **ZapLine** algorithms. These methods excel at extracting signals of interest by exploiting data structure rather than just variance.
+`mne-denoise` provides spatial, spectral, and statistical methods for removing
+artifacts and suppressing noise in EEG and MEG recordings.
 
 ## Features
 
@@ -37,7 +38,7 @@
 
 ## Installation
 
-### Numerical / NumPy workflows
+### Base installation
 
 ```bash
 pip install mne-denoise
@@ -61,13 +62,7 @@ pip install "mne-denoise[viz]"
 pip install "mne-denoise[progress]"
 ```
 
-### Everything runtime-related
-
-```bash
-pip install "mne-denoise[all]"
-```
-
-Extras can be combined when needed:
+Extras can be combined:
 
 ```bash
 pip install "mne-denoise[mne,viz,progress]"

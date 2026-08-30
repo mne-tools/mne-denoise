@@ -10,8 +10,8 @@ Install the latest release from PyPI:
 
    pip install mne-denoise
 
-The ndarray example below uses the numerical core. To run the MNE-Python
-integration example, install the optional MNE extra as well:
+The example below works with NumPy arrays. To use MNE-Python ``Raw``,
+``Epochs``, or ``Evoked`` objects, install the MNE extra:
 
 .. code-block:: console
 

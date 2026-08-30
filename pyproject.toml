@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mne-denoise"
 version = "0.0.1"
-description = "Denoising Source Separation (DSS) and ZapLine algorithms for MNE-Python."
+description = "Artifact removal and signal denoising for EEG and MEG."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -47,7 +47,7 @@ dependencies = [
   "numpy>=1.26,<3",
   "scipy>=1.13",
   "scikit-learn>=1.5",
-  "joblib>=1.4",
+  "joblib>=1.2",
 ]
 
 [project.urls]
@@ -73,7 +73,6 @@ mne = [
 ]
 viz = [
   "matplotlib>=3.8",
-  "seaborn>=0.12",
 ]
 progress = [
   "tqdm>=4.66",
@@ -100,10 +99,7 @@ docs = [
   "myst-parser>=2.0.0",
 ]
 all = [
-  "mne>=1.12.1",
-  "matplotlib>=3.8",
-  "seaborn>=0.12",
-  "tqdm>=4.66",
+  "mne-denoise[dev,docs,progress]",
 ]
 
 [tool.setuptools]

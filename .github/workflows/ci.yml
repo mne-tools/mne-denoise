@@ -65,94 +65,19 @@ jobs:
           flags: unittests
           fail_ci_if_error: false
 
-  array-only-smoke:
-    name: Array-only smoke
+  base-install:
+    name: Base install
     runs-on: ubuntu-latest
-    env:
-      ARRAY_ENV: ${{ runner.temp }}/mne-denoise-array-only
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-      - name: Create clean environment
-        run: python -m venv "$ARRAY_ENV"
-      - name: Install base package
+      - name: Validate base installation
         run: |
-          "$ARRAY_ENV/bin/python" -m pip install --upgrade pip
-          "$ARRAY_ENV/bin/pip" install -e .
-      - name: Run array-only smoke
-        run: |
-          "$ARRAY_ENV/bin/python" - <<'PY'
-          from importlib.util import find_spec
-
-          optional = ("mne", "matplotlib", "tqdm", "pandas", "seaborn")
-          for name in optional:
-              assert find_spec(name) is None, f"{name} leaked into the base environment"
-
-          import numpy as np
-
-          import mne_denoise
-          from mne_denoise import compute_covariance
-          from mne_denoise.dss import compute_dss
-          from mne_denoise.icanclean import ICanClean
-          from mne_denoise.sns import compute_sns
-          from mne_denoise.sound import compute_sound
-          from mne_denoise.spectrum_interpolation import interpolate_spectrum
-          from mne_denoise.ssa import compute_basic_ssa
-
-          assert mne_denoise.__version__ == "0.0.1"
-          assert ICanClean is not None
-
-          rng = np.random.default_rng(0)
-          data = rng.standard_normal((4, 128))
-          leadfield = rng.standard_normal((4, 6))
-          leadfield -= leadfield.mean(axis=0, keepdims=True)
-
-          covariance = compute_covariance(data)
-          filters, patterns, eigenvalues = compute_dss(
-              covariance,
-              np.diag([4.0, 3.0, 2.0, 1.0]),
-              n_components=2,
-          )
-          assert filters.shape == (2, 4)
-          assert patterns.shape == (4, 2)
-          assert eigenvalues.shape == (2,)
-          compute_sns(data, n_neighbors=2)
-          sound_operator, sigmas, convergence = compute_sound(
-              data, leadfield, n_iter=1, random_state=0
-          )
-          assert sound_operator.shape == (4, 4)
-          assert sigmas.shape == (4,)
-          assert convergence.shape == (1,)
-          assert interpolate_spectrum(data, 256.0, [60.0]).shape == data.shape
-          cleaned_ssa, _ = compute_basic_ssa(data, 256.0, window_length=8)
-          assert cleaned_ssa.shape == data.shape
-
-          from mne_denoise._mne import require_mne
-          from mne_denoise.progress import TqdmProgress
-
-          try:
-              require_mne("MNE smoke")
-          except ImportError as error:
-              assert 'mne-denoise[mne]' in str(error)
-          else:
-              raise AssertionError("MNE unexpectedly available in the base environment")
-
-          try:
-              import mne_denoise.viz
-          except ImportError as error:
-              assert 'mne-denoise[viz]' in str(error)
-          else:
-              raise AssertionError("viz unexpectedly available in the base environment")
-
-          try:
-              TqdmProgress(disable=True)
-          except ImportError as error:
-              assert 'mne-denoise[progress]' in str(error)
-          else:
-              raise AssertionError("tqdm unexpectedly available in the base environment")
-          PY
+          python -m venv "$RUNNER_TEMP/mne-denoise-base"
+          "$RUNNER_TEMP/mne-denoise-base/bin/python" -m pip install -e .
+          "$RUNNER_TEMP/mne-denoise-base/bin/python" scripts/check_base_install.py
 
   docs:
     name: Documentation

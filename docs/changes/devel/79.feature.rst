@@ -1,5 +1,0 @@
-The base installation now provides the NumPy/SciPy/scikit-learn/joblib numerical
-core without requiring MNE-Python, Matplotlib, or tqdm. MNE-Python and
-visualization integrations are available through the ``[mne]`` and ``[viz]``
-extras, while the existing ``[progress]`` extra remains optional. The ``[all]``
-extra now installs all optional end-user runtime functionality.
