@@ -141,11 +141,18 @@ jobs:
           project-root: ${{ github.workspace }}
           lockfile-path: tools/pylock.ci-old.toml
           groups: lockfile_extras
+      - name: Restore lower-bound Python environment
+        run: |
+          minimum_env="$RUNNER_TEMP/mne-denoise-minimum"
+          uv venv --python 3.11 "$minimum_env"
+          echo "VIRTUAL_ENV=$minimum_env" >> "$GITHUB_ENV"
+          echo "$minimum_env/bin" >> "$GITHUB_PATH"
       - name: Install lower-bound environment
         run: |
-          uv pip sync tools/pylock.ci-old.toml
-          uv pip install pip
-          uv pip install -e . --no-deps
+          minimum_python="$VIRTUAL_ENV/bin/python"
+          uv pip sync --python "$minimum_python" tools/pylock.ci-old.toml
+          uv pip install --python "$minimum_python" pip
+          uv pip install --python "$minimum_python" -e . --no-deps
       - name: Check declared lower bounds
         uses: mne-tools/mne-tools/actions/check-environment@main
         with:
