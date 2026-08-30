@@ -1,6 +1,8 @@
 """Artifact removal and signal denoising for EEG and MEG."""
 
 from importlib import import_module
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _distribution_version
 
 from . import (
     asr,
@@ -20,7 +22,10 @@ from . import (
 from ._covariance import compute_covariance
 from .overcorrection import quantify_overcorrection
 
-__version__ = "0.0.1"
+try:
+    __version__ = _distribution_version("mne-denoise")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 
 def __getattr__(name: str):

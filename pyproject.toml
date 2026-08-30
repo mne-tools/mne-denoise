@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
+build-backend = "hatchling.build"
+requires = ["hatch-vcs", "hatchling >= 1.27"]
 
 [project]
 name = "mne-denoise"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Artifact removal and signal denoising for EEG and MEG."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 authors = [
   { name = "Sina Esmaeili", email = "sina.esmaeili@umontreal.ca" },
   { name = "Hamza Abdelhedi", email = "hamza.abdelhedi@umontreal.ca" },
@@ -18,30 +19,29 @@ maintainers = [
   { name = "Hamza Abdelhedi", email = "hamza.abdelhedi@umontreal.ca" },
 ]
 keywords = [
-  "mne",
-  "eeg",
-  "meg",
+  "artifact-removal",
+  "asr",
   "denoising",
   "dss",
-  "zapline",
+  "eeg",
+  "meg",
+  "mne",
   "neuroscience",
-  "electrophysiology",
   "signal-processing",
+  "zapline",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
-  "Topic :: Scientific/Engineering :: Bio-Informatics",
-  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
   "numpy>=1.26,<3",
@@ -51,13 +51,24 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mne-tools/mne-denoise"
-Documentation = "https://mne.tools/mne-denoise/"
-Repository = "https://github.com/mne-tools/mne-denoise"
-Issues = "https://github.com/mne-tools/mne-denoise/issues"
+"Bug Tracker" = "https://github.com/mne-tools/mne-denoise/issues"
 Changelog = "https://github.com/mne-tools/mne-denoise/blob/main/CHANGELOG.md"
+Documentation = "https://mne.tools/mne-denoise/"
+Homepage = "https://mne.tools/mne-denoise/"
+"Source Code" = "https://github.com/mne-tools/mne-denoise"
 
 [project.optional-dependencies]
+mne = [
+  "mne>=1.12.1",
+]
+progress = [
+  "tqdm>=4.66",
+]
+viz = [
+  "matplotlib>=3.8",
+]
+
+[dependency-groups]
 test = [
   "pytest>=7.4.0",
   "pytest-cov>=4.1.0",
@@ -68,26 +79,8 @@ test = [
   "seaborn>=0.12",
   "tqdm>=4.66",
 ]
-mne = [
-  "mne>=1.12.1",
-]
-viz = [
-  "matplotlib>=3.8",
-]
-progress = [
-  "tqdm>=4.66",
-]
-dev = [
-  "mne-denoise[test]",
-  "ruff>=0.16.0",
-  "pre-commit>=3.6.0",
-  "mypy>=1.8.0",
-  "build>=1.0.0",
-  "twine>=5.0.0",
-  "types-setuptools",
-  "towncrier",
-]
-docs = [
+
+doc = [
   "mne>=1.12.1",
   "matplotlib>=3.8",
   "numpydoc>=1.6.0",
@@ -98,15 +91,38 @@ docs = [
   "sphinx-gallery>=0.15.0",
   "myst-parser>=2.0.0",
 ]
-all = [
-  "mne-denoise[dev,docs,progress]",
+build = [
+  "build>=1.0.0",
+  "packaging",
+  "twine>=5.0.0",
 ]
 
-[tool.setuptools]
-include-package-data = true
+lint = [
+  "ruff>=0.16.0",
+  "pre-commit>=3.6.0",
+]
 
-[tool.setuptools.packages.find]
-where = [""]
+typecheck = [
+  "mypy>=1.8.0",
+]
+
+changelog = [
+  "towncrier",
+]
+
+dev = [
+  "pip>=25.1",
+  { include-group = "test" },
+  { include-group = "doc" },
+  { include-group = "build" },
+  { include-group = "lint" },
+  { include-group = "typecheck" },
+  { include-group = "changelog" },
+]
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { version_scheme = "release-branch-semver" }
 
 [tool.ruff]
 line-length = 88
