@@ -25,8 +25,8 @@
 
 <!-- Please check each item below -->
 
-- [ ] My code follows the code style of this project (`ruff check .`, `ruff format .`)
+- [ ] My code follows the code style of this project (`spin lint`)
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] I have run the full test suite and all tests pass
-- [ ] I have updated the documentation accordingly (`make -C docs html` builds without warnings)
-- [ ] I have added an entry to `CHANGELOG.md` (if applicable)
+- [ ] I have updated the documentation accordingly (`spin docs` builds without warnings)
+- [ ] I have added a numbered Towncrier fragment in `docs/changes/devel/` (if applicable)
