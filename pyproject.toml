@@ -66,13 +66,13 @@ progress = [
   "tqdm>=4.66",
 ]
 viz = [
-  "matplotlib>=3.8",
+  "matplotlib>=3.11.1",
 ]
 
 [dependency-groups]
 lockfile_extras = [
   "mne>=1.12.1",
-  "matplotlib>=3.8",
+  "matplotlib>=3.11.1",
   "tqdm>=4.66",
 ]
 
@@ -87,7 +87,7 @@ test = [
 
 doc = [
   "mne>=1.12.1",
-  "matplotlib>=3.8",
+  "matplotlib>=3.11.1",
   "numpydoc>=1.6.0",
   "pydata-sphinx-theme>=0.15.2",
   "sphinx>=7.2.0",
