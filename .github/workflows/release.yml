@@ -1,43 +1,137 @@
-name: Publish to PyPI
+name: Release
 
 on:
+  release:
+    types: [published]
   push:
-    tags:
-      - "v*"
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  build-n-publish:
-    name: Build and publish to PyPI
+  package:
+    name: Package
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
+          persist-credentials: false
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-
-      - name: Install build tools
+      - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install --group build
+      - name: Validate release tag and checkout
+        id: release
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$RELEASE_TAG" != v* ]]; then
+            echo "release tag must start with v: $RELEASE_TAG" >&2
+            exit 1
+          fi
 
-      - name: Build package
-        run: python -m build
+          expected_version="${RELEASE_TAG#v}"
+          canonical_version="$(
+            python - "$expected_version" <<'PY'
+          import sys
 
-      - name: Check package
-        run: python -m twine check --strict dist/*
+          from packaging.version import InvalidVersion, Version
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+          value = sys.argv[1]
+          try:
+              parsed = Version(value)
+          except InvalidVersion as error:
+              raise SystemExit(f"invalid release version {value!r}: {error}") from error
+          if str(parsed) != value:
+              raise SystemExit(
+                  f"release version {value!r} is not canonical PEP 440 spelling; "
+                  f"use {parsed}"
+              )
+          print(parsed)
+          PY
+          )"
+          if ! git rev-parse --verify --quiet "refs/tags/$RELEASE_TAG" >/dev/null; then
+            echo "release tag is not available in the checkout: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          head_sha="$(git rev-parse HEAD)"
+          tag_sha="$(git rev-parse "${RELEASE_TAG}^{commit}")"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+          echo "release tag: $RELEASE_TAG"
+          echo "tagged commit SHA: $tag_sha"
+          echo "checkout HEAD SHA: $head_sha"
+          echo "tags pointing at HEAD:"
+          git tag --points-at HEAD
+          echo "derived package version: $canonical_version"
+          if [[ "$tag_sha" != "$head_sha" ]]; then
+            echo "release tag $RELEASE_TAG does not point to checkout HEAD" >&2
+            exit 1
+          fi
+          echo "expected_version=$canonical_version" >> "$GITHUB_OUTPUT"
+      - name: Build distribution artifacts
+        run: |
+          rm -rf dist/
+          python -m build
+      - name: Validate distribution artifacts
+        env:
+          EXPECTED_VERSION: ${{ steps.release.outputs.expected_version }}
+        run: |
+          set -euo pipefail
+          python -m twine check --strict dist/*
+          if [[ -n "$EXPECTED_VERSION" ]]; then
+            python scripts/check_dist.py dist --expected-version "$EXPECTED_VERSION"
+          else
+            python scripts/check_dist.py dist
+          fi
+      - name: Validate installed wheel
+        run: |
+          set -euo pipefail
+          wheel_test="$RUNNER_TEMP/mne-denoise-wheel-test"
+          python -m venv "$wheel_test"
+          wheel="$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)"
+          test -n "$wheel"
+          "$wheel_test/bin/python" -m pip install "$wheel"
+          cd "$RUNNER_TEMP"
+          "$wheel_test/bin/python" "$GITHUB_WORKSPACE/scripts/check_base_install.py"
+          "$wheel_test/bin/python" -m pip check
+      - name: Upload release distributions
+        uses: actions/upload-artifact@v7
         with:
-          generate_release_notes: true
-          files: dist/*
+          name: release-dists
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish to PyPI
+    needs: package
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mne-denoise
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-dists
+          path: dist/
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true

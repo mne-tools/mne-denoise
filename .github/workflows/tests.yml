@@ -80,40 +80,6 @@ jobs:
               print(package, version(package))
           PY
 
-  package:
-    name: Package
-    if: github.event_name != 'schedule'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-      - name: Build and validate distributions
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --group build
-          rm -rf dist/
-          python -m build
-          python -m twine check --strict dist/*
-          python scripts/check_dist.py dist
-      - name: Validate installed wheel
-        run: |
-          wheel_test="$RUNNER_TEMP/mne-denoise-wheel-test"
-          python -m venv "$wheel_test"
-          wheel="$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)"
-          "$wheel_test/bin/python" -m pip install "$wheel"
-          cd "$RUNNER_TEMP"
-          "$wheel_test/bin/python" "$GITHUB_WORKSPACE/scripts/check_base_install.py"
-          "$wheel_test/bin/python" -m pip check
-
   minimum:
     name: Minimum dependencies
     if: github.event_name != 'schedule'
