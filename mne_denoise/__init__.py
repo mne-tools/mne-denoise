@@ -1,9 +1,10 @@
-"""MNE-Denoise: Advanced spatial and spectral denoising tools for MNE-Python.
+"""MNE-Denoise: Numerical denoising algorithms with optional MNE integration.
 
-MNE-Denoise provides a suite of advanced artifact removal and signal processing
-techniques built on top of MNE-Python. It is designed to be fully compatible with
-the scikit-learn estimator API, allowing these algorithms to be seamlessly integrated
-into robust, reproducible machine learning pipelines.
+MNE-Denoise provides a suite of numerical artifact-removal and signal-processing
+techniques for NumPy arrays, with first-class optional integration with MNE-Python.
+It is designed to be fully compatible with the scikit-learn estimator API, allowing
+these algorithms to be seamlessly integrated into robust, reproducible machine
+learning pipelines.
 
 The package includes implementations for standard, adaptive, and nonlinear algorithms
 tailored for EEG and MEG continuous/epoched data.
@@ -62,6 +63,8 @@ viz : Visualization
 
 """
 
+from importlib import import_module
+
 from . import (
     asr,
     bss_cca,
@@ -75,13 +78,22 @@ from . import (
     spectrum_interpolation,
     ssa,
     sspsir,
-    viz,
     zapline,
 )
 from ._covariance import compute_covariance
 from .overcorrection import quantify_overcorrection
 
 __version__ = "0.0.1"
+
+
+def __getattr__(name: str):
+    """Load the optional visualization namespace when it is requested."""
+    if name == "viz":
+        module = import_module(".viz", __name__)
+        globals()[name] = module
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "asr",

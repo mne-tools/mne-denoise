@@ -1,5 +1,16 @@
 """Visualization functions for MNE-Denoise."""
 
+try:
+    import matplotlib as _matplotlib  # noqa: F401
+except ModuleNotFoundError as error:
+    if error.name != "matplotlib":
+        raise
+    raise ImportError(
+        "mne_denoise.viz requires Matplotlib.\n"
+        "Install it with:\n\n"
+        '    pip install "mne-denoise[viz]"'
+    ) from None
+
 from .asr import (
     plot_asr_calibration_fraction,
     plot_asr_component_reconstruction,

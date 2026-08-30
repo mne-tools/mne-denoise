@@ -4,7 +4,9 @@ from __future__ import annotations
 
 try:
     import mne
-except ImportError:  # pragma: no cover - exercised in no-MNE environments
+except ModuleNotFoundError as error:  # pragma: no cover - no-MNE environments
+    if error.name != "mne":
+        raise
     mne = None
 
 HAS_MNE = mne is not None
@@ -14,6 +16,7 @@ def require_mne(feature: str) -> None:
     """Require MNE-Python for an MNE-specific feature."""
     if mne is None:
         raise ImportError(
-            f"{feature} requires MNE-Python. "
-            "Install MNE-Python to use this functionality."
+            f"{feature} requires the optional MNE-Python integration.\n"
+            "Install it with:\n\n"
+            '    pip install "mne-denoise[mne]"'
         )
