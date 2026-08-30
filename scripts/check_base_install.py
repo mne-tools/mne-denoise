@@ -1,5 +1,6 @@
 """Validate the base installation without optional runtime dependencies."""
 
+from importlib.metadata import version
 from importlib.util import find_spec
 
 
@@ -12,6 +13,8 @@ def main() -> None:
 
     import mne_denoise
     from mne_denoise import compute_covariance
+
+    assert mne_denoise.__version__ == version("mne-denoise")
 
     covariance = compute_covariance(np.eye(3))
     assert np.isfinite(covariance).all()
