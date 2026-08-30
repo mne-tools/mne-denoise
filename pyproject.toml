@@ -47,7 +47,7 @@ dependencies = [
   "numpy>=1.26,<3",
   "scipy>=1.13",
   "scikit-learn>=1.5",
-  "joblib>=1.2",
+  "joblib>=1.4",
 ]
 
 [project.urls]
@@ -80,7 +80,7 @@ test = [
   "pytest-cov>=4.1.0",
   "pytest-timeout>=2.2.0",
   "pandas>=2.1.1",
-  "seaborn>=0.12",
+  "seaborn>=0.13",
   { include-group = "lockfile_extras" },
 ]
 

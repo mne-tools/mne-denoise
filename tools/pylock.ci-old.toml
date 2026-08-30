@@ -76,9 +76,9 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f
 
 [[packages]]
 name = "joblib"
-version = "1.2.0"
-sdist = { url = "https://files.pythonhosted.org/packages/45/dd/a5435a6902d6315241c48a5343e6e6675b007e05d3738ed97a7a47864e53/joblib-1.2.0.tar.gz", upload-time = 2022-09-16T10:01:07Z, size = 313200, hashes = { sha256 = "e1cee4a79e4af22881164f218d4311f60074197fb707e082e803b61f6d137018" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/91/d4/3b4c8e5a30604df4c7518c562d4bf0502f2fa29221459226e140cf846512/joblib-1.2.0-py3-none-any.whl", upload-time = 2022-09-16T10:01:04Z, size = 297969, hashes = { sha256 = "091138ed78f800342968c523bdde947e7a305b8594b910a0fea2ab83c3c6d385" } }]
+version = "1.4.0"
+sdist = { url = "https://files.pythonhosted.org/packages/7c/c3/94c9e4886e8f33832690ab48fdac4a121a7bfec3e2c044c9f2762aa9068e/joblib-1.4.0.tar.gz", upload-time = 2024-04-08T15:08:19Z, size = 2115863, hashes = { sha256 = "1eb0dc091919cd384490de890cb5dfd538410a6d4b3b54eef09fb8c50b409b1c" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/ae/e2/4dea6313ef2b38442fccbbaf4017e50a6c3c8a50e8ee9b512783e5c90409/joblib-1.4.0-py3-none-any.whl", upload-time = 2024-04-08T15:08:14Z, size = 301185, hashes = { sha256 = "42942470d4062537be4d54c83511186da1fc14ba354961a2114da91efa9a4ed7" } }]
 
 [[packages]]
 name = "kiwisolver"
@@ -208,9 +208,9 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/87/8c/97e545034c94d0b
 
 [[packages]]
 name = "seaborn"
-version = "0.12.0"
-sdist = { url = "https://files.pythonhosted.org/packages/0a/87/9d713b302b7319f58e76f37fb2308377035c594b76bd50fe3696dad3a27e/seaborn-0.12.0.tar.gz", upload-time = 2022-09-06T03:04:03Z, size = 1407601, hashes = { sha256 = "893f17292d8baca616c1578ddb58eb25c72d622f54fc5ee329c8207dc9b57b23" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/c2/03/14991c1f18422eb640f6fe6eadf9a675bb21d9339236d64c3d12bd0eb1a4/seaborn-0.12.0-py3-none-any.whl", upload-time = 2022-09-06T03:04:01Z, size = 285116, hashes = { sha256 = "cbeff3deef7c2515aa0af99b2c7e02dc5bf8b42c936a74d8e4b416905b549db0" } }]
+version = "0.13.0"
+sdist = { url = "https://files.pythonhosted.org/packages/06/6f/caf0741c5787358b0efba3b4db7f8235e3a48e719ad2444bbd51485f966c/seaborn-0.13.0.tar.gz", upload-time = 2023-09-29T18:58:36Z, size = 1455480, hashes = { sha256 = "0e76abd2ec291c655b516703c6a022f0fd5afed26c8e714e8baef48150f73598" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/7b/e5/83fcd7e9db036c179e0352bfcd20f81d728197a16f883e7b90307a88e65e/seaborn-0.13.0-py3-none-any.whl", upload-time = 2023-09-29T18:58:33Z, size = 294583, hashes = { sha256 = "70d740828c48de0f402bb17234e475eda687e3c65f4383ea25d0cc4728f7772e" } }]
 
 [[packages]]
 name = "six"
