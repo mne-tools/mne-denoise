@@ -103,7 +103,7 @@ build = [
 ]
 
 lint = [
-  "ruff>=0.16.0",
+  "ruff>=0.16.5",
   "pre-commit>=3.6.0",
 ]
 
