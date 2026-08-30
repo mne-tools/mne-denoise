@@ -179,8 +179,17 @@ def test_compute_sound_regularizes_rank_deficient_leadfield():
     """Positive regularization keeps a rank-deficient forward model usable."""
     rng = np.random.default_rng(7)
     data = rng.standard_normal((6, 300))
-    base = rng.standard_normal((6, 2))
-    leadfield = np.column_stack((base, base[:, [0]], 2 * base[:, [1]]))
+    # Zero rows make L @ L.T exactly rank deficient across BLAS implementations.
+    leadfield = np.array(
+        [
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0],
+        ]
+    )
 
     operator, sigmas, convergence = compute_sound(
         data, leadfield, lambda_=0.1, n_iter=3, random_state=0

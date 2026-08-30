@@ -1,0 +1,193 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docs-stable:
+    name: Docs (MNE stable)
+    env:
+      MNE_DATA: ${{ github.workspace }}/.mne-data
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group doc
+      - name: Display MNE and package versions
+        run: |
+          python - <<'PY'
+          import mne
+          import mne_denoise
+
+          print("MNE:", mne.__version__)
+          print("mne-denoise:", mne_denoise.__version__)
+          PY
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Restore documentation datasets
+        id: docs-data-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.MNE_DATA }}
+          key: docs-data-${{ runner.os }}-${{ hashFiles('scripts/prefetch_docs_data.py', 'pyproject.toml') }}
+          restore-keys: |
+            docs-data-${{ runner.os }}-
+      - name: Prefetch and verify documentation datasets
+        run: python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+      - name: Save trusted documentation dataset cache
+        if: >-
+          steps.docs-data-cache.outputs.cache-hit != 'true' &&
+          (github.event_name == 'push' ||
+           github.event_name == 'schedule' ||
+           github.event_name == 'workflow_dispatch')
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.MNE_DATA }}
+          key: docs-data-${{ runner.os }}-${{ hashFiles('scripts/prefetch_docs_data.py', 'pyproject.toml') }}
+      - name: Build documentation
+        run: make -C docs html SPHINXOPTS="-W --keep-going"
+      - name: Add .nojekyll to the build
+        run: touch docs/_build/html/.nojekyll
+      - name: Verify the build produced a complete site
+        run: |
+          set -e
+          test -s docs/_build/html/index.html
+          test -s docs/_build/html/auto_examples/index.html
+          test -s docs/_build/html/auto_examples/zapline/plot_02_parameter_tuning.html
+          test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
+          echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-html-stable-mne
+          path: docs/_build/html/
+          if-no-files-found: error
+
+  docs-main:
+    name: Docs (MNE main)
+    env:
+      MNE_DATA: ${{ github.workspace }}/.mne-data
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group doc
+          python -c "import mne; print(mne.__version__)" > "$RUNNER_TEMP/docs-mne-stable-version"
+      - uses: actions/checkout@v7
+        with:
+          repository: mne-tools/mne-python
+          path: .ci/mne-python
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install MNE-Python main
+        run: python -m pip install --upgrade ./.ci/mne-python
+      - name: Display MNE-Python main information
+        run: |
+          echo "MNE git SHA: $(git -C .ci/mne-python rev-parse HEAD)"
+          python - <<'PY'
+          import os
+          from importlib.metadata import version
+
+          import mne
+          import mne_denoise
+
+          stable_version = open(
+              os.path.join(os.environ["RUNNER_TEMP"], "docs-mne-stable-version"),
+              encoding="utf-8",
+          ).read().strip()
+          print("MNE:", mne.__version__)
+          print("MNE metadata:", version("mne"))
+          print("MNE path:", mne.__file__)
+          print("mne-denoise:", mne_denoise.__version__)
+          if mne.__version__ == stable_version:
+              raise SystemExit("MNE main installation did not replace stable MNE")
+          PY
+      - name: Restore documentation datasets
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.MNE_DATA }}
+          key: docs-data-${{ runner.os }}-${{ hashFiles('scripts/prefetch_docs_data.py', 'pyproject.toml') }}
+          restore-keys: |
+            docs-data-${{ runner.os }}-
+      - name: Prefetch and verify documentation datasets
+        run: python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+      - name: Check installed requirements
+        run: python -m pip check
+      - name: Build documentation
+        run: make -C docs html SPHINXOPTS="-W --keep-going"
+      - name: Add .nojekyll to the build
+        run: touch docs/_build/html/.nojekyll
+      - name: Verify the build produced a complete site
+        run: |
+          set -e
+          test -s docs/_build/html/index.html
+          test -s docs/_build/html/auto_examples/index.html
+          test -s docs/_build/html/auto_examples/zapline/plot_02_parameter_tuning.html
+          test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
+          echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-html-mne-main
+          path: docs/_build/html/
+          if-no-files-found: error
+
+  deploy-docs:
+    name: Deploy docs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docs-stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download stable-MNE documentation
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-html-stable-mne
+          path: docs/_build/html/
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html/
+          force_orphan: true
