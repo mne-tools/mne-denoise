@@ -104,7 +104,7 @@ build = [
 
 lint = [
   "ruff>=0.16.0",
-  "pre-commit>=3.6.0",
+  "pre-commit>=4.6.2",
 ]
 
 typecheck = [
