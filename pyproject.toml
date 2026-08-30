@@ -45,7 +45,7 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=1.26,<3",
-  "scipy>=1.17.1",
+  "scipy>=1.13",
   "scikit-learn>=1.5",
   "joblib>=1.4",
 ]
@@ -65,34 +65,34 @@ progress = [
   "tqdm>=4.66",
 ]
 viz = [
-  "matplotlib>=3.11.1",
+  "matplotlib>=3.8",
 ]
 
 [dependency-groups]
 lockfile_extras = [
   "mne>=1.12.1",
-  "matplotlib>=3.11.1",
+  "matplotlib>=3.8",
   "tqdm>=4.66",
 ]
 
 test = [
   "pytest>=7.4.0",
-  "pytest-cov>=7.1.0",
+  "pytest-cov>=4.1.0",
   "pytest-timeout>=2.2.0",
-  "pandas>=3.0.5",
-  "seaborn>=0.12",
+  "pandas>=2.1.1",
+  "seaborn>=0.13",
   { include-group = "lockfile_extras" },
 ]
 
 doc = [
   "mne>=1.12.1",
-  "matplotlib>=3.11.1",
+  "matplotlib>=3.8",
   "numpydoc>=1.6.0",
-  "pydata-sphinx-theme>=0.21.0",
+  "pydata-sphinx-theme>=0.15.2",
   "sphinx>=7.2.0",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.5.0",
-  "sphinx-gallery>=0.21.0",
+  "sphinx-gallery>=0.15.0",
   "myst-parser>=2.0.0",
 ]
 build = [
@@ -111,7 +111,7 @@ changelog = [
 ]
 
 dev = [
-  "pip>=26.2.1",
+  "pip>=25.1",
   { include-group = "test" },
   { include-group = "doc" },
   { include-group = "build" },
@@ -175,8 +175,6 @@ filterwarnings = [
   "ignore:.*argument is deprecated.*:pyparsing.warnings.PyparsingDeprecationWarning:matplotlib\\._(fontconfig_pattern|mathtext)",
   # pyparsing's parseAll warning reports its own helper as the source.
   "ignore:.*argument is deprecated.*:pyparsing.warnings.PyparsingDeprecationWarning:pyparsing\\.util",
-  # Seaborn 0.12 reaches NumPy's deprecated compatibility helper.
-  "ignore:^np\\.find_common_type is deprecated\\.:DeprecationWarning:pandas\\.core\\.algorithms",
 ]
 
 [tool.coverage.run]
