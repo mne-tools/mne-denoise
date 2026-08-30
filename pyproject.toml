@@ -80,7 +80,7 @@ test = [
   "pytest>=7.4.0",
   "pytest-cov>=4.1.0",
   "pytest-timeout>=2.2.0",
-  "pandas>=1.5",
+  "pandas>=3.0.5",
   "seaborn>=0.12",
   { include-group = "lockfile_extras" },
 ]
