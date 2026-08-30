@@ -2,8 +2,8 @@ coverage:
   status:
     project:
       default:
-        target: 80% # Global target
-        threshold: 1% # Allow 1% drop
+        target: 80%  # Global target
+        threshold: 1%  # Allow 1% drop
     patch:
       default:
         # New code should be well covered, but need not exactly match the
