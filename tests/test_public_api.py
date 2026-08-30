@@ -90,3 +90,14 @@ def test_canonical_public_paths_are_importable():
         module = importlib.import_module(module_name)
         public_object = getattr(module, name, None)
         assert callable(public_object), f"{module_name}.{name} is not callable"
+
+
+def test_root_viz_import_path_remains_compatible():
+    """The optional viz namespace remains available from the package root."""
+    import mne_denoise
+
+    viz = importlib.import_module("mne_denoise.viz")
+    from mne_denoise import viz as root_viz
+
+    assert root_viz is viz
+    assert mne_denoise.viz is viz

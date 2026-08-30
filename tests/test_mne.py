@@ -23,8 +23,9 @@ def test_require_mne_when_unavailable(monkeypatch):
     """Requiring MNE reports the requested feature when unavailable."""
     monkeypatch.setattr(mne_compat, "mne", None)
 
-    with pytest.raises(ImportError, match="SSP-SIR.*MNE-Python"):
+    with pytest.raises(ImportError, match="SSP-SIR.*MNE-Python") as caught:
         mne_compat.require_mne("SSP-SIR")
+    assert "mne-denoise[mne]" in str(caught.value)
 
 
 def test_no_mne_imports_and_pure_numerical_cores_remain_usable():
@@ -37,7 +38,7 @@ def test_no_mne_imports_and_pure_numerical_cores_remain_usable():
 
         def blocked_import(name, *args, **kwargs):
             if name == "mne" or name.startswith("mne."):
-                raise ImportError("blocked for no-MNE test")
+                raise ModuleNotFoundError("No module named 'mne'", name="mne")
             return real_import(name, *args, **kwargs)
 
         builtins.__import__ = blocked_import
@@ -78,6 +79,53 @@ def test_no_mne_imports_and_pure_numerical_cores_remain_usable():
 
         assert not HAS_MNE
         assert mne is None
+        """
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_no_matplotlib_import_and_viz_error_are_actionable():
+    """The base package imports without Matplotlib and viz names its extra."""
+    probe = textwrap.dedent(
+        """
+        import builtins
+
+        real_import = builtins.__import__
+
+        def blocked_import(name, *args, **kwargs):
+            if name == "mne" or name.startswith("mne."):
+                raise ModuleNotFoundError("No module named 'mne'", name="mne")
+            if name == "matplotlib" or name.startswith("matplotlib."):
+                raise ModuleNotFoundError(
+                    "No module named 'matplotlib'", name="matplotlib"
+                )
+            return real_import(name, *args, **kwargs)
+
+        builtins.__import__ = blocked_import
+
+        import mne_denoise
+        from mne_denoise import compute_covariance
+        from mne_denoise.dss import compute_dss
+        from mne_denoise.icanclean import ICanClean
+        from mne_denoise.sns import compute_sns
+
+        assert callable(compute_covariance)
+        assert callable(compute_dss)
+        assert ICanClean is not None
+        assert callable(compute_sns)
+
+        try:
+            import mne_denoise.viz
+        except ImportError as error:
+            assert 'pip install "mne-denoise[viz]"' in str(error)
+        else:
+            raise AssertionError("mne_denoise.viz unexpectedly imported")
         """
     )
     result = subprocess.run(
