@@ -1,0 +1,27 @@
+name: Changelog
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changelog:
+    name: Check changelog entry
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: scientific-python/action-towncrier-changelog@165df35cfb3ff4b5bfea7645c4b923c6e8c7b54a  # v2.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BOT_USERNAME: changelog-bot
