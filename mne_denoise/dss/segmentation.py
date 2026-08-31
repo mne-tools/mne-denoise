@@ -40,7 +40,9 @@ class CovarianceSegmenter:
 
     Identifies boundaries where the spatial covariance matrix changes
     significantly, indicating non-stationary noise characteristics.
-    Based on the ZapLine-plus segmentation algorithm [1]_.
+    Adapted from the covariance-stationarity strategy described for
+    ZapLine-plus [1]_; the complete segmentation behavior and parameterization
+    here are mne-denoise implementation choices.
 
     Parameters
     ----------
@@ -65,9 +67,10 @@ class CovarianceSegmenter:
         :class:`FixedWindowSegmenter`) if you are getting spurious splits.
         Default 0.5 reproduces ZapLine-plus.
 
-    References
-    ----------
-    .. [1] Klug & Kloosterman (2022). Zapline-plus …
+    Notes
+    -----
+    This is a package extension inspired by ZapLine-plus rather than a claim
+    that every detail of this segmenter is prescribed by that publication.
     """
 
     def __init__(

@@ -18,7 +18,8 @@ filtering.  Comparing the two answers the question without any ground-truth
 data: had this cortical region been active, how much of its signal would the
 filter have destroyed?
 
-The four metrics here characterise that comparison from complementary angles:
+The four package-defined metrics here characterise that comparison from
+complementary angles:
 :func:`quantify_overcorrection` returns amplitude change and topography
 correlation, which isolate loss of *magnitude* and loss of *shape*
 respectively, alongside relative error and goodness of fit, which fold both
@@ -29,9 +30,9 @@ including those fitted by SOUND, SSP-SIR, ZapLine, DSS and iCanClean.
 
 References
 ----------
-Mutanen, T. P., Metsomaa, J., Makkonen, M., Varone, G., Marzetti, L., &
-Ilmoniemi, R. J. (2022). Source-based artifact-rejection techniques for
-TMS-EEG. Journal of Neuroscience Methods, 382, 109693.
+The forward-model distortion rationale is discussed by Mutanen et al. (2022),
+but the four exact metrics and their formulas are utilities defined by
+mne-denoise, not quantities attributed to that paper.
 
 Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
          Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
@@ -93,6 +94,11 @@ def quantify_overcorrection(
 
     Notes
     -----
+    These four formulas are package-defined evaluation utilities. Mutanen et
+    al. (2022) motivates evaluating source-space distortion with a forward
+    model, but it is not the source for every exact metric name or formula
+    returned here.
+
     Writing ``l`` for a source's topography before filtering and ``l'`` for
     ``operator @ l`` after, the four metrics are
 

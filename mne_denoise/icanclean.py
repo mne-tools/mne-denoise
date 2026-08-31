@@ -66,7 +66,7 @@ from ._filtering import design_butter_sos
 from ._logging import logger, verbose
 from .progress import _emit_progress, _ProgressCallback, _validate_callback
 
-__all__ = ["ICanClean", "compute_icanclean"]
+__all__ = ["ICanClean", "compute_icanclean", "null_r2_threshold"]
 
 #: Default number of circular-shift surrogates for ``threshold='null'``. 20 is
 #: the floor at which the default alpha's quantile is even defined; 100 gives
@@ -121,8 +121,9 @@ def null_r2_threshold(
     This estimates the upper ``1 - alpha`` quantile of the *largest* squared
     canonical correlation under the null hypothesis that the two blocks share
     nothing, by recomputing the spectrum against circularly shifted copies of
-    the reference. Thresholding at the returned value therefore controls the
-    family-wise false-rejection rate at ``alpha`` over components.
+    the reference. Thresholding at the returned value is intended to provide a
+    nominal family-wise false-rejection rate of ``alpha`` over components when
+    the circular-shift null is appropriate.
 
     Circular shift, not sample permutation: EEG is strongly autocorrelated, and
     shuffling samples destroys that structure, producing surrogates that cannot
@@ -137,59 +138,46 @@ def null_r2_threshold(
         Primary block, as passed to the CCA solver.
     Y_cca : ndarray, shape (n_times, n_reference)
         Reference block, as passed to the CCA solver.
-    alpha : float
-        Family-wise false-rejection rate. Default 0.05.
-    n_surrogate : int
+    alpha : float, default=0.05
+        Nominal family-wise false-rejection rate used for the surrogate
+        quantile.
+    n_surrogate : int, default=100
         Number of circular shifts. Default 100. The quantile this estimates
         needs at least ``1 / alpha`` samples to exist at all (19 at the
         default ``alpha``); a value that close to the floor makes the
         returned threshold noisy run to run. 100 trades a still-cheap
         surrogate pass for a materially more stable quantile.
-    random_state : int | Generator | None
+    random_state : int | Generator | None, default=None
         Seed or generator for the shift offsets.
 
     Returns
     -------
     threshold : float
         The :math:`R^2` value above which a component is unlikely to arise from
-        sampling noise. Approaches 1.0 in the rank-deficient regime, so nothing
-        is rejected there rather than nearly everything.
+        the circular-shift surrogate distribution. It approaches 1.0 in the
+        rank-deficient regime, so the surrogate rule becomes conservative.
 
     Notes
     -----
-    The threshold adapts to conditioning automatically. Measured on independent
-    AR(1) blocks with 40 primary and 40 reference channels, components falsely
-    removed (of 40):
-
-    ==================  ==========  ======  ===========  ===========
-    n / (p + q)         threshold   null    fixed 0.65   fixed 0.85
-    ==================  ==========  ======  ===========  ===========
-    1.2                 0.999       0.20    20.4         14.4
-    2.0                 0.992       0.12    16.8         10.6
-    10.0                0.904       0.00    11.4         2.6
-    300.0               0.124       0.04    0.0          0.0
-    ==================  ==========  ======  ===========  ===========
-
-    Power is unaffected: with 0, 1, 3 and 8 injected shared components the
-    threshold recovers exactly 0, 1, 3 and 8.
+    This is a package-defined surrogate-threshold extension. It addresses the
+    finite-sample degeneracy of CCA, not the scientific identity of a shared
+    component. The threshold adapts to conditioning, but its performance
+    depends on the recording, surrogate construction, and CCA ranks.
 
     This solves the *degeneracy* problem, not the *selectivity* problem. A
-    component that genuinely shares variance with the reference is retained as a
-    candidate regardless of whether that variance is artifact or brain. With a
-    pseudo-reference -- a band-stopped copy of the primary block -- almost every
-    component shares real variance, so the null alone will select broadly.
+    component that genuinely shares variance with the reference can still be
+    neural signal rather than artifact. With a pseudo-reference -- a band-stopped
+    copy of the primary block -- almost every component shares real variance, so
+    the null alone will select broadly. Evaluate artifact attenuation and
+    preservation of the signal of interest on the user's data.
 
     In ``mode='calibrated'``, the score being thresholded is a projection
     through CCA weights fit once on the whole recording, not a fresh per-window
-    fit -- yet this function always re-searches CCA on the surrogate. Matching
-    the null to the fixed-weight projection sounds like the correct fix, but
-    empirically makes rejections *more* false-positive-prone here: a window
-    that contributed to fitting those weights scores higher on its own
-    (unshifted) data than an out-of-sample window would, an in-sample leakage
-    effect a shift-based null does not remove. The search-based null used here
-    happens to run high enough to absorb that leakage in practice, but this is
-    an empirical observation on AR(1) test data, not a property proven to hold
-    in general -- treat ``'null'`` with ``mode='calibrated'`` as unvalidated.
+    fit. This function nevertheless re-searches CCA on each circular-shift
+    surrogate, so the resulting null is not an exact simulation of the fixed-
+    weight score. Treat ``threshold='null'`` with ``mode='calibrated'`` as an
+    unvalidated package extension and check its behavior with held-out or
+    otherwise independent data.
     """
     rng = np.random.default_rng(random_state)
     n_times = X_cca.shape[0]
@@ -671,11 +659,78 @@ def compute_icanclean(
     verbose: bool | str | int | None = None,
     callback=None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Compute one iCanClean pass and emit one aggregate INFO summary.
+    r"""Compute one iCanClean pass on continuous NumPy arrays.
 
+    This functional interface performs one global, sliding-window, or
+    calibrated pass over a primary/reference recording pair. It returns the
+    cleaned primary data and a quality-control dictionary. It does not accept
+    MNE containers; use :class:`ICanClean` for MNE integration.
+
+    Parameters
+    ----------
+    X_primary : ndarray, shape (n_primary, n_times)
+        Primary channels to clean.
+    X_ref : ndarray, shape (n_reference, n_times)
+        Reference channels that capture candidate artifact activity.
+    sfreq : float
+        Sampling frequency in Hz.
+    mode : {'sliding', 'global', 'calibrated'}, default='sliding'
+        Where the CCA decomposition is estimated and how it is reused.
+        ``'global'`` fits one decomposition to the full recording,
+        ``'sliding'`` fits one per cleaning window, and ``'calibrated'`` fits
+        one global decomposition and scores it in each window.
+    clean_with : {'X', 'Y', 'both'}, default='X'
+        Canonical basis used for artifact regression: primary-side variates,
+        reference-side variates, or their concatenation.
+    segment_len : float, default=2.0
+        Cleaning-window duration in seconds for ``mode='sliding'`` or
+        ``'calibrated'``.
+    overlap : float, default=0.0
+        Fractional overlap between consecutive windows. Must be in [0, 1).
+    threshold : float | {'auto', 'null'}, default=0.7
+        Squared-canonical-correlation threshold for rejecting components. A
+        numeric value is used directly; ``'auto'`` uses the running 95th
+        percentile; ``'null'`` calls :func:`null_r2_threshold` separately for
+        each window.
+    max_reject_fraction : float, default=0.5
+        Maximum fraction of available canonical components removed per window.
+    reref_primary : bool | str, default=False
+        Average-reference option applied to the primary block for CCA only.
+    reref_ref : bool | str, default=False
+        Average-reference option applied to the reference block for CCA only.
+    stats_segment_len : float | None, default=None
+        Optional broader statistics window in seconds for sliding mode. The
+        cleaned region remains ``segment_len`` seconds.
+    null_random_state : int | None, default=None
+        Seed used by ``threshold='null'``. Has no effect for other thresholds.
+    verbose : bool | str | int | None, default=None
+        MNE-style logging level for the aggregate summary.
+    callback : callable | None, default=None
+        Synchronous progress callback for completed sliding or calibrated
+        windows. Return values are ignored and callback exceptions propagate.
+
+    Returns
+    -------
+    X_primary_clean : ndarray, shape (n_primary, n_times)
+        Cleaned primary data.
+    qc : dict
+        Quality-control arrays and lists, including ``correlations_``,
+        ``n_removed_``, ``removed_idx_``, ``filters_``, ``patterns_``, and
+        ``n_windows_``.
+
+    Raises
+    ------
+    ValueError
+        If the inputs, mode, threshold, or window settings are invalid.
+
+    Notes
+    -----
     ``callback`` is intended to be passed by keyword. It receives one
     synchronous ``method="icanclean"``, ``stage="window"`` event after each
     completed cleaning window in ``'sliding'`` and ``'calibrated'`` modes.
+    The null threshold and hybrid orchestration are package extensions; use
+    them as research-facing options and validate their effect on the signal
+    of interest.
     """
     callback = _validate_callback(callback)
     cleaned, qc = _compute_icanclean_impl(
@@ -732,10 +787,10 @@ class ICanClean(BaseEstimator, TransformerMixin):
     ----------
     sfreq : float
         Sampling frequency in Hz.
-    ref_channels : list of str | list of int
+    ref_channels : list of str | list of int | None, default=None
         Explicit reference noise channels. For MNE objects, provide channel
         names or integer channel indices. For NumPy arrays, provide integer
-        channel indices.
+        channel indices. Required unless ``pseudo_ref=True``.
     primary_channels : list of str | list of int | None, default=None
         Explicit primary (scalp) channels to clean. If ``None``, all channels
         not listed in ``ref_channels`` are used.
@@ -753,13 +808,14 @@ class ICanClean(BaseEstimator, TransformerMixin):
         Sliding window duration in seconds (the "clean window").
     overlap : float, default=0.0
         Overlap between consecutive windows as a fraction in [0, 1).
-    threshold : float | 'auto', default=0.7
-        :math:`R^2` threshold for component rejection.
-        If ``'auto'``, uses an adaptive threshold based on the 95th percentile
-        of the running correlation distribution.
+    threshold : float | {'auto', 'null'}, default=0.7
+        :math:`R^2` threshold for component rejection. If ``'auto'``, uses an
+        adaptive threshold based on the 95th percentile of the running
+        correlation distribution. If ``'null'``, uses the package-defined
+        circular-shift surrogate threshold from :func:`null_r2_threshold`.
     max_reject_fraction : float, default=0.5
-        Safety cap: at most this fraction of canonical components can be
-        removed per window.
+        Package-level cap: at most this fraction of canonical components can
+        be removed per window.
     reref_primary : bool | str, default=False
         Apply average re-referencing to primary channels *for CCA only*
         (the original data is used for cleaning). ``True`` or ``'fullrank'``
@@ -791,6 +847,9 @@ class ICanClean(BaseEstimator, TransformerMixin):
         ``ref_channels``, which must be left as ``None``. This is the
         pseudo-reference method of Downey & Ferris (2023) [2]_, for
         recordings with no dual-layer noise electrodes.
+    null_random_state : int | None, default=None
+        Seed for the circular-shift surrogates used when ``threshold='null'``.
+        This option has no effect for other threshold modes.
     global_threshold : float | 'auto' | None, default=None
         Threshold for the explicit global pass in ``mode='hybrid'``.
     global_clean_with : {'X', 'Y', 'both'} | None, default=None
@@ -843,6 +902,16 @@ class ICanClean(BaseEstimator, TransformerMixin):
     removing too many components in a single window, which would distort
     the signal. This is especially important for short windows or noisy
     reference sensors.
+
+    The CCA-based reference-noise strategy is the published iCanClean method
+    [1]_. ``pseudo_ref=True`` follows the pseudo-reference configuration
+    described in [2]_. ``threshold='null'``, ``mode='hybrid'``, and the
+    calibrated/window orchestration are mne-denoise extensions or
+    implementation conventions; they should not be attributed to the papers
+    without checking the specific source. In particular, a high canonical
+    correlation identifies shared variance, not artifact identity, so these
+    options require validation of both attenuation and preservation of the
+    signal of interest.
 
     Examples
     --------
@@ -984,10 +1053,12 @@ class ICanClean(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
+        X : Raw | Epochs | Evoked | ndarray
             Input data (unused aside from validation).
         y : None
             Ignored.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level. ``fit`` itself performs no cleaning.
 
         Returns
         -------
@@ -1008,11 +1079,12 @@ class ICanClean(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
+        X : Raw | Epochs | Evoked | ndarray
             Input data to clean. Accepted formats:
 
             - MNE ``Raw``: channels are resolved by name.
             - MNE ``Epochs``: each epoch is cleaned individually.
+            - MNE ``Evoked``: the single data matrix is cleaned once.
             - ndarray, shape ``(n_channels, n_times)``: channel indices in
               ``ref_channels`` / ``primary_channels`` are used directly.
 
@@ -1023,6 +1095,8 @@ class ICanClean(BaseEstimator, TransformerMixin):
             window. Callback return values are ignored and callback exceptions
             propagate unchanged. Epoched processing remains callback-silent
             because epochs are cleaned by the existing threaded joblib path.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for the aggregate cleaning report.
 
         Returns
         -------
@@ -1138,13 +1212,15 @@ class ICanClean(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
+        X : Raw | Epochs | Evoked | ndarray
             Input data.
         y : None
             Ignored.
         callback : callable | None, default=None
             Called synchronously after each completed continuous cleaning
             window. Epoched processing remains callback-silent.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for the composed fit and transform call.
         **fit_params
             Ignored.
 

@@ -60,7 +60,19 @@ class TanhMaskDenoiser(NonlinearDenoiser):
         self.normalize = normalize
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply tanh nonlinearity."""
+        """Apply the scaled hyperbolic-tangent nonlinearity.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series. Normalization, when enabled, is computed over
+            the supplied values.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            ``tanh(alpha * source)`` with optional standard-deviation scaling.
+        """
         if self.normalize:
             std = np.std(source)
             if std > 1e-15:
@@ -103,7 +115,18 @@ class RobustTanhDenoiser(NonlinearDenoiser):
         self.alpha = alpha
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply robust tanh denoising."""
+        """Apply the robust hyperbolic-tangent nonlinearity.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            ``source - tanh(alpha * source)``.
+        """
         return source - np.tanh(self.alpha * source)
 
 
@@ -138,7 +161,18 @@ class GaussDenoiser(NonlinearDenoiser):
         self.a = a
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply Gaussian nonlinearity."""
+        """Apply the Gaussian FastICA nonlinearity.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            ``source * exp(-a * source**2 / 2)``.
+        """
         s2 = source**2
         return source * np.exp(-self.a * s2 / 2)
 
@@ -165,7 +199,18 @@ class SkewDenoiser(NonlinearDenoiser):
     """
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply skewness ($s^2$)."""
+        """Apply the squared-source skewness nonlinearity.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Element-wise squared source.
+        """
         return source**2
 
 
@@ -204,7 +249,18 @@ class KurtosisDenoiser(NonlinearDenoiser):
         self.alpha = alpha
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply nonlinearity."""
+        """Apply the configured ICA contrast nonlinearity.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Transformed source using ``tanh``, ``cube``, or ``gauss``.
+        """
         if self.nonlinearity == "tanh":
             return np.tanh(self.alpha * source)
         elif self.nonlinearity == "cube":
@@ -242,7 +298,18 @@ class SmoothTanhDenoiser(NonlinearDenoiser):
         self.window = max(3, window)
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply smoothed tanh nonlinearity."""
+        """Smooth a source and apply the scaled tanh nonlinearity.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series. Smoothing is applied along the time axis.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Smoothed and nonlinearly transformed source.
+        """
         from scipy.ndimage import uniform_filter1d
 
         # Smooth the source
@@ -260,13 +327,21 @@ class SmoothTanhDenoiser(NonlinearDenoiser):
 def beta_tanh(source: np.ndarray) -> float:
     r"""Compute beta for Tanh denoiser (FastICA Newton step).
 
-    Formula: $\\beta = -E[1 - \\tanh^2(s)]$
-    Legacy: `beta_tanh.m`
+    Parameters
+    ----------
+    source : ndarray
+        Source samples used to estimate the expectation.
 
     Returns
     -------
     beta : float
-        Scalar value.
+        Estimated Newton-step coefficient,
+        ``-mean(1 - tanh(source)**2)``.
+
+    Notes
+    -----
+    Formula: $\\beta = -E[1 - \\tanh^2(s)]$.
+    Legacy: `beta_tanh.m`
     """
     return -np.mean(1 - np.tanh(source) ** 2)
 
@@ -274,9 +349,21 @@ def beta_tanh(source: np.ndarray) -> float:
 def beta_pow3(source: np.ndarray) -> float:
     r"""Compute beta for Cubic ($s^3$) denoiser.
 
-    Formula: $\\beta = -3$ (constant expectation for $g(s)=s^3$, $g'(s)=3s^2$, assuming unit var)
-    Actually for $g(s)=s^3$, $g'(s)=3s^2$. $E[3s^2] = 3 E[s^2] = 3$ (if whitened).
-    So $\\beta = -3$.
+    Parameters
+    ----------
+    source : ndarray
+        Unused source array accepted for a common beta-function interface.
+
+    Returns
+    -------
+    beta : float
+        The constant ``-3`` used for the cubic nonlinearity under the
+        unit-variance DSS convention.
+
+    Notes
+    -----
+    For $g(s)=s^3$, $g'(s)=3s^2$ and the unit-variance assumption gives
+    $E[g'(s)] = 3$, so $\\beta=-3$.
     Legacy: `beta_pow3.m`
     """
     return -3.0
@@ -285,7 +372,22 @@ def beta_pow3(source: np.ndarray) -> float:
 def beta_gauss(source: np.ndarray, a: float = 1.0) -> float:
     r"""Compute beta for Gaussian denoiser.
 
-    Formula: $\\beta = -E[(1 - a s^2) \\exp(-a s^2 / 2)]$
+    Parameters
+    ----------
+    source : ndarray
+        Source samples used to estimate the expectation.
+    a : float, default=1.0
+        Gaussian nonlinearity scale.
+
+    Returns
+    -------
+    beta : float
+        Estimated coefficient
+        ``-mean((1 - a * source**2) * exp(-a * source**2 / 2))``.
+
+    Notes
+    -----
+    Formula: $\\beta = -E[(1 - a s^2) \\exp(-a s^2 / 2)]$.
     Legacy: `beta_gauss.m`
     """
     s2 = source**2

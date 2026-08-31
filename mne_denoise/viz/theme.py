@@ -267,8 +267,10 @@ def themed_figure(
 
     Parameters
     ----------
-    nrows, ncols : int, default=1
-        Subplot grid dimensions.
+    nrows : int, default=1
+        Number of subplot rows.
+    ncols : int, default=1
+        Number of subplot columns.
     figsize : tuple | None
         (width, height) in inches.  Defaults to :data:`DEFAULT_FIGSIZE`.
     dpi : int | None

@@ -106,6 +106,10 @@ def calibrate_asr(
         Statistics-only filter. ``'asr'`` applies the original inverse-EEG
         Yule-Walker pre-emphasis filter, ``'highpass'`` applies a lightweight
         high-pass filter, and ``'none'`` avoids implicit filtering.
+    method : {'standard', 'riemannian', 'riemannian_windowed'}, default='standard'
+        Covariance geometry used by the calibration. ``'standard'`` uses the
+        Euclidean ASR calibration; the two Riemannian options use the
+        corresponding package backends.
     max_mem_mb : int | None
         Reserved memory limit for future chunking. Present for API stability.
     callback : callable | None

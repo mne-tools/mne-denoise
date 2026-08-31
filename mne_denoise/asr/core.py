@@ -76,25 +76,24 @@ class ASR(BaseEstimator, TransformerMixin):
         Fraction of lowest RMS values ignored while estimating thresholds.
     min_clean_fraction : float, default=0.25
         Minimum central fraction used to estimate clean RMS statistics.
+    picks : str | list[str] | list[int] | None, default='eeg'
+        Channels to process for MNE inputs. ``None`` processes every channel;
+        integer indices and names select the fitted channel subset. NumPy
+        arrays are processed across all channels.
     method : {'standard', 'riemannian', 'riemannian_windowed'}, default='standard'
         ASR backend.
 
         - ``'standard'`` — standard Euclidean ASR.
-        - ``'riemannian'`` — experimental SPD-manifold covariance backend,
-          NOTE: this backend computes one covariance +
-          one reconstruction matrix for the entire stream, so its cleaned
-          output is **cutoff-invariant on real EEG** (the ``cutoff`` knob does
-          not meaningfully change the result). Use it primarily for research or benchmarking, not
-          for cutoff tuning.
+        - ``'riemannian'`` — experimental SPD-manifold covariance backend.
+          This backend computes one covariance and one reconstruction matrix
+          for the entire stream, so the output of the current implementation
+          is not meaningfully controlled by ``cutoff``.
         - ``'riemannian_windowed'`` — per-window Riemannian backend that keeps
           the Riemannian-aggregated (geometric-median) calibration but applies
-          a standard per-window eigendecomposition at processing time. Unlike
-          ``'riemannian'``, its ``cutoff`` knob works: ``% data modified`` and
-          ``% variance reduced`` scale monotonically with ``cutoff`` like
-          ``'standard'`` does. This is a **first-class backend** (no
-          ``experimental`` flag required): its processing is numerically identical to
-          standard ASR while preserving robust manifold calibration. Prefer it over ``'riemannian'`` whenever you need
-          cutoff control with Riemannian-robust calibration.
+          a standard per-window eigendecomposition at processing time. Its
+          processing path follows the standard per-window reconstruction while
+          retaining the Riemannian calibration aggregate; this package
+          behavior should still be evaluated on the intended data regime.
     experimental : bool, default=False
         Explicit opt-in for the unstable ``method='riemannian'`` research
         backend (cutoff-invariant on real EEG). Not required for
@@ -329,6 +328,9 @@ class ASR(BaseEstimator, TransformerMixin):
         calibration_mask : ndarray | None, default=None
             Optional boolean sample mask for 2D calibration arrays or Raw
             inputs after annotation exclusion.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each fitted principal-component threshold
             with an ASR calibration progress event. Callback return values are
@@ -511,6 +513,9 @@ class ASR(BaseEstimator, TransformerMixin):
             Reserved API flag. Transform returns a new object/array.
         return_diagnostics : bool, default=False
             If True, return ``(cleaned, diagnostics)``.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each completed reconstruction window for
             continuous input, or after each completed epoch for epoched input.
@@ -651,6 +656,9 @@ class ASR(BaseEstimator, TransformerMixin):
             Optional separate calibration data with matching channels.
         return_diagnostics : bool, default=False
             If True, return ``(cleaned, diagnostics)``.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Passed to fitting and reconstruction progress callbacks. Callback
             return values are ignored and callback exceptions propagate unchanged.

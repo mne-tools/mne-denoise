@@ -381,6 +381,23 @@ class ComponentSelector:
     needed by the live preview. Use :attr:`excluded` to inspect the selection
     and :meth:`apply` to reconstruct the selected signal.
 
+    Parameters
+    ----------
+    estimator : DSS | IterativeDSS | ZapLine
+        Fitted estimator associated with the selection. Direct construction is
+        an internal operation; normally this is supplied by
+        :func:`plot_component_selector`.
+    data : Raw | Epochs | Evoked | ndarray | None
+        Cached input used by the selector's preview and by :meth:`apply` when
+        no replacement data is supplied.
+    fig : matplotlib.figure.Figure
+        Figure owned by the selector.
+    state : object
+        Internal cached component-state object created by
+        :func:`plot_component_selector`.
+    excluded : sequence of int
+        Component indices initially excluded from the reconstruction.
+
     Notes
     -----
     This class is a public return type, but direct construction is not part of

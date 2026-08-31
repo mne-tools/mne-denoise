@@ -520,6 +520,9 @@ class SNS(BaseEstimator, TransformerMixin):
             Called synchronously after each completed channel solve while
             learning the SNS operator. Callback return values are ignored and
             callback exceptions propagate unchanged.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -573,6 +576,9 @@ class SNS(BaseEstimator, TransformerMixin):
             Data with the same channel layout used during fitting.
         y : None
             Ignored. Included for scikit-learn compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -628,6 +634,9 @@ class SNS(BaseEstimator, TransformerMixin):
         callback : callable | None, default=None
             Forwarded to :meth:`fit` for channel-solve progress events. No
             progress events are emitted by :meth:`transform`.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         **fit_params : dict
             Reserved for scikit-learn compatibility.
 

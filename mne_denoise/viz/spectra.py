@@ -317,12 +317,16 @@ def plot_psd_comparison(
 
     Parameters
     ----------
-    inst_before, inst_after : MNE object | ndarray
-        Inputs to compare. Supported MNE inputs are Raw, Epochs, and Evoked.
-        Array inputs are interpreted with the last axis as time. When either
-        input is an array, ``sfreq`` must be provided.
-    fmin, fmax : float
-        Frequency bounds to display.
+    inst_before : MNE object | ndarray
+        Signal before denoising. Supported MNE inputs are Raw, Epochs, and
+        Evoked. Array inputs are interpreted with the last axis as time. When
+        either input is an array, ``sfreq`` must be provided.
+    inst_after : MNE object | ndarray
+        Signal after denoising with matching channel and time dimensions.
+    fmin : float, default=0
+        Lower frequency bound to display.
+    fmax : float, default=np.inf
+        Upper frequency bound to display.
     picks : str | array-like | slice | None
         Channels to include. For MNE objects, if None, one homogeneous channel type
         is automatically picked ('mag', 'grad', or 'eeg' in order) to prevent
@@ -418,10 +422,14 @@ def plot_psd_zoom_comparison(
 
     Parameters
     ----------
-    freqs_before, freqs_after : array-like of shape (n_freqs,)
-        Frequency vectors for the before/after PSD curves.
-    psd_before, psd_after : array-like of shape (n_freqs,)
-        PSD vectors aligned with ``freqs_before`` and ``freqs_after``.
+    freqs_before : array-like of shape (n_freqs,)
+        Frequency vector for the before PSD curve.
+    freqs_after : array-like of shape (n_freqs,)
+        Frequency vector for the after PSD curve.
+    psd_before : array-like of shape (n_freqs,)
+        PSD vector aligned with ``freqs_before``.
+    psd_after : array-like of shape (n_freqs,)
+        PSD vector aligned with ``freqs_after``.
     series_name : str
         Series key used for optional color/label mapping.
     title : str
@@ -916,8 +924,10 @@ def plot_component_psd_comparison(
         and ``sfreq`` is None, ``components.info['sfreq']`` is used.
     peak_freq : float | None
         Optional frequency marker shown on both panels.
-    fmin, fmax : float
-        Frequency bounds for PSD computation.
+    fmin : float, default=1
+        Lower frequency bound for PSD computation.
+    fmax : float, default=40
+        Upper frequency bound for PSD computation.
     show : bool
         If True, display the figure.
     fname : path-like | None
@@ -1034,18 +1044,22 @@ def plot_spectrogram_comparison(
 
     Parameters
     ----------
-    inst_before, inst_after : MNE object | ndarray
-        Inputs to compare. Either both MNE objects or both arrays.
-        Array inputs must be 2D ``(n_channels, n_times)`` or
+    inst_before : MNE object | ndarray
+        Signal before denoising. It must be paired with the same input kind as
+        ``inst_after``. Array inputs must be 2D ``(n_channels, n_times)`` or
         3D ``(n_epochs, n_channels, n_times)``.
+    inst_after : MNE object | ndarray
+        Signal after denoising with matching channel and time dimensions.
     picks : sequence of int
         Explicit channel picks used for averaging.
     times : array-like of shape (n_times,)
         Explicit time vector used on x-axis.
     sfreq : float | None
         Sampling frequency for array inputs.
-    fmin, fmax : float
-        Frequency bounds for the spectrogram.
+    fmin : float, default=1
+        Lower frequency bound for the spectrogram.
+    fmax : float, default=40
+        Upper frequency bound for the spectrogram.
     n_freqs : int
         Number of frequencies in the display grid.
     show : bool

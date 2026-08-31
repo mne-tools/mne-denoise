@@ -329,6 +329,7 @@ iCanClean
 
    mne_denoise.icanclean.ICanClean
    mne_denoise.icanclean.compute_icanclean
+   mne_denoise.icanclean.null_r2_threshold
 
 SOUND
 -----

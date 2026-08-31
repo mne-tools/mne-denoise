@@ -459,7 +459,33 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Estimate the SSP-SIR cleaning operators from ``X``."""
+        """Estimate the SSP-SIR cleaning operators from ``X``.
+
+        Parameters
+        ----------
+        X : ndarray | Raw | Epochs | Evoked
+            EEG data used to estimate the artifact subspace. NumPy input must
+            have shape ``(n_channels, n_times)`` or
+            ``(n_epochs, n_channels, n_times)``. MNE input may be Raw, Epochs,
+            or Evoked; the estimator selects one homogeneous data channel type
+            and records its channel layout.
+        y : None
+            Ignored scikit-learn compatibility argument.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for the fit summary.
+
+        Returns
+        -------
+        self : SSPSIR
+            Fitted estimator.
+
+        Raises
+        ------
+        ValueError
+            If ``n_components`` or the reconstruction settings are invalid,
+            if a plain array has no sampling frequency, or if the forward
+            model cannot be resolved.
+        """
         if self.n_components is None:
             raise ValueError(
                 "n_components must be set (number of artifact PCs to remove, or a "
@@ -564,7 +590,32 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Apply the fitted SSP-SIR operators to ``X``."""
+        """Apply the fitted SSP-SIR operators to ``X``.
+
+        Parameters
+        ----------
+        X : ndarray | Raw | Epochs | Evoked
+            Data to transform with shape ``(n_channels, n_times)`` or
+            ``(n_epochs, n_channels, n_times)`` for NumPy input. MNE input
+            must have the fitted channel layout and sampling frequency.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level.
+
+        Returns
+        -------
+        cleaned : ndarray | Raw | Epochs | Evoked
+            Reconstructed data with the same layout and, for MNE input, a copy
+            of the original container. Channels outside the fitted data
+            channel selection are preserved.
+
+        Raises
+        ------
+        sklearn.exceptions.NotFittedError
+            If :meth:`fit` has not been called.
+        ValueError
+            If the channel layout, sampling frequency, or time dimension does
+            not match the fitted estimator.
+        """
         check_is_fitted(self, attributes=["operator_", "operator_orig_", "kernel_"])
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
             X, ch_names=getattr(self, "_mne_ch_names_", None)

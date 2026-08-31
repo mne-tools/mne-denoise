@@ -376,6 +376,9 @@ class JugglerASR(ASR):
             Separate calibration dataset. If None, `X` is used.
         calibration_mask : np.ndarray | None, default=None
             Optional boolean mask shape `(n_times,)` to pre-select samples.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each shared ASR threshold calibration
             component completes. Callback return values are ignored and

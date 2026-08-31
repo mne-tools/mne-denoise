@@ -839,6 +839,9 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             segmented mode. Global mode emits no progress events. Callback
             return values are ignored and callback exceptions propagate
             unchanged.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -902,6 +905,9 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             Data with the channel layout seen during ``fit``.
         y : None
             Ignored. Included for scikit-learn compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -958,6 +964,9 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             unchanged.
         **fit_params : dict
             Reserved for scikit-learn compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------

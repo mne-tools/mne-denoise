@@ -201,12 +201,24 @@ class SmoothingBias(LinearDenoiser):
         self.iterations = iterations
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply smoothing bias.
+        """Apply the causal running-mean smoothing bias.
 
         Uses a causal running-mean filter:
         ``y[t] = mean(x[t-W+1 : t+1])`` for ``t >= W``, with an expanding
         window for the first ``W`` samples.  Repeated ``iterations`` passes
         approximate a Gaussian kernel.
+
+        Parameters
+        ----------
+        data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+            Channel-first data. For three-dimensional input, smoothing is
+            applied independently after flattening the time/epoch axes in the
+            package's channel-first convention.
+
+        Returns
+        -------
+        smoothed : ndarray, same shape as ``data``
+            Smoothed data.
         """
         orig_shape = data.shape
         if data.ndim == 3:
@@ -276,7 +288,19 @@ class DCTDenoiser(NonlinearDenoiser):
         self._cached_len = None
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply DCT filtering."""
+        """Apply the configured DCT-domain mask to a source.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series. Two-dimensional input is processed one epoch
+            at a time along its first axis.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Source reconstructed after DCT coefficient masking.
+        """
         from scipy.fftpack import dct, idct
 
         n = len(source)

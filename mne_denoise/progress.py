@@ -104,7 +104,7 @@ class TqdmProgress:
     ----------
     leave : bool
         Whether completed bars should remain visible. Defaults to ``False``.
-    **tqdm_kwargs
+    **tqdm_kwargs : dict
         Additional keyword arguments passed to tqdm. The adapter controls
         ``total`` and ``initial`` from the first event of each stream.
     """
@@ -119,7 +119,18 @@ class TqdmProgress:
         self._previous_event: ProgressEvent | None = None
 
     def __call__(self, event: ProgressEvent) -> None:
-        """Render one completed-work progress event."""
+        """Render one completed-work progress event.
+
+        Parameters
+        ----------
+        event : ProgressEvent
+            Immutable event describing the completed work unit.
+
+        Returns
+        -------
+        None
+            The adapter updates its active bar in place.
+        """
         if self._starts_new_stream(event):
             self.close()
             bar_kwargs = dict(self._tqdm_kwargs)
@@ -157,7 +168,22 @@ class TqdmProgress:
         return self
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> bool:
-        """Close the active bar without suppressing exceptions."""
+        """Close the active bar without suppressing exceptions.
+
+        Parameters
+        ----------
+        exc_type : type | None
+            Exception type supplied by the context-manager protocol.
+        exc_value : BaseException | None
+            Exception instance supplied by the context-manager protocol.
+        traceback : types.TracebackType | None
+            Traceback supplied by the context-manager protocol.
+
+        Returns
+        -------
+        bool
+            Always ``False`` so exceptions propagate.
+        """
         self.close()
         return False
 

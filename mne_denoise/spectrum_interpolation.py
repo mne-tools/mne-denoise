@@ -169,6 +169,8 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
     neighbour_width : float
         Width in Hz of the reference band on each side used to estimate the
         replacement amplitude. Default 2.0.
+    verbose : bool | str | int | None, default=None
+        MNE-style logging level for fitting and transformation.
 
     Attributes
     ----------
@@ -279,6 +281,9 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
             Data to clean. Only metadata (sampling frequency) is read here.
         y : None
             Ignored; present for scikit-learn API compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -322,6 +327,9 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         X : Raw | Epochs | Evoked | ndarray
             Data to clean. For MNE objects every data channel is processed and
             non-data channels are returned unchanged.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -376,6 +384,9 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
             Data to clean.
         y : None
             Ignored; present for scikit-learn API compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         **fit_params : dict
             Ignored; present for scikit-learn API compatibility.
 

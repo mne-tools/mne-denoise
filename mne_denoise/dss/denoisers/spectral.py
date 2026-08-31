@@ -190,7 +190,19 @@ class LineNoiseBias(LinearDenoiser):
             raise ValueError(f"Unknown method '{method}', must be 'fft' or 'iir'.")
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply the selected bias."""
+        """Apply the selected line-noise bias.
+
+        Parameters
+        ----------
+        data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+            Channel-first data. Three-dimensional input is processed one epoch
+            at a time.
+
+        Returns
+        -------
+        biased : ndarray, same shape as ``data``
+            Data containing the selected line-frequency content.
+        """
         if self.method == "iir":
             return self._bandpass.apply(data)
         elif self.method == "fft":

@@ -24,10 +24,10 @@ def iterative_outlier_removal(scores: np.ndarray, sigma: float = 3.0) -> int:
 
     This algorithm iteratively identifies values that exceed `mean + sigma * std`,
     removes them from consideration, and repeats until no more outliers are found.
-    It follows NoiseTools' ``nt_dss``-style outlier rule [2]_, which
-    ZapLine-plus (Klug & Kloosterman, 2022, §2.4 "Detection of noise
-    components") [1]_ adopts to automatically choose how many spatial
-    components to remove: outliers in the
+    It follows the NoiseTools ``nt_dss`` reference-implementation convention
+    [2]_, which ZapLine-plus (Klug & Kloosterman, 2022, §2.4 "Detection of
+    noise components") [1]_ describes for automatically choosing how many
+    spatial components to remove: outliers in the
     component scores are flagged with a ``mean + sigma * SD`` threshold and
     removed, the mean/SD are recomputed across the remaining components, and the
     loop repeats until none are left; the count of removed outliers is taken as
@@ -154,7 +154,9 @@ def detect_eigenvalue_knee(
 
     Notes
     -----
-    Complementary to :func:`iterative_outlier_removal`, which is robust when
+    This is a package-defined knee heuristic, not a criterion prescribed by
+    the DSS publication. It is complementary to
+    :func:`iterative_outlier_removal`, which is robust when
     a small number of components stand out as statistical outliers but fails
     when many co-equal strong components are present (e.g., high-channel-count
     MEG with coherent line noise spread across many sensors). Use
@@ -224,14 +226,15 @@ def auto_select_components_robust(
     knee_rel_floor: float = 0.01,
     knee_min_ratio: float = 3.0,
 ) -> int:
-    """Auto-select component count using outlier + knee detection.
+    """Auto-select component count using outlier and knee heuristics.
 
-    Layers :func:`iterative_outlier_removal` and :func:`detect_eigenvalue_knee`
-    and returns the maximum of the two counts. This handles both regimes:
+    This package-defined selector layers :func:`iterative_outlier_removal` and
+    :func:`detect_eigenvalue_knee` and returns the maximum of the two counts.
+    It handles both regimes:
 
-    - **Few outliers** (typical EEG): :func:`iterative_outlier_removal` finds
+    - **Few outliers**: :func:`iterative_outlier_removal` finds
       the 1-2 dominant components.
-    - **Many co-equal strong components** (typical high-channel-count MEG with
+    - **Many co-equal strong components** (for example, high-channel-count MEG with
       coherent line noise): the outlier path returns 0 because the strong
       components don't stand out from each other; :func:`detect_eigenvalue_knee`
       catches the boundary to the noise floor.

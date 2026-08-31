@@ -80,7 +80,7 @@ class AdaptiveASR(ASR):
     cutoff : float, default=20.0
         ASR threshold multiplier. Values around 20 are conservative; lower
         values clean more aggressively.
-    variant : {'psw', 'psp'}, default='psw'
+    variant : {'psw', 'psp', 'mw'}, default='psw'
         The adaptive update rule to use.
     window_length : float, default=0.5
         Processing/statistics window length in seconds.
@@ -130,8 +130,8 @@ class AdaptiveASR(ASR):
     max_mem_mb : int | None, default=512
         Maximum memory (in megabytes) allowed for internal chunking operations.
     copy : bool, default=True
-        If True, data is copied before processing. If False, processing
-        happens in place.
+        Reserved compatibility parameter. Public transformations return a new
+        object or array and do not mutate the input.
     store_reconstruction_matrices : bool, default=False
         If True, the diagnostic dictionaries will contain the applied
         reconstruction mixing matrices.
@@ -268,6 +268,9 @@ class AdaptiveASR(ASR):
             Called synchronously after each adaptive calibration component for PSP/PSW,
             or after each MW calibration window. Callback return values are ignored and
             callback exceptions propagate unchanged.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -399,13 +402,17 @@ class AdaptiveASR(ASR):
             The incoming data chunk to update the state with. For ``np.ndarray``,
             shape must be (n_channels, n_times) or (n_epochs, n_channels, n_times).
             The chunk must contain more samples than ``calibration_window_length``
-            so clean-window statistics can be estimated. The published AASR demo
-            uses complete 20-second update segments and omits its incomplete tail.
+            so clean-window statistics can be estimated. Complete 20-second
+            update segments are a convention of the cited AASR demonstration,
+            not a requirement of this method.
         y : None
             Ignored. Present for scikit-learn compatibility.
         calibration_mask : np.ndarray | None, default=None
             Optional boolean mask of shape (n_times,) designating which samples in
             the incoming chunk are clean. If None, it is estimated automatically.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -513,6 +520,9 @@ class AdaptiveASR(ASR):
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)`` where
             ``diagnostics`` is a dictionary detailing the reconstruction process.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each completed reconstruction window for
             continuous input, or after each completed epoch for epoched input.
@@ -663,6 +673,9 @@ class AdaptiveASR(ASR):
             Optional separate calibration dataset.
         return_diagnostics : bool, default=False
             If True, returns a tuple ``(cleaned_data, diagnostics)``.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each completed adaptive calibration or
             reconstruction progress unit. Callback return values are ignored

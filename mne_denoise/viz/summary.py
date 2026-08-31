@@ -72,10 +72,12 @@ def plot_denoising_summary(
 
     Parameters
     ----------
-    inst_before, inst_after : MNE object | ndarray
-        Signals before and after denoising. Supported array shapes are
+    inst_before : MNE object | ndarray
+        Signal before denoising. Supported array shapes are
         ``(n_channels, n_times)`` and ``(n_epochs, n_channels, n_times)``.
         MNE Raw/Epochs/Evoked inputs are also accepted.
+    inst_after : MNE object | ndarray
+        Signal after denoising with matching channel and time dimensions.
     info : mne.Info
         Channel info used for the power-ratio map panel.
     times : array-like of shape (n_times,)
@@ -188,20 +190,36 @@ def plot_metric_tradeoff_summary(
         Group column name.
     subject_col : str
         Subject column name used for paired metric comparison.
-    x_col, y_col : str
-        Metric columns used for trade-off scatter axes.
+    x_col : str
+        Metric column used for the trade-off scatter x-axis.
+    y_col : str
+        Metric column used for the trade-off scatter y-axis.
     metric_col : str
         Metric column used for the right-panel comparison.
-    x_label, y_label, metric_label : str | None
-        Optional axis labels.
-    group_order : sequence of str | None
+    x_label : str | None, default=None
+        Optional trade-off x-axis label.
+    y_label : str | None, default=None
+        Optional trade-off y-axis label.
+    metric_label : str | None, default=None
+        Optional comparison-panel label.
+    group_order : sequence of str | None, default=None
         Optional group display order.
-    group_colors, group_labels : mapping | None
-        Optional color/label overrides keyed by group.
-    tradeoff_title, metric_title, suptitle : str
-        Panel and figure titles.
-    reference_x, reference_y, reference_value : float | None
-        Optional reference lines.
+    group_colors : mapping | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : mapping | None, default=None
+        Optional display-label overrides keyed by group.
+    tradeoff_title : str, default="Metric Trade-off"
+        Trade-off panel title.
+    metric_title : str, default="Metric Comparison"
+        Metric comparison panel title.
+    suptitle : str, default="Trade-off Analysis"
+        Figure title.
+    reference_x : float | None, default=None
+        Optional vertical reference line in the trade-off panel.
+    reference_y : float | None, default=None
+        Optional horizontal reference line in the trade-off panel.
+    reference_value : float | None, default=None
+        Optional reference line in the metric panel.
     reference_label : str
         Label for the metric reference line.
     show : bool
@@ -306,8 +324,10 @@ def plot_component_cleaning_summary(
         Sampling frequency for source/segment time axes.
     freqs : array-like | None
         Frequency axis for PSD panel.
-    psd_before, psd_after : array-like | None
-        PSD values for before/after comparison.
+    psd_before : array-like | None, default=None
+        PSD values before denoising.
+    psd_after : array-like | None, default=None
+        PSD values after denoising.
     line_freq : float | None
         Optional line frequency marker in PSD panel.
     fmax : float
@@ -496,8 +516,10 @@ def plot_signal_diagnostics_summary(
         Explicit group plotting order.
     reference_group : str
         Explicit reference group used for the difference panel.
-    group_colors, group_labels : mapping
-        Explicit color and display-label mappings keyed by group.
+    group_colors : mapping
+        Explicit color mapping keyed by group.
+    group_labels : mapping
+        Explicit display-label mapping keyed by group.
     windows : sequence of tuple[float, float, str] | None
         Optional highlighted windows. Each entry must be
         ``(start, stop, label)``.
@@ -714,10 +736,12 @@ def plot_condition_interaction_summary(
         Optional nested mapping ``condition -> group -> standard error``.
     condition_order : sequence of str | None
         Optional condition order. Defaults to first-seen order.
-    group_order : sequence of str | None
+    group_order : sequence of str | None, default=None
         Optional group order. Defaults to first-seen order across conditions.
-    group_colors, group_labels : mapping | None
-        Optional color/label overrides keyed by group.
+    group_colors : mapping | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : mapping | None, default=None
+        Optional display-label overrides keyed by group.
     windows : sequence of tuple[float, float, str] | None
         Optional highlighted windows as explicit ``(start, stop, label)`` tuples.
     title : str
@@ -999,10 +1023,12 @@ def plot_endpoint_metrics_summary(
         Group identifier column.
     subject_col : str
         Subject identifier column.
-    group_order : sequence of str | None
+    group_order : sequence of str | None, default=None
         Optional group order. Defaults to first-seen order.
-    group_colors, group_labels : mapping | None
-        Optional color/label overrides keyed by group.
+    group_colors : mapping | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : mapping | None, default=None
+        Optional display-label overrides keyed by group.
     reference_value : float | None
         Optional horizontal reference line for metric panels.
     reference_label : str

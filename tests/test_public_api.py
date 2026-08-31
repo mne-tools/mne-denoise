@@ -90,3 +90,12 @@ def test_canonical_public_paths_are_importable():
         module = importlib.import_module(module_name)
         public_object = getattr(module, name, None)
         assert callable(public_object), f"{module_name}.{name} is not callable"
+
+
+def test_canonical_public_paths_are_declared_by_their_facade():
+    """Canonical public names are declared by the facade that exports them."""
+    for module_name, name in CANONICAL_PUBLIC_PATHS:
+        module = importlib.import_module(module_name)
+        assert name in module.__all__, (
+            f"{module_name}.{name} must be declared in {module_name}.__all__"
+        )

@@ -37,12 +37,19 @@ References
 .. [1] Kothe, C. A. E., & Jung, T. P. (2016). Artifact removal techniques with
        signal reconstruction. U.S. Patent No. 9,474,467.
 .. [2] Chang, C. Y., Hsu, S. H., Pion-Tonachini, L., & Jung, T. P. (2018).
-       Evaluation of Artifact Subspace Reconstruction for Automatic Artifact
-       Components Removal in Multi-Channel EEG Recordings. IEEE Transactions
-       on Biomedical Engineering, 65(5), 1114-1121.
-.. [3] Blum, S., Jacobsen, N. S. J., Bleichner, M. G., & Debener, S. (2019).
+       Evaluation of Artifact Subspace Reconstruction for Automatic EEG
+       Artifact Removal. Proceedings of the 40th Annual International
+       Conference of the IEEE Engineering in Medicine and Biology Society,
+       1242-1245. https://doi.org/10.1109/EMBC.2018.8512547
+.. [3] Chang, C. Y., Hsu, S. H., & Jung, T. P. (2020). Real-time
+       implementation of artifact subspace reconstruction for automatic
+       artifact components removal from multichannel EEG recordings. IEEE
+       Transactions on Biomedical Engineering, 67(4), 1114-1121.
+       https://doi.org/10.1109/TBME.2019.2930186
+.. [4] Blum, S., Jacobsen, N. S. J., Bleichner, M. G., & Debener, S. (2019).
        A Riemannian Modification of Artifact Subspace Reconstruction for EEG
        Artifact Handling. Frontiers in Human Neuroscience, 13, 141.
+       https://doi.org/10.3389/fnhum.2019.00141
 """
 
 # Core Algorithms

@@ -9,7 +9,8 @@ References
 ----------
 .. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
 .. [2] de Cheveigné & Simon (2008). Denoising based on spatial filtering. J. Neurosci. Methods.
-.. [3] de Cheveigné & Parra (2014). Joint denoising source separation. NeuroImage, 98, 489-496.
+.. [3] de Cheveigné & Parra (2014). Joint decorrelation, a versatile tool for
+       multichannel data analysis. NeuroImage, 98, 487-505.
 """
 
 from __future__ import annotations
@@ -42,7 +43,7 @@ class AverageBias(LinearDenoiser):
     Examples
     --------
     >>> from mne_denoise.dss.denoisers import AverageBias
-    >>> # For evoked response enhancement (like old TrialAverageBias)
+    >>> # For evoked response enhancement
     >>> epochs_data = np.random.randn(64, 100, 50)  # channels x times x trials
     >>> bias = AverageBias(axis="epochs")
     >>> biased = bias.apply(epochs_data)
@@ -55,7 +56,16 @@ class AverageBias(LinearDenoiser):
     References
     ----------
     Särelä & Valpola (2005). Section 4.1.4 "DENOISING OF QUASIPERIODIC SIGNALS"
-    de Cheveigné & Parra (2014). Joint denoising source separation.
+    de Cheveigné & Parra (2014). Joint decorrelation, a versatile tool for
+    multichannel data analysis.
+
+    Notes
+    -----
+    ``axis='datasets'`` is a low-level bias operation on a dataset-first
+    array. The public :class:`~mne_denoise.dss.linear.DSS` estimator's NumPy
+    fitting contract is channel-first, so this axis should not be passed to
+    that estimator as though it were a second DSS input layout. The bias
+    function itself preserves the dataset-first layout documented above.
     """
 
     def __init__(self, axis: str = "epochs", weights: np.ndarray | None = None) -> None:

@@ -94,17 +94,18 @@ def compute_dss(
 
     Parameters
     ----------
-    covariance_baseline : ndarray
-        Baseline covariance.
-    covariance_biased : ndarray
-        Biased covariance.
-    n_components : int, optional
+    covariance_baseline : ndarray, shape (n_channels, n_channels)
+        Baseline covariance that defines the total-power metric.
+    covariance_biased : ndarray, shape (n_channels, n_channels)
+        Biased covariance that defines the signal-of-interest metric. It must
+        have the same shape and channel order as ``covariance_baseline``.
+    n_components : int | None, default=None
         Number of DSS components to return (The **Q** selector step). If None, return all.
-    rank : int, optional
+    rank : int | None, default=None
         Rank for whitening stage. If None, auto-determined from data.
-    reg : float
-        Regularization threshold. Default 1e-9.
-    verbose : bool | str | int | None
+    reg : float, default=1e-9
+        Relative regularization threshold for the baseline whitening stage.
+    verbose : bool | str | int | None, default=None
         MNE-style logging level. DSS numerical details are emitted at DEBUG;
         the estimator owns the user-facing fit summary.
 
@@ -314,11 +315,13 @@ class DSS(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    n_components : int, optional
-        Number of DSS components to keep. If None, keep all.
-    bias : LinearDenoiser
+    n_components : int | None, default=None
+        Number of DSS components to keep. If None, keep all components retained
+        by the whitening rank.
+    bias : LinearDenoiser or callable
         Bias function to define the signal of interest. Must be an instance of
-        `mne_denoise.dss.LinearDenoiser` (e.g. `BandpassBias`, `TrialAverageBias`)
+        :class:`mne_denoise.dss.LinearDenoiser` (e.g. ``BandpassBias`` or
+        ``AverageBias``)
         or a callable that takes data and returns biased data.
     n_select : int | 'auto' | None, default=None
         Number of significant components to auto-select after fitting.
@@ -341,20 +344,20 @@ class DSS(BaseEstimator, TransformerMixin):
         Minimum drop ratio required to qualify as a knee, so that smoothly
         decaying (artifact-free) spectra select nothing. Same meaning as
         ``ZapLine(knee_min_ratio=...)``.
-    rank : int or dict, optional
+    rank : int or dict | None, default=None
         Rank of the data for whitening. If None, rank is estimated automatically.
-    reg : float
+    reg : float, default=1e-9
         Regularization for covariance estimation. Default 1e-9.
-    normalize_input : bool
+    normalize_input : bool, default=True
         If True, normalize input data channel-wise (L2 norm) before fitting/transforming.
         Useful when mixing sensors with different scales (e.g. MAG and GRAD). Default True.
         Ignored when ``whiten=True`` (the whitener handles the scaling).
-    cov_method : str
+    cov_method : str, default='empirical'
         Method for covariance estimation.
         For MNE objects, passed as `method` to `mne.compute_covariance`.
         For NumPy arrays, selects the internal array covariance estimator.
         Default 'empirical'.
-    cov_kws : dict, optional
+    cov_kws : dict | None, default=None
         Additional keywords options for covariance estimation.
         For MNE objects, passed to `mne.compute_covariance` (e.g. `{'tstep': 0.1, 'rank': 'info'}`).
         For NumPy arrays, passed to the internal array covariance estimator
@@ -362,9 +365,11 @@ class DSS(BaseEstimator, TransformerMixin):
     smooth : SmoothingBias | int | None, default=None
         Optional smoothing decomposition before DSS, inspired by ZapLine.
         When set, data is decomposed into ``smooth + residual`` and DSS
-        is fitted/applied on the **residual** only.  This dramatically
-        increases eigenvalue contrast for narrowband artifacts because
-        DSS no longer competes against broadband EEG variance.
+        is fitted/applied on the **residual** only.  This can increase
+        eigenvalue contrast for narrowband structure because DSS is applied
+        to the residual rather than the full signal.  This is an
+        mne-denoise extension; its effect depends on the data and smoothing
+        choice.
 
         - If ``SmoothingBias`` instance: used directly.
         - If ``int``: interpreted as the smoothing window in samples
@@ -374,7 +379,7 @@ class DSS(BaseEstimator, TransformerMixin):
     adaptive : bool, default=False
         If ``True``, data is split into segments and DSS is fitted
         independently per segment.  This handles **non-stationary**
-        artifacts whose spatial or spectral profile changes over
+        artifacts by allowing their fitted spatial filters to vary over
         time.  The per-segment pathway runs in :meth:`fit_transform`;
         :meth:`fit` still produces a single global fit. Segmented
         :meth:`fit_transform` requires ``component_action='subtract'``
@@ -392,7 +397,7 @@ class DSS(BaseEstimator, TransformerMixin):
         when ``adaptive=True``.  Adjacent segments are extended by
         this amount on each side, cleaned independently, then blended
         using a raised-cosine (Hann) overlap-add window.  This
-        eliminates discontinuities at segment boundaries.
+        is intended to reduce discontinuities at segment boundaries.
         If ``0.0`` (default), segments are hard-concatenated, matching
         ZapLine-plus, which concatenates cleaned chunks directly
         (Klug & Kloosterman, 2022); the cross-fade is an ``mne-denoise``
@@ -400,7 +405,7 @@ class DSS(BaseEstimator, TransformerMixin):
     max_prop_remove : float | None, default=None
         Maximum proportion of channels that can be removed per segment.
         E.g. ``0.2`` caps ``n_selected`` at ``int(n_channels × 0.2)``.
-        Safety valve to prevent over-cleaning; mirrors ZapLine-plus, which
+        Cap on the number of selected components; mirrors ZapLine-plus, which
         caps the automatic component count at one-fifth of the channels
         (Klug & Kloosterman, 2022, §2.4).
     min_select : int, default=0
@@ -457,9 +462,8 @@ class DSS(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> from mne_denoise.dss import DSS, BandpassBias
-    >>> from mne_denoise.dss.denoisers import TrialAverageBias
     >>> # Create a bias (e.g. emphasize 10Hz oscillations)
-    >>> bias = BandpassBias(sfreq=250, freq=10, bandwidth=2)
+    >>> bias = BandpassBias(freq_band=(9, 11), sfreq=250)
     >>> # Initialize DSS
     >>> dss = DSS(bias=bias, n_components=3, component_action="extract")
     >>> # Fit on data (MNE Raw/Epochs or NumPy)
@@ -559,16 +563,27 @@ class DSS(BaseEstimator, TransformerMixin):
         ----------
         X : Raw | Epochs | Evoked | array
             The data to fit.
-            - If array, shape must be:
-              - `(n_channels, n_times)` for continuous data.
-              - `(n_channels, n_times, n_epochs)` for epoch data (evoked DSS).
-              - `(n_datasets, n_channels, n_times)` for group data (Joint DSS).
-            Note: For group DSS, you must reshape your list of datasets into a 3D array before fitting.
+            - If array, shape must be ``(n_channels, n_times)`` for
+              continuous data or ``(n_channels, n_times, n_epochs)`` for
+              repeated-trial data. The first axis is always channels; an
+              epoch-major array ``(n_epochs, n_channels, n_times)`` must be
+              transposed before fitting.
+            - If MNE ``Epochs``, the input uses MNE's usual
+              ``(n_epochs, n_channels, n_times)`` layout and is converted
+              internally.
+            MNE inputs are reduced to one homogeneous data-channel type unless
+            ``whiten=True``. Bad channels are left untouched in MNE outputs.
         y : None
             Ignored.
-        weights : array, shape (n_times,), optional
-             Sample weights for covariance computation. Only used if input is numpy array
-             or if internal logic supports weighted covariance for MNE objects.
+        weights : ndarray | None, default=None
+            Non-negative observation weights for the NumPy covariance path. For
+            2D input use shape ``(n_times,)``; for channel-first 3D input use
+            ``(n_times,)``, ``(n_times, n_epochs)``, or
+            ``(n_times * n_epochs,)``. Weighted fitting of MNE objects uses
+            the same internal path.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -713,13 +728,13 @@ class DSS(BaseEstimator, TransformerMixin):
         which layers two complementary detectors and takes the larger count:
 
         - :func:`~mne_denoise.dss.selection.iterative_outlier_removal`
-          catches the case where a few components stand out as statistical
-          outliers (typical EEG, and any spectrum with high contrast such as
-          DSS after ``smooth``).
+          detects components that stand out as statistical outliers.
         - :func:`~mne_denoise.dss.selection.detect_eigenvalue_knee`
-          catches the case where many co-equal strong components sit above a
-          noise floor, where the outlier test returns 0 (typical
-          high-channel-count MEG with coherent line noise; see Issue #34).
+          detects a sufficiently sharp transition between a leading group and
+          a lower eigenvalue floor when the outlier test returns 0.
+
+        These are package selection heuristics, not a universal scientific
+        rule for deciding which components contain artifact.
 
         On a smoothly-decaying spectrum both return 0, so clean data is left
         untouched. This is the same selector :class:`~mne_denoise.zapline.ZapLine`
@@ -1040,14 +1055,26 @@ class DSS(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : Raw | Epochs | Evoked | array
-            Data to transform.
-            - If array, must match the shape convention used in fit (see fit docstring).
+            Data to transform. NumPy arrays must have shape
+            ``(n_channels, n_times)`` or ``(n_channels, n_times, n_epochs)``;
+            MNE ``Raw``, ``Epochs``, and ``Evoked`` inputs retain their
+            container type for sensor-space operations. The fitted channel
+            names/order are used for MNE inputs, and channels not used by the
+            fitted decomposition remain unchanged.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
         out : array | Raw | Epochs | Evoked
-            Component time courses for extraction, otherwise transformed data
-            in the same container type as the input.
+            For ``component_action='extract'``, component time courses with
+            shape ``(n_components, n_times)`` or
+            ``(n_components, n_times, n_epochs)`` for NumPy input,
+            ``(n_components, n_times)`` for MNE ``Raw``/``Evoked`` input, or
+            ``(n_epochs, n_components, n_times)`` for MNE ``Epochs`` input.
+            For ``'retain'`` and ``'subtract'``, a copy of the input data in
+            the same array layout or MNE container type is returned.
         """
         self._validate_component_action()
         return self._transform_with_action(X, self.component_action)
@@ -1173,15 +1200,26 @@ class DSS(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        sources : array, shape (n_components, n_times)
-            The latent sources.
+        sources : ndarray, shape (n_components, n_times) or 3D
+            Latent sources returned by ``transform`` with
+            ``component_action='extract'``. NumPy epoch data uses
+            ``(n_components, n_times, n_epochs)``; the MNE ``Epochs`` output
+            convention ``(n_epochs, n_components, n_times)`` is also accepted.
         component_indices : array-like of bool or int, optional
             Indices of components to keep. If None, keep all.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
-        reconstructed : array, shape (n_channels, n_times)
-            The reconstructed sensor space data.
+        reconstructed : ndarray, shape (n_channels, n_times) or 3D
+            Reconstructed sensor-space data. Three-dimensional NumPy input
+            uses ``(n_channels, n_times, n_epochs)``; MNE-style source input
+            returns ``(n_epochs, n_channels, n_times)``. The fitted global
+            mean is not added by this low-level source reconstruction; use
+            ``component_action='retain'`` with :meth:`transform` when the
+            mean-preserving sensor-space operation is desired.
         """
         if self.filters_ is None:
             raise RuntimeError("DSS not fitted. Call fit() first.")
@@ -1291,9 +1329,16 @@ class DSS(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : Raw | Epochs | Evoked | ndarray
-            The data to process.
+            The data to process. NumPy arrays use
+            ``(n_channels, n_times)`` or
+            ``(n_channels, n_times, n_epochs)``; MNE ``Raw``, ``Epochs``,
+            and ``Evoked`` inputs retain their container type in adaptive
+            cleaning.
         y : None
             Ignored.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None, default=None
             Called synchronously after each completed segment in adaptive mode.
             Each event represents one fully fitted, selected, cleaned, and
@@ -1304,8 +1349,10 @@ class DSS(BaseEstimator, TransformerMixin):
         Returns
         -------
         X_out : ndarray | Raw | Epochs | Evoked
-            In adaptive mode, returns cleaned data (same type as input).
-            In standard mode, the result follows ``component_action``.
+            In adaptive mode, returns a copy of the cleaned data with the
+            same type and layout as the input. In standard mode, the result
+            follows ``component_action`` and therefore has the shapes and
+            container behavior documented by :meth:`transform`.
         """
         callback = _validate_callback(callback)
         self._validate_component_action()

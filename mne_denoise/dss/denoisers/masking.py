@@ -164,7 +164,19 @@ class VarianceMaskDenoiser(NonlinearDenoiser):
         self.soft = soft
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply variance-based masking to source time series."""
+        """Apply variance-based masking to a source time series.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series. Two-dimensional input is processed one epoch
+            at a time.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Source weighted by the local-variance mask.
+        """
         if source.ndim == 1:
             return self._denoise_1d(source)
         elif source.ndim == 2:

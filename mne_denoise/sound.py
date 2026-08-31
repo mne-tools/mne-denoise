@@ -259,29 +259,29 @@ def compute_sound(
         Sensor data, in the same reference as ``leadfield``.
     leadfield : ndarray, shape (n_channels, n_sources)
         Lead-field matrix, in the same reference as ``data``.
-    lambda_ : float
+    lambda_ : float, default=0.1
         Regularisation parameter, the heuristic tuning scalar ``lambda_0`` of
         ``lambda = lambda_0 * trace(L~ L~.T) / C`` (Mutanen et al. 2022,
         Eq. 18). Larger values suppress noise more aggressively at the cost of
         distorting the signal. Default 0.1, as in TESA. Mutanen et al. (2022)
         [2]_ suggest ``lambda_0 = 1 / SNR`` as a starting point.
-    n_iter : int
+    n_iter : int, default=5
         Maximum number of SOUND iterations. Default 5.
-    tol : float | None
+    tol : float | None, default=None
         Convergence tolerance on the maximum relative change of ``sigmas``. If
         None (default), exactly ``n_iter`` iterations are run, matching
         ``SOUND.m`` and TESA. Set e.g. ``tol=0.01`` for the stopping rule used
         on real data in Mutanen et al. (2018) [1]_, which iterates "until the
         relative change in all the channels is less than 1%"; the algorithm
         statement in Mutanen et al. (2022) [2]_ combines both criteria.
-    random_state : int | np.random.Generator | None
+    random_state : int | np.random.Generator | None, default=None
         Seed/generator controlling the random channel-update order.
-    callback : callable | None
+    callback : callable | None, default=None
         Called synchronously after each completed SOUND sigma iteration with a
         progress event having ``method="sound"`` and ``stage="iteration"``.
         Callback return values are ignored and callback exceptions propagate
         unchanged. The event metric is the maximum relative sigma change.
-    verbose : bool | str | int | None
+    verbose : bool | str | int | None, default=None
         MNE-style logging level. The final convergence report is emitted at
         INFO and sigma iterations at DEBUG.
 
@@ -368,20 +368,20 @@ def compute_sound_ref_best(
         Sensor data.
     leadfield : ndarray, shape (n_channels, n_sources)
         Lead-field matrix in the same channel order as ``data``.
-    lambda_ : float
+    lambda_ : float, default=0.1
         Regularisation parameter. Default 0.1.
-    n_iter : int
+    n_iter : int, default=5
         Maximum number of SOUND iterations. Default 5.
-    tol : float | None
+    tol : float | None, default=None
         Convergence tolerance; see :func:`compute_sound`.
-    random_state : int | np.random.Generator | None
+    random_state : int | np.random.Generator | None, default=None
         Seed/generator controlling the random channel-update order.
-    callback : callable | None
+    callback : callable | None, default=None
         Called synchronously after each completed SOUND sigma iteration with a
         progress event having ``method="sound"`` and ``stage="iteration"``.
         Callback return values are ignored and callback exceptions propagate
         unchanged. The event metric is the maximum relative sigma change.
-    verbose : bool | str | int | None
+    verbose : bool | str | int | None, default=None
         MNE-style logging level. The final convergence report is emitted at
         INFO and sigma iterations at DEBUG.
 
@@ -392,7 +392,7 @@ def compute_sound_ref_best(
         SOUND-corrected data.
     sigmas : ndarray, shape (n_channels - 1,)
         Estimated noise amplitudes for the retained channels.
-    convergence : ndarray, shape (n_iter,)
+    convergence : ndarray, shape (n_iter_run,)
         Maximum relative change of ``sigmas`` at each iteration.
     best_channel : int
         Index of the reference channel chosen by DDWiener.
@@ -502,41 +502,41 @@ class SOUND(BaseEstimator, TransformerMixin):
     """Automatic, robust noise suppression for EEG/MEG (SOUND).
 
     SOUND estimates the noise level of every sensor and applies a forward-model
-    Wiener filter that suppresses channel-specific noise while preserving
-    field-consistent brain signal. With no individualised forward model, a
-    three-layer spherical lead field is built from the montage.
+    Wiener filter that downweights channel-specific noise relative to the
+    supplied lead field. With no individualised forward model, a three-layer
+    spherical lead field is built from the montage.
 
     Parameters
     ----------
-    lambda_ : float
+    lambda_ : float, default=0.1
         Regularisation parameter. Default 0.1.
-    n_iter : int
+    n_iter : int, default=5
         Maximum number of SOUND iterations. Default 5.
-    tol : float | None
+    tol : float | None, default=None
         Convergence tolerance on the maximum relative change of ``sigmas_``. If
         None (default), exactly ``n_iter`` iterations run, matching TESA. Set
         ``tol=0.01`` to reproduce the 1% stopping rule Mutanen et al. (2018)
         [1]_ use on real data.
-    forward : mne.Forward | None
+    forward : mne.Forward | None, default=None
         Optional pre-computed forward solution. If None, a spherical lead field
         is built from the data's montage.
-    reference : {'best', 'average'}
+    reference : {'best', 'average'}, default='best'
         Reference handling. ``'best'`` (default) follows ``tesa_sound``:
         re-reference to the least noisy channel, drop it from the estimation,
         and reconstruct the full average-referenced montage from the source
         estimate. This keeps SOUND's diagonal-noise assumption intact.
         ``'average'`` runs the plain ``SOUND.m`` solver on all channels and
         assumes the input is already average referenced.
-    sigma_source : {'evoked', 'trials'}
+    sigma_source : {'evoked', 'trials'}, default='evoked'
         For epoched input, whether to estimate the per-channel noise from the
         trial average (``'evoked'``, the default, as in ``tesa_sound``) or from
         all trials concatenated in time. Only the *relative* pattern of
         ``sigmas_`` affects the operator -- a global rescaling cancels -- so
         this matters mainly when artifacts are trial-locked. Ignored for
         continuous input.
-    n_dipoles : int
+    n_dipoles : int, default=5000
         Number of dipoles for the spherical lead field.
-    random_state : int | np.random.Generator | None
+    random_state : int | np.random.Generator | None, default=None
         Controls the random channel-update order for reproducibility.
     verbose : bool | str | int | None, default=None
         MNE-style logging level. The fitted SOUND summary is emitted at INFO;
@@ -643,14 +643,32 @@ class SOUND(BaseEstimator, TransformerMixin):
     ):
         """Estimate the SOUND cleaning operator from ``X``.
 
+        ``X`` may be a NumPy array with shape ``(n_channels, n_times)`` or
+        ``(n_epochs, n_channels, n_times)``, or an MNE Raw, Epochs, or Evoked
+        object. For MNE input the fitted channel selection and sampling
+        frequency are taken from the object; the returned transform preserves
+        the container type and leaves channels outside the fitted homogeneous
+        data type unchanged.
+
         Parameters
         ----------
-        callback : callable | None
+        X : ndarray | Raw | Epochs | Evoked
+            Data used to estimate the channel noise levels and operator.
+        y : None
+            Ignored scikit-learn compatibility argument.
+        callback : callable | None, default=None
             Called synchronously after each completed SOUND sigma iteration
             with a progress event whose ``method`` is ``"sound"`` and whose
             ``stage`` is ``"iteration"``. Callback return values are ignored
             and callback exceptions propagate unchanged. The event metric is
             the maximum relative sigma change.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for the fit summary and iteration logs.
+
+        Returns
+        -------
+        self : SOUND
+            Fitted estimator.
         """
         callback = _validate_callback(callback)
         check_option(self.reference, name="reference", allowed=("best", "average"))
@@ -713,12 +731,23 @@ class SOUND(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        callback : callable | None
+        X : ndarray | Raw | Epochs | Evoked
+            Data used for fitting and transformation. NumPy arrays must have
+            shape ``(n_channels, n_times)`` or
+            ``(n_epochs, n_channels, n_times)``.
+        y : None
+            Ignored scikit-learn compatibility argument.
+        callback : callable | None, default=None
             Called synchronously after each completed SOUND sigma iteration
             during fitting. Callback return values are ignored and callback
             exceptions propagate unchanged.
         verbose : bool | str | int | None
             MNE-style logging level for the composed fit and transform call.
+
+        Returns
+        -------
+        cleaned : ndarray | Raw | Epochs | Evoked
+            Transformed data with the same container type and layout as ``X``.
         """
         callback = _validate_callback(callback)
         return self.fit(X, y=y, callback=callback).transform(X)
@@ -730,7 +759,31 @@ class SOUND(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Apply the fitted SOUND operator to ``X``."""
+        """Apply the fitted SOUND operator to ``X``.
+
+        Parameters
+        ----------
+        X : ndarray | Raw | Epochs | Evoked
+            Data to transform. NumPy arrays must have shape
+            ``(n_channels, n_times)`` or ``(n_epochs, n_channels, n_times)``.
+            An MNE input must have the fitted channel layout and sampling
+            frequency.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level.
+
+        Returns
+        -------
+        cleaned : ndarray | Raw | Epochs | Evoked
+            Cleaned data. MNE inputs are copied; NumPy inputs are not mutated.
+
+        Raises
+        ------
+        sklearn.exceptions.NotFittedError
+            If :meth:`fit` has not been called.
+        ValueError
+            If the channel layout or sampling frequency is incompatible with
+            the fitted operator.
+        """
         check_is_fitted(self, attributes=["operator_"])
         data, _, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(
             X, ch_names=getattr(self, "_mne_ch_names_", None)

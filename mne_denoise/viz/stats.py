@@ -119,7 +119,29 @@ def plot_window_count_series(
     show=True,
     fname=None,
 ):
-    """Plot a per-window count or metric series."""
+    """Plot a per-window count or metric series.
+
+    Parameters
+    ----------
+    counts : array-like of shape (n_windows,)
+        One scalar count or metric for each window.
+    ax : matplotlib.axes.Axes | None, default=None
+        Existing axes. If None, create a themed figure.
+    show : bool, default=True
+        Whether to display the figure.
+    fname : path-like | None, default=None
+        Optional output path.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Figure containing the bar series.
+
+    Raises
+    ------
+    ValueError
+        If ``counts`` is not a non-empty one-dimensional array.
+    """
     counts = np.asarray(counts, dtype=float)
     if counts.ndim != 1 or counts.size == 0:
         raise ValueError("counts must be a non-empty 1D array.")
@@ -182,15 +204,17 @@ def plot_metric_bars(
         If None, no best-marker star is added.
     group_col : str
         Column name identifying comparison groups.
-    group_order : list of str | None
+    group_order : list of str | None, default=None
         Explicit order for group bars. If None, first-seen order is used.
-    group_colors, group_labels : dict | None
-        Optional color/label overrides keyed by group name.
-    title : str
+    group_colors : dict | None, default=None
+        Optional color overrides keyed by group name.
+    group_labels : dict | None, default=None
+        Optional display-label overrides keyed by group name.
+    title : str, default="Metric Comparison (group mean ± SEM)"
         Figure-level title.
-    fname : path-like | None
+    fname : path-like | None, default=None
         Optional output path.
-    show : bool
+    show : bool, default=True
         Whether to display the figure.
 
     Returns
@@ -335,25 +359,33 @@ def plot_tradeoff_scatter(
     ----------
     data : mapping of str to array-like
         Columnar mapping with group and metric columns.
-    x_col, y_col : str
-        Metric columns for x and y axes.
+    x_col : str
+        Metric column for the x-axis.
+    y_col : str
+        Metric column for the y-axis.
     group_col : str
         Grouping column name.
-    group_order : list of str | None
+    group_order : list of str | None, default=None
         Optional group order. If None, first-seen order is used.
-    group_colors, group_labels : dict | None
-        Optional style overrides keyed by group name.
-    x_label, y_label : str | None
-        Axis labels. If None, derived from metric names.
-    title : str
+    group_colors : dict | None, default=None
+        Optional color overrides keyed by group name.
+    group_labels : dict | None, default=None
+        Optional display-label overrides keyed by group name.
+    x_label : str | None, default=None
+        X-axis label. If None, derived from ``x_col``.
+    y_label : str | None, default=None
+        Y-axis label. If None, derived from ``y_col``.
+    title : str, default="Metric Trade-off"
         Axes title.
-    reference_x, reference_y : float | None
-        Optional vertical/horizontal reference lines.
-    ax : matplotlib.axes.Axes | None
+    reference_x : float | None, default=None
+        Optional vertical reference line.
+    reference_y : float | None, default=None
+        Optional horizontal reference line.
+    ax : matplotlib.axes.Axes | None, default=None
         Existing axes. If None, create a new figure.
-    fname : path-like | None
+    fname : path-like | None, default=None
         Optional output path when creating a new figure.
-    show : bool
+    show : bool, default=True
         Whether to display the figure when creating a new figure.
 
     Returns
@@ -495,11 +527,13 @@ def plot_metric_comparison(
         Grouping column name.
     subject_col : str
         Subject identifier column for paired overlays.
-    group_order : list of str | None
+    group_order : list of str | None, default=None
         Optional explicit group order. If None, first-seen order is used.
-    group_colors, group_labels : dict | None
-        Optional style overrides keyed by group.
-    title : str
+    group_colors : dict | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : dict | None, default=None
+        Optional display-label overrides keyed by group.
+    title : str, default="Metric Comparison"
         Axes title.
     reference_value : float | None
         Optional horizontal reference line.
@@ -665,11 +699,13 @@ def plot_harmonic_attenuation(
         Harmonic frequencies to evaluate.
     subject : str
         Optional subject label included in default title.
-    series_order : list[str] | None
+    series_order : list[str] | None, default=None
         Plotting order for series. If None, keys from ``cleaned_psds`` are used.
-    series_colors, series_labels : dict | None
-        Optional color/label overrides keyed by series name.
-    title : str | None
+    series_colors : dict | None, default=None
+        Optional color overrides keyed by series name.
+    series_labels : dict | None, default=None
+        Optional display-label overrides keyed by series name.
+    title : str | None, default=None
         Custom axes title.
     fname : path-like | None
         Optional output path.
@@ -771,15 +807,19 @@ def plot_metric_slopes(
         Grouping column name.
     subject_col : str
         Subject identifier column name.
-    group_order : list of str | None
+    group_order : list of str | None, default=None
         Optional group order. If None, first-seen order is used.
-    group_colors, group_labels : dict | None
-        Optional style overrides keyed by group.
+    group_colors : dict | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : dict | None, default=None
+        Optional display-label overrides keyed by group.
     reference_lines : dict | None
         Optional horizontal reference lines per metric:
         ``{metric_col: [(y_value, style_dict), ...]}``.
-    suptitle, title : str | None
-        Figure title. ``suptitle`` overrides ``title`` when provided.
+    suptitle : str | None, default=None
+        Figure-level title override.
+    title : str | None, default="Paired Subject-Level Comparison"
+        Axes title used when ``suptitle`` is not provided.
     fname : path-like | None
         Optional output path.
     show : bool
@@ -906,23 +946,25 @@ def plot_metric_violins(
         Grouping column name.
     subject_col : str
         Subject identifier column name.
-    group_order : list of str | None
+    group_order : list of str | None, default=None
         Optional group order. If None, first-seen order is used.
-    group_colors, group_labels : dict | None
-        Optional style overrides keyed by group.
-    baseline_group : str | None
+    group_colors : dict | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : dict | None, default=None
+        Optional display-label overrides keyed by group.
+    baseline_group : str | None, default=None
         Optional group used to draw a baseline mean line.
     reference_lines : dict | None
         Optional horizontal reference lines per metric.
-    show_paired : bool
+    show_paired : bool, default=True
         Whether to draw subject-level paired lines.
-    suptitle : str | None
+    suptitle : str | None, default=None
         Figure-level title.
-    figsize : tuple | None
+    figsize : tuple | None, default=None
         Figure size in inches. Defaults to ``(4 * n_metrics, 5.5)``.
-    fname : path-like | None
+    fname : path-like | None, default=None
         Optional output path.
-    show : bool
+    show : bool, default=True
         Whether to display the figure.
 
     Returns
@@ -1272,19 +1314,21 @@ def plot_forest(
         first-seen group.
     baseline_group : str | None
         Optional baseline group to overlay with faint points and mean marker.
-    group_colors, group_labels : dict | None
-        Optional style overrides keyed by group.
-    metric_label : str | None
+    group_colors : dict | None, default=None
+        Optional color overrides keyed by group.
+    group_labels : dict | None, default=None
+        Optional display-label overrides keyed by group.
+    metric_label : str | None, default=None
         X-axis label. If None, derived from ``metric_col``.
     reference_line : float | None
         Optional vertical reference line value.
-    suptitle : str | None
+    suptitle : str | None, default=None
         Figure title override.
-    figsize : tuple | None
+    figsize : tuple | None, default=None
         Figure size in inches.
-    fname : path-like | None
+    fname : path-like | None, default=None
         Optional output path.
-    show : bool
+    show : bool, default=True
         Whether to display the figure.
 
     Returns

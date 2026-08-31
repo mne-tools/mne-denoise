@@ -99,6 +99,9 @@ def iterative_dss_one(
         Learning rate / relaxation parameter. Controls step size:
         ``w = w_old + gamma · (w_new - w_old)``.
         Default None (gamma=1, full step).
+    random_state : int | numpy.random.Generator | None, default=None
+        Seed or generator used for random initialization when ``w_init`` is
+        ``None``.
     callback : callable | None
         Called synchronously after each completed fixed-point iteration with a
         progress event having ``method="iterative_dss"`` and
@@ -363,6 +366,8 @@ def iterative_dss(
         Newton step parameter (see ``iterative_dss_one``).
     gamma : float or callable, optional
         Learning rate / relaxation (see ``iterative_dss_one``).
+    random_state : int | numpy.random.Generator | None, default=None
+        Seed or generator used for random initialization.
     callback : callable | None
         Called synchronously after each completed fixed-point iteration with a
         progress event having ``method="iterative_dss"`` and
@@ -815,6 +820,9 @@ class IterativeDSS:
         Maximum iterations per component. Default 100.
     tol : float
         Convergence tolerance. Default 1e-6.
+    normalize_input : bool, default=True
+        If True, normalize each input channel by its fitted standard
+        deviation before fitting and undo that scaling on reconstruction.
     verbose : bool | str | int | None
         MNE-style logging level.
     alpha : float or callable, optional
@@ -914,6 +922,9 @@ class IterativeDSS:
             - ``mne.io.Raw``: Continuous data
             - ``mne.Epochs``: Epoched data
             - ``ndarray``: Shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each completed fixed-point iteration
             with a progress event whose ``method`` is ``"iterative_dss"`` and
@@ -986,6 +997,9 @@ class IterativeDSS:
         ----------
         X : Raw | Epochs | ndarray
             Data to transform. Same formats as ``fit()``.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -1039,6 +1053,9 @@ class IterativeDSS:
         ----------
         sources : ndarray, shape (n_sources, n_times)
             Source time series. Can use fewer sources than fitted.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -1103,6 +1120,9 @@ class IterativeDSS:
         ----------
         X : Raw | Epochs | ndarray
             Data to fit and transform.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each completed fixed-point iteration
             during fitting. Callback return values are ignored and callback

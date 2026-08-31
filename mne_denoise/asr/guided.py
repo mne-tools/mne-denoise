@@ -526,8 +526,7 @@ class GuidedASR(ASR):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> GuidedASR:
-        """
-        Calibrate ASR and fit the optional guidance covariances.
+        """Calibrate ASR and fit optional guidance covariances.
 
         Standard ASR calibration is delegated to :meth:`ASR.fit`. Bias-bank
         covariances are then estimated from the target data only when guidance
@@ -545,6 +544,9 @@ class GuidedASR(ASR):
         calibration_mask : ndarray | None, default=None
             Optional boolean sample mask for two-dimensional calibration data
             or Raw input after annotation exclusion.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None
             Called synchronously after each shared ASR threshold calibration
             component completes. Callback return values are ignored and

@@ -307,7 +307,37 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         sample_weight: np.ndarray | None = None,
         verbose: bool | str | int | None = None,
     ) -> TimeShiftDSS:
-        """Fit lag-augmented repeated-trial DSS filters."""
+        """Fit lag-augmented repeated-trial DSS filters.
+
+        Parameters
+        ----------
+        X : mne.BaseEpochs | ndarray, shape (n_epochs, n_channels, n_times) or (n_channels, n_times, n_epochs)
+            Repeated-trial data. MNE ``Epochs`` are read in their native
+            epoch-first layout; NumPy input uses the channel-first
+            ``(n_channels, n_times, n_epochs)`` layout.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        sample_weight : ndarray | None, default=None
+            Non-negative observation weights with shape ``(n_times,)`` or
+            ``(n_times, n_epochs)``. Lagged observations receive the minimum
+            weight across all samples touched by a lag tuple.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
+
+        Returns
+        -------
+        self : TimeShiftDSS
+            Fitted estimator. The fitted lag grid is in ``lag_samples_`` and
+            ``lag_times_``; ``valid_slice_`` identifies the common no-padding
+            support.
+
+        Raises
+        ------
+        ValueError
+            If the data is not repeated-trial 3D data, the lag declaration is
+            invalid, or rank/component/weight settings are incompatible.
+        """
         del y
         self._validate_parameters()
         data, data_sfreq, _, _, _ = self._prepare_epochs(X, fitting=True)
@@ -471,6 +501,29 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         The score is the trial-average power divided by total power, summed
         over the first ``n_select`` components. A fixed ``n_select`` therefore
         defines one scalar model score suitable for whole-epoch validation.
+
+        Parameters
+        ----------
+        X : mne.BaseEpochs | ndarray
+            Held-out repeated-trial data in the same layout accepted by
+            :meth:`fit`.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        sample_weight : ndarray | None, default=None
+            Optional non-negative weights with shape ``(n_times,)`` or
+            ``(n_times, n_epochs)``.
+
+        Returns
+        -------
+        score : float
+            Ratio of weighted trial-average power to weighted total power for
+            the selected leading components. Returns ``0.0`` when their total
+            power is zero.
+
+        Notes
+        -----
+        The score measures repeatability in the fitted component subspace; it
+        is not an artifact-removal or neural-signal-preservation guarantee.
         """
         del y
         check_is_fitted(self, "dss_")
@@ -507,7 +560,26 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ) -> BaseEpochs | np.ndarray:
-        """Extract components or apply the fitted sensor-space operation."""
+        """Extract components or apply the fitted sensor-space operation.
+
+        Parameters
+        ----------
+        X : mne.BaseEpochs | ndarray
+            Repeated-trial data in the same layout accepted by :meth:`fit`.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
+
+        Returns
+        -------
+        out : ndarray | mne.BaseEpochs
+            For ``component_action='extract'``, source data with shape
+            ``(n_components, n_valid_times, n_epochs)`` for NumPy input or
+            ``(n_epochs, n_components, n_valid_times)`` for MNE input. For
+            ``'retain'`` and ``'subtract'``, the original container family and
+            full time axis are preserved; samples outside the common lag
+            support are unchanged.
+        """
         check_is_fitted(self, "dss_")
         self._validate_parameters()
         data, _, mne_type, orig, picks = self._prepare_epochs(X, fitting=False)

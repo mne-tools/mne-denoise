@@ -6,7 +6,8 @@ and its harmonics from M/EEG recordings using Denoising Source Separation (DSS).
 The algorithm works by:
 1. Decomposing data into a smooth component and a residual (line-frequency related)
 2. Applying DSS to the residual to find components that maximize line noise power
-3. Projecting out the noise components while preserving neural signals
+3. Projecting out the selected noise components. Signal preservation must be
+   assessed separately on the application data.
 
 This module contains:
 1. `ZapLine`: Scikit-learn/MNE compatible Transformer (inherits from DSS)
@@ -76,8 +77,9 @@ class ZapLine(DSS):
     compatible with scikit-learn and MNE-Python objects.
 
     The algorithm uses Denoising Source Separation (DSS) to find spatial filters
-    that maximize power at the line noise frequency, then projects out these
-    noise components while preserving neural signals.
+    that maximize power at the line-noise frequency, then projects out the
+    selected noise components. Reduced line-noise power does not by itself
+    establish preservation of neural signals.
 
     The cleaning process follows these steps:
 
@@ -106,6 +108,10 @@ class ZapLine(DSS):
     n_harmonics : int | None, default=None
         Number of harmonics to include in the bias function.
         If ``None``, auto-determined based on Nyquist frequency.
+    segmenter : CovarianceSegmenter | FixedWindowSegmenter | None, default=None
+        Segmentation strategy for ``adaptive=True``. If ``None``, the
+        covariance-stationarity segmenter is created from the adaptive
+        parameters. Ignored in standard mode.
     nfft : int, default=1024
         FFT length for the spectral bias function.
     nkeep : int | None, default=None
@@ -327,6 +333,9 @@ class ZapLine(DSS):
 
         y : None
             Ignored. Present for scikit-learn API compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -402,6 +411,9 @@ class ZapLine(DSS):
         X : Raw | Epochs | Evoked | ndarray
             The data to clean. Must have the same number of channels as the
             data used for fitting.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
 
         Returns
         -------
@@ -477,6 +489,9 @@ class ZapLine(DSS):
             The data to process.
         y : None
             Ignored. Present for scikit-learn API compatibility.
+        verbose : bool | str | int | None, default=None
+            MNE-style logging level for this call. ``None`` leaves the current
+            package logging configuration unchanged.
         callback : callable | None, default=None
             Called synchronously after each completed target-frequency pass in
             adaptive mode. The event metric is the completed target frequency

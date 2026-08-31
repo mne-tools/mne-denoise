@@ -95,7 +95,19 @@ class SpectrogramBias(LinearDenoiser):
         self.noverlap = noverlap if noverlap is not None else nperseg // 2
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply fixed spectrogram mask to all channels."""
+        """Apply a fixed spectrogram mask to all channels.
+
+        Parameters
+        ----------
+        data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+            Channel-first data. Three-dimensional input is processed one epoch
+            at a time.
+
+        Returns
+        -------
+        biased : ndarray, same shape as ``data``
+            Data reconstructed after applying the time-frequency mask.
+        """
         # Linear denoisers operate on sensor data (n_ch, n_times)
         if data.ndim == 2:
             return self._apply_2d(data)
@@ -170,7 +182,19 @@ class SpectrogramDenoiser(NonlinearDenoiser):
         self.mask = mask
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply adaptive 2D spectrogram masking."""
+        """Apply adaptive spectrogram masking to a source.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series. Two-dimensional input is processed one epoch
+            at a time.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Source reconstructed after time-frequency masking.
+        """
         if source.ndim == 2:
             _, n_epochs = source.shape
             denoised = np.zeros_like(source)

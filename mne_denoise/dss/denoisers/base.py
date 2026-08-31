@@ -49,7 +49,18 @@ class LinearDenoiser(ABC):
         pass
 
     def __call__(self, data: np.ndarray) -> np.ndarray:
-        """Allow using denoiser as a callable."""
+        """Apply the linear denoiser through the callable interface.
+
+        Parameters
+        ----------
+        data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+            Data passed to :meth:`apply`.
+
+        Returns
+        -------
+        biased : ndarray, same shape as ``data``
+            Bias-transformed data.
+        """
         return self.apply(data)
 
 
@@ -87,5 +98,16 @@ class NonlinearDenoiser(ABC):
         pass
 
     def __call__(self, source: np.ndarray) -> np.ndarray:
-        """Allow using denoiser as a callable."""
+        """Apply the nonlinear denoiser through the callable interface.
+
+        Parameters
+        ----------
+        source : ndarray, shape (n_times,) or (n_times, n_epochs)
+            Source time series passed to :meth:`denoise`.
+
+        Returns
+        -------
+        denoised : ndarray, same shape as ``source``
+            Nonlinearly transformed source.
+        """
         return self.denoise(source)
