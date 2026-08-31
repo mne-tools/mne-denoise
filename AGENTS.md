@@ -40,7 +40,16 @@ When the context is available, determine the parts of the scientific problem tha
 
 Do not ask every question in every conversation, but do not ignore these factors when they change the scientific interpretation or API choice. No method is universally best. Explain relevant assumptions, choose the simplest public workflow that fits the goal, and preserve MNE metadata and container semantics.
 
-Do not recommend private helpers when a public estimator or function exists. Distinguish established published methods from mne-denoise-specific extensions and experimental research APIs. On current main, `GuidedASR` and `process_guided_asr` are unpublished, unvalidated experimental research prototypes; the estimator requires explicit experimental opt-in. The SSP-SIR estimator has a validated numerical core but is not independently validated on a public real TMS-EEG dataset, so real-data use is experimental. The `ASR` `method="riemannian"` backend is also explicitly experimental; do not describe these APIs as established defaults.
+Do not recommend private helpers when a public estimator or function exists. Distinguish established published methods from mne-denoise-specific extensions and experimental research APIs.
+
+Honor experimental-status and validation warnings in the current public
+docstrings and method documentation. Public availability does not imply that
+an API is an established or independently validated scientific method. Do not
+recommend experimental or unvalidated research APIs as established defaults.
+When scientific validation status matters, inspect the current method
+documentation and primary literature before making a recommendation. For
+example, an API such as GuidedASR should be presented with that qualification
+whenever its current documentation marks it experimental.
 
 Artifact attenuation is not evidence that desired neural signal was preserved. Where relevant, encourage users to evaluate both artifact attenuation and preservation of the signal of interest, using suitable controls and scientific knowledge.
 
@@ -101,13 +110,24 @@ Implement behavior at the highest existing owner layer. For example, a generic e
 
 Optimize for reviewer comprehension and long-term maintenance, not diff size or output volume. Prefer the smallest change that fully satisfies the issue, and avoid opportunistic cleanup of unrelated code.
 
-If a task starts requiring a new subsystem, dependency, public API family, or many unrelated files, reconsider its scope. Reuse existing test infrastructure before creating new infrastructure. Avoid future-proofing that has no immediate requirement. In particular, do not silently turn a documentation or repository-guidance task into a scientific implementation change.
+If a task starts requiring a new subsystem, dependency, public API family, or many unrelated files, reconsider its scope. Reuse existing test infrastructure before creating new infrastructure. Avoid future-proofing that has no immediate requirement.
+
+Do not expand a focused task into unrelated architecture, public API,
+dependencies, algorithms, or upstream work unless the issue or maintainer
+explicitly asks for it. Do not silently turn a documentation or
+repository-guidance task into a scientific implementation change.
 
 ## Public API
 
-The intentional public API is tested in `tests/test_public_api.py`. Current public facades include `mne_denoise`, `asr`, `bss_cca`, `dss`, `dss.denoisers`, `dss.variants`, `dss.segmentation`, `dss.selection`, `icanclean`, `overcorrection`, `progress`, `qa`, `sns`, `sound`, `spectrum_interpolation`, `ssa`, `sspsir`, `viz`, and `zapline`.
+The intentional public API is defined and tested in
+`tests/test_public_api.py`. Treat its facade and canonical-path registries,
+together with the corresponding `__all__` declarations, as the authoritative
+inventory.
 
-These facades declare `__all__`. Importability alone does not make a symbol public; canonical import paths are tested explicitly. A new public API requires updates to the appropriate facade, `__all__`, API documentation, tests, and user-facing documentation or the changelog when appropriate.
+Public facades declare `__all__`, and canonical public paths are tested
+explicitly. Importability alone does not make a symbol public. A new public API
+requires updates to the appropriate facade, `__all__`, API documentation,
+tests, and user-facing documentation or the changelog when appropriate.
 
 Private underscore names have no compatibility promise. Experimental APIs
 must be clearly identified. Documentation and examples must never invent
@@ -169,59 +189,50 @@ Algorithm code emits structured progress events through callback support. `Progr
 
 ## Optional dependencies and base-install boundary
 
-The required runtime dependencies are NumPy (`>=1.26,<3`), SciPy (`>=1.13`),
-scikit-learn (`>=1.5`), and joblib (`>=1.4`). Published optional extras are:
+`pyproject.toml` is the authoritative source for dependency declarations,
+optional extras, dependency groups, and minimum versions.
 
-- `mne`: MNE-Python (`>=1.12.1`) for MNE container integration.
-- `viz`: matplotlib (`>=3.8`) for visualization.
-- `progress`: tqdm (`>=4.66`) for the tqdm progress adapter.
+The important compatibility boundary is that the base package remains usable
+without optional MNE, visualization, or progress dependencies. MNE
+integration, visualization, and the tqdm progress adapter remain optional.
+Optional dependencies must not be imported eagerly in a way that breaks base
+import. `scripts/check_base_install.py` tests this boundary.
 
-The dependency groups in `pyproject.toml` are `lockfile_extras`, `test`,
-`doc`, `build`, `lint`, `changelog`, and `dev`. The lockfile group covers
-optional runtime packages for lower-bound checks; `test` adds pytest,
-coverage, timeout, pandas, and seaborn; `doc` adds MNE and documentation
-tooling; `build` adds distribution tooling; `lint` adds `prek` and `spin`;
-`changelog` adds towncrier; and `dev` combines the development groups with
-pip.
-
-The base package must remain usable without MNE, matplotlib, or tqdm.
-Optional dependencies must not be imported eagerly in a way that makes base
-import fail. MNE-Python integration, plotting, and tqdm remain optional, and
-the minimum versions are deliberate compatibility commitments.
-
-`scripts/check_base_install.py` verifies this boundary, including that the
-base installation can import the package and that the visualization namespace
-gives actionable optional-dependency guidance. Preserve this boundary in all
-changes.
+Do not raise dependency floors or promote an optional dependency to required
+without a concrete compatibility reason.
 
 ## Continuous integration
 
-The matrix in `.github/workflows/tests.yml` protects different compatibility
-properties rather than repeating one test run:
+The workflow files are the authoritative source for the exact Python versions,
+platforms, and dependency combinations. The matrix in
+`.github/workflows/tests.yml` intentionally protects different compatibility
+dimensions rather than repeating one test run:
 
-- A lint job runs the complete `prek` hook suite on Ubuntu with Python 3.14.
-- A base-install job uses Python 3.12, installs only the package, and runs
-  `scripts/check_base_install.py`.
-- A minimum-dependencies job validates the lower-bound lockfile on Python
-  3.12 and runs the tests.
-- The stable matrix covers Ubuntu Python 3.13, Ubuntu Python 3.14 with the
-  coverage upload, Windows Python 3.14, and macOS ARM Python 3.14.
-- An MNE-main job installs MNE-Python main over the stable test environment
-  and runs the tests.
-- A scientific-dependency prerelease job upgrades the scientific stack and is
-  allowed to report failures without blocking required jobs.
+- Lint checks the complete repository hook suite.
+- Base-install checks protect the package boundary without optional extras.
+- Minimum-dependency jobs protect declared lower bounds.
+- Stable jobs cover supported Python and platform combinations.
+- Coverage measures the supported test suite.
+- MNE-main jobs check compatibility with upcoming MNE changes.
+- Scientific-dependency prereleases expose forward-compatibility problems.
 
-`.github/workflows/docs.yml` builds the full gallery against both released
-MNE and MNE main, prefetching the MNE Sample, Somato, and EEGBCI datasets.
+`.github/workflows/docs.yml` builds the full gallery against both released MNE
+and MNE main. Stable-MNE and MNE-main documentation jobs protect both
+documentation compatibility dimensions. Documentation CI prefetches and
+caches the real datasets required by the gallery; `scripts/prefetch_docs_data.py`
+and the docs workflow are the authoritative inventory. When an example
+introduces a new real dataset, update the prefetch mechanism in the same
+change.
+
 The release workflow builds and validates distributions and tests an
 installed wheel before publishing on a GitHub release. The changelog workflow
 checks Towncrier fragments, and dependency review rejects high-severity
 dependency findings.
 
 Passing one local environment is not sufficient evidence of repository
-compatibility. Do not fix CI failures by raising dependency floors without
-justification, removing platform coverage, weakening optional-dependency
-boundaries, disabling tests, or allowing failures on required jobs.
+compatibility. Do not weaken CI, remove platform coverage, raise dependency
+floors just to fix CI, disable tests, or turn required jobs into informational
+jobs.
 
 ## Repository task commands
 
@@ -292,9 +303,10 @@ the implementation or contracts do not provide, or misstate copy versus
 in-place semantics and `fit`/`transform` lifecycle. Document experimental
 status where appropriate.
 
-PR 2 will perform a callable-by-callable public docstring audit. Existing
-docstrings are not authoritative when they disagree with implementation,
-tests, or scientific sources.
+When changing or reviewing public API, audit public docstrings callable by
+callable against the implementation, tests, and relevant scientific sources.
+Existing docstrings are not authoritative when they disagree with those
+sources of truth.
 
 ## Examples and gallery
 
@@ -308,8 +320,9 @@ examples.
 New real-data dependencies must use the documentation data prefetch/cache
 mechanism. Add datasets to `scripts/prefetch_docs_data.py` when an example
 needs them. Examples must use public APIs and should not preserve obsolete
-APIs merely to avoid changing docs. Do not introduce a `tutorials/` directory
-as part of this documentation refactor.
+APIs merely to avoid changing docs. Prefer the existing documentation and
+gallery structure unless a change in information architecture is explicitly
+part of the task.
 
 ## Repository scripts and generated artifacts
 
@@ -318,19 +331,6 @@ substrate or parity-generation scripts without a demonstrated current need.
 Generated changelog, release, and citation artifacts should be maintained by
 their owning tooling rather than hand-edited where applicable. Old parity
 builders are not part of the current architecture.
-
-## Deferred / out-of-scope architecture
-
-Do not expand a task into these areas unless the issue or maintainer explicitly
-asks for it:
-
-- A broader SSP-SIR/MNE-Python redesign.
-- Upstream generic MNE helper work that is not necessary for the current task.
-- A repository-wide typing or type-checker migration.
-- Historical parity infrastructure.
-- Unrelated new denoising algorithms.
-
-These are deferred categories, not a prohibition on legitimate future work.
 
 ## Git and pull-request expectations
 

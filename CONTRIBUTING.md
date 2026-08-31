@@ -9,9 +9,9 @@ maintenance.
 Please search existing issues and discussions first.
 
 - Usage and support questions belong on the [MNE Forum](https://mne.discourse.group/).
-- Reproducible bugs belong in the [bug report form](https://github.com/mne-tools/mne-denoise/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml).
-- Feature or scientific enhancement ideas belong in the [feature request form](https://github.com/mne-tools/mne-denoise/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
-- Documentation problems belong in the [documentation form](https://github.com/mne-tools/mne-denoise/blob/main/.github/ISSUE_TEMPLATE/documentation.yml).
+- Reproducible bugs belong in the [bug report form](https://github.com/mne-tools/mne-denoise/issues/new?template=bug_report.yml).
+- Feature or scientific enhancement ideas belong in the [feature request form](https://github.com/mne-tools/mne-denoise/issues/new?template=feature_request.yml).
+- Documentation problems belong in the [documentation form](https://github.com/mne-tools/mne-denoise/issues/new?template=documentation.yml).
 
 ## Code of Conduct and communication
 

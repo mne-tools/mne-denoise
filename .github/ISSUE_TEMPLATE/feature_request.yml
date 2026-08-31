@@ -1,6 +1,6 @@
 name: Feature request
 description: Suggest a capability or scientific enhancement for mne-denoise.
-title: "[ENH] "
+title: ""
 labels:
   - enhancement
 body:

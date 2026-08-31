@@ -1,6 +1,6 @@
 name: Documentation issue
 description: Report unclear, missing, incorrect, or stale documentation.
-title: "[DOC] "
+title: ""
 body:
   - type: input
     id: location

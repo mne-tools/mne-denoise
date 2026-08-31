@@ -52,18 +52,15 @@ pip install "mne-denoise[progress]"
 
 ## Quick start
 
-The estimator below operates directly on an MNE `Raw` object. Install the
-`mne` extra before running it.
+The example assumes that `raw` is an MNE `Raw` object loaded with
+`preload=True`; install the `mne` extra to use it.
 
 ```python
-import mne
 from mne_denoise.spectrum_interpolation import SpectrumInterpolation
 
-raw = mne.io.read_raw_fif("sample-raw.fif", preload=True)
-cleaner = SpectrumInterpolation(
-    line_freq=50.0,
-    n_harmonics=3,
-)
+# `raw` is an mne.io.Raw object loaded with preload=True.
+# Set line_freq to the mains frequency in your recording.
+cleaner = SpectrumInterpolation(line_freq=60.0, n_harmonics=3)
 clean_raw = cleaner.fit_transform(raw)
 ```
 
@@ -76,8 +73,9 @@ clean_raw = cleaner.fit_transform(raw)
 
 ## Citing
 
-See the method documentation and its primary references for how to cite
-`mne-denoise` and the scientific method(s) used in your analysis.
+When using mne-denoise in scientific work, cite the primary publication(s) for
+the method(s) used in your analysis. Method-specific references are provided
+in the documentation.
 
 ## Contributing
 
