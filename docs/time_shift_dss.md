@@ -8,7 +8,8 @@ validation.
 
 ## What it adds to trial-average DSS
 
-Ordinary DSS learns an instantaneous spatial filter:
+Ordinary DSS learns an instantaneous spatial filter, as in the DSS literature
+{footcite:p}`sarela2005_dss,decheveigne2010_time_shift`:
 
 \[
 y_k(t) = \sum_j a_{kj} x_j(t).
@@ -55,7 +56,8 @@ lags is fitted or extracted. Sensor-valued `retain` and `subtract` operations
 keep the original container and timeline and leave edge samples outside that
 interval unchanged.
 
-The 2010 paper defines delays as `0, ..., D - 1` but describes its one-sample
+The 2010 paper {footcite:p}`decheveigne2010_time_shift` defines delays as
+`0, ..., D - 1` but describes its one-sample
 delayed-noise simulation as `D = 1`. The package therefore does not expose this
 ambiguous shorthand: the reproduction declares `[0, 1]` explicitly.
 
@@ -76,16 +78,15 @@ The implementation maps the paper's steps as follows.
 | Relative PCA cutoff | Explicit rank and relative `reg` tolerance | Rank and source-simulation sensitivity sweep |
 | Resampling and CV | Whole-trial bootstrap, grouped CV, nested CV, and max-null surrogates | Reduced CI fixtures and checked validation script |
 
-Primary sources:
-
-- [de Cheveigne (2010), Time-shift denoising source separation](https://doi.org/10.1016/j.jneumeth.2010.03.002)
-- [de Cheveigne and Parra (2014), Joint denoising source separation](https://doi.org/10.1016/j.neuroimage.2014.05.068)
+The primary time-shift and joint-DSS sources are
+{footcite:p}`decheveigne2010_time_shift,decheveigne_parra2014_joint`.
 
 ## Centering and covariance weights
 
 The source/reference-aligned default is `center=False`: DSS is fitted from
 uncentered second moments. This preserves meaningful baseline correction. It
-also avoids the trial-wise mean removal that the 2014 review shows can create a
+also avoids the trial-wise mean removal that the 2014 review
+{footcite:p}`decheveigne_parra2014_joint` shows can create a
 repeatable ramp.
 
 `center=True` is a package extension. It fits one weighted global mean of the
@@ -124,7 +125,8 @@ A warning is raised when augmented dimension approaches the effective weighted
 observation count. This ratio is only a heuristic: autocorrelated samples supply
 fewer independent constraints than their count suggests.
 
-The source simulation has a real rank cliff. In Simulation 2 with explicit
+The source simulation {footcite:p}`decheveigne2010_time_shift` has a real rank
+cliff. In Simulation 2 with explicit
 lags `[0, 1]`, five noise sources enter the augmented covariance at three time
 states. A rank that keeps only those 15 noise directions omits the target;
 admitting the next direction makes temporal cancellation possible. Rank and
@@ -168,7 +170,8 @@ while destroying trial locking.
 If lags, rank, or subspace size are tuned from the same data, use sklearn nested
 cross-validation and repeat that exact search inside every surrogate; otherwise
 the null distribution does not include search multiplicity. Continuous
-event-marker randomization from the 2014 paper remains a future Raw/event-data
+event-marker randomization from the 2014 paper
+{footcite:p}`decheveigne_parra2014_joint` remains a future Raw/event-data
 extension. Bootstrap uncertainty is likewise kept in the checked validation
 script rather than duplicated as package API.
 
@@ -197,9 +200,15 @@ adds another fitted operation that must stay inside validation folds.
 - Preserved edge samples are not FIR-filtered and are excluded from efficacy
   metrics.
 - The epoched circular-shift null is a package extension, not the continuous
-  random-event surrogate used in the 2014 paper.
+  random-event surrogate used in the 2014 paper
+  {footcite:p}`decheveigne_parra2014_joint`.
 - Arbitrary lag grids, optional centering, weighted/regularized CCA, and the
   high-dimensional warning threshold are package contracts rather than claims
   made by the 2010 paper.
 - Apply one fitted transform to all study conditions. Fitting each
   condition separately can manufacture apparent condition differences.
+
+## References
+
+```{footbibliography}
+```

@@ -73,9 +73,9 @@ clean_raw = cleaner.fit_transform(raw)
 
 ## Citing
 
-When using mne-denoise in scientific work, cite the primary publication(s) for
-the method(s) used in your analysis. Method-specific references are provided
-in the documentation.
+When using mne-denoise in scientific work, cite both the software and the
+primary publication(s) for the method(s) used in your analysis. See the
+[citation guidance](https://mne.tools/mne-denoise/citing.html).
 
 ## Contributing
 

@@ -1,6 +1,7 @@
 # Sensor Noise Suppression (SNS)
 
-The `mne_denoise.sns` module implements Sensor Noise Suppression (SNS) [^1], a
+The `mne_denoise.sns` module implements Sensor Noise Suppression (SNS)
+{footcite:p}`decheveigne_simon2008_sensor`, a
 spatial method that regenerates each sensor from correlated neighboring
 sensors. It targets noise that is specific to individual sensors while
 preserving signals that are spatially redundant across the array.
@@ -114,6 +115,5 @@ deterministic exploration of the algorithm's assumptions and diagnostics.
 
 ## References
 
-[^1]: de Cheveigné, A., & Simon, J. Z. (2008). Sensor noise suppression.
-    *Journal of Neuroscience Methods, 168*(1), 195–202.
-    <https://doi.org/10.1016/j.jneumeth.2007.09.012>
+```{footbibliography}
+```

@@ -2,7 +2,8 @@
 # Reference-free BSS-CCA
 
 The `mne_denoise.bss_cca` module implements blind source separation by
-canonical correlation analysis (BSS-CCA) [^1], a reference-free method for
+canonical correlation analysis (BSS-CCA) {footcite:p}`declercq2006_bss_cca`, a
+reference-free method for
 attenuating broadband muscle (EMG) artifacts.
 
 CCA is solved between the recording $x(t)$ and a delayed copy
@@ -31,7 +32,7 @@ always uses those, so a sample gets the same result whether it is transformed
 alone, in a temporal chunk, or among other epochs. By default the fitted mean
 is added back so the output keeps the input's offset; pass
 `preserve_mean=False` for the mean-free reconstruction of Equation (7) in
-[^1].
+{footcite:p}`declercq2006_bss_cca`.
 
 For Raw, Epochs, and Evoked inputs the estimator selects one homogeneous data
 channel type and returns a copy of the same container, preserving timing,
@@ -49,27 +50,32 @@ BSSCCA(n_remove=3)  # drop the 3 lowest-correlation components
 BSSCCA(rho_threshold=0.75)  # keep components with correlation >= 0.75
 ```
 
-`n_remove` is the operating knob used throughout [^1] — its figures remove 3,
+`n_remove` is the operating knob used throughout {footcite:p}`declercq2006_bss_cca`
+— its figures remove 3,
 7, 14, and 15 of the lowest-autocorrelated components — and the clinical
-protocol in [^2] has a neurophysiologist choose the count per epoch. It is
+protocol in {footcite:p}`vergult2007_bss_cca` has a neurophysiologist choose the
+count per epoch. It is
 also stable: it means the same thing when the fitted rank drops because a
 channel was interpolated.
 
-`rho_threshold` is a package convenience. [^1] describes autocorrelation
+`rho_threshold` is a package convenience. {footcite:p}`declercq2006_bss_cca`
+describes autocorrelation
 thresholding as unvalidated future work ("Further research will indicate
 whether thresholding on the autocorrelation index will be sufficient"), and no
 value generalizes. Real recordings produce a compressed correlation spectrum —
-a genuine EMG component sits around 0.3–0.5, and the worked example in [^2]
+a genuine EMG component sits around 0.3–0.5, and the worked example in
+{footcite:p}`vergult2007_bss_cca`
 reports 0.49 — so a high fixed threshold can reject essentially everything. If
 no component reaches the threshold, the estimator logs a warning and removes
 all of them rather than silently substituting a different operating point.
 
 Sweep `n_remove` and look at where the result stops improving; that is the
-procedure Figure 4 of [^1] uses.
+procedure Figure 4 of {footcite:p}`declercq2006_bss_cca` uses.
 
 ## Preprocessing matters
 
-Both source papers band-pass filter before decomposing — [^2] uses 0.3–35 Hz
+Both source papers band-pass filter before decomposing —
+{footcite:p}`vergult2007_bss_cca` uses 0.3–35 Hz
 plus a notch — and both use an average-referenced montage. Do the same.
 
 The reason is not cosmetic. Canonical correlations are derived from singular
@@ -95,7 +101,8 @@ which the canonical correlation can be read as an autocorrelation at all.
 
 ## Lag
 
-The lag is one sample by default, which is what [^1] specifies. Declare it in
+The lag is one sample by default, which is what
+{footcite:p}`declercq2006_bss_cca` specifies. Declare it in
 samples or in physical time:
 
 ```python
@@ -112,7 +119,8 @@ they are formed strictly within each epoch, so no pair spans an epoch boundary.
 
 By default one operator is learned for all the data. EMG is non-stationary,
 though: the artifact topography changes with which muscle contracts. Every
-application in [^1] is a single 10-second epoch, and [^2] repeats the procedure
+application in {footcite:p}`declercq2006_bss_cca` is a single 10-second epoch,
+and {footcite:p}`vergult2007_bss_cca` repeats the procedure
 "for every 10-s epoch of each EEG segment". Pass `segment_len` to reproduce
 that:
 
@@ -149,7 +157,8 @@ info["input_rank"]  # < n_channels when the data is rank deficient
 
 BSS-CCA assumes the sources are mutually uncorrelated with differing
 autocorrelation structure, that mixing is linear and instantaneous, and that
-there are no more sources than sensors [^1]. In practice:
+there are no more sources than sensors {footcite:p}`declercq2006_bss_cca`. In
+practice:
 
 - **The ordering assumption is regime-dependent.** It rests on neural activity
   being more autocorrelated than muscle. A high-frequency neural target, or a
@@ -162,8 +171,9 @@ there are no more sources than sensors [^1]. In practice:
 - **Sample count matters.** Canonical correlations are biased upward when
   samples are scarce. Fewer lagged pairs than channels is rejected outright,
   and a thin margin is warned about.
-- **Selection is not automated for you.** [^1] calls the method
-  "user-dependent and semi-automatic" as applied in [^2].
+- **Selection is not automated for you.** {footcite:p}`declercq2006_bss_cca`
+  calls the method "user-dependent and semi-automatic" as applied in
+  {footcite:p}`vergult2007_bss_cca`.
 
 ## Not implemented
 
@@ -173,14 +183,5 @@ there are no more sources than sensors [^1]. In practice:
 
 ## References
 
-[^1]: De Clercq, W., Vergult, A., Vanrumste, B., Van Paesschen, W., &
-    Van Huffel, S. (2006). Canonical correlation analysis applied to remove
-    muscle artifacts from the electroencephalogram. *IEEE Transactions on
-    Biomedical Engineering*, 53(12), 2583–2587.
-    <https://doi.org/10.1109/TBME.2006.879459>
-
-[^2]: Vergult, A., De Clercq, W., Palmini, A., Vanrumste, B., Dupont, P.,
-    Van Huffel, S., & Van Paesschen, W. (2007). Improving the interpretation of
-    ictal scalp EEG: BSS-CCA algorithm for muscle artifact removal.
-    *Epilepsia*, 48(5), 950–958.
-    <https://doi.org/10.1111/j.1528-1167.2007.01031.x>
+```{footbibliography}
+```

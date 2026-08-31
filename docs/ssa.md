@@ -7,7 +7,7 @@ that space. The module provides two scientifically distinct methods:
 - **Basic SSA** produces an additive decomposition into reconstructed
   components. An optional frequency-based grouping rule selects components for
   subtraction.
-- **Local SSA** follows Teixeira et al.[^2] It models a high-amplitude artifact
+- **Local SSA** follows Teixeira et al. {footcite:p}`teixeira2006_local_ssa`. It models a high-amplitude artifact
   through locally estimated subspaces of clustered delay vectors and subtracts
   the reconstructed artifact.
 
@@ -47,7 +47,8 @@ $$
 where $\sigma_1\geq\cdots\geq\sigma_d\geq0$. Each singular triplet defines an
 elementary trajectory matrix. Direct SVD is algebraically equivalent to
 eigendecomposing a lag-covariance matrix, while avoiding the loss of numerical
-conditioning caused by forming a matrix product.[^1]
+conditioning caused by forming a matrix product.
+{footcite:p}`golyandina_zhigljavsky2013_ssa`
 
 Each elementary matrix is converted back to a time series by averaging its
 anti-diagonals. The number of matrix entries contributing to a reconstructed
@@ -133,7 +134,8 @@ print(diagnostics["dropped_frequencies"])
 
 Local SSA is based on a different signal model. Rather than grouping the
 global Basic SSA eigentriples, it assumes that a high-amplitude artifact forms
-locally coherent structure among delay vectors.[^2] Its stages are:
+locally coherent structure among delay vectors.
+{footcite:p}`teixeira2006_local_ssa` Its stages are:
 
 1. Embed the observed series into overlapping delay vectors.
 2. Partition the delay vectors into $q$ clusters using k-means.
@@ -186,7 +188,8 @@ assumption, not a universal property of EEG. High-amplitude rhythmic neural
 activity can also occupy those subspaces and be attenuated.
 
 Teixeira et al. report changes mainly at low frequencies and relative
-preservation of beta-band activity in their experiments.[^2] Those observations
+preservation of beta-band activity in their experiments
+{footcite:p}`teixeira2006_local_ssa`. Those observations
 do not establish frequency-specific guarantees for other recordings,
 montages, populations, or artifact types.
 
@@ -218,9 +221,11 @@ increases computation and leaves fewer delay vectors for estimation.
 
 In the absence of prior information, Basic SSA references often use
 $L\approx N/2$; when a periodicity is known, $L$ can instead be related to its
-period.[^1] For local SSA, Teixeira et al. state $M>f_s/f_r$ as a lower bound
+period. {footcite:p}`golyandina_zhigljavsky2013_ssa` For local SSA, Teixeira et
+al. state $M>f_s/f_r$ as a lower bound
 associated with resolving a frequency $f_r$, and report that larger embeddings
-improved separation at low signal-to-noise ratios.[^2]
+improved separation at low signal-to-noise ratios.
+{footcite:p}`teixeira2006_local_ssa`
 
 The software caps automatically selected windows through `max_window` to limit
 the cost of dense decompositions. That cap is a computational safeguard, not a
@@ -264,9 +269,5 @@ be chosen before analysis and reported alongside the SSA parameters.
 
 ## References
 
-[^1]: N. Golyandina and A. Zhigljavsky, *Singular Spectrum Analysis for Time
-    Series*, Springer, 2013. <https://doi.org/10.1007/978-3-642-34913-3>
-[^2]: A. R. Teixeira et al., "Automatic removal of high-amplitude artefacts
-    from single-channel electroencephalograms," *Computer Methods and Programs
-    in Biomedicine*, 83, 125–138, 2006.
-    <https://doi.org/10.1016/j.cmpb.2006.06.003>
+```{footbibliography}
+```

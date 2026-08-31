@@ -1,319 +1,130 @@
 Artifact Subspace Reconstruction
 ================================
 
-Artifact Subspace Reconstruction (ASR) repairs short, high-amplitude,
-spatially structured EEG artifacts by calibrating a clean covariance model and
-reconstructing burst-contaminated subspaces with the standard clean_rawdata
-lookahead, moving-covariance, and raised-cosine blending procedure.
+Overview
+--------
 
-The production target is standard Euclidean ASR. The module also exposes
-specialized Juggler-style calibration variants, MATLAB-fixture-backed adaptive
-ASR variants, and an experimental Riemannian backend; these variants are useful
-for research and comparison workflows but should be reported explicitly when
-used.
+Artifact Subspace Reconstruction (ASR) estimates a reference covariance from
+relatively clean data, detects windows whose channel covariance exceeds that
+reference, and reconstructs the affected subspace. The standard method follows
+the signal-reconstruction formulation in the Kothe and Jung patent and the
+evaluation/implementation literature by Chang et al.
+:footcite:p:`kothe_jung2016_asr,chang2018_asr,chang2020_asr`.
 
-Basic usage
------------
+ASR is intended for transient, high-variance, spatially structured artifacts in
+continuous EEG. It is not a general-purpose filter, and artifact attenuation
+does not by itself establish preservation of neural activity.
 
-For MNE ``Raw`` objects, ASR defaults to EEG channels and leaves other channel
-types unchanged.
+Standard estimator
+------------------
+
+For an MNE ``Raw`` object, the estimator can select EEG channels by default and
+returns a copied container with non-selected channels untouched:
 
 .. code-block:: python
 
    from mne_denoise.asr import ASR
 
-   asr = ASR(
-       cutoff=20.0,
-       calibration="auto",
-       picks="eeg",
-   )
-
+   asr = ASR(cutoff=20.0, calibration="auto", picks="eeg")
    asr.fit(raw)
    raw_clean = asr.transform(raw)
 
-For NumPy arrays, pass the sampling frequency explicitly. Arrays use shape
-``(n_channels, n_times)``.
+For a NumPy array, pass ``sfreq`` explicitly. The array layout is
+``(n_channels, n_times)``:
 
 .. code-block:: python
 
    asr = ASR(sfreq=250.0, cutoff=20.0)
    clean = asr.fit_transform(data)
 
-Typical preprocessing pipeline
-------------------------------
+``fit`` calibrates the reference state. ``transform`` applies that fitted state
+to a recording and does not mutate the input. ``fit_transform`` performs both
+operations. The estimator exposes calibration and reconstruction diagnostics,
+including the clean-window mask, the last repair mask, reconstructed-component
+counts, and window-level thresholds.
 
-ASR sits between high-pass filtering and ICA in a standard EEG pipeline. It is
-applied to continuous data *after* filtering and *before* epoching/ICA, so that
-high-amplitude bursts do not bias the ICA decomposition:
+Calibration and reconstruction
+-----------------------------
 
-.. code-block:: python
+The calibration data should represent the clean covariance of the channel type
+being processed. ``calibration="auto"`` selects windows using robust RMS/
+covariance criteria; an explicit mask or calibration data can be used when the
+application has a trusted clean period. The cutoff is a threshold in the
+whitened component space, not a universal percentage of variance or a
+transferable artifact-amplitude scale.
 
-   import mne
-   from mne_denoise.asr import ASR
+ASR repairs affected windows using a spatial reconstruction and blends the
+result over the processing window. The package also exposes final clean-window
+rejection diagnostics and ``to_annotations`` so that changed or rejected spans
+can be inspected without deleting samples. These annotation and diagnostics
+APIs are software contracts; they are not additional scientific validation.
 
-   raw = mne.io.read_raw_fif("sub-01_raw.fif", preload=True)
-   raw.set_eeg_reference("average")
+ASR should be applied with the surrounding preprocessing made explicit. In
+particular, review high-pass filtering, referencing, bad-channel handling,
+rank-reducing projectors, and whether the calibration period contains the
+signal and artifact regimes relevant to the analysis. Filtering used only for
+statistics in an ASR configuration does not replace the user's preprocessing.
 
-   # 1. High-pass filter (ASR assumes high-pass-filtered data; see below).
-   raw.filter(l_freq=1.0, h_freq=None)
+Riemannian and adaptive variants
+-------------------------------
 
-   # 2. ASR: calibrate on the clean parts of the recording, then repair bursts.
-   asr = ASR(cutoff=20.0, picks="eeg")
-   raw_clean = asr.fit_transform(raw)
+The package exposes several research variants. Their names should be reported
+alongside the standard parameters because they alter calibration or state
+updates.
 
-   # 3. ICA on the ASR-cleaned data (now free of high-variance bursts).
-   ica = mne.preprocessing.ICA(
-       n_components=0.99, method="infomax",
-       fit_params=dict(extended=True), random_state=97,
-   )
-   ica.fit(raw_clean)
+``method="riemannian_windowed"`` uses a robust Riemannian calibration
+covariance and then a windowed reconstruction path. Its cutoff and reconstruction
+behavior are package-specific and should be checked on representative data.
+``method="riemannian"`` is retained for compatibility with the
+``rASRMatlab``-style path and requires the explicit experimental opt-in. The
+Riemannian ASR formulation is related to the modification of Blum et al.
+:footcite:p:`blum2019_riemannian_asr`.
 
-The repaired and rejected spans are also available as annotations via
-``asr.to_annotations(...)`` so you can review what ASR changed without deleting
-samples. The ``examples/asr`` gallery has runnable, synthetic versions of these
-workflows.
+``AdaptiveASR`` updates the calibration state between processing chunks. Its
+PSP/PSW and moving-window variants are related to the adaptive ASR work of Tsai
+et al. :footcite:p:`tsai2024_adaptive_asr`. The package's chunking, state-reset,
+and final-state semantics are implementation conventions. Use complete update
+segments, document the variant and update settings, and validate the effect on
+both artifacts and neural controls.
 
-Riemannian ASR
---------------
+``JugglerASR`` changes the calibration-reference selection strategy while
+retaining the standard reconstruction stage. Its ``dbscan`` and ``gev``
+strategies are based on the Juggler's ASR description by Kim et al.
+:footcite:p:`kim2025_juggler_asr`. The local package implementation is covered
+by software tests and the cited method description; this is not a universal
+replacement for standard ASR.
 
-Two Riemannian backends are available.
+``GuidedASR`` and ``process_guided_asr`` are unpublished, unvalidated
+experimental research APIs. They add artifact/preserve bias information to
+soft reconstruction. Do not present them as established preprocessing methods;
+validate signal preservation and artifact attenuation independently before any
+scientific use.
 
-``method="riemannian_windowed"`` is the **recommended** Riemannian backend and
-is first-class (no ``experimental`` flag). It keeps the Riemannian
-(geometric-median) robust calibration covariance but applies a standard
-per-window eigendecomposition at processing time, so its ``cutoff`` knob works
-the same monotone way as standard ASR:
-
-.. code-block:: python
-
-   asr = ASR(sfreq=250.0, cutoff=20.0, method="riemannian_windowed")
-   clean = asr.fit_transform(data)
-
-Its processing is byte-identical to standard ASR given the same calibration
-state, while retaining the robust Riemannian calibration covariance.
-
-``method="riemannian"`` is the MATLAB-``rASRMatlab``-faithful backend and stays
-behind an explicit experimental opt-in. It computes one covariance and one
-reconstruction matrix for the whole stream, which makes it **cutoff-invariant
-on real EEG** — use it only for MATLAB parity, not for cutoff tuning:
-
-.. code-block:: python
-
-   asr = ASR(sfreq=250.0, cutoff=20.0, method="riemannian", experimental=True)
-   clean = asr.fit_transform(data)
-
-Reference cross-checks
-----------------------
-
-The specialized backends are research-oriented and should be independently
-validated on data representative of the intended use before being adopted in a
-scientific pipeline. The standard backend is covered by the package test suite;
-its assumptions and diagnostics are described above.
-
-Adaptive ASR
-------------
-
-The local AASR MATLAB reference is exposed as :class:`mne_denoise.asr.AdaptiveASR`.
-This variant keeps standard ASR burst reconstruction but updates the
-calibration subspace between chunks using the Hebbian/anti-Hebbian PSP/PSW
-rules from the AASR repository.
-
-.. code-block:: python
-
-   from mne_denoise.asr import AdaptiveASR
-
-   aasr = AdaptiveASR(
-       sfreq=250.0,
-       cutoff=20.0,
-       variant="psw",
-   )
-
-   aasr.fit(chunk_1)
-   aasr.partial_fit(chunk_2)
-   clean = aasr.transform(full_data)
-
-``chunk_1`` and ``chunk_2`` should be complete update segments. The published
-AASR demonstration uses 20-second segments and does not update on the final
-incomplete remainder. ``partial_fit()`` rejects a segment that is too short to
-form the one-second clean-selection window before changing any fitted state.
-Streaming applications should therefore accumulate short acquisition blocks
-into an update segment before calling ``partial_fit()``.
-
-The public API follows the package (sklearn-style) conventions:
-
-- ``fit()`` for initial calibration; ``partial_fit()`` for adaptive updates
-- ``transform()`` for burst repair with the current adaptive state
-- ``reset_process_state()`` to replay the reconstruction path deterministically
-
-A moving-window variant is available via ``variant="mw"``. Its
-``mw_mode="sliding"`` option (calibrate-and-clean per window) is the
-recommended MW configuration; the default ``mw_mode="final_state"`` mirrors the
-MATLAB ``AASR_demo`` Cell 4 semantics.
-
-The adaptive variants are specialized research paths. Validate their behavior
-on data representative of the intended application before scientific use.
-
-JugglerASR
-----------
-
-Juggler's ASR keeps the standard ASR burst-repair stage and replaces only the
-reference-data selector used during calibration. Two source-backed strategies
-from Kim et al. (2025) are exposed:
-
-- ``strategy="dbscan"``: top-five amplitude features clustered with
-  Chebyshev-distance DBSCAN
-- ``strategy="gev"``: a fitted generalized extreme-value model on the maximum
-  per-sample amplitude
-
-.. code-block:: python
-
-   from mne_denoise.asr import JugglerASR
-
-   jasr = JugglerASR(
-       cutoff=20.0,
-       strategy="dbscan",
-   )
-
-   jasr.fit(raw)
-   raw_clean = jasr.transform(raw)
-   reference_mask = jasr.get_calibration_mask()  # sample-based for Juggler
-
-The paper specifies the sample-selection logic but does not provide a local
-MATLAB oracle in this repository, so this implementation is validated through
-unit tests and the published algorithm description rather than a parity
-fixture. Treat it as a specialized calibration strategy for high-motion MoBI
-data, not as a universal replacement for standard ASR.
-
-Choosing a variant
-------------------
-
-A quick decision guide:
-
-- **Reference-compatible starting point** — ``ASR(method="standard")`` retains
-  ``cutoff=20`` as its default for legacy comparisons. The
-  cutoff scale changes with calibration, filtering, reconstruction, and data
-  regime, so this value is not a universal recommendation. Freeze it only after
-  paired attenuation and neural-preservation validation.
-- **Need Riemannian-robust calibration with a working cutoff** —
-  ``ASR(method="riemannian_windowed")``.
-- **Online / streaming BCI** — ``AdaptiveASR(variant="psw")`` (strongest SNR
-  gain) or ``variant="psp"`` (best ground-truth correlation).
-- **Per-segment cleaning** — ``AdaptiveASR(variant="mw", mw_mode="sliding")``
-  (avoid the coarse-window ``final_state`` default, which can over-clean).
-- **Extreme MoBI / high motion** where the clean-windows criterion collapses —
-  ``JugglerASR(strategy="gev")`` (tight selector) or ``strategy="dbscan"``
-  (more permissive). These survive contamination levels where standard ASR
-  refuses to calibrate.
-
-Visualizing results
+Choosing parameters
 -------------------
 
-``mne_denoise.viz`` ships three ASR-specific diagnostics that have no generic
-equivalent --- :func:`~mne_denoise.viz.plot_asr_repair_timeline`,
-:func:`~mne_denoise.viz.plot_asr_component_reconstruction`, and
-:func:`~mne_denoise.viz.plot_asr_calibration_fraction`. They take the fitted
-estimator and honour ``ax=`` / ``show=`` / ``fname=``:
+There is no source-backed universal cutoff, calibration duration, variant, or
+preprocessing sequence for all EEG/MEG recordings. A sensible starting point
+depends on sampling rate, channel type, expected artifact duration, clean-data
+availability, and whether the analysis is offline or streaming. Freeze those
+choices before held-out evaluation, and report the calibration rule, cutoff,
+window/step settings, channel picks, rank, and variant.
 
-.. code-block:: python
+For streaming use, ``AdaptiveASR`` exposes ``partial_fit`` and state-reset
+operations. These make stateful processing possible; they do not remove the
+need to define chunk boundaries and validate state carry-over.
 
-   from mne_denoise.viz import plot_asr_repair_timeline, plot_signal_overlay
+Evaluation
+----------
 
-   asr = ASR(sfreq=250.0, cutoff=20.0).fit(raw)
-   clean = asr.transform(raw)
-   plot_signal_overlay(raw, clean, raw.times, pick="Fp1")  # generic before/after
-   plot_asr_repair_timeline(asr)                            # repaired windows
+Inspect at least the clean-window mask, repaired/rejected spans, component
+reconstruction counts, and a before/after signal measure. A lower artifact
+metric can coexist with distortion of the signal of interest. Use held-out
+events, simulated controls, or independent recordings where possible. See
+:doc:`evaluation` for package QA utilities and forward-model overcorrection
+metrics.
 
-For before/after overlays, PSD comparison, and per-channel variance
-topographies, reuse the generic helpers
-:func:`~mne_denoise.viz.plot_signal_overlay`,
-:func:`~mne_denoise.viz.plot_psd_comparison`, and
-:func:`~mne_denoise.viz.plot_power_ratio_map` (they accept MNE objects or NumPy
-arrays). The ``plot_05_asr_visualization.py`` gallery example exercises the
-full set end-to-end.
+References
+----------
 
-Important assumptions
----------------------
-
-ASR should be applied after bad channels are removed or excluded and after the
-data have been high-pass filtered in the surrounding MNE pipeline. The
-statistics-only filter in ``ASR`` does not replace user-visible preprocessing;
-it only affects covariance estimates. Average-reference projectors and other
-rank-reducing projectors should be reviewed before calibration.
-
-Diagnostics
------------
-
-After ``transform``, the estimator stores audit fields:
-
-``clean_window_mask_``
-   Calibration windows retained as clean.
-
-``sample_mask_``
-   Samples repaired during the last transform.
-
-``n_components_reconstructed_``
-   Number of reconstructed components per processing window.
-
-``diagnostics_``
-   Window starts, stops, variance estimates, thresholds, and summary fractions.
-   Long-recording memory fields include ``memory_mode``, ``max_mem_mb``,
-   ``estimated_full_cov_bytes``, ``peak_cov_buffer_bytes``, ``chunk_samples``,
-   and ``used_memory_bound``.
-
-``to_annotations(kind=...)``
-   Unified annotation export. ``kind="repair"`` (default) annotates repaired
-   windows from the last transform; ``kind="rejection"`` annotates samples
-   removed by the final window-rejection pass; ``kind="calibration"`` annotates
-   the reference samples chosen by :class:`JugglerASR` (sample-based backends
-   only). All return ``mne.Annotations``.
-
-``get_calibration_mask()``
-   Returns the boolean calibration mask — window-based for standard / Riemannian
-   / adaptive backends, sample-based for :class:`JugglerASR` (see
-   ``calibration_mask_kind_``).
-
-``get_rejection_mask()``
-   Returns the retained-sample mask from optional clean_windows-style final
-   window rejection.
-
-``variance_removed()``
-   Computes ASR-specific variance-change and repair-extent metrics from
-   before/after data and an optional fitted ``ASR`` instance.
-
-``compute_clean_window_mask()``
-   Exposes clean_windows-style retained-sample masking as a standalone helper
-   for continuous arrays.
-
-Threshold fitting
------------------
-
-ASR calibration uses ``fit_rms_distribution()`` to estimate robust clean RMS
-statistics for each calibration component. The fitter follows the
-clean_rawdata truncated generalized-Gaussian grid search and stores
-per-component ``threshold_mu``, ``threshold_sigma``, ``threshold_beta``, and
-``threshold_fit_error`` in ``calibration_info_``.
-
-Final window rejection
-----------------------
-
-``ASR`` can optionally apply a non-destructive clean_windows-style final pass
-after burst repair by setting ``window_criterion`` and
-``window_criterion_tolerances``. This mirrors clean_rawdata's distinction
-between burst repair and later segment rejection:
-
-.. code-block:: python
-
-   asr = ASR(
-       cutoff=20.0,
-       calibration="auto",
-       window_criterion=0.25,
-       window_criterion_tolerances=(-np.inf, 7.0),
-   )
-
-   raw_clean = asr.fit_transform(raw)
-   keep_mask = asr.get_rejection_mask()
-   reject_annotations = asr.to_annotations("rejection")
-
-This step does not delete samples from the returned object. It records the
-retained/rejected mask and exposes it for downstream QC, annotation, or
-manual trimming.
+.. footbibliography::

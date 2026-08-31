@@ -2,22 +2,32 @@
 mne-denoise
 ===========
 
-`mne-denoise` provides narrow-band artefact suppression routines tailored to
-MNE-Python workflows. The package specializes in Denoising Source Separation (DSS)
-to extract reproducible or rhythmic components while preserving data rank.
+``mne-denoise`` provides artifact-suppression and signal-denoising methods for
+EEG and MEG. It includes complementary spatial, spectral, statistical, and
+source-informed methods, with NumPy support and optional integration with
+MNE-Python containers.
+
+No denoising method is universally best. Choose a method from the artifact,
+recording, channel layout, and signal of interest, then evaluate both artifact
+attenuation and preservation of the desired signal.
 
 .. toctree::
    :maxdepth: 2
    :caption: User guide
 
    getting-started
+   evaluation
    dss
    time_shift_dss
    asr
    bss_cca
-   sns
-   ssa
    icanclean
+   sns
+   sound
+   spectrum_interpolation
+   ssa
+   sspsir
+   zapline
    auto_examples/index
 
 .. toctree::
@@ -30,4 +40,5 @@ to extract reproducible or rhythmic components while preserving data rank.
    :maxdepth: 1
    :caption: Project information
 
+   citing
    development
