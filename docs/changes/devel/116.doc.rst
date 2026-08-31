@@ -1,0 +1,1 @@
+Audited scientific documentation and public docstrings, corrected remaining API and citation mismatches, and improved core API guidance with concise examples and cross-references.
