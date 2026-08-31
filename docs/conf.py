@@ -116,7 +116,20 @@ html_theme_options = {
     "footer_start": ["mdn-footer"],
     "footer_center": [],
     "footer_end": [],
+    "navbar_center": ["navbar-nav"],
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_persistent": ["search-button-field"],
+    "header_links_before_dropdown": 6,
+    "navigation_depth": 2,
+    "show_nav_level": 1,
+    "icon_links": [
+        {
+            "name": "MNE Forum",
+            "url": "https://mne.discourse.group/",
+            "icon": "fa-solid fa-comments",
+            "type": "fontawesome",
+        },
+    ],
 }
 html_context = {
     "github_user": "mne-tools",

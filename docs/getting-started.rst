@@ -1,8 +1,8 @@
 Getting started
 ===============
 
-Installation
-------------
+Install
+-------
 
 Install the base package and optional integrations as needed:
 
@@ -13,8 +13,8 @@ Install the base package and optional integrations as needed:
    pip install "mne-denoise[viz]"
    pip install "mne-denoise[progress]"
 
-Estimator pattern
------------------
+First NumPy workflow
+--------------------
 
 Most estimators follow the scikit-learn pattern: configure, fit on data used
 to learn an operator, then transform compatible data. Use fit_transform when
@@ -29,8 +29,8 @@ the method has a fixed fitted operator.
    bias = BandpassBias((8.0, 12.0), sfreq=250.0)
    clean = DSS(bias=bias, n_components=3).fit_transform(data)
 
-MNE-Python integration
-----------------------
+First MNE workflow
+------------------
 
 Pass supported MNE objects directly; estimators preserve container metadata and
 return copies. For example, with a preloaded Raw object named raw:
@@ -43,8 +43,8 @@ return copies. For example, with a preloaded Raw object named raw:
        line_freq=60.0, n_harmonics=3
    ).fit_transform(raw)
 
-Choosing a method
------------------
+Where to go next
+----------------
 
 The method pages summarize assumptions and minimal workflows for:
 
@@ -57,6 +57,7 @@ The method pages summarize assumptions and minimal workflows for:
 * SSA for channel-wise delay-coordinate decompositions; and
 * SSP-SIR for source-informed TMS-evoked artifact reconstruction.
 
-See the :doc:`api` reference for exact contracts, the
-:doc:`auto_examples/index` gallery for complete workflows, and
-:doc:`citing` for citation guidance.
+* :doc:`Choose a method <methods>` from the artifact and assumptions.
+* Browse the :doc:`auto_examples/index` gallery for complete workflows.
+* See the :doc:`api` reference for exact contracts and public names.
+* Read :doc:`citing` for citation guidance.
