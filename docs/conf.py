@@ -35,6 +35,7 @@ extensions = [
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
     "myst_parser",
+    "sphinxcontrib.bibtex",
 ]
 
 templates_path = ["_templates"]
@@ -47,6 +48,12 @@ autosummary_generate = True
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 numpydoc_show_class_members = False
+
+# Scientific references are kept in one BibTeX database so that method pages
+# and API documentation cannot silently drift apart.
+bibtex_bibfiles = ["references.bib"]
+bibtex_default_style = "unsrt"
+bibtex_reference_style = "author_year"
 
 # MyST configuration
 myst_heading_anchors = 3

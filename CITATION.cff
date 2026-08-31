@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: "mne-denoise"
+type: software
+authors:
+  - family-names: Esmaeili
+    given-names: Sina
+    email: sina.esmaeili@umontreal.ca
+  - family-names: Abdelhedi
+    given-names: Hamza
+    email: hamza.abdelhedi@umontreal.ca
+repository-code: "https://github.com/mne-tools/mne-denoise"
+license: BSD-3-Clause
+message: "Please cite mne-denoise and the primary scientific publication(s) for the method(s) used."
