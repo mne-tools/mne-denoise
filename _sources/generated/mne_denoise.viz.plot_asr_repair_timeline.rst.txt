@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_asr\_repair\_timeline
+============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_asr_repair_timeline

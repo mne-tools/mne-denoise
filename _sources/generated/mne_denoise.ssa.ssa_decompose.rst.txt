@@ -1,0 +1,6 @@
+﻿mne\_denoise.ssa.ssa\_decompose
+===============================
+
+.. currentmodule:: mne_denoise.ssa
+
+.. autofunction:: ssa_decompose

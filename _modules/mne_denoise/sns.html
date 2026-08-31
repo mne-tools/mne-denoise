@@ -1,0 +1,1266 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.sns &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/sns';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.sns</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.sns</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Sensor Noise Suppression (SNS)."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integral</span><span class="p">,</span> <span class="n">Real</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_is_fitted</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_covariance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._data</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">continuous_to_epochs</span><span class="p">,</span>
+    <span class="n">epochs_to_continuous</span><span class="p">,</span>
+    <span class="n">extract_data_from_mne</span><span class="p">,</span>
+    <span class="n">reconstruct_mne_object</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_spatial_transform</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">check_channel_first_data</span><span class="p">,</span>
+    <span class="n">check_channel_layout</span><span class="p">,</span>
+    <span class="n">check_chunk_size</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_emit_progress</span><span class="p">,</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+
+<span class="n">_DEFAULT_RCOND</span> <span class="o">=</span> <span class="mf">1e-12</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"SNS"</span><span class="p">,</span> <span class="s2">"compute_sns"</span><span class="p">,</span> <span class="s2">"compute_sns_weights"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_automatic_sample_mask</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">manual_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Reject samples with a large robust deviation in any channel."""</span>
+    <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">included</span> <span class="o">=</span> <span class="n">manual_weight</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">reference</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="n">included</span><span class="p">]</span>
+    <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">mad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">reference</span> <span class="o">-</span> <span class="n">center</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.4826</span> <span class="o">*</span> <span class="n">mad</span>
+    <span class="n">fallback</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scale</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">fallback</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scale</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">max_abs_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">data</span> <span class="o">-</span> <span class="n">center</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">max_abs_z</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_sns_weights</span><span class="p">(</span>
+    <span class="n">cov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">n_neighbors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">skip</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rcond</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_RCOND</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">progress_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">progress_total</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Compute the SNS spatial operator from a channel covariance matrix."""</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cov</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"cov must be a square (n_channels, n_channels) matrix, "</span>
+            <span class="sa">f</span><span class="s2">"got shape </span><span class="si">{</span><span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"SNS requires at least two channels"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cov must contain only finite values"</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cov</span><span class="p">))),</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">tiny</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cov</span> <span class="o">-</span> <span class="n">cov</span><span class="o">.</span><span class="n">T</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cov must be symmetric"</span><span class="p">)</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="p">(</span><span class="n">cov</span> <span class="o">+</span> <span class="n">cov</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+    <span class="n">eigen_scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">))),</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">tiny</span><span class="p">)</span>
+    <span class="n">eigen_tolerance</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">eigen_scale</span> <span class="o">*</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">eigen_tolerance</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cov must be positive semidefinite"</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">((</span><span class="n">n_neighbors</span><span class="p">,</span> <span class="s2">"n_neighbors"</span><span class="p">),</span> <span class="p">(</span><span class="n">skip</span><span class="p">,</span> <span class="s2">"skip"</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a non-negative integer"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a non-negative integer"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rcond</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rcond</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"rcond must be a finite number"</span><span class="p">)</span>
+    <span class="n">rcond</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rcond</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">rcond</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">rcond</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"rcond must be finite and strictly between 0 and 1"</span><span class="p">)</span>
+
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">progress_total</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">progress_total</span> <span class="o">=</span> <span class="n">n_channels</span>
+    <span class="k">if</span> <span class="n">skip</span> <span class="o">&gt;</span> <span class="n">n_channels</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"skip must leave at least one candidate neighbor"</span><span class="p">)</span>
+    <span class="n">max_neighbors</span> <span class="o">=</span> <span class="n">n_channels</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">skip</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">k_neighbors</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">max_neighbors</span> <span class="k">if</span> <span class="n">n_neighbors</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n_neighbors</span><span class="p">),</span> <span class="n">max_neighbors</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">standard_deviation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">cov</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">standard_deviation</span><span class="p">,</span> <span class="n">standard_deviation</span><span class="p">)</span>
+    <span class="n">denominator</span><span class="p">[</span><span class="n">denominator</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">correlation</span> <span class="o">=</span> <span class="n">cov</span> <span class="o">/</span> <span class="n">denominator</span>
+
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+    <span class="n">neighbor_ranks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">correlation</span><span class="p">[:,</span> <span class="n">channel</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span><span class="n">order</span> <span class="o">!=</span> <span class="n">channel</span><span class="p">]</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">skip</span><span class="p">)</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">skip</span><span class="p">)</span> <span class="o">+</span> <span class="n">k_neighbors</span><span class="p">]</span>
+        <span class="n">neighbor_cov</span> <span class="o">=</span> <span class="n">cov</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">)]</span>
+        <span class="n">singular_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">neighbor_cov</span><span class="p">)</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="n">rcond</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">neighbor_ranks</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">)</span>
+        <span class="n">weights</span><span class="p">[</span><span class="n">channel</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">neighbor_cov</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">,</span> <span class="n">hermitian</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="compute_sns_weights">
+<a class="viewcode-back" href="../../generated/mne_denoise.sns.compute_sns_weights.html#mne_denoise.sns.compute_sns_weights">[docs]</a>
+            <span class="o">@</span> <span class="n">cov</span><span class="p">[</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">channel</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"sns"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"channel"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">progress_offset</span> <span class="o">+</span> <span class="n">channel</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">progress_total</span><span class="p">,</span>
+            <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">neighbor_ranks</span><span class="p">[</span><span class="n">channel</span><span class="p">]),</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="p">,</span> <span class="n">neighbor_ranks</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_sns_weights</span><span class="p">(</span>
+    <span class="n">cov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">n_neighbors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">skip</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rcond</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_RCOND</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Compute SNS weights from a channel covariance matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cov : ndarray, shape (n_channels, n_channels)</span>
+<span class="sd">        Finite symmetric positive-semidefinite covariance matrix.</span>
+<span class="sd">    n_neighbors : int, default=0</span>
+<span class="sd">        Number of neighbors per channel; zero uses all available neighbors.</span>
+<span class="sd">    skip : int, default=0</span>
+<span class="sd">        Number of most-correlated neighbors to omit.</span>
+<span class="sd">    rcond : float, default=1e-12</span>
+<span class="sd">        Relative pseudoinverse cutoff.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous callback after each channel solve.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    weights : ndarray, shape (n_channels, n_channels)</span>
+<span class="sd">        Operator for centered channel-first data.</span>
+<span class="sd">    n_neighbors_used : int</span>
+<span class="sd">        Effective neighbor count.</span>
+<span class="sd">    neighbor_ranks : ndarray, shape (n_channels,)</span>
+<span class="sd">        Numerical rank of each selected neighbor covariance.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    SNS</span>
+<span class="sd">        Estimator that fits and reuses the SNS operator.</span>
+<span class="sd">    compute_sns</span>
+<span class="sd">        One-shot SNS operation for channel-first data.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.sns import compute_sns_weights</span>
+<span class="sd">    &gt;&gt;&gt; rng = np.random.default_rng(0)</span>
+<span class="sd">    &gt;&gt;&gt; data = rng.standard_normal((8, 1000))</span>
+<span class="sd">    &gt;&gt;&gt; weights, n_neighbors, ranks = compute_sns_weights(np.cov(data), n_neighbors=4)</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">cov</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">cov</span><span class="o">.</span><span class="n">ndim</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">_compute_sns_weights</span><span class="p">(</span>
+        <span class="n">cov</span><span class="p">,</span>
+        <span class="n">n_neighbors</span><span class="o">=</span><span class="n">n_neighbors</span><span class="p">,</span>
+        <span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span>
+        <span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="n">progress_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">progress_total</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_sns">
+<a class="viewcode-back" href="../../generated/mne_denoise.sns.compute_sns.html#mne_denoise.sns.compute_sns">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_sns</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">n_neighbors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">skip</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rcond</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_RCOND</span><span class="p">,</span>
+    <span class="n">preserve_mean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">outlier_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Learn and apply Sensor Noise Suppression to channel-first data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : ndarray, shape (n_channels, n_times) or (n_epochs, n_channels, n_times)</span>
+<span class="sd">        Continuous or epoched data.</span>
+<span class="sd">    n_neighbors : int, default=0</span>
+<span class="sd">        Number of neighbors per channel; zero uses all available neighbors.</span>
+<span class="sd">    skip : int, default=0</span>
+<span class="sd">        Number of most-correlated neighbors to omit.</span>
+<span class="sd">    rcond : float, default=1e-12</span>
+<span class="sd">        Relative pseudoinverse cutoff.</span>
+<span class="sd">    preserve_mean : bool, default=False</span>
+<span class="sd">        Add the fitted channel means after regeneration.</span>
+<span class="sd">    n_iter : int, default=1</span>
+<span class="sd">        Number of SNS projections to compose.</span>
+<span class="sd">    outlier_threshold : float or None, default=None</span>
+<span class="sd">        Robust channel-wise z-score threshold for samples used during fitting.</span>
+<span class="sd">    chunk_size : int or None, default=None</span>
+<span class="sd">        Samples per covariance/application chunk.</span>
+<span class="sd">    sample_weight : ndarray or None, shape (n_times,) or (n_epochs, n_times)</span>
+<span class="sd">        Non-negative fitting weights.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous callback after each channel solve.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X_clean : ndarray</span>
+<span class="sd">        Data with the same shape as X.</span>
+<span class="sd">    info : dict</span>
+<span class="sd">        Fitted operators and diagnostics.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    SNS reconstructs each channel from spatially redundant signals in other</span>
+<span class="sd">    channels using the channel covariance. It targets noise specific to individual</span>
+<span class="sd">    sensors rather than a source or artifact shared across the array. With centered</span>
+<span class="sd">    data, the learned operator is applied in channel space.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    :footcite:p:`decheveigne_simon2008_sensor`</span>
+
+<span class="sd">    .. footbibliography::</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">check_channel_first_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"SNS"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preserve_mean</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"preserve_mean must be a bool"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_iter</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"n_iter must be a positive integer"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"n_iter must be a positive integer"</span><span class="p">)</span>
+    <span class="n">chunk_size</span> <span class="o">=</span> <span class="n">check_chunk_size</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">outlier_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outlier_threshold</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">outlier_threshold</span><span class="p">,</span> <span class="n">Real</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"outlier_threshold must be a positive number or None"</span><span class="p">)</span>
+        <span class="n">outlier_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">outlier_threshold</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">outlier_threshold</span><span class="p">)</span> <span class="ow">or</span> <span class="n">outlier_threshold</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"outlier_threshold must be finite and positive"</span><span class="p">)</span>
+
+    <span class="n">continuous</span> <span class="o">=</span> <span class="n">epochs_to_continuous</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">expected_weight_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+    <span class="k">if</span> <span class="n">sample_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">manual_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">continuous</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sample_weight</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sample_weight</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">expected_weight_shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"sample_weight must have shape "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">expected_weight_shape</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">sample_weight</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">manual_weight</span> <span class="o">=</span> <span class="n">sample_weight</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">manual_weight</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">manual_weight</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"sample_weight must be finite and non-negative"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">manual_weight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"sample_weight must weight at least two samples positively"</span>
+            <span class="p">)</span>
+
+    <span class="n">automatic_weight</span> <span class="o">=</span> <span class="n">_automatic_sample_mask</span><span class="p">(</span>
+        <span class="n">continuous</span><span class="p">,</span> <span class="n">manual_weight</span><span class="p">,</span> <span class="n">outlier_threshold</span>
+    <span class="p">)</span>
+    <span class="n">combined_weight</span> <span class="o">=</span> <span class="n">manual_weight</span> <span class="o">*</span> <span class="n">automatic_weight</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">combined_weight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"fewer than two positively weighted samples remain after rejection"</span>
+        <span class="p">)</span>
+    <span class="n">training_mean</span> <span class="o">=</span> <span class="p">(</span><span class="n">continuous</span> <span class="o">@</span> <span class="n">combined_weight</span> <span class="o">/</span> <span class="n">combined_weight</span><span class="o">.</span><span class="n">sum</span><span class="p">())[</span>
+        <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span>
+    <span class="p">]</span>
+    <span class="n">centered</span> <span class="o">=</span> <span class="n">continuous</span> <span class="o">-</span> <span class="n">training_mean</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">centered</span>
+    <span class="n">composite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">continuous</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">matrices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ranks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">effective_neighbors</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_iter</span><span class="p">)</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">continuous</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iter</span><span class="p">):</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">compute_covariance</span><span class="p">(</span>
+            <span class="n">current</span><span class="p">,</span>
+            <span class="n">weights</span><span class="o">=</span><span class="n">combined_weight</span><span class="p">,</span>
+            <span class="n">assume_centered</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">matrix</span><span class="p">,</span> <span class="n">effective_neighbors</span><span class="p">,</span> <span class="n">iteration_ranks</span> <span class="o">=</span> <span class="n">_compute_sns_weights</span><span class="p">(</span>
+            <span class="n">cov</span><span class="p">,</span>
+            <span class="n">n_neighbors</span><span class="o">=</span><span class="n">n_neighbors</span><span class="p">,</span>
+            <span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span>
+            <span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+            <span class="n">progress_offset</span><span class="o">=</span><span class="n">iteration</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">,</span>
+            <span class="n">progress_total</span><span class="o">=</span><span class="n">n_iter</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+        <span class="n">ranks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iteration_ranks</span><span class="p">)</span>
+        <span class="n">composite</span> <span class="o">=</span> <span class="n">matrix</span> <span class="o">@</span> <span class="n">composite</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"SNS iteration </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">: effective neighbours=</span><span class="si">%d</span><span class="s2">, median local rank=</span><span class="si">%.1f</span><span class="s2">."</span><span class="p">,</span>
+            <span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">n_iter</span><span class="p">,</span>
+            <span class="n">effective_neighbors</span><span class="p">,</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">iteration_ranks</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">n_iter</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">apply_spatial_transform</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">)</span>
+
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">apply_spatial_transform</span><span class="p">(</span><span class="n">composite</span><span class="p">,</span> <span class="n">centered</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">preserve_mean</span><span class="p">:</span>
+        <span class="n">cleaned</span> <span class="o">+=</span> <span class="n">training_mean</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">continuous_to_epochs</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"weights"</span><span class="p">:</span> <span class="n">composite</span><span class="p">,</span>
+        <span class="s2">"denoising_matrix"</span><span class="p">:</span> <span class="n">composite</span><span class="p">,</span>
+        <span class="s2">"denoising_matrices"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">),</span>
+        <span class="s2">"training_mean"</span><span class="p">:</span> <span class="n">training_mean</span><span class="p">,</span>
+        <span class="s2">"n_neighbors"</span><span class="p">:</span> <span class="n">effective_neighbors</span><span class="p">,</span>
+        <span class="s2">"requested_n_neighbors"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_neighbors</span><span class="p">),</span>
+        <span class="s2">"skip"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">skip</span><span class="p">),</span>
+        <span class="s2">"rcond"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">rcond</span><span class="p">),</span>
+        <span class="s2">"preserve_mean"</span><span class="p">:</span> <span class="n">preserve_mean</span><span class="p">,</span>
+        <span class="s2">"n_iter"</span><span class="p">:</span> <span class="n">n_iter</span><span class="p">,</span>
+        <span class="s2">"outlier_threshold"</span><span class="p">:</span> <span class="n">outlier_threshold</span><span class="p">,</span>
+        <span class="s2">"chunk_size"</span><span class="p">:</span> <span class="n">chunk_size</span><span class="p">,</span>
+        <span class="s2">"neighbor_ranks"</span><span class="p">:</span> <span class="n">ranks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s2">"neighbor_ranks_per_iteration"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ranks</span><span class="p">),</span>
+        <span class="s2">"input_rank"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">centered</span><span class="p">)),</span>
+        <span class="s2">"effective_weight_sum"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">combined_weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+        <span class="s2">"rejected_sample_count"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">automatic_weight</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"SNS: learned </span><span class="si">%d</span><span class="s2"> iteration(s) on </span><span class="si">%d</span><span class="s2"> channels (</span><span class="si">%d</span><span class="s2"> neighbours each; "</span>
+        <span class="s2">"</span><span class="si">%d</span><span class="s2"> samples rejected)."</span><span class="p">,</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"n_iter"</span><span class="p">],</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"n_neighbors"</span><span class="p">],</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"rejected_sample_count"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">cleaned</span><span class="p">,</span> <span class="n">info</span></div>
+
+
+
+<div class="viewcode-block" id="SNS">
+<a class="viewcode-back" href="../../generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SNS</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Sensor Noise Suppression estimator.</span>
+
+<span class="sd">    The estimator learns a channel mean and spatial operator from training data and</span>
+<span class="sd">    reuses both during transform.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_neighbors : int, default=0</span>
+<span class="sd">        Number of neighbors per channel; zero uses all available neighbors.</span>
+<span class="sd">    skip : int, default=0</span>
+<span class="sd">        Number of most-correlated neighbors to omit.</span>
+<span class="sd">    rcond : float, default=1e-12</span>
+<span class="sd">        Relative pseudoinverse cutoff.</span>
+<span class="sd">    preserve_mean : bool, default=False</span>
+<span class="sd">        Add the fitted channel mean after regeneration.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+<span class="sd">    n_iter : int, default=1</span>
+<span class="sd">        Number of SNS projections to compose.</span>
+<span class="sd">    outlier_threshold : float or None, default=None</span>
+<span class="sd">        Robust channel-wise z-score threshold for fitting.</span>
+<span class="sd">    chunk_size : int or None, default=None</span>
+<span class="sd">        Samples per covariance/application chunk.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    training_mean_ : ndarray</span>
+<span class="sd">        Weighted channel mean.</span>
+<span class="sd">    denoising_matrix_ : ndarray</span>
+<span class="sd">        Composite spatial operator.</span>
+<span class="sd">    denoising_matrices_ : tuple of ndarray</span>
+<span class="sd">        One operator per iteration.</span>
+<span class="sd">    neighbor_ranks_per_iteration_ : tuple of ndarray</span>
+<span class="sd">        Local covariance ranks by iteration.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    compute_sns</span>
+<span class="sd">        One-shot SNS operation for channel-first arrays.</span>
+<span class="sd">    compute_sns_weights</span>
+<span class="sd">        Construct the local sensor reconstruction operator.</span>
+<span class="sd">    mne_denoise.sound.SOUND</span>
+<span class="sd">        Forward-model-based sensor-noise suppression.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Channel-first NumPy arrays and MNE Raw, Epochs, and Evoked inputs are supported;</span>
+<span class="sd">    transform returns the corresponding type without mutating the input. SNS</span>
+<span class="sd">    reconstructs each channel from spatially redundant signals in other channels;</span>
+<span class="sd">    it is intended for noise specific to individual sensors, not for a source or</span>
+<span class="sd">    artifact shared across the array.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    :footcite:p:`decheveigne_simon2008_sensor`</span>
+
+<span class="sd">    .. footbibliography::</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.sns import SNS</span>
+<span class="sd">    &gt;&gt;&gt; rng = np.random.default_rng(0)</span>
+<span class="sd">    &gt;&gt;&gt; data = rng.standard_normal((8, 1000))</span>
+<span class="sd">    &gt;&gt;&gt; model = SNS(n_neighbors=4)</span>
+<span class="sd">    &gt;&gt;&gt; clean = model.fit_transform(data)</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="SNS.__init__">
+<a class="viewcode-back" href="../../generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_neighbors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">skip</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">rcond</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_RCOND</span><span class="p">,</span>
+        <span class="n">preserve_mean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">outlier_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbors</span> <span class="o">=</span> <span class="n">n_neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skip</span> <span class="o">=</span> <span class="n">skip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rcond</span> <span class="o">=</span> <span class="n">rcond</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preserve_mean</span> <span class="o">=</span> <span class="n">preserve_mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="n">n_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outlier_threshold</span> <span class="o">=</span> <span class="n">outlier_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="n">chunk_size</span></div>
+
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SNS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit the SNS mean and spatial operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like or MNE Raw, Epochs, or Evoked</span>
+<span class="sd">            Data used to learn the operator.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        sample_weight : ndarray or None, default=None</span>
+<span class="sd">            Non-negative fitting weights.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous channel-solve callback.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SNS</span>
+<span class="sd">            The fitted estimator.</span>
+<span class="sd">        """</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_sfreq</span><span class="p">,</span> <span class="n">_mne_type</span><span class="p">,</span> <span class="n">_orig</span><span class="p">,</span> <span class="n">_picks</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">auto_pick</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">_cleaned</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">compute_sns</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbors</span><span class="p">,</span>
+            <span class="n">skip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">skip</span><span class="p">,</span>
+            <span class="n">rcond</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcond</span><span class="p">,</span>
+            <span class="n">preserve_mean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_mean</span><span class="p">,</span>
+            <span class="n">n_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">,</span>
+            <span class="n">outlier_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">outlier_threshold</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span>
+            <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">training_mean_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"training_mean"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denoising_matrix_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"denoising_matrix"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denoising_matrices_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"denoising_matrices"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbors_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"n_neighbors"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_ranks_per_iteration_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"neighbor_ranks_per_iteration"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_ranks_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_ranks_per_iteration_</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_rank_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"input_rank"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_channels_in_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">denoising_matrix_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"n_iter"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"chunk_size"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effective_weight_sum_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"effective_weight_sum"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rejected_sample_count_</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"rejected_sample_count"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_names_in_</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply the fitted SNS operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like or MNE Raw, Epochs, or Evoked</span>
+<span class="sd">            Data with the fitted channel layout.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        same type as X</span>
+<span class="sd">            A cleaned copy.</span>
+<span class="sd">        """</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="s2">"denoising_matrix_"</span><span class="p">,</span> <span class="s2">"training_mean_"</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_sfreq</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">picks</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">auto_pick</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">check_channel_first_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"SNS"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_mean</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"preserve_mean must be a bool"</span><span class="p">)</span>
+        <span class="n">check_channel_layout</span><span class="p">(</span>
+            <span class="s2">"SNS"</span><span class="p">,</span>
+            <span class="n">n_channels</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+            <span class="n">fitted_n_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_channels_in_</span><span class="p">,</span>
+            <span class="n">ch_names</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">names</span><span class="p">),</span>
+            <span class="n">fitted_ch_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_names_in_</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">continuous</span> <span class="o">=</span> <span class="n">epochs_to_continuous</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">apply_spatial_transform</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">denoising_matrix_</span><span class="p">,</span>
+            <span class="n">continuous</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_mean_</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunk_size_</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preserve_mean</span><span class="p">:</span>
+            <span class="n">cleaned</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_mean_</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">continuous_to_epochs</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reconstruct_mne_object</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">)</span>
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">fit_params</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit SNS and apply the fitted operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like or MNE Raw, Epochs, or Evoked</span>
+<span class="sd">            Data to fit and transform.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        sample_weight : ndarray or None, default=None</span>
+<span class="sd">            Non-negative fitting weights.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous channel-solve callback.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+<span class="sd">        **fit_params : dict</span>
+<span class="sd">            Unexpected fit parameters raise TypeError.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        same type as X</span>
+<span class="sd">            Sensor-noise-suppressed data.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">fit_params</span><span class="p">:</span>
+            <span class="n">unexpected</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">fit_params</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unexpected fit parameters: </span><span class="si">{</span><span class="n">unexpected</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+            <span class="n">X</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

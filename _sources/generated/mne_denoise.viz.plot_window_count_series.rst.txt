@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_window\_count\_series
+============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_window_count_series

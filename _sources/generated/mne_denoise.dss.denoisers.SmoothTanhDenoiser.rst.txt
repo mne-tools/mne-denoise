@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.denoisers.SmoothTanhDenoiser
+=============================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: SmoothTanhDenoiser
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SmoothTanhDenoiser.__init__
+      ~SmoothTanhDenoiser.denoise
+   
+   
+
+   
+   
+   

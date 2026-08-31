@@ -1,0 +1,1554 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.asr.juggler &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/asr/juggler';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.asr.juggler</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.asr.juggler</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""JugglerASR reference-sample selection and reconstruction."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">spatial</span><span class="p">,</span> <span class="n">stats</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._data</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_data_from_mne</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_validate_callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">calibrate_asr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">_design_statistics_filter</span><span class="p">,</span> <span class="n">_lfilter_channels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_validate_array_2d</span><span class="p">,</span>
+    <span class="n">_validate_backend_params</span><span class="p">,</span>
+    <span class="n">_validate_common_params</span><span class="p">,</span>
+    <span class="n">_validate_juggler_params</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._windowing</span><span class="w"> </span><span class="kn">import</span> <span class="n">_create_good_sample_mask_from_mne</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASR</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mne.epochs</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEpochs</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mne.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRaw</span>
+
+
+<div class="viewcode-block" id="select_juggler_reference_samples">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.select_juggler_reference_samples.html#mne_denoise.asr.select_juggler_reference_samples">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">select_juggler_reference_samples</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"dbscan"</span><span class="p">,</span>
+    <span class="n">selection_filter_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"asr"</span><span class="p">,</span>
+    <span class="n">dbscan_top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">dbscan_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+    <span class="n">dbscan_min_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+    <span class="n">gev_grid_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span>
+    <span class="n">min_reference_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Select calibration samples with JugglerASR rules.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Continuous candidate calibration data.</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    strategy : {"dbscan", "gev"}, default="dbscan"</span>
+<span class="sd">        Reference-sample selection strategy.</span>
+<span class="sd">    selection_filter_kind : {"asr", "highpass", "none"}, default="asr"</span>
+<span class="sd">        Statistics/pre-emphasis filter applied before selection.</span>
+<span class="sd">    dbscan_top_k : int, default=5</span>
+<span class="sd">        Number of largest channel amplitudes used as DBSCAN features.</span>
+<span class="sd">    dbscan_eps : float or {"auto", "paper"}, default="auto"</span>
+<span class="sd">        DBSCAN neighborhood radius.</span>
+<span class="sd">    dbscan_min_samples : int, float, or {"auto", "paper"}, default="auto"</span>
+<span class="sd">        DBSCAN core-neighborhood count.</span>
+<span class="sd">    gev_grid_size : int, default=2048</span>
+<span class="sd">        Number of grid points used for GEV mode estimation.</span>
+<span class="sd">    min_reference_fraction : float, default=0.05</span>
+<span class="sd">        Minimum retained sample fraction.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X_ref : ndarray, shape (n_channels, n_selected_times)</span>
+<span class="sd">        Selected samples after the statistics/pre-emphasis filter.</span>
+<span class="sd">    sample_mask : ndarray of bool, shape (n_times,)</span>
+<span class="sd">        Retained reference-sample mask.</span>
+<span class="sd">    diagnostics : dict</span>
+<span class="sd">        Selection parameters, labels or GEV diagnostics, and retained counts.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    :footcite:p:`kim2025_juggler_asr`</span>
+
+<span class="sd">    .. footbibliography::</span>
+<span class="sd">    """</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">_validate_array_2d</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">_validate_juggler_params</span><span class="p">(</span>
+        <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+        <span class="n">dbscan_top_k</span><span class="o">=</span><span class="n">dbscan_top_k</span><span class="p">,</span>
+        <span class="n">gev_grid_size</span><span class="o">=</span><span class="n">gev_grid_size</span><span class="p">,</span>
+        <span class="n">min_reference_fraction</span><span class="o">=</span><span class="n">min_reference_fraction</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">filter_b</span><span class="p">,</span> <span class="n">filter_a</span> <span class="o">=</span> <span class="n">_design_statistics_filter</span><span class="p">(</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">selection_filter_kind</span><span class="p">)</span>
+    <span class="n">X_stats</span><span class="p">,</span> <span class="n">filter_zi</span> <span class="o">=</span> <span class="n">_lfilter_channels</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">filter_b</span><span class="p">,</span> <span class="n">filter_a</span><span class="p">)</span>
+
+    <span class="n">amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X_stats</span><span class="p">)</span>
+    <span class="n">sorted_amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">top_k</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">dbscan_top_k</span><span class="p">),</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">sorted_amplitude</span><span class="p">[:</span><span class="n">top_k</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">leading_amplitude</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">diagnostics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"reference_selection_strategy"</span><span class="p">:</span> <span class="n">strategy</span><span class="p">,</span>
+        <span class="s2">"selection_filter_kind"</span><span class="p">:</span> <span class="n">selection_filter_kind</span><span class="p">,</span>
+        <span class="s2">"selection_filter_b"</span><span class="p">:</span> <span class="n">filter_b</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"selection_filter_a"</span><span class="p">:</span> <span class="n">filter_a</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"selection_filter_zi"</span><span class="p">:</span> <span class="n">filter_zi</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"leading_amplitude"</span><span class="p">:</span> <span class="n">leading_amplitude</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"dbscan_top_k"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">top_k</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">"dbscan"</span><span class="p">:</span>
+        <span class="n">sample_mask</span><span class="p">,</span> <span class="n">dbscan_info</span> <span class="o">=</span> <span class="n">_select_dbscan_reference_mask</span><span class="p">(</span>
+            <span class="n">features</span><span class="p">,</span>
+            <span class="n">leading_amplitude</span><span class="p">,</span>
+            <span class="n">dbscan_eps</span><span class="o">=</span><span class="n">dbscan_eps</span><span class="p">,</span>
+            <span class="n">dbscan_min_samples</span><span class="o">=</span><span class="n">dbscan_min_samples</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dbscan_info</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sample_mask</span><span class="p">,</span> <span class="n">gev_info</span> <span class="o">=</span> <span class="n">_select_gev_reference_mask</span><span class="p">(</span>
+            <span class="n">leading_amplitude</span><span class="p">,</span>
+            <span class="n">grid_size</span><span class="o">=</span><span class="n">gev_grid_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">gev_info</span><span class="p">)</span>
+
+    <span class="n">selected_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sample_mask</span><span class="p">))</span>
+    <span class="n">keep_fraction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">selected_samples</span> <span class="o">/</span> <span class="n">sample_mask</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">minimum_samples</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">min_reference_fraction</span> <span class="o">*</span> <span class="n">sample_mask</span><span class="o">.</span><span class="n">size</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">selected_samples</span> <span class="o">&lt;</span> <span class="n">minimum_samples</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">"Juggler reference selection retained too little data: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keep_fraction</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">% &lt; </span><span class="si">{</span><span class="n">min_reference_fraction</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%."</span>
+        <span class="p">)</span>
+
+    <span class="n">X_ref</span> <span class="o">=</span> <span class="n">X_stats</span><span class="p">[:,</span> <span class="n">sample_mask</span><span class="p">]</span>
+    <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"reference_sample_mask"</span><span class="p">:</span> <span class="n">sample_mask</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"reference_selected_samples"</span><span class="p">:</span> <span class="n">selected_samples</span><span class="p">,</span>
+            <span class="s2">"reference_candidate_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="s2">"reference_selected_fraction"</span><span class="p">:</span> <span class="n">keep_fraction</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"Juggler reference selection: strategy=</span><span class="si">%s</span><span class="s2">, retained </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> samples (</span><span class="si">%.1f%%</span><span class="s2">)."</span><span class="p">,</span>
+        <span class="n">strategy</span><span class="p">,</span>
+        <span class="n">selected_samples</span><span class="p">,</span>
+        <span class="n">sample_mask</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="mf">100.0</span> <span class="o">*</span> <span class="n">keep_fraction</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_ref</span><span class="p">,</span> <span class="n">sample_mask</span><span class="p">,</span> <span class="n">diagnostics</span></div>
+
+
+
+<div class="viewcode-block" id="JugglerASR">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.JugglerASR.html#mne_denoise.asr.JugglerASR">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JugglerASR</span><span class="p">(</span><span class="n">ASR</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""JugglerASR estimator with pointwise reference-sample selection.</span>
+
+<span class="sd">    The selection stage uses DBSCAN or GEV statistics; the reconstruction stage is</span>
+<span class="sd">    the standard ASR burst-repair operation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sfreq : float or None, default=None</span>
+<span class="sd">        Sampling frequency in Hz; inferred from MNE metadata when available.</span>
+<span class="sd">    cutoff : float, default=20.0</span>
+<span class="sd">        ASR threshold multiplier.</span>
+<span class="sd">    strategy : {"dbscan", "gev"}, default="dbscan"</span>
+<span class="sd">        Reference-sample selection strategy.</span>
+<span class="sd">    window_length : float, default=0.5</span>
+<span class="sd">        Reconstruction-window length in seconds.</span>
+<span class="sd">    window_overlap : float, default=0.66</span>
+<span class="sd">        Reconstruction-window overlap.</span>
+<span class="sd">    max_dropout_fraction : float, default=0.1</span>
+<span class="sd">        Maximum dropped-sample fraction per window.</span>
+<span class="sd">    min_clean_fraction : float, default=0.25</span>
+<span class="sd">        Minimum clean fraction for threshold estimation.</span>
+<span class="sd">    picks : str, list of str, list of int, or None, default="eeg"</span>
+<span class="sd">        MNE channels to process; NumPy input uses all rows.</span>
+<span class="sd">    calibration_window_length : float, default=1.0</span>
+<span class="sd">        Fallback calibration-window length.</span>
+<span class="sd">    calibration_window_overlap : float, default=0.66</span>
+<span class="sd">        Fallback calibration-window overlap.</span>
+<span class="sd">    ref_max_bad_channels : float, default=0.075</span>
+<span class="sd">        Maximum bad-channel fraction in a calibration window.</span>
+<span class="sd">    ref_tolerances : tuple of float, default=(-np.inf, 5.5)</span>
+<span class="sd">        Robust z-score bounds for fallback selection.</span>
+<span class="sd">    blocksize : int, default=10</span>
+<span class="sd">        Samples per covariance block.</span>
+<span class="sd">    max_dims : float or int, default=0.66</span>
+<span class="sd">        Maximum fraction or number of reconstructed dimensions.</span>
+<span class="sd">    reject_by_annotation : bool, default=True</span>
+<span class="sd">        Exclude bad annotated samples during calibration.</span>
+<span class="sd">    skip_by_annotation : tuple of str, default=("bad", "bad_acq_skip")</span>
+<span class="sd">        Annotation prefixes treated as bad.</span>
+<span class="sd">    cov_estimator : {"geometric_median", "mean", "median"}, default="geometric_median"</span>
+<span class="sd">        Calibration-covariance aggregation rule.</span>
+<span class="sd">    regularization : float, default=1e-8</span>
+<span class="sd">        Relative covariance eigenvalue floor.</span>
+<span class="sd">    filter_kind : {"none", "asr", "highpass"}, default="asr"</span>
+<span class="sd">        Statistics/pre-emphasis filter used by ASR calculations; it does not</span>
+<span class="sd">        filter the returned data directly.</span>
+<span class="sd">    window_criterion : float, int, str, or None, default=None</span>
+<span class="sd">        Optional final retained-sample criterion.</span>
+<span class="sd">    window_criterion_tolerances : tuple of float, default=(-np.inf, 7.0)</span>
+<span class="sd">        Robust z-score bounds for the final criterion.</span>
+<span class="sd">    lookahead : float or None, default=None</span>
+<span class="sd">        Processing lookahead in seconds.</span>
+<span class="sd">    stepsize : int or None, default=None</span>
+<span class="sd">        Samples between reconstruction updates.</span>
+<span class="sd">    max_mem_mb : int or None, default=512</span>
+<span class="sd">        Memory bound for covariance processing.</span>
+<span class="sd">    copy : bool, default=True</span>
+<span class="sd">        Reserved compatibility parameter; transformations return new outputs.</span>
+<span class="sd">    store_reconstruction_matrices : bool, default=False</span>
+<span class="sd">        Store per-window reconstruction matrices in diagnostics.</span>
+<span class="sd">    selection_filter_kind : {"none", "asr", "highpass"}, default="asr"</span>
+<span class="sd">        Statistics/pre-emphasis filter used for reference-sample selection. It must</span>
+<span class="sd">        match filter_kind.</span>
+<span class="sd">    dbscan_top_k : int, default=5</span>
+<span class="sd">        Number of largest channel amplitudes used as DBSCAN features.</span>
+<span class="sd">    dbscan_eps : float or str, default="auto"</span>
+<span class="sd">        DBSCAN neighborhood radius.</span>
+<span class="sd">    dbscan_min_samples : int, float, or str, default="auto"</span>
+<span class="sd">        DBSCAN core-neighborhood count.</span>
+<span class="sd">    gev_grid_size : int, default=2048</span>
+<span class="sd">        Number of GEV mode-estimation grid points.</span>
+<span class="sd">    min_reference_fraction : float, default=0.05</span>
+<span class="sd">        Minimum retained reference-sample fraction.</span>
+<span class="sd">    random_state : int or None, default=None</span>
+<span class="sd">        Reserved for reproducibility.</span>
+<span class="sd">    n_jobs : int or None, default=None</span>
+<span class="sd">        Reserved for future parallel processing.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ASR</span>
+<span class="sd">        Standard ASR calibration and reconstruction.</span>
+<span class="sd">    AdaptiveASR</span>
+<span class="sd">        Adaptive calibration-state updates rather than pointwise sample selection.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The fitted calibration mask is sample-based rather than window-based.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    :footcite:p:`kim2025_juggler_asr`</span>
+
+<span class="sd">    .. footbibliography::</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="JugglerASR.__init__">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.JugglerASR.html#mne_denoise.asr.JugglerASR.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span>
+        <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"dbscan"</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+        <span class="n">max_dropout_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">min_clean_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">picks</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"eeg"</span><span class="p">,</span>
+        <span class="n">calibration_window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">calibration_window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+        <span class="n">ref_max_bad_channels</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.075</span><span class="p">,</span>
+        <span class="n">ref_tolerances</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">),</span>
+        <span class="n">blocksize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">max_dims</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+        <span class="n">reject_by_annotation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">skip_by_annotation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bad"</span><span class="p">,</span> <span class="s2">"bad_acq_skip"</span><span class="p">),</span>
+        <span class="n">cov_estimator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"geometric_median"</span><span class="p">,</span>
+        <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+        <span class="n">filter_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"asr"</span><span class="p">,</span>
+        <span class="n">window_criterion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_criterion_tolerances</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">),</span>
+        <span class="n">lookahead</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+        <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">selection_filter_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"asr"</span><span class="p">,</span>
+        <span class="n">dbscan_top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">dbscan_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">dbscan_min_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">gev_grid_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span>
+        <span class="n">min_reference_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+            <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+            <span class="n">min_clean_fraction</span><span class="o">=</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"standard"</span><span class="p">,</span>
+            <span class="n">experimental</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">calibration</span><span class="o">=</span><span class="s2">"manual"</span><span class="p">,</span>
+            <span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">,</span>
+            <span class="n">calibration_window_length</span><span class="o">=</span><span class="n">calibration_window_length</span><span class="p">,</span>
+            <span class="n">calibration_window_overlap</span><span class="o">=</span><span class="n">calibration_window_overlap</span><span class="p">,</span>
+            <span class="n">ref_max_bad_channels</span><span class="o">=</span><span class="n">ref_max_bad_channels</span><span class="p">,</span>
+            <span class="n">ref_tolerances</span><span class="o">=</span><span class="n">ref_tolerances</span><span class="p">,</span>
+            <span class="n">blocksize</span><span class="o">=</span><span class="n">blocksize</span><span class="p">,</span>
+            <span class="n">max_dims</span><span class="o">=</span><span class="n">max_dims</span><span class="p">,</span>
+            <span class="n">reject_by_annotation</span><span class="o">=</span><span class="n">reject_by_annotation</span><span class="p">,</span>
+            <span class="n">skip_by_annotation</span><span class="o">=</span><span class="n">skip_by_annotation</span><span class="p">,</span>
+            <span class="n">cov_estimator</span><span class="o">=</span><span class="n">cov_estimator</span><span class="p">,</span>
+            <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+            <span class="n">filter_kind</span><span class="o">=</span><span class="n">filter_kind</span><span class="p">,</span>
+            <span class="n">window_criterion</span><span class="o">=</span><span class="n">window_criterion</span><span class="p">,</span>
+            <span class="n">window_criterion_tolerances</span><span class="o">=</span><span class="n">window_criterion_tolerances</span><span class="p">,</span>
+            <span class="n">lookahead</span><span class="o">=</span><span class="n">lookahead</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+            <span class="n">copy</span><span class="o">=</span><span class="n">copy</span><span class="p">,</span>
+            <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">strategy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection_filter_kind</span> <span class="o">=</span> <span class="n">selection_filter_kind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbscan_top_k</span> <span class="o">=</span> <span class="n">dbscan_top_k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbscan_eps</span> <span class="o">=</span> <span class="n">dbscan_eps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbscan_min_samples</span> <span class="o">=</span> <span class="n">dbscan_min_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gev_grid_size</span> <span class="o">=</span> <span class="n">gev_grid_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_reference_fraction</span> <span class="o">=</span> <span class="n">min_reference_fraction</span></div>
+
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">calibration</span><span class="p">:</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">calibration_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JugglerASR</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit JugglerASR and select reference samples.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw, Epochs, or ndarray</span>
+<span class="sd">            Primary data stream.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        calibration : Raw, Epochs, or ndarray, default=None</span>
+<span class="sd">            Optional separate calibration data.</span>
+<span class="sd">        calibration_mask : ndarray of bool or None, default=None</span>
+<span class="sd">            Optional pre-selection mask for calibration samples.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous calibration progress callback.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level for this call.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        JugglerASR</span>
+<span class="sd">            The fitted estimator.</span>
+<span class="sd">        """</span>
+        <span class="k">del</span> <span class="n">y</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="n">_validate_backend_params</span><span class="p">(</span>
+            <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">experimental</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experimental</span><span class="p">,</span>
+            <span class="n">lookahead</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lookahead</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">window_criterion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_criterion</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_validate_common_params</span><span class="p">(</span>
+            <span class="n">sfreq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">cutoff</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">window_overlap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_overlap</span><span class="p">,</span>
+            <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+            <span class="n">min_clean_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+            <span class="n">regularization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">regularization</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_validate_juggler_params</span><span class="p">(</span>
+            <span class="n">strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span>
+            <span class="n">dbscan_top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dbscan_top_k</span><span class="p">,</span>
+            <span class="n">gev_grid_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gev_grid_size</span><span class="p">,</span>
+            <span class="n">min_reference_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_reference_fraction</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_kind</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selection_filter_kind</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"JugglerASR requires filter_kind and selection_filter_kind to "</span>
+                <span class="s2">"match so calibration and reconstruction use the same "</span>
+                <span class="s2">"statistics filter"</span>
+            <span class="p">)</span>
+
+        <span class="n">fit_input</span> <span class="o">=</span> <span class="n">X</span> <span class="k">if</span> <span class="n">calibration</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">calibration</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">sfreq</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">picks</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+            <span class="n">fit_input</span><span class="p">,</span>
+            <span class="n">auto_pick</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">concatenate_epochs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"evoked"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"JugglerASR.fit() does not support Evoked calibration data"</span>
+            <span class="p">)</span>
+        <span class="n">sfreq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_sfreq</span><span class="p">(</span><span class="n">sfreq</span><span class="p">)</span>
+        <span class="n">data_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">calibration_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calibration_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">calibration_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">calibration_mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"calibration_mask must have shape (n_times,), got "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">calibration_mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data_2d</span><span class="p">[:,</span> <span class="n">calibration_mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"raw"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">reject_by_annotation</span><span class="p">:</span>
+            <span class="n">good_mask</span> <span class="o">=</span> <span class="n">_create_good_sample_mask_from_mne</span><span class="p">(</span>
+                <span class="n">orig_inst</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_by_annotation</span>
+            <span class="p">)</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data_2d</span><span class="p">[:,</span> <span class="n">good_mask</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_warn_preprocessing_state</span><span class="p">(</span><span class="n">orig_inst</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">)</span>
+        <span class="n">reference_data</span><span class="p">,</span> <span class="n">reference_mask</span><span class="p">,</span> <span class="n">reference_info</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">select_juggler_reference_samples</span><span class="p">(</span>
+                <span class="n">data_2d</span><span class="p">,</span>
+                <span class="n">sfreq</span><span class="p">,</span>
+                <span class="n">strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span>
+                <span class="n">selection_filter_kind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selection_filter_kind</span><span class="p">,</span>
+                <span class="n">dbscan_top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dbscan_top_k</span><span class="p">,</span>
+                <span class="n">dbscan_eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dbscan_eps</span><span class="p">,</span>
+                <span class="n">dbscan_min_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dbscan_min_samples</span><span class="p">,</span>
+                <span class="n">gev_grid_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gev_grid_size</span><span class="p">,</span>
+                <span class="n">min_reference_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_reference_fraction</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">cal_info</span> <span class="o">=</span> <span class="n">calibrate_asr</span><span class="p">(</span>
+            <span class="n">reference_data</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">cutoff</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">window_overlap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_overlap</span><span class="p">,</span>
+            <span class="n">calibration</span><span class="o">=</span><span class="s2">"manual"</span><span class="p">,</span>
+            <span class="n">calibration_window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_window_length</span><span class="p">,</span>
+            <span class="n">calibration_window_overlap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_window_overlap</span><span class="p">,</span>
+            <span class="n">ref_max_bad_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_max_bad_channels</span><span class="p">,</span>
+            <span class="n">ref_tolerances</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_tolerances</span><span class="p">,</span>
+            <span class="n">blocksize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">,</span>
+            <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+            <span class="n">min_clean_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+            <span class="n">cov_estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cov_estimator</span><span class="p">,</span>
+            <span class="n">regularization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">regularization</span><span class="p">,</span>
+            <span class="c1"># Reference samples have already been filtered continuously before</span>
+            <span class="c1"># pointwise selection. Filtering their concatenation again would</span>
+            <span class="c1"># introduce discontinuity transients and alter the calibration.</span>
+            <span class="n">filter_kind</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"standard"</span><span class="p">,</span>
+            <span class="n">max_mem_mb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_mem_mb</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">filter_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reference_info</span><span class="p">[</span><span class="s2">"selection_filter_b"</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">filter_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reference_info</span><span class="p">[</span><span class="s2">"selection_filter_a"</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">filter_zi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reference_info</span><span class="p">[</span><span class="s2">"selection_filter_zi"</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">cal_info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">reference_info</span><span class="p">)</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"filter_kind"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_kind</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"calibration_input_filtering"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"continuous_before_selection"</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"clean_window_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"clean_window_scores"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">)</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"n_clean_windows"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"n_calibration_windows"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"reference_selection_strategy"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span>
+        <span class="n">cal_info</span><span class="p">[</span><span class="s2">"reference_mask_kind"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"sample"</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sfreq_</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sfreq</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">picks_</span> <span class="o">=</span> <span class="n">picks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ch_names_</span> <span class="o">=</span> <span class="n">ch_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_channels_</span> <span class="o">=</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold_matrix_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thresholds_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">thresholds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_patterns_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">calibration_patterns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">calibration_patterns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank_</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_sample_mask_</span> <span class="o">=</span> <span class="n">reference_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clean_window_mask_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clean_window_scores_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="c1"># JugglerASR selects calibration data sample-by-sample, not by windows.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_mask_kind_</span> <span class="o">=</span> <span class="s2">"sample"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_info_</span> <span class="o">=</span> <span class="n">cal_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"juggler"</span><span class="p">,</span>
+            <span class="s2">"strategy"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span>
+            <span class="s2">"source_type"</span><span class="p">:</span> <span class="n">mne_type</span><span class="p">,</span>
+            <span class="s2">"n_channels"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_channels_</span><span class="p">,</span>
+            <span class="s2">"sfreq"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq_</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"JugglerASR: strategy=</span><span class="si">%s</span><span class="s2">, method=</span><span class="si">%s</span><span class="s2">, channels=</span><span class="si">%d</span><span class="s2">, sfreq=</span><span class="si">%.3g</span><span class="s2"> Hz, "</span>
+            <span class="s2">"cutoff=</span><span class="si">%.3g</span><span class="s2">, rank=</span><span class="si">%d</span><span class="s2">, retained </span><span class="si">%.1f%%</span><span class="s2"> reference samples."</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_channels_</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sfreq_</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rank_</span><span class="p">,</span>
+            <span class="mf">100.0</span> <span class="o">*</span> <span class="n">reference_info</span><span class="p">[</span><span class="s2">"reference_selected_fraction"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_calibration_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sample-wise JugglerASR reference mask.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of bool, shape (n_times,)</span>
+<span class="sd">            True for samples retained as calibration references.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_is_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_sample_mask_</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_dbscan_reference_mask</span><span class="p">(</span>
+    <span class="n">features</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">leading_amplitude</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">dbscan_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">dbscan_min_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Select reference samples with bounded-memory DBSCAN."""</span>
+    <span class="k">del</span> <span class="n">leading_amplitude</span>
+    <span class="n">feature_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="n">_histogram_mode</span><span class="p">(</span><span class="n">feature_scale</span><span class="p">)</span>
+    <span class="n">estimated_clean_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">feature_scale</span> <span class="o">&lt;=</span> <span class="n">mode</span><span class="p">))</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">_resolve_dbscan_eps</span><span class="p">(</span><span class="n">dbscan_eps</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">feature_scale</span><span class="p">)</span>
+    <span class="n">min_samples</span> <span class="o">=</span> <span class="n">_resolve_dbscan_min_samples</span><span class="p">(</span>
+        <span class="n">dbscan_min_samples</span><span class="p">,</span>
+        <span class="n">estimated_clean_count</span><span class="p">,</span>
+        <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">labels</span><span class="p">,</span> <span class="n">dbscan_memory_info</span> <span class="o">=</span> <span class="n">_dbscan_chebyshev_memory_bounded</span><span class="p">(</span>
+        <span class="n">features</span><span class="p">,</span>
+        <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+        <span class="n">min_samples</span><span class="o">=</span><span class="n">min_samples</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">candidate_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">labels</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">candidate_labels</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">"DBSCAN found no non-noise cluster. Increase eps or provide a "</span>
+            <span class="s2">"longer calibration stream."</span>
+        <span class="p">)</span>
+
+    <span class="n">cluster_scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cluster_sizes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">candidate_labels</span><span class="p">:</span>
+        <span class="n">label_points</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">labels</span> <span class="o">==</span> <span class="n">label</span><span class="p">]</span>
+        <span class="n">cluster_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">label_points</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="p">)</span>
+        <span class="n">cluster_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">label_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="n">score_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">(</span>
+        <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cluster_sizes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cluster_scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">selected_label</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">candidate_labels</span><span class="p">[</span><span class="n">score_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">sample_mask</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">==</span> <span class="n">selected_label</span>
+
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"juggler_dbscan_mode"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span>
+        <span class="s2">"juggler_dbscan_scale"</span><span class="p">:</span> <span class="s2">"l2_norm"</span><span class="p">,</span>
+        <span class="s2">"juggler_dbscan_eps"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">eps</span><span class="p">),</span>
+        <span class="s2">"juggler_dbscan_min_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_samples</span><span class="p">),</span>
+        <span class="s2">"juggler_dbscan_labels"</span><span class="p">:</span> <span class="n">labels</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"juggler_dbscan_selected_label"</span><span class="p">:</span> <span class="n">selected_label</span><span class="p">,</span>
+        <span class="s2">"juggler_dbscan_cluster_sizes"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cluster_sizes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"juggler_dbscan_cluster_scores"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cluster_scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"juggler_dbscan_estimated_clean_count"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">estimated_clean_count</span><span class="p">),</span>
+        <span class="o">**</span><span class="n">dbscan_memory_info</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">sample_mask</span><span class="p">,</span> <span class="n">diagnostics</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dbscan_chebyshev_memory_bounded</span><span class="p">(</span>
+    <span class="n">features</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">min_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">count_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Run exact Chebyshev DBSCAN without materializing all neighborhoods."""</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">features</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"features must be a non-empty 2D array"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span> <span class="ow">or</span> <span class="n">eps</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"eps must be positive and finite"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">min_samples</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"min_samples must be at least 1"</span><span class="p">)</span>
+    <span class="n">count_batch_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">count_batch_size</span><span class="p">))</span>
+
+    <span class="n">n_samples</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cell_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">features</span> <span class="o">/</span> <span class="n">eps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">sample_cells</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">cell_coordinates</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">sample_cells</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">sample_cell_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sample_cells</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">key</span><span class="p">:</span> <span class="n">sample_cells</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">sample_cell_positions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">position</span> <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_cell_keys</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">sample_cell_trees</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)])</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">sample_cells</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">neighbor_offsets</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="c1"># Points in the same eps-wide Chebyshev cell are all mutual neighbors.</span>
+    <span class="c1"># Accumulate exact counts only across occupied adjacent cells. This avoids</span>
+    <span class="c1"># a dense all-point radius query, whose running time can become quadratic</span>
+    <span class="c1"># even when ``return_length=True`` keeps its memory bounded.</span>
+    <span class="n">neighbor_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">sample_cells</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">neighbor_counts</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">left_position</span><span class="p">,</span> <span class="n">left_key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_cell_keys</span><span class="p">):</span>
+        <span class="n">left_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sample_cells</span><span class="p">[</span><span class="n">left_key</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">left_points</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">left_indices</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">neighbor_offsets</span><span class="p">:</span>
+            <span class="n">right_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">coordinate</span> <span class="o">+</span> <span class="n">delta</span> <span class="k">for</span> <span class="n">coordinate</span><span class="p">,</span> <span class="n">delta</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">left_key</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">right_position</span> <span class="o">=</span> <span class="n">sample_cell_positions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">right_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">right_position</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">right_position</span> <span class="o">&lt;=</span> <span class="n">left_position</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">right_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sample_cells</span><span class="p">[</span><span class="n">right_key</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">right_points</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">right_indices</span><span class="p">]</span>
+            <span class="n">left_needed</span> <span class="o">=</span> <span class="n">neighbor_counts</span><span class="p">[</span><span class="n">left_indices</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_samples</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">left_needed</span><span class="p">):</span>
+                <span class="n">neighbor_counts</span><span class="p">[</span><span class="n">left_indices</span><span class="p">[</span><span class="n">left_needed</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">sample_cell_trees</span><span class="p">[</span>
+                    <span class="n">right_key</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span>
+                    <span class="n">left_points</span><span class="p">[</span><span class="n">left_needed</span><span class="p">],</span>
+                    <span class="n">r</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+                    <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                    <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">right_needed</span> <span class="o">=</span> <span class="n">neighbor_counts</span><span class="p">[</span><span class="n">right_indices</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_samples</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">right_needed</span><span class="p">):</span>
+                <span class="n">neighbor_counts</span><span class="p">[</span><span class="n">right_indices</span><span class="p">[</span><span class="n">right_needed</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">sample_cell_trees</span><span class="p">[</span>
+                    <span class="n">left_key</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span>
+                    <span class="n">right_points</span><span class="p">[</span><span class="n">right_needed</span><span class="p">],</span>
+                    <span class="n">r</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+                    <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                    <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+    <span class="n">core_mask</span> <span class="o">=</span> <span class="n">neighbor_counts</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_samples</span><span class="p">)</span>
+    <span class="n">core_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">core_mask</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">core_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">"juggler_dbscan_backend"</span><span class="p">:</span> <span class="s2">"ckdtree_grid_memory_bounded"</span><span class="p">,</span>
+            <span class="s2">"juggler_dbscan_core_samples"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"juggler_dbscan_core_cells"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"juggler_dbscan_count_batch_size"</span><span class="p">:</span> <span class="n">count_batch_size</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Every pair of points in the same eps-wide Chebyshev grid cell is a</span>
+    <span class="c1"># neighbor. Connected components can therefore be found at cell level,</span>
+    <span class="c1"># avoiding a radius query for every point in a dense core cluster.</span>
+    <span class="n">core_cells</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">core_indices</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">cell_coordinates</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">core_cells</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+    <span class="n">cell_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">core_cells</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">key</span><span class="p">:</span> <span class="n">core_cells</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell_keys</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">cell_min_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">core_cells</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cell_keys</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="n">position</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">parent</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">!=</span> <span class="n">position</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="n">parent</span><span class="p">[</span><span class="n">position</span><span class="p">]]</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="n">position</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">position</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="n">left</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">left_root</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">right_root</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">left_root</span> <span class="o">==</span> <span class="n">right_root</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">cell_min_index</span><span class="p">[</span><span class="n">left_root</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">cell_min_index</span><span class="p">[</span><span class="n">right_root</span><span class="p">]:</span>
+            <span class="n">parent</span><span class="p">[</span><span class="n">right_root</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_root</span>
+            <span class="n">cell_min_index</span><span class="p">[</span><span class="n">left_root</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="n">cell_min_index</span><span class="p">[</span><span class="n">left_root</span><span class="p">],</span> <span class="n">cell_min_index</span><span class="p">[</span><span class="n">right_root</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">[</span><span class="n">left_root</span><span class="p">]</span> <span class="o">=</span> <span class="n">right_root</span>
+            <span class="n">cell_min_index</span><span class="p">[</span><span class="n">right_root</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="n">cell_min_index</span><span class="p">[</span><span class="n">left_root</span><span class="p">],</span> <span class="n">cell_min_index</span><span class="p">[</span><span class="n">right_root</span><span class="p">]</span>
+            <span class="p">)</span>
+
+    <span class="n">cell_trees</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)])</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">core_cells</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">cell_positions</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">position</span> <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cell_keys</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">left_position</span><span class="p">,</span> <span class="n">left_key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cell_keys</span><span class="p">):</span>
+        <span class="n">left_points</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">core_cells</span><span class="p">[</span><span class="n">left_key</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">neighbor_offsets</span><span class="p">:</span>
+            <span class="n">right_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">coordinate</span> <span class="o">+</span> <span class="n">delta</span> <span class="k">for</span> <span class="n">coordinate</span><span class="p">,</span> <span class="n">delta</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">left_key</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">right_position</span> <span class="o">=</span> <span class="n">cell_positions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">right_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">right_position</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">right_position</span> <span class="o">&lt;=</span> <span class="n">left_position</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">right_points</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">core_cells</span><span class="p">[</span><span class="n">right_key</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">left_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">right_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">distances</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cell_trees</span><span class="p">[</span><span class="n">right_key</span><span class="p">]</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                    <span class="n">left_points</span><span class="p">,</span>
+                    <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                    <span class="n">distance_upper_bound</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+                    <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">distances</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cell_trees</span><span class="p">[</span><span class="n">left_key</span><span class="p">]</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                    <span class="n">right_points</span><span class="p">,</span>
+                    <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                    <span class="n">distance_upper_bound</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+                    <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">distances</span><span class="p">)):</span>
+                <span class="n">union</span><span class="p">(</span><span class="n">left_position</span><span class="p">,</span> <span class="n">right_position</span><span class="p">)</span>
+
+    <span class="n">roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">find</span><span class="p">(</span><span class="n">position</span><span class="p">)</span> <span class="k">for</span> <span class="n">position</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell_keys</span><span class="p">))])</span>
+    <span class="n">unique_roots</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">roots</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">root</span><span class="p">:</span> <span class="n">cell_min_index</span><span class="p">[</span><span class="n">root</span><span class="p">])</span>
+    <span class="n">root_to_label</span> <span class="o">=</span> <span class="p">{</span><span class="n">root</span><span class="p">:</span> <span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">root</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_roots</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cell_keys</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">root_to_label</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">roots</span><span class="p">[</span><span class="n">position</span><span class="p">])]</span>
+        <span class="n">labels</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">core_cells</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)]</span> <span class="o">=</span> <span class="n">label</span>
+
+    <span class="c1"># A non-core point is a DBSCAN border point when it neighbors a core</span>
+    <span class="c1"># sample. Grouping border points by grid cell avoids one tree query per</span>
+    <span class="c1"># point. All core points within one cell share a component label, and only</span>
+    <span class="c1"># the 3**n_features adjacent cells can contain Chebyshev neighbors.</span>
+    <span class="n">border_cells</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="o">~</span><span class="n">core_mask</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">cell_coordinates</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">border_cells</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">border_key</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">border_cells</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">border_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">border_points</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">border_indices</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">neighbor_offsets</span><span class="p">:</span>
+            <span class="n">core_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">coordinate</span> <span class="o">+</span> <span class="n">delta</span> <span class="k">for</span> <span class="n">coordinate</span><span class="p">,</span> <span class="n">delta</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">border_key</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">core_indices_in_cell</span> <span class="o">=</span> <span class="n">core_cells</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">core_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">core_indices_in_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">core_label</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">core_indices_in_cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">core_key</span> <span class="o">==</span> <span class="n">border_key</span><span class="p">:</span>
+                <span class="n">matched</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">border_indices</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">distances</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cell_trees</span><span class="p">[</span><span class="n">core_key</span><span class="p">]</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                    <span class="n">border_points</span><span class="p">,</span>
+                    <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                    <span class="n">distance_upper_bound</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+                    <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">matched</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
+            <span class="n">matched_indices</span> <span class="o">=</span> <span class="n">border_indices</span><span class="p">[</span><span class="n">matched</span><span class="p">]</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">matched_indices</span><span class="p">]</span>
+            <span class="n">labels</span><span class="p">[</span><span class="n">matched_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">current</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">core_label</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">core_label</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s2">"juggler_dbscan_backend"</span><span class="p">:</span> <span class="s2">"ckdtree_grid_memory_bounded"</span><span class="p">,</span>
+        <span class="s2">"juggler_dbscan_core_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">core_indices</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+        <span class="s2">"juggler_dbscan_core_cells"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">core_cells</span><span class="p">)),</span>
+        <span class="s2">"juggler_dbscan_count_batch_size"</span><span class="p">:</span> <span class="n">count_batch_size</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_gev_reference_mask</span><span class="p">(</span>
+    <span class="n">leading_amplitude</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">grid_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Select reference samples using the Generalized Extreme Value (GEV) strategy."""</span>
+    <span class="n">amplitude_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">leading_amplitude</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">amplitude_scale</span><span class="p">)</span> <span class="ow">or</span> <span class="n">amplitude_scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">amplitude_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">leading_amplitude</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">amplitude_scale</span><span class="p">)</span> <span class="ow">or</span> <span class="n">amplitude_scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"GEV fitting requires at least one positive amplitude"</span><span class="p">)</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">leading_amplitude</span> <span class="o">/</span> <span class="n">amplitude_scale</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">shape</span><span class="p">,</span> <span class="n">loc_normalized</span><span class="p">,</span> <span class="n">scale_normalized</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"GEV fitting failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">scale_normalized</span><span class="p">)</span> <span class="ow">or</span> <span class="n">scale_normalized</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"GEV fitting returned a non-positive scale"</span><span class="p">)</span>
+
+    <span class="n">distribution</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="p">(</span>
+        <span class="n">shape</span><span class="p">,</span>
+        <span class="n">loc</span><span class="o">=</span><span class="n">loc_normalized</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">scale_normalized</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">&lt;</span> <span class="mf">1.0</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+        <span class="n">standardized_mode</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">shape</span><span class="p">)</span> <span class="o">**</span> <span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="n">shape</span>
+        <span class="n">mode_normalized</span> <span class="o">=</span> <span class="n">loc_normalized</span> <span class="o">+</span> <span class="n">scale_normalized</span> <span class="o">*</span> <span class="n">standardized_mode</span>
+    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-10</span><span class="p">:</span>
+        <span class="n">mode_normalized</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">loc_normalized</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># For boundary-mode shapes, evaluate a fixed probability grid. Working</span>
+        <span class="c1"># in normalized coordinates keeps this fallback invariant to EEG units.</span>
+        <span class="n">probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">grid_size</span><span class="p">))</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">distribution</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">probabilities</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">logpdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">distribution</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">logpdf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
+            <span class="n">valid_grid</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+            <span class="n">valid_logpdf</span> <span class="o">=</span> <span class="n">logpdf</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+            <span class="n">mode_normalized</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">valid_grid</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">valid_logpdf</span><span class="p">))])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode_normalized</span> <span class="o">=</span> <span class="n">_histogram_mode</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">mode_normalized</span><span class="p">):</span>
+        <span class="n">mode_normalized</span> <span class="o">=</span> <span class="n">_histogram_mode</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mode_normalized</span> <span class="o">*</span> <span class="n">amplitude_scale</span><span class="p">)</span>
+    <span class="n">sample_mask</span> <span class="o">=</span> <span class="n">normalized</span> <span class="o">&lt;=</span> <span class="n">mode_normalized</span>
+    <span class="n">loc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">loc_normalized</span> <span class="o">*</span> <span class="n">amplitude_scale</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale_normalized</span> <span class="o">*</span> <span class="n">amplitude_scale</span><span class="p">)</span>
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"juggler_gev_shape"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span>
+        <span class="s2">"juggler_gev_loc"</span><span class="p">:</span> <span class="n">loc</span><span class="p">,</span>
+        <span class="s2">"juggler_gev_scale"</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
+        <span class="s2">"juggler_gev_mode"</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
+        <span class="s2">"juggler_gev_grid_size"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">grid_size</span><span class="p">),</span>
+        <span class="s2">"juggler_gev_normalization_scale"</span><span class="p">:</span> <span class="n">amplitude_scale</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">sample_mask</span><span class="p">,</span> <span class="n">diagnostics</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_histogram_mode</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Estimate a distribution mode from histogram bin counts."""</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot estimate a mode from empty values"</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">))),</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">tiny</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">scale</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s2">"fd"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">edges</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+    <span class="n">counts</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">counts</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_dbscan_eps</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">feature_scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve the DBSCAN ``eps`` neighborhood radius."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"paper"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"dbscan_eps must be a positive float, 'auto', or 'paper'"</span><span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">mode</span> <span class="o">/</span> <span class="mf">10.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span> <span class="ow">or</span> <span class="n">eps</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="n">feature_scale</span><span class="p">[</span><span class="n">feature_scale</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">positive</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"Cannot derive a positive DBSCAN eps from zero-amplitude data"</span>
+            <span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">positive</span><span class="p">))</span> <span class="o">/</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_dbscan_min_samples</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">estimated_clean_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve the DBSCAN ``min_samples`` core-neighborhood count."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"paper"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"dbscan_min_samples must be an int, a float fraction, 'auto', or 'paper'"</span>
+            <span class="p">)</span>
+        <span class="n">min_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">0.10</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">estimated_clean_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">min_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">estimated_clean_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">min_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">min_samples</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_samples</span><span class="p">)</span>
+    <span class="n">min_samples</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_samples</span><span class="p">,</span> <span class="n">n_times</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_samples</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

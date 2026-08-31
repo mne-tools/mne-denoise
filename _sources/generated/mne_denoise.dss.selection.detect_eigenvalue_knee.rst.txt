@@ -1,0 +1,6 @@
+﻿mne\_denoise.dss.selection.detect\_eigenvalue\_knee
+===================================================
+
+.. currentmodule:: mne_denoise.dss.selection
+
+.. autofunction:: detect_eigenvalue_knee

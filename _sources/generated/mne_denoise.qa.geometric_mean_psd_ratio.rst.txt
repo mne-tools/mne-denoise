@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.geometric\_mean\_psd\_ratio
+===========================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: geometric_mean_psd_ratio

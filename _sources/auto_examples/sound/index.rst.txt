@@ -1,0 +1,75 @@
+
+
+.. _sphx_glr_auto_examples_sound:
+
+SOUND Examples
+==============
+
+Overview
+--------
+
+Examples demonstrating SOUND (Source-estimate-Utilizing Noise-discarding), which
+suppresses channel-specific noise by asking whether each sensor's signal is
+consistent with what a forward model says the head could have produced.
+
+Files
+-----
+
+- ``plot_01_sound_basics.py``: SOUND on synthetic EEG with deliberately corrupted
+  sensors; recovering them, checking the intact channels are not damaged, and
+  sweeping ``lambda_``.
+
+Data Requirements
+-----------------
+
+- All sections run directly with no external data.
+- The lead field is built from the montage with a three-layer spherical head
+  model, so no MRI or forward solution is needed.
+
+References
+----------
+
+- Mutanen, Metsomaa, Liljander & Ilmoniemi (2018). Automatic and robust noise
+  suppression in EEG and MEG: The SOUND algorithm. NeuroImage.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="SOUND asks a question no purely statistical cleaner can: is what this sensor reports physically consistent with what its neighbours report, given the shape of the head? A channel whose signal cannot be explained by any cortical source configuration is carrying noise, and SOUND estimates how much -- per channel, iteratively -- then applies a Wiener filter that trusts each sensor in proportion to how clean it is.">
+
+.. only:: html
+
+  .. image:: /auto_examples/sound/images/thumb/sphx_glr_plot_01_sound_basics_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/sound/plot_01_sound_basics`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">SOUND: Suppressing Channel-Specific Noise with a Forward Model</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/sound/plot_01_sound_basics
+

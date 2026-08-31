@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_endpoint\_metrics\_summary
+=================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_endpoint_metrics_summary

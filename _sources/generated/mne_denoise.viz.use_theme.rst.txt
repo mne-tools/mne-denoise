@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.use\_theme
+===========================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: use_theme

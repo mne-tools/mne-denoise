@@ -1,0 +1,79 @@
+
+:orphan:
+
+.. _sphx_glr_auto_examples_asr_sg_execution_times:
+
+
+Computation times
+=================
+**00:41.448** total execution time for 15 files **from auto_examples/asr**:
+
+.. container::
+
+  .. raw:: html
+
+    <style scoped>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" class="init">
+    $(document).ready( function () {
+        $('table.sg-datatable').DataTable({order: [[1, 'desc']]});
+    } );
+    </script>
+
+  .. list-table::
+   :header-rows: 1
+   :class: table table-striped sg-datatable
+
+   * - Example
+     - Time
+     - Mem (MB)
+   * - :ref:`sphx_glr_auto_examples_asr_plot_07_riemannian_asr.py` (``plot_07_riemannian_asr.py``)
+     - 00:06.456
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_11_epochs_and_meg.py` (``plot_11_epochs_and_meg.py``)
+     - 00:05.895
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_08_adaptive_variants.py` (``plot_08_adaptive_variants.py``)
+     - 00:05.798
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_06_cutoff_tuning.py` (``plot_06_cutoff_tuning.py``)
+     - 00:04.902
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_13_pipeline_filter_asr_ica.py` (``plot_13_pipeline_filter_asr_ica.py``)
+     - 00:04.207
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_09_juggler_strategies.py` (``plot_09_juggler_strategies.py``)
+     - 00:03.748
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_04_juggler_asr.py` (``plot_04_juggler_asr.py``)
+     - 00:02.152
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_05_asr_visualization.py` (``plot_05_asr_visualization.py``)
+     - 00:02.015
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_10_choosing_a_variant.py` (``plot_10_choosing_a_variant.py``)
+     - 00:01.973
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_12_diagnostics_qc.py` (``plot_12_diagnostics_qc.py``)
+     - 00:01.127
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_15_guided_asr.py` (``plot_15_guided_asr.py``)
+     - 00:01.122
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_03_adaptive_asr.py` (``plot_03_adaptive_asr.py``)
+     - 00:00.765
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_02_mne_raw_qc.py` (``plot_02_mne_raw_qc.py``)
+     - 00:00.643
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_01_asr_basics.py` (``plot_01_asr_basics.py``)
+     - 00:00.450
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_14_rms_distribution.py` (``plot_14_rms_distribution.py``)
+     - 00:00.196
+     - 0.0

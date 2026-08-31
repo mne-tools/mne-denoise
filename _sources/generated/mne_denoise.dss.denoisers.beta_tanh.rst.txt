@@ -1,0 +1,6 @@
+﻿mne\_denoise.dss.denoisers.beta\_tanh
+=====================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autofunction:: beta_tanh

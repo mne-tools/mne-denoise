@@ -1,0 +1,1548 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.zapline.core &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/zapline/core';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.zapline.core</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.zapline.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""ZapLine line-noise removal."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._data</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">continuous_to_epochs</span><span class="p">,</span>
+    <span class="n">epochs_to_continuous</span><span class="p">,</span>
+    <span class="n">extract_data_from_mne</span><span class="p">,</span>
+    <span class="n">reconstruct_mne_object</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_spatial_transform</span>
+
+<span class="c1"># Inherit from DSS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..dss._whitening</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">map_spatial_matrices_to_sensor_space</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..dss.denoisers.spectral</span><span class="w"> </span><span class="kn">import</span> <span class="n">LineNoiseBias</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..dss.denoisers.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">SmoothingBias</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..dss.linear</span><span class="w"> </span><span class="kn">import</span> <span class="n">DSS</span><span class="p">,</span> <span class="n">_as_smoother</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..dss.segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovarianceSegmenter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_emit_progress</span><span class="p">,</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.adaptive</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">apply_hybrid_cleanup</span><span class="p">,</span>
+    <span class="n">check_artifact_presence</span><span class="p">,</span>
+    <span class="n">check_spectral_qa</span><span class="p">,</span>
+    <span class="n">detect_harmonics</span><span class="p">,</span>
+    <span class="n">find_fine_peak</span><span class="p">,</span>
+    <span class="n">find_noise_freqs</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="ZapLine">
+<a class="viewcode-back" href="../../../generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ZapLine</span><span class="p">(</span><span class="n">DSS</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""DSS-based line-noise removal estimator.</span>
+
+<span class="sd">    ZapLine fits spatial filters for a line frequency and removes selected</span>
+<span class="sd">    components. Adaptive mode performs the ZapLine-plus frequency, segmentation, and</span>
+<span class="sd">    per-segment processing path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    line_freq : float or None, default=60.0</span>
+<span class="sd">        Fundamental line frequency in Hz. Required in standard mode; None enables</span>
+<span class="sd">        detection in adaptive mode.</span>
+<span class="sd">    n_select : int or {"auto"}, default="auto"</span>
+<span class="sd">        Number of DSS components to remove, or automatic selection.</span>
+<span class="sd">    n_harmonics : int or None, default=None</span>
+<span class="sd">        Number of harmonics; None uses harmonics below Nyquist.</span>
+<span class="sd">    nfft : int, default=1024</span>
+<span class="sd">        FFT length for the line-noise bias.</span>
+<span class="sd">    nkeep : int or None, default=None</span>
+<span class="sd">        Number of dimensions retained before DSS.</span>
+<span class="sd">    rank : int or None, default=None</span>
+<span class="sd">        Whitening rank.</span>
+<span class="sd">    reg : float, default=1e-9</span>
+<span class="sd">        DSS covariance regularization.</span>
+<span class="sd">    threshold : float, default=3.0</span>
+<span class="sd">        Outlier threshold for automatic component selection.</span>
+<span class="sd">    knee_rel_floor : float, default=0.01</span>
+<span class="sd">        Relative score floor for knee selection.</span>
+<span class="sd">    knee_min_ratio : float, default=3.0</span>
+<span class="sd">        Minimum score ratio for knee selection.</span>
+<span class="sd">    adaptive : bool, default=False</span>
+<span class="sd">        Use adaptive ZapLine-plus processing.</span>
+<span class="sd">    adaptive_params : dict or None, default=None</span>
+<span class="sd">        Parameters for adaptive frequency detection and segment processing.</span>
+<span class="sd">    segmenter : object or None, default=None</span>
+<span class="sd">        Segmenter used in adaptive mode.</span>
+<span class="sd">    crossfade : float, default=0.0</span>
+<span class="sd">        Boundary crossfade duration in seconds in adaptive mode.</span>
+<span class="sd">    whiten : bool, default=False</span>
+<span class="sd">        Pre-whiten supported MNE data channels before processing.</span>
+<span class="sd">    noise_cov : mne.Covariance or None, default=None</span>
+<span class="sd">        Noise covariance used when whiten=True.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filters_, patterns_, eigenvalues_</span>
+<span class="sd">        Fitted DSS filters, patterns, and eigenvalues.</span>
+<span class="sd">    n_removed_ : int</span>
+<span class="sd">        Number of removed components or adaptive component passes.</span>
+<span class="sd">    n_harmonics_ : int or None</span>
+<span class="sd">        Number of harmonics used by the bias.</span>
+<span class="sd">    adaptive_results_ : dict or None</span>
+<span class="sd">        Diagnostics from adaptive processing.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    mne_denoise.spectrum_interpolation.SpectrumInterpolation</span>
+<span class="sd">        Spectral-amplitude interpolation around line frequencies.</span>
+<span class="sd">    mne_denoise.dss.DSS</span>
+<span class="sd">        General DSS estimator underlying standard ZapLine decomposition.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Standard fit followed by transform uses a fitted operator. Adaptive mode requires</span>
+<span class="sd">    fit_transform because fitting and cleaning are performed per segment.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    :footcite:p:`decheveigne2020_zapline,klug_kloosterman2022_zapline_plus`</span>
+
+<span class="sd">    .. footbibliography::</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.zapline import ZapLine</span>
+<span class="sd">    &gt;&gt;&gt; rng = np.random.default_rng(0)</span>
+<span class="sd">    &gt;&gt;&gt; data = rng.standard_normal((8, 2000))</span>
+<span class="sd">    &gt;&gt;&gt; model = ZapLine(sfreq=1000.0, line_freq=50.0, n_select="auto")</span>
+<span class="sd">    &gt;&gt;&gt; clean = model.fit_transform(data)</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="ZapLine.__init__">
+<a class="viewcode-back" href="../../../generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">line_freq</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">60.0</span><span class="p">,</span>
+        <span class="n">n_select</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">n_harmonics</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">nfft</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="n">nkeep</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">knee_rel_floor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">knee_min_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">adaptive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">adaptive_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">segmenter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">crossfade</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">whiten</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">noise_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sfreq</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_freq</span><span class="p">)</span> <span class="k">if</span> <span class="n">line_freq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_harmonics</span> <span class="o">=</span> <span class="n">n_harmonics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nfft</span> <span class="o">=</span> <span class="n">nfft</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nkeep</span> <span class="o">=</span> <span class="n">nkeep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knee_rel_floor</span> <span class="o">=</span> <span class="n">knee_rel_floor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knee_min_ratio</span> <span class="o">=</span> <span class="n">knee_min_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adaptive_params</span> <span class="o">=</span> <span class="n">adaptive_params</span> <span class="k">if</span> <span class="n">adaptive_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="c1"># Initialize DSS Bias immediately if line_freq is known and valid</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">LineNoiseBias</span><span class="p">(</span>
+                <span class="n">freq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span><span class="p">,</span>
+                <span class="n">sfreq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">"fft"</span><span class="p">,</span>
+                <span class="n">n_harmonics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_harmonics</span><span class="p">,</span>
+                <span class="n">nfft</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nfft</span><span class="p">,</span>
+                <span class="n">overlap</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_harmonics_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">n_harmonics</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_harmonics_</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Initialize DSS parent with our bias</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span>
+            <span class="n">normalize_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">adaptive</span><span class="o">=</span><span class="n">adaptive</span><span class="p">,</span>
+            <span class="n">segmenter</span><span class="o">=</span><span class="n">segmenter</span><span class="p">,</span>
+            <span class="n">crossfade</span><span class="o">=</span><span class="n">crossfade</span><span class="p">,</span>
+            <span class="n">max_prop_remove</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">min_select</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">component_action</span><span class="o">=</span><span class="s2">"subtract"</span><span class="p">,</span>
+            <span class="n">n_select</span><span class="o">=</span><span class="n">n_select</span><span class="p">,</span>
+            <span class="n">selection_threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">knee_rel_floor</span><span class="o">=</span><span class="n">knee_rel_floor</span><span class="p">,</span>
+            <span class="n">knee_min_ratio</span><span class="o">=</span><span class="n">knee_min_ratio</span><span class="p">,</span>
+            <span class="n">whiten</span><span class="o">=</span><span class="n">whiten</span><span class="p">,</span>
+            <span class="n">noise_cov</span><span class="o">=</span><span class="n">noise_cov</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_freq_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adaptive_results_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mne_ch_names_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_whitening_info_</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Fit standard-mode ZapLine filters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw, Epochs, Evoked, or ndarray</span>
+<span class="sd">            Data used to fit the filters.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ZapLine</span>
+<span class="sd">            The fitted estimator.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If adaptive=True; use fit_transform instead.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adaptive</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"Adaptive mode requires simultaneous fit and transform (local chunks). "</span>
+                <span class="s2">"Use fit_transform() instead."</span>
+            <span class="p">)</span>
+
+        <span class="n">data</span><span class="p">,</span> <span class="n">extracted_sfreq</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span>
+            <span class="n">auto_pick</span><span class="o">=</span><span class="s2">"data"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span> <span class="k">else</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">concatenate_epochs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mne_ch_names_</span> <span class="o">=</span> <span class="n">ch_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_whitening_info_</span> <span class="o">=</span> <span class="n">orig_inst</span><span class="o">.</span><span class="n">info</span> <span class="k">if</span> <span class="n">orig_inst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="c1"># Validate sfreq consistency</span>
+        <span class="k">if</span> <span class="n">extracted_sfreq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">extracted_sfreq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Input data sfreq (</span><span class="si">{</span><span class="n">extracted_sfreq</span><span class="si">}</span><span class="s2">) differs from init sfreq (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="s2">"Using init sfreq. Please verify your data or init parameters."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Confirm line_freq is set</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"line_freq required for standard fit()."</span><span class="p">)</span>
+
+        <span class="c1"># Run core fitting logic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit_dss</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"ZapLine: mode=standard, frequency=</span><span class="si">%.3g</span><span class="s2"> Hz, harmonics=</span><span class="si">%d</span><span class="s2">, "</span>
+            <span class="s2">"removed=</span><span class="si">%d</span><span class="s2"> component(s) of </span><span class="si">%d</span><span class="s2">."</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_harmonics_</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply fitted standard-mode ZapLine filters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw, Epochs, Evoked, or ndarray</span>
+<span class="sd">            Data with the fitted channel layout.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        same type as X</span>
+<span class="sd">            Cleaned data.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If adaptive=True or the estimator is not fitted.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adaptive</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"Adaptive mode requires simultaneous fit and transform (local chunks). "</span>
+                <span class="s2">"Use fit_transform() instead."</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check if fitted</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Not fitted"</span><span class="p">)</span>
+
+        <span class="n">data</span><span class="p">,</span> <span class="n">extracted_sfreq</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">picks</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span>
+            <span class="n">ch_names</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_mne_ch_names_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">auto_pick</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Validate sfreq consistency</span>
+        <span class="k">if</span> <span class="n">extracted_sfreq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">extracted_sfreq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Input data sfreq (</span><span class="si">{</span><span class="n">extracted_sfreq</span><span class="si">}</span><span class="s2">) differs from init sfreq (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="s2">"Using init sfreq."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Standard Transform</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">continuous_to_epochs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_standard_cleaning</span><span class="p">(</span><span class="n">epochs_to_continuous</span><span class="p">(</span><span class="n">data</span><span class="p">)),</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reconstruct_mne_object</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">)</span>
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">fit_params</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Fit and transform with standard or adaptive ZapLine.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw, Epochs, Evoked, or ndarray</span>
+<span class="sd">            Data to clean.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous progress callback in adaptive mode.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+<span class="sd">        **fit_params : dict</span>
+<span class="sd">            Additional parameters passed to the standard DSS fit_transform path.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        same type as X</span>
+<span class="sd">            Cleaned data with the input layout.</span>
+<span class="sd">        """</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">adaptive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">)</span>
+
+        <span class="n">data</span><span class="p">,</span> <span class="n">extracted_sfreq</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">picks</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">extract_data_from_mne</span><span class="p">(</span>
+                <span class="n">X</span><span class="p">,</span>
+                <span class="n">auto_pick</span><span class="o">=</span><span class="s2">"data"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span> <span class="k">else</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mne_ch_names_</span> <span class="o">=</span> <span class="n">ch_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_whitening_info_</span> <span class="o">=</span> <span class="n">orig_inst</span><span class="o">.</span><span class="n">info</span> <span class="k">if</span> <span class="n">orig_inst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">extracted_sfreq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">extracted_sfreq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Input data sfreq (</span><span class="si">{</span><span class="n">extracted_sfreq</span><span class="si">}</span><span class="s2">) differs from init sfreq (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="s2">"Using init sfreq."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Adaptive logic (ZapLine-plus)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n_ep</span><span class="p">,</span> <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_t</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_cont</span> <span class="o">=</span> <span class="n">epochs_to_continuous</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_t</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_cont</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span><span class="p">:</span>
+            <span class="n">data_work</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prewhiten_sensor_data</span><span class="p">(</span>
+                <span class="n">data_cont</span><span class="p">,</span>
+                <span class="n">info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_whitening_info_</span><span class="p">,</span>
+                <span class="n">ch_names</span><span class="o">=</span><span class="n">ch_names</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_work</span> <span class="o">=</span> <span class="n">data_cont</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_adaptive</span><span class="p">(</span><span class="n">data_work</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">"n_removed"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span><span class="p">:</span>
+            <span class="n">removed</span> <span class="o">=</span> <span class="n">apply_spatial_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dewhitener_</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="s2">"removed"</span><span class="p">])</span>
+            <span class="n">cleaned</span> <span class="o">=</span> <span class="n">data_cont</span> <span class="o">-</span> <span class="n">removed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="n">apply_spatial_transform</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_dewhitener_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span>
+                <span class="p">)</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">"cleaned"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cleaned</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">"removed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">removed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cleaned</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">"cleaned"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adaptive_results_</span> <span class="o">=</span> <span class="n">res</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">cleaned</span> <span class="o">=</span> <span class="n">continuous_to_epochs</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="p">(</span><span class="n">n_ep</span><span class="p">,</span> <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_t</span><span class="p">))</span>
+
+        <span class="n">line_freqs</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"line_freqs"</span><span class="p">,</span> <span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"ZapLine: mode=adaptive, frequencies=</span><span class="si">%s</span><span class="s2"> Hz, </span><span class="si">%d</span><span class="s2"> segment pass(es), "</span>
+            <span class="s2">"removed=</span><span class="si">%d</span><span class="s2"> component pass(es)."</span><span class="p">,</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">line_freqs</span><span class="p">),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"chunk_info"</span><span class="p">,</span> <span class="p">())),</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_removed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reconstruct_mne_object</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_dss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Fit DSS filters to residual data and choose removals."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span><span class="p">:</span>
+            <span class="n">data_work</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prewhiten_sensor_data</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span>
+                <span class="n">info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_whitening_info_</span><span class="p">,</span>
+                <span class="n">ch_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mne_ch_names_</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_work</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="c1"># 1. Smooth data</span>
+        <span class="n">data_smooth</span><span class="p">,</span> <span class="n">data_residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_smooth_residual</span><span class="p">(</span><span class="n">data_work</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># 2. Setup (Rank)</span>
+        <span class="n">dss_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkeep</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkeep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">dss_rank</span>
+
+        <span class="c1"># 3. Call DSS fit on Residual</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_fit_numpy</span><span class="p">(</span><span class="n">data_residual</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span>
+
+        <span class="c1"># Keep full DSS solution before truncating to removed components.</span>
+        <span class="n">full_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">full_mixing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">qa_filters</span> <span class="o">=</span> <span class="n">full_filters</span>
+        <span class="n">qa_mixing</span> <span class="o">=</span> <span class="n">full_mixing</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">whiten</span><span class="p">:</span>
+            <span class="n">full_filters</span><span class="p">,</span> <span class="n">full_mixing</span> <span class="o">=</span> <span class="n">map_spatial_matrices_to_sensor_space</span><span class="p">(</span>
+                <span class="n">full_filters</span><span class="p">,</span>
+                <span class="n">full_mixing</span><span class="p">,</span>
+                <span class="n">whitener</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_whitener_</span><span class="p">,</span>
+                <span class="n">dewhitener</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dewhitener_</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span> <span class="o">=</span> <span class="n">full_mixing</span>
+
+        <span class="c1"># 4. Resolve the component count. DSS.auto_select handles both the 'auto' and</span>
+        <span class="c1"># the explicit-int cases, so the primary policy lives in exactly one place.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_select</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_select</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">check_artifact_presence</span><span class="p">(</span>
+                <span class="n">data_work</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span>
+            <span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">"ZapLine auto-selection found no DSS component boundary, "</span>
+                    <span class="s2">"but a line-noise peak is present at </span><span class="si">%.3g</span><span class="s2"> Hz; evaluating "</span>
+                    <span class="s2">"component counts spectrally."</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_min_components_for_line_suppression</span><span class="p">(</span>
+                    <span class="n">data_smooth</span><span class="o">=</span><span class="n">data_smooth</span><span class="p">,</span>
+                    <span class="n">data_residual</span><span class="o">=</span><span class="n">data_residual</span><span class="p">,</span>
+                    <span class="n">full_filters</span><span class="o">=</span><span class="n">qa_filters</span><span class="p">,</span>
+                    <span class="n">full_mixing</span><span class="o">=</span><span class="n">qa_mixing</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">"ZapLine spectral fallback selected </span><span class="si">%d</span><span class="s2"> components."</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"ZapLine auto-selected </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> components "</span>
+                <span class="s2">"(eigenvalues: max=</span><span class="si">%.3g</span><span class="s2">, min=</span><span class="si">%.3g</span><span class="s2">)"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span><span class="p">),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># 5. Truncate to line-dominated DSS components.</span>
+        <span class="c1"># Use DSS mixing from the full decomposition to reconstruct artifacts.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">=</span> <span class="n">full_filters</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span> <span class="o">=</span> <span class="n">full_mixing</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_min_components_for_line_suppression</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">data_smooth</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">data_residual</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">full_filters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">full_mixing</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Find the smallest DSS subspace that passes spectral QA."""</span>
+        <span class="n">n_candidates</span> <span class="o">=</span> <span class="n">full_filters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">last_status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_before_overcleaning</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">n_selected</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_candidates</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">filters</span> <span class="o">=</span> <span class="n">full_filters</span><span class="p">[:</span><span class="n">n_selected</span><span class="p">]</span>
+            <span class="n">mixing</span> <span class="o">=</span> <span class="n">full_mixing</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_selected</span><span class="p">]</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="n">filters</span> <span class="o">@</span> <span class="n">data_residual</span>
+            <span class="n">artifact</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">@</span> <span class="n">sources</span>
+            <span class="n">candidate_clean</span> <span class="o">=</span> <span class="n">data_smooth</span> <span class="o">+</span> <span class="p">(</span><span class="n">data_residual</span> <span class="o">-</span> <span class="n">artifact</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">check_spectral_qa</span><span class="p">(</span>
+                <span class="n">candidate_clean</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">last_status</span> <span class="o">=</span> <span class="n">status</span>
+
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">n_selected</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"weak"</span><span class="p">:</span>
+                <span class="n">best_before_overcleaning</span> <span class="o">=</span> <span class="n">n_selected</span>
+
+        <span class="k">if</span> <span class="n">best_before_overcleaning</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">best_before_overcleaning</span> <span class="o">=</span> <span class="n">n_candidates</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">"Line noise remains after evaluating the available DSS components "</span>
+            <span class="s2">"without a satisfactory spectral-QA result. Consider setting "</span>
+            <span class="s2">"n_select manually or using adaptive ZapLine."</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"ZapLine spectral fallback ended with status </span><span class="si">%r</span><span class="s2"> after </span><span class="si">%d</span><span class="s2"> candidates."</span><span class="p">,</span>
+            <span class="n">last_status</span><span class="p">,</span>
+            <span class="n">n_candidates</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">best_before_overcleaning</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_standard_cleaning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply cleaning with fitted DSS filters."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_removed_</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># 1. Smooth</span>
+        <span class="n">data_smooth</span><span class="p">,</span> <span class="n">data_residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_smooth_residual</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># 2. Extract artifact sources using fitted filters (manual to avoid recentering)</span>
+        <span class="c1"># DSS filters are spatial (n_comp, n_ch).</span>
+        <span class="c1"># data_residual is (n_ch, n_times).</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">data_residual</span>
+
+        <span class="c1"># 3. Project back to artifact using full DSS mixing for selected components.</span>
+        <span class="n">artifact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span> <span class="o">@</span> <span class="n">sources</span>
+
+        <span class="c1"># 4. Subtract artifact from residual, add back smooth</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">data_smooth</span> <span class="o">+</span> <span class="p">(</span><span class="n">data_residual</span> <span class="o">-</span> <span class="n">artifact</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cleaned</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_smooth_residual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">warn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Split data into smooth and residual components."""</span>
+        <span class="c1"># Use self.sfreq directly</span>
+        <span class="c1"># If line_freq=0 (unlikely here if fit passed), period undefined.</span>
+        <span class="c1"># Check integrity</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Should not happen in standard mode, effectively no cleaning</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Calculate exact period (may be non-integer)</span>
+        <span class="n">exact_period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span>
+        <span class="n">int_period</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">exact_period</span><span class="p">))</span>
+
+        <span class="c1"># Check if period is close to an integer (within 5%)</span>
+        <span class="n">period_error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">exact_period</span> <span class="o">-</span> <span class="n">int_period</span><span class="p">)</span> <span class="o">/</span> <span class="n">exact_period</span>
+
+        <span class="k">if</span> <span class="n">period_error</span> <span class="o">&gt;</span> <span class="mf">1e-4</span><span class="p">:</span>
+            <span class="c1"># Significant mismatch - use fractional smoothing</span>
+            <span class="k">if</span> <span class="n">warn</span> <span class="ow">and</span> <span class="n">period_error</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"sfreq/line_freq = </span><span class="si">{</span><span class="n">exact_period</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> is not close to an integer. "</span>
+                    <span class="sa">f</span><span class="s2">"Using fractional-period smoothing for accuracy."</span><span class="p">,</span>
+                    <span class="ne">UserWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">data_smooth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fractional_smooth</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">exact_period</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Period is close to integer - use standard smoothing</span>
+            <span class="k">if</span> <span class="n">warn</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">exact_period</span> <span class="o">-</span> <span class="n">int_period</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"sfreq/line_freq = </span><span class="si">{</span><span class="n">exact_period</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> is not exactly an integer. "</span>
+                    <span class="sa">f</span><span class="s2">"Smoothing will use period=</span><span class="si">{</span><span class="n">int_period</span><span class="si">}</span><span class="s2"> samples."</span><span class="p">,</span>
+                    <span class="ne">UserWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">smoother</span> <span class="o">=</span> <span class="n">SmoothingBias</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">int_period</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">data_smooth</span> <span class="o">=</span> <span class="n">smoother</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">data_residual</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">data_smooth</span>
+        <span class="k">return</span> <span class="n">data_smooth</span><span class="p">,</span> <span class="n">data_residual</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fractional_smooth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply fractional-period boxcar smoothing."""</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">lfilter</span>
+
+        <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">period</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Degenerate case (should not occur for valid line frequencies).</span>
+            <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">integ</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">period</span><span class="p">))</span>
+        <span class="n">frac</span> <span class="o">=</span> <span class="n">period</span> <span class="o">-</span> <span class="n">integ</span>
+
+        <span class="k">if</span> <span class="n">integ</span> <span class="o">&gt;=</span> <span class="n">n_times</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">n_times</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># remove onset step, filter, then restore DC.</span>
+        <span class="n">mean_head</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="n">integ</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">centered</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">mean_head</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">frac</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="c1"># Fast path for integer period using cumulative sums.</span>
+            <span class="n">smoothed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">centered</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">smoothed</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">integ</span><span class="p">:]</span> <span class="o">=</span> <span class="n">smoothed</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">integ</span><span class="p">:]</span> <span class="o">-</span> <span class="n">smoothed</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="n">integ</span><span class="p">]</span>
+            <span class="n">smoothed</span> <span class="o">=</span> <span class="n">smoothed</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">integ</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">integ</span><span class="p">),</span> <span class="p">[</span><span class="n">frac</span><span class="p">]])</span> <span class="o">/</span> <span class="n">period</span>
+            <span class="n">smoothed</span> <span class="o">=</span> <span class="n">lfilter</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="n">centered</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">smoothed</span> <span class="o">+=</span> <span class="n">mean_head</span>
+        <span class="k">return</span> <span class="n">smoothed</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># Adaptive Mode (ZapLine-plus) Methods</span>
+    <span class="c1"># =========================================================================</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_adaptive</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Run the adaptive ZapLine processing path."""</span>
+        <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adaptive_params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Extract params with defaults</span>
+        <span class="n">fmin</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fmin"</span><span class="p">,</span> <span class="mf">17.0</span><span class="p">)</span>
+        <span class="n">fmax</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fmax"</span><span class="p">,</span> <span class="mf">99.0</span><span class="p">)</span>
+        <span class="n">process_harmonics</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"process_harmonics"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">max_harmonics</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_harmonics"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">min_chunk_len</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_chunk_len"</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">)</span>
+
+        <span class="c1"># 1. Automatic frequency detection</span>
+        <span class="n">line_freqs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span>
+        <span class="k">if</span> <span class="n">line_freqs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"ZapLine adaptive frequency detection started."</span><span class="p">)</span>
+            <span class="n">line_freqs</span> <span class="o">=</span> <span class="n">find_noise_freqs</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">fmin</span><span class="o">=</span><span class="n">fmin</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"ZapLine adaptive frequencies detected: </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span> <span class="n">line_freqs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line_freqs</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">line_freqs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">line_freqs</span><span class="p">)]</span>
+
+        <span class="c1"># Quick exit if nothing to clean</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line_freqs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"cleaned"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                <span class="s2">"removed"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+                <span class="s2">"n_removed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">"line_freq"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="s2">"chunk_info"</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="p">}</span>
+
+        <span class="n">current_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">all_chunk_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Collect all target frequencies</span>
+        <span class="n">all_freqs_to_process</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">lfreq</span> <span class="ow">in</span> <span class="n">line_freqs</span><span class="p">:</span>
+            <span class="n">all_freqs_to_process</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lfreq</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">process_harmonics</span><span class="p">:</span>
+                <span class="n">harmonics</span> <span class="o">=</span> <span class="n">detect_harmonics</span><span class="p">(</span>
+                    <span class="n">current_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">lfreq</span><span class="p">,</span> <span class="n">max_harmonics</span>
+                <span class="p">)</span>
+                <span class="n">all_freqs_to_process</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">harmonics</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_smoother</span> <span class="o">=</span> <span class="n">_as_smoother</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smooth</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">freq_idx</span><span class="p">,</span> <span class="n">target_freq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_freqs_to_process</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_target_freq_</span> <span class="o">=</span> <span class="n">target_freq</span>
+                <span class="n">segmenter</span> <span class="o">=</span> <span class="n">CovarianceSegmenter</span><span class="p">(</span>
+                    <span class="n">sfreq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                    <span class="n">min_chunk_len</span><span class="o">=</span><span class="n">min_chunk_len</span><span class="p">,</span>
+                    <span class="n">bandpass</span><span class="o">=</span><span class="p">(</span><span class="n">target_freq</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">target_freq</span> <span class="o">+</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">current_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_segmented</span><span class="p">(</span>
+                    <span class="n">current_data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                    <span class="n">segmenter</span><span class="o">=</span><span class="n">segmenter</span><span class="p">,</span>
+                    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">"ZapLine adaptive frequency pass </span><span class="si">%.3g</span><span class="s2"> Hz completed over </span><span class="si">%d</span><span class="s2"> "</span>
+                    <span class="s2">"segment(s)."</span><span class="p">,</span>
+                    <span class="n">target_freq</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_results_</span> <span class="ow">or</span> <span class="p">()),</span>
+                <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_results_</span> <span class="ow">or</span> <span class="p">[]:</span>
+                    <span class="n">all_chunk_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">"frequency"</span><span class="p">:</span> <span class="n">target_freq</span><span class="p">,</span>
+                            <span class="s2">"fine_freq"</span><span class="p">:</span> <span class="n">seg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fine_freq"</span><span class="p">),</span>
+                            <span class="s2">"start"</span><span class="p">:</span> <span class="n">seg</span><span class="p">[</span><span class="s2">"start"</span><span class="p">],</span>
+                            <span class="s2">"end"</span><span class="p">:</span> <span class="n">seg</span><span class="p">[</span><span class="s2">"end"</span><span class="p">],</span>
+                            <span class="s2">"n_removed"</span><span class="p">:</span> <span class="n">seg</span><span class="p">[</span><span class="s2">"n_selected"</span><span class="p">],</span>
+                            <span class="s2">"artifact_present"</span><span class="p">:</span> <span class="n">seg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"artifact_present"</span><span class="p">),</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                    <span class="c1"># Representative attributes for plotting</span>
+                    <span class="k">if</span> <span class="n">seg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eigenvalues"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span> <span class="o">=</span> <span class="n">seg</span><span class="p">[</span><span class="s2">"eigenvalues"</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">seg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"patterns"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="n">seg</span><span class="p">[</span><span class="s2">"patterns"</span><span class="p">]</span>
+                <span class="n">_emit_progress</span><span class="p">(</span>
+                    <span class="n">callback</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">"zapline"</span><span class="p">,</span>
+                    <span class="n">stage</span><span class="o">=</span><span class="s2">"frequency"</span><span class="p">,</span>
+                    <span class="n">current</span><span class="o">=</span><span class="n">freq_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">all_freqs_to_process</span><span class="p">),</span>
+                    <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">target_freq</span><span class="p">),</span>
+                <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_target_freq_</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"cleaned"</span><span class="p">:</span> <span class="n">current_data</span><span class="p">,</span>
+            <span class="s2">"removed"</span><span class="p">:</span> <span class="n">data</span> <span class="o">-</span> <span class="n">current_data</span><span class="p">,</span>
+            <span class="s2">"n_removed"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_removed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_chunk_metadata</span><span class="p">),</span>
+            <span class="s2">"line_freq"</span><span class="p">:</span> <span class="n">line_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">line_freqs</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"line_freqs"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">all_freqs_to_process</span><span class="p">),</span>
+            <span class="s2">"chunk_info"</span><span class="p">:</span> <span class="n">all_chunk_metadata</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Clean one segment with the ZapLine spectral-QA retry loop."""</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adaptive_params</span>
+        <span class="n">n_remove_params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_remove_params"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">qa_params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"qa_params"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">hybrid_fallback</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hybrid_fallback"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">sigma_init</span> <span class="o">=</span> <span class="n">n_remove_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sigma"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selection_threshold</span><span class="p">)</span>
+        <span class="n">min_remove</span> <span class="o">=</span> <span class="n">n_remove_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_remove"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_select</span><span class="p">)</span>
+        <span class="n">max_prop_remove</span> <span class="o">=</span> <span class="n">n_remove_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_prop"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_prop_remove</span><span class="p">)</span>
+
+        <span class="n">target_freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_freq_</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_freq</span>
+        <span class="k">if</span> <span class="n">target_freq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"ZapLine needs a target frequency to clean a segment. Pass "</span>
+                <span class="s2">"line_freq=..., or use adaptive=True to detect it."</span>
+            <span class="p">)</span>
+
+        <span class="n">max_sigma</span> <span class="o">=</span> <span class="n">qa_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_sigma"</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">)</span>
+        <span class="n">min_sigma</span> <span class="o">=</span> <span class="n">qa_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_sigma"</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+        <span class="c1"># New QA parameters</span>
+        <span class="n">max_prop_above</span> <span class="o">=</span> <span class="n">qa_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_prop_above_upper"</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">)</span>
+        <span class="n">max_prop_below</span> <span class="o">=</span> <span class="n">qa_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_prop_below_lower"</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">)</span>
+        <span class="n">freq_detect_mult</span> <span class="o">=</span> <span class="n">qa_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"freq_detect_mult_fine"</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+
+        <span class="n">n_channels</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fine_freq</span> <span class="o">=</span> <span class="n">find_fine_peak</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">target_freq</span><span class="p">)</span>
+        <span class="n">present</span> <span class="o">=</span> <span class="n">check_artifact_presence</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">fine_freq</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"ZapLine segment: target=</span><span class="si">%.3g</span><span class="s2"> Hz, fine=</span><span class="si">%.3g</span><span class="s2"> Hz, artifact_present=</span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+            <span class="n">target_freq</span><span class="p">,</span>
+            <span class="n">fine_freq</span><span class="p">,</span>
+            <span class="n">present</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">current_sigma</span> <span class="o">=</span> <span class="n">sigma_init</span>
+        <span class="n">current_min_remove</span> <span class="o">=</span> <span class="n">min_remove</span> <span class="k">if</span> <span class="n">present</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="n">best_chunk_clean</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">is_too_strong</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
+
+        <span class="n">max_retries</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">res_n_removed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">res_cleaned</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">_retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
+            <span class="c1"># Fresh ZapLine for this chunk. Deriving it from get_params()</span>
+            <span class="c1"># carries every setting (rank, reg, whiten, nfft, ...) rather than</span>
+            <span class="c1"># silently dropping whatever this call site forgot to list.</span>
+            <span class="n">est</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
+                <span class="o">**</span><span class="p">{</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">(),</span>
+                    <span class="s2">"line_freq"</span><span class="p">:</span> <span class="n">fine_freq</span><span class="p">,</span>
+                    <span class="s2">"n_select"</span><span class="p">:</span> <span class="s2">"auto"</span><span class="p">,</span>
+                    <span class="s2">"threshold"</span><span class="p">:</span> <span class="n">current_sigma</span><span class="p">,</span>
+                    <span class="s2">"adaptive"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">"crossfade"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="s2">"verbose"</span><span class="p">:</span> <span class="s2">"WARNING"</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Adaptive ZapLine owns the segment-level aggregate report; hide</span>
+            <span class="c1"># each retry's nested DSS fit from the user-facing INFO stream.</span>
+            <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="n">res_cleaned</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="n">res_n_removed</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">n_removed_</span>
+
+            <span class="c1"># Apply constraints</span>
+            <span class="n">max_rem_cap</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">*</span> <span class="n">max_prop_remove</span><span class="p">)</span>
+            <span class="n">n_rem</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">res_n_removed</span><span class="p">,</span> <span class="n">max_rem_cap</span><span class="p">)</span>
+            <span class="n">n_rem</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">n_rem</span><span class="p">,</span> <span class="n">current_min_remove</span><span class="p">)</span>
+
+            <span class="c1"># Refit if constraints changed n_removed</span>
+            <span class="k">if</span> <span class="n">n_rem</span> <span class="o">!=</span> <span class="n">res_n_removed</span><span class="p">:</span>
+                <span class="n">est</span> <span class="o">=</span> <span class="n">ZapLine</span><span class="p">(</span>
+                    <span class="n">sfreq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                    <span class="n">line_freq</span><span class="o">=</span><span class="n">fine_freq</span><span class="p">,</span>
+                    <span class="n">n_select</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_rem</span><span class="p">),</span>
+                    <span class="n">knee_rel_floor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">knee_rel_floor</span><span class="p">,</span>
+                    <span class="n">knee_min_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">knee_min_ratio</span><span class="p">,</span>
+                    <span class="n">adaptive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="c1"># The outer adaptive operation owns the aggregate report.</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                <span class="n">res_cleaned</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                <span class="n">res_n_removed</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">n_removed_</span>
+
+            <span class="n">status</span> <span class="o">=</span> <span class="n">check_spectral_qa</span><span class="p">(</span>
+                <span class="n">res_cleaned</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                <span class="n">fine_freq</span><span class="p">,</span>
+                <span class="n">max_prop_above</span><span class="o">=</span><span class="n">max_prop_above</span><span class="p">,</span>
+                <span class="n">max_prop_below</span><span class="o">=</span><span class="n">max_prop_below</span><span class="p">,</span>
+                <span class="n">freq_detect_mult</span><span class="o">=</span><span class="n">freq_detect_mult</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"ZapLine segment retry </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">: fine=</span><span class="si">%.3g</span><span class="s2"> Hz, sigma=</span><span class="si">%.3g</span><span class="s2">, "</span>
+                <span class="s2">"selected=</span><span class="si">%d</span><span class="s2">, status=</span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+                <span class="n">_retry</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">max_retries</span><span class="p">,</span>
+                <span class="n">fine_freq</span><span class="p">,</span>
+                <span class="n">current_sigma</span><span class="p">,</span>
+                <span class="n">res_n_removed</span><span class="p">,</span>
+                <span class="n">status</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">:</span>
+                <span class="n">best_chunk_clean</span> <span class="o">=</span> <span class="n">res_cleaned</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"weak"</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_too_strong</span><span class="p">:</span>
+                    <span class="n">best_chunk_clean</span> <span class="o">=</span> <span class="n">res_cleaned</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">current_sigma</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">current_sigma</span> <span class="o">-</span> <span class="mf">0.25</span><span class="p">,</span> <span class="n">min_sigma</span><span class="p">)</span>
+                    <span class="n">current_min_remove</span> <span class="o">=</span> <span class="n">current_min_remove</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"strong"</span><span class="p">:</span>
+                <span class="n">is_too_strong</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">current_sigma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">current_sigma</span> <span class="o">+</span> <span class="mf">0.25</span><span class="p">,</span> <span class="n">max_sigma</span><span class="p">)</span>
+                <span class="n">current_min_remove</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">current_min_remove</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">best_chunk_clean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">best_chunk_clean</span> <span class="o">=</span> <span class="n">res_cleaned</span>
+
+        <span class="k">if</span> <span class="n">hybrid_fallback</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"weak"</span><span class="p">:</span>
+            <span class="n">best_chunk_clean</span> <span class="o">=</span> <span class="n">apply_hybrid_cleanup</span><span class="p">(</span>
+                <span class="n">best_chunk_clean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">fine_freq</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"cleaned"</span><span class="p">:</span> <span class="n">best_chunk_clean</span><span class="p">,</span>
+            <span class="s2">"n_selected"</span><span class="p">:</span> <span class="n">res_n_removed</span><span class="p">,</span>
+            <span class="s2">"eigenvalues"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="s2">"eigenvalues_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="s2">"patterns"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="s2">"patterns_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="s2">"filters"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="s2">"filters_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="c1"># ZapLine-specific diagnostics, carried into segment_results_</span>
+            <span class="s2">"fine_freq"</span><span class="p">:</span> <span class="n">fine_freq</span><span class="p">,</span>
+            <span class="s2">"artifact_present"</span><span class="p">:</span> <span class="n">present</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

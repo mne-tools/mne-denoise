@@ -1,0 +1,75 @@
+
+
+.. _sphx_glr_auto_examples_spectrum_interpolation:
+
+Spectrum Interpolation Examples
+===============================
+
+Overview
+--------
+
+Examples demonstrating spectrum-interpolation line-noise removal
+(Leske & Dalal, 2019). The power-line frequency and its harmonics are removed by
+interpolating the amplitude spectrum across a narrow band while preserving the
+phase, leaving broadband activity around the line frequency largely intact.
+The FFT-based method is best suited to continuous recordings or long segments;
+short epochs should be inspected for edge effects.
+
+Files
+-----
+
+- ``plot_01_spectrum_interpolation.py``: Basic spectrum interpolation on
+  synthetic data with 60 Hz line noise and harmonics.
+
+Data Requirements
+-----------------
+
+- The example runs directly on synthetic data with no external downloads.
+
+References
+----------
+
+- Leske, S., & Dalal, S. S. (2019). Reducing power line noise in EEG and MEG
+  data via spectrum interpolation. NeuroImage, 189, 763-776.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates SpectrumInterpolation on a synthetic recording contaminated by 60 Hz line noise and its harmonics.">
+
+.. only:: html
+
+  .. image:: /auto_examples/spectrum_interpolation/images/thumb/sphx_glr_plot_01_spectrum_interpolation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/spectrum_interpolation/plot_01_spectrum_interpolation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Spectrum Interpolation: Power-Line Noise Removal.</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/spectrum_interpolation/plot_01_spectrum_interpolation
+

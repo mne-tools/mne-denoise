@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.get\_color
+===========================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: get_color

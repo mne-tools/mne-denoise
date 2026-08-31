@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.style\_axes
+============================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: style_axes

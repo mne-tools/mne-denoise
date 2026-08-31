@@ -1,0 +1,6 @@
+﻿mne\_denoise.ssa.compute\_basic\_ssa
+====================================
+
+.. currentmodule:: mne_denoise.ssa
+
+.. autofunction:: compute_basic_ssa

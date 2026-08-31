@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_psd\_gallery
+===================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_psd_gallery

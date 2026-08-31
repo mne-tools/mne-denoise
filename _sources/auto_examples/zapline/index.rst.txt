@@ -1,0 +1,167 @@
+
+
+.. _sphx_glr_auto_examples_zapline:
+
+ZapLine Examples
+================
+
+Overview
+--------
+
+Examples demonstrating ZapLine and ZapLine-plus for removing power-line
+artifacts from synthetic, epoched, continuous, and adaptive-cleaning scenarios.
+
+Files
+-----
+
+- ``plot_01_basic_usage.py``: Basic ZapLine usage on synthetic line-noise data.
+- ``plot_02_parameter_tuning.py``: Parameter tuning and real NoiseTools MEG data.
+- ``plot_03_epoched_data.py``: Epoched ZapLine workflows and high-channel MEG data.
+- ``plot_04_adaptive_mode.py``: ZapLine-plus style adaptive cleaning on non-stationary data.
+- ``plot_05_adaptive_advanced.py``: Advanced harmonic and chunk-level adaptive outputs.
+
+Data Requirements
+-----------------
+
+- Synthetic sections run directly with no external data.
+- Examples using MNE datasets download and cache them through MNE when needed.
+- NoiseTools-backed examples download and cache the required `.mat` files into
+  ``examples/zapline/data`` the first time they are run.
+
+References
+----------
+
+- de Cheveigné (2020). ZapLine: A simple and effective method to remove power line artifacts. NeuroImage.
+- Klug & Kloosterman (2022). Zapline-plus: A Zapline extension for automatic and adaptive removal of frequency-specific noise artifacts in M/EEG. Human Brain Mapping.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example introduces ZapLine on a controlled synthetic dataset. The goal is to show the basic workflow first on a simple 50 Hz contamination problem, then extend it to harmonics and more realistic multi-channel structure.">
+
+.. only:: html
+
+  .. image:: /auto_examples/zapline/images/thumb/sphx_glr_plot_01_basic_usage_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/zapline/plot_01_basic_usage`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ZapLine: Line Noise Removal Fundamentals.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how the main ZapLine tuning parameters change the cleaning behavior on synthetic data, then applies the same workflow to the real MNE Sample MEG recording.">
+
+.. only:: html
+
+  .. image:: /auto_examples/zapline/images/thumb/sphx_glr_plot_02_parameter_tuning_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/zapline/plot_02_parameter_tuning`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ZapLine: Parameter Tuning and Real Data.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how ZapLine can be applied when the data are naturally epoched, then extends the same workflow to real MNE Sample MEG data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/zapline/images/thumb/sphx_glr_plot_03_epoched_data_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/zapline/plot_03_epoched_data`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ZapLine: Epoched Data and Real Data Examples.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example follows the main steps of ZapLine-plus on a synthetic recording whose line noise changes in frequency, topography, and strength over time. The goal is to make the adaptive logic visible: frequency detection, segmentation, and chunk-wise cleaning.">
+
+.. only:: html
+
+  .. image:: /auto_examples/zapline/images/thumb/sphx_glr_plot_04_adaptive_mode_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/zapline/plot_04_adaptive_mode`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ZapLine-plus: Adaptive Cleaning on Non-Stationary Noise.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example focuses on the extra adaptive features around the core ZapLine step: harmonic handling, chunk metadata, and the hybrid fallback path when a plain component projection is not enough.">
+
+.. only:: html
+
+  .. image:: /auto_examples/zapline/images/thumb/sphx_glr_plot_05_adaptive_advanced_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/zapline/plot_05_adaptive_advanced`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ZapLine-plus: Advanced Settings and Features.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the auto-mode fix from Issue #34. With high-channel-count MEG recordings (e.g., CTF 275-magnetometer systems), line noise couples into many sensors through different lead-field paths, producing several co-equal strong DSS components. The classic iterative_outlier_removal selector underdetects in this regime because no single eigenvalue stands out from the others; the new auto_select_components_robust falls back to a log-space knee detector that catches the cluster boundary.">
+
+.. only:: html
+
+  .. image:: /auto_examples/zapline/images/thumb/sphx_glr_plot_06_ctf_meg_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/zapline/plot_06_ctf_meg`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ZapLine on MEG-like data with many co-equal noise components.</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/zapline/plot_01_basic_usage
+   /auto_examples/zapline/plot_02_parameter_tuning
+   /auto_examples/zapline/plot_03_epoched_data
+   /auto_examples/zapline/plot_04_adaptive_mode
+   /auto_examples/zapline/plot_05_adaptive_advanced
+   /auto_examples/zapline/plot_06_ctf_meg
+

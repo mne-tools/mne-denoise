@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_asr\_calibration\_fraction
+=================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_asr_calibration_fraction

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_guided\_asr\_weights
+===========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_guided_asr_weights

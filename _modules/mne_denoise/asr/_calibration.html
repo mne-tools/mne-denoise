@@ -1,0 +1,964 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.asr._calibration &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/asr/_calibration';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.asr._calibration</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.asr._calibration</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""ASR calibration helpers."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_emit_progress</span><span class="p">,</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">_aggregate_block_covariances</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_rms_distribution</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">_design_statistics_filter</span><span class="p">,</span> <span class="n">_lfilter_channels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._spd</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_regularize_spd</span><span class="p">,</span>
+    <span class="n">_riemannian_nonlinear_eigenspace</span><span class="p">,</span>
+    <span class="n">_sqrt_and_eig</span><span class="p">,</span>
+    <span class="n">_sqrtm_spd</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASRState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_check_enough_samples</span><span class="p">,</span>
+    <span class="n">_round_half_up</span><span class="p">,</span>
+    <span class="n">_validate_array_2d</span><span class="p">,</span>
+    <span class="n">_validate_common_params</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._windowing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_create_sample_mask_from_windows</span><span class="p">,</span>
+    <span class="n">_get_fractional_window_starts</span><span class="p">,</span>
+    <span class="n">_select_clean_windows</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="calibrate_asr">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.calibrate_asr.html#mne_denoise.asr.calibrate_asr">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calibrate_asr</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="n">calibration</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+    <span class="n">calibration_window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">calibration_window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="n">ref_max_bad_channels</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.075</span><span class="p">,</span>
+    <span class="n">ref_tolerances</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">),</span>
+    <span class="n">blocksize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">max_dropout_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">min_clean_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">cov_estimator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"geometric_median"</span><span class="p">,</span>
+    <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">filter_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"standard"</span><span class="p">,</span>
+    <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ASRState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Calibrate an ASR state from continuous channel-first data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Calibration data.</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    cutoff : float, default=20.0</span>
+<span class="sd">        ASR threshold multiplier.</span>
+<span class="sd">    window_length : float, default=0.5</span>
+<span class="sd">        Processing window length in seconds.</span>
+<span class="sd">    window_overlap : float, default=0.66</span>
+<span class="sd">        Overlap fraction for processing windows.</span>
+<span class="sd">    calibration : {"auto", "manual"}, default="auto"</span>
+<span class="sd">        Clean-window selection rule.</span>
+<span class="sd">    calibration_window_length : float, default=1.0</span>
+<span class="sd">        Automatic calibration-window length in seconds.</span>
+<span class="sd">    calibration_window_overlap : float, default=0.66</span>
+<span class="sd">        Overlap fraction for calibration windows.</span>
+<span class="sd">    ref_max_bad_channels : float, default=0.075</span>
+<span class="sd">        Maximum bad-channel fraction for a retained calibration window.</span>
+<span class="sd">    ref_tolerances : tuple of float, default=(-np.inf, 5.5)</span>
+<span class="sd">        Lower and upper robust z-score limits for calibration windows.</span>
+<span class="sd">    blocksize : int, default=10</span>
+<span class="sd">        Samples per covariance block.</span>
+<span class="sd">    max_dropout_fraction : float, default=0.1</span>
+<span class="sd">        Low-tail fraction excluded while fitting RMS thresholds.</span>
+<span class="sd">    min_clean_fraction : float, default=0.25</span>
+<span class="sd">        Minimum clean fraction used for RMS fitting.</span>
+<span class="sd">    cov_estimator : {"geometric_median", "mean", "median"}, default="geometric_median"</span>
+<span class="sd">        Covariance aggregation rule.</span>
+<span class="sd">    regularization : float, default=1e-8</span>
+<span class="sd">        Relative SPD eigenvalue floor.</span>
+<span class="sd">    filter_kind : {"none", "asr", "highpass"}, default="none"</span>
+<span class="sd">        Statistics-only filter.</span>
+<span class="sd">    method : {"standard", "riemannian", "riemannian_windowed"}, default="standard"</span>
+<span class="sd">        Covariance backend.</span>
+<span class="sd">    max_mem_mb : int or None, default=512</span>
+<span class="sd">        Memory cap for covariance aggregation.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous threshold-progress callback.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    state : ASRState</span>
+<span class="sd">        Calibrated state.</span>
+<span class="sd">    diagnostics : dict</span>
+<span class="sd">        Calibration diagnostics.</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">_validate_common_params</span><span class="p">(</span>
+        <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+        <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+        <span class="n">min_clean_fraction</span><span class="o">=</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+        <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">calibration</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"manual"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"calibration must be 'auto' or 'manual'"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cov_estimator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"geometric_median"</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"median"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"cov_estimator must be 'geometric_median', 'mean', or 'median'"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"standard"</span><span class="p">,</span> <span class="s2">"riemannian"</span><span class="p">,</span> <span class="s2">"riemannian_windowed"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"method must be 'standard', 'riemannian', or 'riemannian_windowed'"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">blocksize</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"blocksize must be at least 1"</span><span class="p">)</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">_validate_array_2d</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">_check_enough_samples</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">sfreq</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">window_length</span><span class="p">,</span> <span class="n">calibration_window_length</span><span class="p">))</span>
+
+    <span class="n">cal_len</span> <span class="o">=</span> <span class="n">_round_half_up</span><span class="p">(</span><span class="n">calibration_window_length</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">calibration</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+        <span class="n">cal_starts</span> <span class="o">=</span> <span class="n">_get_fractional_window_starts</span><span class="p">(</span>
+            <span class="n">n_times</span><span class="p">,</span>
+            <span class="n">cal_len</span><span class="p">,</span>
+            <span class="n">calibration_window_overlap</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">clean_window_mask</span><span class="p">,</span> <span class="n">clean_window_scores</span> <span class="o">=</span> <span class="n">_select_clean_windows</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span>
+            <span class="n">cal_starts</span><span class="p">,</span>
+            <span class="n">cal_len</span><span class="p">,</span>
+            <span class="n">ref_max_bad_channels</span><span class="o">=</span><span class="n">ref_max_bad_channels</span><span class="p">,</span>
+            <span class="n">ref_tolerances</span><span class="o">=</span><span class="n">ref_tolerances</span><span class="p">,</span>
+            <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+            <span class="n">min_clean_fraction</span><span class="o">=</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">clean_sample_mask</span> <span class="o">=</span> <span class="n">_create_sample_mask_from_windows</span><span class="p">(</span>
+            <span class="n">n_times</span><span class="p">,</span>
+            <span class="n">cal_starts</span><span class="p">,</span>
+            <span class="n">cal_len</span><span class="p">,</span>
+            <span class="o">~</span><span class="n">clean_window_mask</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">X_calibration</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">clean_sample_mask</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Manual calibration consumes all supplied samples directly. Do not</span>
+        <span class="c1"># impose the longer automatic-selection window on pointwise backends</span>
+        <span class="c1"># such as Juggler; only the threshold window must fit.</span>
+        <span class="n">cal_starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">clean_window_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cal_starts</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">clean_window_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">cal_starts</span><span class="p">),</span> <span class="n">n_channels</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">clean_sample_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">X_calibration</span> <span class="o">=</span> <span class="n">X</span>
+
+    <span class="n">filter_b</span><span class="p">,</span> <span class="n">filter_a</span> <span class="o">=</span> <span class="n">_design_statistics_filter</span><span class="p">(</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">filter_kind</span><span class="p">)</span>
+    <span class="n">X_clean</span><span class="p">,</span> <span class="n">filter_zi</span> <span class="o">=</span> <span class="n">_lfilter_channels</span><span class="p">(</span><span class="n">X_calibration</span><span class="p">,</span> <span class="n">filter_b</span><span class="p">,</span> <span class="n">filter_a</span><span class="p">)</span>
+    <span class="n">riemannian_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Both Riemannian variants aggregate block covariances with Riemannian primitives</span>
+    <span class="c1"># (geometric median + Karcher-style block reduction). The difference is the</span>
+    <span class="c1"># eigenspace family used for V (and downstream T):</span>
+    <span class="c1">#   - "riemannian"           : tangent-space V (standard reference one-shot processing)</span>
+    <span class="c1">#   - "riemannian_windowed"  : standard eigh on the Riemannian-aggregated C</span>
+    <span class="c1">#                              (cutoff-sensitive per-window processing)</span>
+    <span class="n">use_riemannian_aggregation</span> <span class="o">=</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"riemannian"</span><span class="p">,</span> <span class="s2">"riemannian_windowed"</span><span class="p">)</span>
+    <span class="n">C</span><span class="p">,</span> <span class="n">memory_info</span> <span class="o">=</span> <span class="n">_aggregate_block_covariances</span><span class="p">(</span>
+        <span class="n">X_clean</span><span class="p">,</span>
+        <span class="n">blocksize</span><span class="p">,</span>
+        <span class="n">cov_estimator</span><span class="p">,</span>
+        <span class="n">covariance_kind</span><span class="o">=</span><span class="s2">"standard"</span> <span class="k">if</span> <span class="n">use_riemannian_aggregation</span> <span class="k">else</span> <span class="s2">"padded"</span><span class="p">,</span>
+        <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">_regularize_spd</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">regularization</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"riemannian"</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">_sqrtm_spd</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">regularization</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_riemannian_nonlinear_eigenspace</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">regularization</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Both "standard" and "riemannian_windowed" use standard eigh on C.</span>
+        <span class="c1"># The Riemannian-windowed variant gets robustness from the geometric-</span>
+        <span class="c1"># median aggregation above; cutoff sensitivity comes from the matching</span>
+        <span class="c1"># V family at calibration and per-window processing time.</span>
+        <span class="n">M</span><span class="p">,</span> <span class="n">eigvals</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_sqrt_and_eig</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">regularization</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">eigvals</span> <span class="o">&gt;</span> <span class="n">regularization</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)))</span>
+
+    <span class="n">thresholds</span><span class="p">,</span> <span class="n">threshold_info</span> <span class="o">=</span> <span class="n">_fit_component_thresholds</span><span class="p">(</span>
+        <span class="n">X_clean</span><span class="p">,</span>
+        <span class="n">V</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+        <span class="n">min_clean_fraction</span><span class="o">=</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+        <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="n">ASRState</span><span class="p">(</span>
+        <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
+        <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
+        <span class="n">thresholds</span><span class="o">=</span><span class="n">thresholds</span><span class="p">,</span>
+        <span class="n">calibration_patterns</span><span class="o">=</span><span class="n">V</span><span class="p">,</span>
+        <span class="n">filter_b</span><span class="o">=</span><span class="n">filter_b</span><span class="p">,</span>
+        <span class="n">filter_a</span><span class="o">=</span><span class="n">filter_a</span><span class="p">,</span>
+        <span class="n">filter_zi</span><span class="o">=</span><span class="n">filter_zi</span><span class="p">,</span>
+        <span class="n">cov</span><span class="o">=</span><span class="n">C</span><span class="p">,</span>
+        <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+        <span class="n">riemannian_solver</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"nonlinear_eigenspace"</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"riemannian"</span><span class="p">,</span> <span class="s2">"riemannian_windowed"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"clean_window_mask"</span><span class="p">:</span> <span class="n">clean_window_mask</span><span class="p">,</span>
+        <span class="s2">"clean_window_scores"</span><span class="p">:</span> <span class="n">clean_window_scores</span><span class="p">,</span>
+        <span class="s2">"clean_sample_mask"</span><span class="p">:</span> <span class="n">clean_sample_mask</span><span class="p">,</span>
+        <span class="s2">"calibration_window_starts"</span><span class="p">:</span> <span class="n">cal_starts</span><span class="p">,</span>
+        <span class="s2">"calibration_window_length_samples"</span><span class="p">:</span> <span class="n">cal_len</span><span class="p">,</span>
+        <span class="s2">"blocksize"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">blocksize</span><span class="p">),</span>
+        <span class="s2">"n_clean_windows"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">clean_window_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+        <span class="s2">"n_calibration_windows"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cal_starts</span><span class="p">)),</span>
+        <span class="s2">"calibration_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">X_clean</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="s2">"rank"</span><span class="p">:</span> <span class="n">rank</span><span class="p">,</span>
+        <span class="s2">"thresholds"</span><span class="p">:</span> <span class="n">thresholds</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"threshold_mu"</span><span class="p">:</span> <span class="n">threshold_info</span><span class="p">[</span><span class="s2">"mu"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"threshold_sigma"</span><span class="p">:</span> <span class="n">threshold_info</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"threshold_beta"</span><span class="p">:</span> <span class="n">threshold_info</span><span class="p">[</span><span class="s2">"beta"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"threshold_fit_error"</span><span class="p">:</span> <span class="n">threshold_info</span><span class="p">[</span><span class="s2">"fit_error"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"threshold_fit_interval"</span><span class="p">:</span> <span class="n">threshold_info</span><span class="p">[</span><span class="s2">"fit_interval"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"cov_condition"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">C</span><span class="p">)),</span>
+        <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+        <span class="s2">"filter_kind"</span><span class="p">:</span> <span class="n">filter_kind</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">memory_info</span><span class="p">)</span>
+    <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">riemannian_info</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"ASR calibration details: method=</span><span class="si">%s</span><span class="s2">, clean windows=</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">, "</span>
+        <span class="s2">"calibration samples=</span><span class="si">%d</span><span class="s2">, rank=</span><span class="si">%d</span><span class="s2">, filter=</span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">,</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_clean_windows"</span><span class="p">],</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_calibration_windows"</span><span class="p">],</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"calibration_samples"</span><span class="p">],</span>
+        <span class="n">rank</span><span class="p">,</span>
+        <span class="n">filter_kind</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">diagnostics</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fit_component_thresholds</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">min_clean_fraction</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_dropout_fraction</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Fit threshold statistics for all principal components."""</span>
+    <span class="n">win_len</span> <span class="o">=</span> <span class="n">_round_half_up</span><span class="p">(</span><span class="n">window_length</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">)</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="n">_get_fractional_window_starts</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">win_len</span><span class="p">,</span> <span class="n">window_overlap</span><span class="p">)</span>
+    <span class="n">projected</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">X</span>
+    <span class="n">thresholds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">mu_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">sigma_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">beta_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">fit_errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">fit_intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">comp_idx</span><span class="p">,</span> <span class="n">comp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">projected</span><span class="p">):</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">starts</span><span class="p">):</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">win_len</span><span class="p">]</span>
+            <span class="n">rms</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">segment</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">fit_rms_distribution</span><span class="p">(</span>
+            <span class="n">rms</span><span class="p">,</span>
+            <span class="n">min_clean_fraction</span><span class="o">=</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+            <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+            <span class="n">return_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">mu_values</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="n">sigma_values</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="n">beta_values</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"beta"</span><span class="p">]</span>
+        <span class="n">fit_errors</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"fit_error"</span><span class="p">]</span>
+        <span class="n">fit_intervals</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"fit_interval"</span><span class="p">]</span>
+        <span class="n">thresholds</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">cutoff</span> <span class="o">*</span> <span class="n">sigma</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"asr"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"calibration"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">comp_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">projected</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">component</span><span class="o">=</span><span class="n">comp_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">thresholds</span><span class="p">[</span><span class="n">comp_idx</span><span class="p">]),</span>
+        <span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"mu"</span><span class="p">:</span> <span class="n">mu_values</span><span class="p">,</span>
+        <span class="s2">"sigma"</span><span class="p">:</span> <span class="n">sigma_values</span><span class="p">,</span>
+        <span class="s2">"beta"</span><span class="p">:</span> <span class="n">beta_values</span><span class="p">,</span>
+        <span class="s2">"fit_error"</span><span class="p">:</span> <span class="n">fit_errors</span><span class="p">,</span>
+        <span class="s2">"fit_interval"</span><span class="p">:</span> <span class="n">fit_intervals</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">thresholds</span><span class="p">,</span> <span class="n">info</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

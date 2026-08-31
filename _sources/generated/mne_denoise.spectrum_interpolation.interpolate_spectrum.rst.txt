@@ -1,0 +1,6 @@
+﻿mne\_denoise.spectrum\_interpolation.interpolate\_spectrum
+==========================================================
+
+.. currentmodule:: mne_denoise.spectrum_interpolation
+
+.. autofunction:: interpolate_spectrum

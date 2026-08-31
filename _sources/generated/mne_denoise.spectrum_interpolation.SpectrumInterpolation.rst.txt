@@ -1,0 +1,31 @@
+﻿mne\_denoise.spectrum\_interpolation.SpectrumInterpolation
+==========================================================
+
+.. currentmodule:: mne_denoise.spectrum_interpolation
+
+.. autoclass:: SpectrumInterpolation
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SpectrumInterpolation.__init__
+      ~SpectrumInterpolation.fit
+      ~SpectrumInterpolation.fit_transform
+      ~SpectrumInterpolation.get_metadata_routing
+      ~SpectrumInterpolation.get_params
+      ~SpectrumInterpolation.set_fit_request
+      ~SpectrumInterpolation.set_output
+      ~SpectrumInterpolation.set_params
+      ~SpectrumInterpolation.set_transform_request
+      ~SpectrumInterpolation.transform
+   
+   
+
+   
+   
+   

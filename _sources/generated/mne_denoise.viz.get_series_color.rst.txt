@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.get\_series\_color
+===================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: get_series_color

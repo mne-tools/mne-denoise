@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.underclean\_proportion
+======================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: underclean_proportion

@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.noise\_surround\_ratio
+======================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: noise_surround_ratio

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_tradeoff\_scatter
+========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_tradeoff_scatter

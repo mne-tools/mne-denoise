@@ -1,0 +1,6 @@
+﻿mne\_denoise.sound.compute\_sound
+=================================
+
+.. currentmodule:: mne_denoise.sound
+
+.. autofunction:: compute_sound

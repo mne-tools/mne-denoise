@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_signal\_diagnostics\_summary
+===================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_signal_diagnostics_summary

@@ -1,0 +1,6 @@
+﻿mne\_denoise.quantify\_overcorrection
+=====================================
+
+.. currentmodule:: mne_denoise
+
+.. autofunction:: quantify_overcorrection

@@ -1,0 +1,6 @@
+﻿mne\_denoise.sound.compute\_sound\_ref\_best
+============================================
+
+.. currentmodule:: mne_denoise.sound
+
+.. autofunction:: compute_sound_ref_best

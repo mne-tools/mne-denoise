@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.spectral\_distortion
+====================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: spectral_distortion

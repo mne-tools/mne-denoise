@@ -1,0 +1,1216 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.asr.guided &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/asr/guided';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.asr.guided</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.asr.guided</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Guided soft-reconstruction variant of ASR."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._data</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_data_from_mne</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._covariance</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_covariance_stack_bytes</span><span class="p">,</span>
+    <span class="n">_process_memory_info</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._guidance</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_compute_guidance_covariance</span><span class="p">,</span>
+    <span class="n">_guided_component_weights</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._reconstruction</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_empty_process_diagnostics</span><span class="p">,</span>
+    <span class="n">_prepare_asr_stream</span><span class="p">,</span>
+    <span class="n">_process_asr_windowed</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASRState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">_validate_covariance_matrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASR</span>
+
+<span class="n">_EXPERIMENTAL_DISCLAIMER</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"GuidedASR soft reconstruction is an unpublished, unvalidated experimental "</span>
+    <span class="s2">"research prototype. Validate neural-signal preservation and artifact "</span>
+    <span class="s2">"attenuation independently before using it in scientific analyses."</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_guided_asr">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.process_guided_asr.html#mne_denoise.asr.process_guided_asr">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_guided_asr</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">artifact_cov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">preserve_cov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reconstruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"soft"</span><span class="p">,</span>
+    <span class="n">guidance_strength</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="n">max_dims</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+    <span class="n">lookahead</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Apply a calibrated ASR state with guided reconstruction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Continuous data in the calibrated channel order.</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    state : ASRState</span>
+<span class="sd">        Calibration state returned by calibrate_asr.</span>
+<span class="sd">    artifact_cov : ndarray, shape (n_channels, n_channels), or None, default=None</span>
+<span class="sd">        Covariance describing directions to attenuate.</span>
+<span class="sd">    preserve_cov : ndarray, shape (n_channels, n_channels), or None, default=None</span>
+<span class="sd">        Covariance describing directions to preserve.</span>
+<span class="sd">    reconstruction : {"soft", "hard"}, default="soft"</span>
+<span class="sd">        Use guidance-aware continuous weights or standard binary ASR weights.</span>
+<span class="sd">    guidance_strength : float, default=1.0</span>
+<span class="sd">        Guidance contribution in [0, 1].</span>
+<span class="sd">    window_length : float, default=0.5</span>
+<span class="sd">        Processing window length in seconds.</span>
+<span class="sd">    window_overlap : float, default=0.66</span>
+<span class="sd">        Processing-window overlap.</span>
+<span class="sd">    max_dims : float or int, default=0.66</span>
+<span class="sd">        Maximum fraction or number of reconstructed components.</span>
+<span class="sd">    regularization : float, default=1e-8</span>
+<span class="sd">        Relative covariance eigenvalue floor.</span>
+<span class="sd">    store_reconstruction_matrices : bool, default=False</span>
+<span class="sd">        Include reconstruction matrices in diagnostics.</span>
+<span class="sd">    max_mem_mb : int or None, default=512</span>
+<span class="sd">        Memory bound for covariance processing.</span>
+<span class="sd">    lookahead : float or None, default=None</span>
+<span class="sd">        Processing lookahead in seconds.</span>
+<span class="sd">    stepsize : int or None, default=None</span>
+<span class="sd">        Samples between reconstruction updates.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous progress callback.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X_clean : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Reconstructed data.</span>
+<span class="sd">    diagnostics : dict</span>
+<span class="sd">        ASR diagnostics with guided weights and reconstruction mode.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Hard reconstruction requires both guidance covariances to be None. Soft</span>
+<span class="sd">    reconstruction requires the GuidedASR experimental opt-in when used through the</span>
+<span class="sd">    estimator.</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reconstruction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"soft"</span><span class="p">,</span> <span class="s2">"hard"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"reconstruction must be 'soft' or 'hard'"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">guidance_strength</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">guidance_strength</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"guidance_strength must be a finite number in [0, 1]"</span><span class="p">)</span>
+    <span class="n">prepared</span> <span class="o">=</span> <span class="n">_prepare_asr_stream</span><span class="p">(</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+        <span class="n">max_dims</span><span class="o">=</span><span class="n">max_dims</span><span class="p">,</span>
+        <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+        <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+        <span class="n">lookahead</span><span class="o">=</span><span class="n">lookahead</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">n_channels</span>
+    <span class="n">n_times</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">n_times</span>
+    <span class="n">artifact_cov</span> <span class="o">=</span> <span class="n">_validate_covariance_matrix</span><span class="p">(</span>
+        <span class="n">artifact_cov</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"artifact_cov"</span><span class="p">,</span>
+        <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">preserve_cov</span> <span class="o">=</span> <span class="n">_validate_covariance_matrix</span><span class="p">(</span>
+        <span class="n">preserve_cov</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"preserve_cov"</span><span class="p">,</span>
+        <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">reconstruction</span> <span class="o">==</span> <span class="s2">"hard"</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">artifact_cov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">preserve_cov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"artifact_cov and preserve_cov only affect reconstruction='soft'"</span>
+        <span class="p">)</span>
+
+    <span class="n">win_len</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">win_len</span>
+    <span class="n">lookahead_samples</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">lookahead_samples</span>
+    <span class="n">stepsize</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">stepsize</span>
+    <span class="n">max_bad</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">max_bad</span>
+    <span class="k">if</span> <span class="n">max_bad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">_empty_process_diagnostics</span><span class="p">(</span><span class="n">n_times</span><span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"soft_weights"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="s2">"mean_soft_weight"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="s2">"guided"</span><span class="p">,</span>
+                <span class="s2">"reconstruction"</span><span class="p">:</span> <span class="n">reconstruction</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"identity"</span><span class="p">,</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"GuidedASR reconstruction details: mode=</span><span class="si">%s</span><span class="s2">, identity path, </span><span class="si">%d</span><span class="s2"> sample(s)."</span><span class="p">,</span>
+            <span class="n">reconstruction</span><span class="p">,</span>
+            <span class="n">n_times</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">diagnostics</span>
+
+    <span class="k">assert</span> <span class="n">prepared</span><span class="o">.</span><span class="n">data_stream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">prepared</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">prepared</span><span class="o">.</span><span class="n">update_at</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">data_stream</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">data_stream</span>
+    <span class="n">n_stream_input</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">n_stream_input</span>
+    <span class="n">X_stats</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">statistics</span>
+    <span class="n">update_at</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">update_at</span>
+    <span class="n">use_rolling_covariance</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">use_rolling_covariance</span>
+
+    <span class="n">component_weight_function</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">reconstruction</span> <span class="o">==</span> <span class="s2">"soft"</span><span class="p">:</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">component_weight_function</span><span class="p">(</span>
+            <span class="n">variances</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">eigenvectors</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">thresholds</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">forced_keep</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_guided_component_weights</span><span class="p">(</span>
+                <span class="n">variances</span><span class="p">,</span>
+                <span class="n">eigenvectors</span><span class="p">,</span>
+                <span class="n">thresholds</span><span class="p">,</span>
+                <span class="n">forced_keep</span><span class="o">=</span><span class="n">forced_keep</span><span class="p">,</span>
+                <span class="n">artifact_covariance</span><span class="o">=</span><span class="n">artifact_cov</span><span class="p">,</span>
+                <span class="n">preserve_covariance</span><span class="o">=</span><span class="n">preserve_cov</span><span class="p">,</span>
+                <span class="n">strength</span><span class="o">=</span><span class="n">guidance_strength</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">_process_asr_windowed</span><span class="p">(</span>
+        <span class="n">data_stream</span><span class="p">,</span>
+        <span class="n">X_stats</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">n_times</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+        <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+        <span class="n">lookahead_samples</span><span class="o">=</span><span class="n">lookahead_samples</span><span class="p">,</span>
+        <span class="n">update_at</span><span class="o">=</span><span class="n">update_at</span><span class="p">,</span>
+        <span class="n">max_bad</span><span class="o">=</span><span class="n">max_bad</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+        <span class="n">win_len</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+        <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+        <span class="n">use_rolling_covariance</span><span class="o">=</span><span class="n">use_rolling_covariance</span><span class="p">,</span>
+        <span class="n">component_weight_function</span><span class="o">=</span><span class="n">component_weight_function</span><span class="p">,</span>
+        <span class="n">return_component_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="n">progress_method</span><span class="o">=</span><span class="s2">"guided_asr"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">diagnostics</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"component_weights"</span><span class="p">)</span>
+    <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"soft_weights"</span><span class="p">:</span> <span class="n">weights</span><span class="p">,</span>
+            <span class="s2">"mean_soft_weight"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="k">if</span> <span class="n">weights</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="s2">"guided"</span><span class="p">,</span>
+            <span class="s2">"reconstruction"</span><span class="p">:</span> <span class="n">reconstruction</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">_process_memory_info</span><span class="p">(</span>
+            <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+            <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+            <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+            <span class="n">memory_mode</span><span class="o">=</span><span class="p">(</span><span class="s2">"guided_rolling"</span> <span class="k">if</span> <span class="n">use_rolling_covariance</span> <span class="k">else</span> <span class="s2">"guided"</span><span class="p">),</span>
+            <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">),</span>
+            <span class="n">chunk_samples</span><span class="o">=</span><span class="n">win_len</span> <span class="k">if</span> <span class="n">use_rolling_covariance</span> <span class="k">else</span> <span class="n">n_stream_input</span><span class="p">,</span>
+            <span class="n">used_memory_bound</span><span class="o">=</span><span class="n">use_rolling_covariance</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"GuidedASR reconstruction details: mode=</span><span class="si">%s</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> window(s), "</span>
+        <span class="s2">"mean component keep weight=</span><span class="si">%.3f</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">reconstruction</span><span class="p">,</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_windows"</span><span class="p">],</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"mean_soft_weight"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Estimator</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="GuidedASR">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.GuidedASR.html#mne_denoise.asr.GuidedASR">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GuidedASR</span><span class="p">(</span><span class="n">ASR</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Guided soft-reconstruction variant of ASR.</span>
+
+<span class="sd">    GuidedASR uses artifact and preserve bias covariances to modify ASR component</span>
+<span class="sd">    weights. Soft reconstruction requires experimental=True.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sfreq : float or None, default=None</span>
+<span class="sd">        Sampling frequency in Hz; inferred from MNE metadata when available.</span>
+<span class="sd">    cutoff : float, default=20.0</span>
+<span class="sd">        ASR threshold multiplier.</span>
+<span class="sd">    window_length : float, default=0.5</span>
+<span class="sd">        Processing window length in seconds.</span>
+<span class="sd">    window_overlap : float, default=0.66</span>
+<span class="sd">        Processing-window overlap.</span>
+<span class="sd">    max_dropout_fraction : float, default=0.1</span>
+<span class="sd">        Fraction of low-RMS values excluded from threshold estimation.</span>
+<span class="sd">    min_clean_fraction : float, default=0.25</span>
+<span class="sd">        Minimum central fraction used for clean RMS statistics.</span>
+<span class="sd">    picks : str, list of str, list of int, or None, default="eeg"</span>
+<span class="sd">        MNE channels to process; NumPy input uses all rows.</span>
+<span class="sd">    calibration : {"auto", "manual"}, default="auto"</span>
+<span class="sd">        Calibration mode.</span>
+<span class="sd">    calibration_window_length : float, default=1.0</span>
+<span class="sd">        Automatic calibration-window length in seconds.</span>
+<span class="sd">    calibration_window_overlap : float, default=0.66</span>
+<span class="sd">        Automatic calibration-window overlap.</span>
+<span class="sd">    ref_max_bad_channels : float, default=0.075</span>
+<span class="sd">        Maximum bad-channel fraction in a calibration window.</span>
+<span class="sd">    ref_tolerances : tuple of float, default=(-np.inf, 5.5)</span>
+<span class="sd">        Robust z-score bounds for calibration-window selection.</span>
+<span class="sd">    blocksize : int, default=10</span>
+<span class="sd">        Samples per calibration covariance block.</span>
+<span class="sd">    max_dims : float or int, default=0.66</span>
+<span class="sd">        Maximum fraction or number of reconstructed dimensions.</span>
+<span class="sd">    reject_by_annotation : bool, default=True</span>
+<span class="sd">        Exclude bad annotated samples during calibration.</span>
+<span class="sd">    skip_by_annotation : tuple of str, default=("bad", "bad_acq_skip")</span>
+<span class="sd">        Annotation prefixes treated as bad.</span>
+<span class="sd">    cov_estimator : {"geometric_median", "mean", "median"}, default="geometric_median"</span>
+<span class="sd">        Calibration-covariance aggregation rule.</span>
+<span class="sd">    regularization : float, default=1e-8</span>
+<span class="sd">        Relative covariance eigenvalue floor.</span>
+<span class="sd">    filter_kind : {"none", "asr", "highpass"}, default="asr"</span>
+<span class="sd">        Filter used for ASR statistics.</span>
+<span class="sd">    window_criterion : float, int, or None, default=None</span>
+<span class="sd">        Optional final retained-sample criterion.</span>
+<span class="sd">    window_criterion_tolerances : tuple of float, default=(-np.inf, 7.0)</span>
+<span class="sd">        Robust z-score bounds for the final criterion.</span>
+<span class="sd">    lookahead : float or None, default=None</span>
+<span class="sd">        Processing lookahead in seconds.</span>
+<span class="sd">    stepsize : int or None, default=None</span>
+<span class="sd">        Samples between reconstruction updates.</span>
+<span class="sd">    max_mem_mb : int or None, default=512</span>
+<span class="sd">        Memory bound for covariance processing.</span>
+<span class="sd">    copy : bool, default=True</span>
+<span class="sd">        Reserved compatibility parameter; transformations return new outputs.</span>
+<span class="sd">    store_reconstruction_matrices : bool, default=False</span>
+<span class="sd">        Store per-window reconstruction matrices in diagnostics.</span>
+<span class="sd">    artifact_biases : sequence or None, default=None</span>
+<span class="sd">        DSS bias operators defining artifact-like covariance directions.</span>
+<span class="sd">    preserve_biases : sequence or None, default=None</span>
+<span class="sd">        DSS bias operators defining directions to preserve.</span>
+<span class="sd">    reconstruction : {"soft", "hard"}, default="soft"</span>
+<span class="sd">        Guided continuous weights or binary ASR reconstruction.</span>
+<span class="sd">    guidance_strength : float, default=1.0</span>
+<span class="sd">        Guidance contribution in [0, 1].</span>
+<span class="sd">    experimental : bool, default=False</span>
+<span class="sd">        Must be true for soft reconstruction.</span>
+<span class="sd">    random_state : int or None, default=None</span>
+<span class="sd">        Reserved for stochastic calibration.</span>
+<span class="sd">    n_jobs : int or None, default=None</span>
+<span class="sd">        Reserved for future parallel processing.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ASR</span>
+<span class="sd">        Standard ASR without guidance covariances.</span>
+<span class="sd">    process_guided_asr</span>
+<span class="sd">        Low-level array processing with a calibrated ASR state.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    With reconstruction="hard" and no bias operators, this uses the</span>
+<span class="sd">    riemannian_windowed ASR backend. The soft path is an unpublished, unvalidated</span>
+<span class="sd">    experimental research API and requires independent evaluation of artifact</span>
+<span class="sd">    attenuation and signal preservation.</span>
+<span class="sd">    """</span>
+
+    <span class="n">_progress_method</span> <span class="o">=</span> <span class="s2">"guided_asr"</span>
+
+<div class="viewcode-block" id="GuidedASR.__init__">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.GuidedASR.html#mne_denoise.asr.GuidedASR.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+        <span class="n">max_dropout_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">min_clean_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">picks</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"eeg"</span><span class="p">,</span>
+        <span class="n">calibration</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">calibration_window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">calibration_window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+        <span class="n">ref_max_bad_channels</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.075</span><span class="p">,</span>
+        <span class="n">ref_tolerances</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">),</span>
+        <span class="n">blocksize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">max_dims</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+        <span class="n">reject_by_annotation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">skip_by_annotation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bad"</span><span class="p">,</span> <span class="s2">"bad_acq_skip"</span><span class="p">),</span>
+        <span class="n">cov_estimator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"geometric_median"</span><span class="p">,</span>
+        <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+        <span class="n">filter_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"asr"</span><span class="p">,</span>
+        <span class="n">window_criterion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_criterion_tolerances</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">),</span>
+        <span class="n">lookahead</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+        <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">artifact_biases</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">preserve_biases</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reconstruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"soft"</span><span class="p">,</span>
+        <span class="n">guidance_strength</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">experimental</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+            <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="n">max_dropout_fraction</span><span class="p">,</span>
+            <span class="n">min_clean_fraction</span><span class="o">=</span><span class="n">min_clean_fraction</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"riemannian_windowed"</span><span class="p">,</span>
+            <span class="n">experimental</span><span class="o">=</span><span class="n">experimental</span><span class="p">,</span>
+            <span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span>
+            <span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">,</span>
+            <span class="n">calibration_window_length</span><span class="o">=</span><span class="n">calibration_window_length</span><span class="p">,</span>
+            <span class="n">calibration_window_overlap</span><span class="o">=</span><span class="n">calibration_window_overlap</span><span class="p">,</span>
+            <span class="n">ref_max_bad_channels</span><span class="o">=</span><span class="n">ref_max_bad_channels</span><span class="p">,</span>
+            <span class="n">ref_tolerances</span><span class="o">=</span><span class="n">ref_tolerances</span><span class="p">,</span>
+            <span class="n">blocksize</span><span class="o">=</span><span class="n">blocksize</span><span class="p">,</span>
+            <span class="n">max_dims</span><span class="o">=</span><span class="n">max_dims</span><span class="p">,</span>
+            <span class="n">reject_by_annotation</span><span class="o">=</span><span class="n">reject_by_annotation</span><span class="p">,</span>
+            <span class="n">skip_by_annotation</span><span class="o">=</span><span class="n">skip_by_annotation</span><span class="p">,</span>
+            <span class="n">cov_estimator</span><span class="o">=</span><span class="n">cov_estimator</span><span class="p">,</span>
+            <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+            <span class="n">filter_kind</span><span class="o">=</span><span class="n">filter_kind</span><span class="p">,</span>
+            <span class="n">window_criterion</span><span class="o">=</span><span class="n">window_criterion</span><span class="p">,</span>
+            <span class="n">window_criterion_tolerances</span><span class="o">=</span><span class="n">window_criterion_tolerances</span><span class="p">,</span>
+            <span class="n">lookahead</span><span class="o">=</span><span class="n">lookahead</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+            <span class="n">copy</span><span class="o">=</span><span class="n">copy</span><span class="p">,</span>
+            <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">artifact_biases</span> <span class="o">=</span> <span class="n">artifact_biases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preserve_biases</span> <span class="o">=</span> <span class="n">preserve_biases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">=</span> <span class="n">reconstruction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">guidance_strength</span> <span class="o">=</span> <span class="n">guidance_strength</span></div>
+
+
+    <span class="c1"># -- fit ---------------------------------------------------------------</span>
+
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">calibration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">calibration_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuidedASR</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit ASR calibration and optional guidance covariances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw, Epochs, or ndarray</span>
+<span class="sd">            Target data; it also supplies calibration when calibration is None.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        calibration : Raw, Epochs, or ndarray, default=None</span>
+<span class="sd">            Optional separate ASR calibration data.</span>
+<span class="sd">        calibration_mask : ndarray of bool or None, default=None</span>
+<span class="sd">            Optional mask for calibration samples.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous calibration progress callback.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level for this call.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        GuidedASR</span>
+<span class="sd">            The fitted estimator.</span>
+<span class="sd">        """</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"soft"</span><span class="p">,</span> <span class="s2">"hard"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"reconstruction must be 'soft' or 'hard'"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">guidance_strength</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guidance_strength</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"guidance_strength must be a finite number in [0, 1]"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">==</span> <span class="s2">"soft"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">experimental</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"GuidedASR soft reconstruction is experimental; pass "</span>
+                <span class="s2">"experimental=True to use it (reconstruction='hard' reproduces "</span>
+                <span class="s2">"standard ASR and needs no opt-in)."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">==</span> <span class="s2">"hard"</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">artifact_biases</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">preserve_biases</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"artifact_biases and preserve_biases only affect reconstruction='soft'"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">==</span> <span class="s2">"soft"</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">_EXPERIMENTAL_DISCLAIMER</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span>
+            <span class="n">calibration_mask</span><span class="o">=</span><span class="n">calibration_mask</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Bias operators define artifact / brain *subspaces*, so they are</span>
+        <span class="c1"># estimated from the primary recording ``X`` (which contains those</span>
+        <span class="c1"># phenomena), whereas the ASR threshold model above uses ``calibration``</span>
+        <span class="c1"># when provided.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">artifact_cov_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preserve_cov_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">artifact_biases</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">preserve_biases</span><span class="p">:</span>
+            <span class="n">data_2d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+                <span class="n">X</span><span class="p">,</span>
+                <span class="n">ch_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ch_names_</span><span class="p">,</span>
+                <span class="n">auto_pick</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">concatenate_epochs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data_2d</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_channels_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"GuidedASR bias data channel count does not match calibration: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_channels_</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">artifact_cov_</span> <span class="o">=</span> <span class="n">_compute_guidance_covariance</span><span class="p">(</span>
+                <span class="n">data_2d</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">artifact_biases</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"artifact_biases"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">preserve_cov_</span> <span class="o">=</span> <span class="n">_compute_guidance_covariance</span><span class="p">(</span>
+                <span class="n">data_2d</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">preserve_biases</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"preserve_biases"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"estimator"</span><span class="p">:</span> <span class="s2">"GuidedASR"</span><span class="p">,</span>
+                <span class="s2">"reconstruction"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span><span class="p">,</span>
+                <span class="s2">"guidance_strength"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">guidance_strength</span><span class="p">,</span>
+                <span class="s2">"experimental"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">==</span> <span class="s2">"soft"</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"GuidedASR: reconstruction=</span><span class="si">%s</span><span class="s2">, guidance strength=</span><span class="si">%.3g</span><span class="s2">, "</span>
+            <span class="s2">"artifact biases=</span><span class="si">%d</span><span class="s2">, preserve biases=</span><span class="si">%d</span><span class="s2">."</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">guidance_strength</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_biases</span> <span class="ow">or</span> <span class="p">()),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_biases</span> <span class="ow">or</span> <span class="p">()),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="c1"># -- transform ---------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">selected</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">process_guided_asr</span><span class="p">(</span>
+            <span class="n">selected</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_</span><span class="p">,</span>
+            <span class="n">artifact_cov</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"artifact_cov_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">preserve_cov</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"preserve_cov_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">reconstruction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reconstruction</span><span class="p">,</span>
+            <span class="n">guidance_strength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">guidance_strength</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">window_overlap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_overlap</span><span class="p">,</span>
+            <span class="n">max_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dims</span><span class="p">,</span>
+            <span class="n">regularization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">regularization</span><span class="p">,</span>
+            <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+            <span class="n">max_mem_mb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_mem_mb</span><span class="p">,</span>
+            <span class="n">lookahead</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lookahead</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1361 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Periodic Signals (SSVEP and Quasi-Periodic). &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/dss/plot_05_periodic_dss';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Temporal Biases for Ordinary DSS" href="plot_06_temporal_dss.html" />
+    <link rel="prev" title="Denoising Rhythms (Spectral DSS)." href="plot_04_spectral_dss.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sns/index.html">Sensor Noise Suppression</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sns/plot_01_sns_basics.html">Basic Sensor Noise Suppression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sns/plot_02_algorithm_properties.html">SNS assumptions and diagnostics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../bss_cca/index.html">Reference-free BSS-CCA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../bss_cca/plot_01_bss_cca_basics.html">Basic reference-free BSS-CCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bss_cca/plot_02_bss_cca_properties.html">BSS-CCA algorithm properties</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ssa/index.html">Singular Spectrum Analysis</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ssa/plot_01_ssa_basics.html">Basic SSA decomposition and frequency-guided cleaning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ssa/plot_02_local_ssa_properties.html">Local SSA properties on a synthetic signal</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">DSS Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plot_01_dss_fundamentals.html">Fundamentals of DSS.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_02_artifact_correction.html">Artifact Correction with DSS.</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="plot_03_evoked_responses.html">Denoising Evoked Responses.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_04_spectral_dss.html">Denoising Rhythms (Spectral DSS).</a></li>
+
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Periodic Signals (SSVEP and Quasi-Periodic).</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_06_temporal_dss.html">Temporal Biases for Ordinary DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_07_spectrogram_dss.html">Time-Frequency DSS: Spectrogram Masking.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_08_blind_source_separation.html">Blind Source Separation and ICA Equivalence.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_09_custom_bias.html">Custom DSS: Defining Your Own Bias.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_11_wiener_masking.html">Adaptive Wiener Masking for Bursty Signals.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_12_joint_dss.html">Joint DSS (Multi-Dataset Repeatability).</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_13_cardiac_composition.html">Cardiac DSS as an Explicit Composition</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zapline/index.html">ZapLine Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_01_basic_usage.html">ZapLine: Line Noise Removal Fundamentals.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_02_parameter_tuning.html">ZapLine: Parameter Tuning and Real Data.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_03_epoched_data.html">ZapLine: Epoched Data and Real Data Examples.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_04_adaptive_mode.html">ZapLine-plus: Adaptive Cleaning on Non-Stationary Noise.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_05_adaptive_advanced.html">ZapLine-plus: Advanced Settings and Features.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_06_ctf_meg.html">ZapLine on MEG-like data with many co-equal noise components.</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../asr/index.html">ASR Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_01_asr_basics.html">Artifact Subspace Reconstruction: Basic Usage.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_02_mne_raw_qc.html">Artifact Subspace Reconstruction: Raw QC and Annotations.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_03_adaptive_asr.html">Adaptive ASR with chunk updates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_04_juggler_asr.html">JugglerASR for dense short bursts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_05_asr_visualization.html">Visualizing ASR with mne_denoise.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_06_cutoff_tuning.html">Choosing the ASR cutoff.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_07_riemannian_asr.html">Riemannian ASR versus standard ASR.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_08_adaptive_variants.html">Adaptive ASR variants (PSP / PSW / MW).</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_09_juggler_strategies.html">Juggler ASR: DBSCAN vs GEV reference selection.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_10_choosing_a_variant.html">Choosing an ASR variant.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_11_epochs_and_meg.html">ASR on Epochs and on MEG.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_12_diagnostics_qc.html">ASR diagnostics and quality control.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_13_pipeline_filter_asr_ica.html">A realistic pipeline: filter, ASR, then ICA.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_14_rms_distribution.html">Quantifying Dataset Noise with RMS Statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_15_guided_asr.html">Guided ASR: preserving neural activity that ASR would over-clean.</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../spectrum_interpolation/index.html">Spectrum Interpolation Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../spectrum_interpolation/plot_01_spectrum_interpolation.html">Spectrum Interpolation: Power-Line Noise Removal.</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sound/index.html">SOUND Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sound/plot_01_sound_basics.html">SOUND: Suppressing Channel-Specific Noise with a Forward Model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sspsir/index.html">SSP-SIR Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sspsir/plot_01_sspsir_basics.html">SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Examples Gallery</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">DSS Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Periodic Signals (SSVEP and Quasi-Periodic).</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-dss-plot-05-periodic-dss-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="periodic-signals-ssvep-and-quasi-periodic">
+<span id="sphx-glr-auto-examples-dss-plot-05-periodic-dss-py"></span><h1>Periodic Signals (SSVEP and Quasi-Periodic).<a class="headerlink" href="#periodic-signals-ssvep-and-quasi-periodic" title="Link to this heading">#</a></h1>
+<p>This example demonstrates periodic signal extraction with DSS. It combines
+PeakFilterBias, CombFilterBias, and QuasiPeriodicDenoiser with DSS and
+IterativeDSS to cover single-frequency extraction, SSVEP harmonics, and
+quasi-periodic structure such as ECG-like activity.</p>
+<dl class="simple">
+<dt>Authors: Sina Esmaeili (<a class="reference external" href="mailto:sina&#46;esmaeili&#37;&#52;&#48;umontreal&#46;ca">sina<span>&#46;</span>esmaeili<span>&#64;</span>umontreal<span>&#46;</span>ca</a>)</dt><dd><p>Hamza Abdelhedi (<a class="reference external" href="mailto:hamza&#46;abdelhedi&#37;&#52;&#48;umontreal&#46;ca">hamza<span>&#46;</span>abdelhedi<span>&#64;</span>umontreal<span>&#46;</span>ca</a>)</p>
+</dd>
+</dl>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mne</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html#scipy.signal.detrend" title="scipy.signal.detrend" class="sphx-glr-backref-module-scipy-signal sphx-glr-backref-type-py-function"><span class="n">detrend</span></a>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mne_denoise.dss</span><span class="w"> </span><span class="kn">import</span> <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class"><span class="n">DSS</span></a><span class="p">,</span> <a href="../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class"><span class="n">IterativeDSS</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mne_denoise.dss.denoisers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">CombFilterBias</span></a><span class="p">,</span>
+    <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">PeakFilterBias</span></a><span class="p">,</span>
+    <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">QuasiPeriodicDenoiser</span></a><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mne_denoise.dss.variants</span><span class="w"> </span><span class="kn">import</span> <span class="n">ssvep_dss</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mne_denoise.viz</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <a href="../../generated/mne_denoise.viz.plot_channel_time_course_comparison.html#mne_denoise.viz.plot_channel_time_course_comparison" title="mne_denoise.viz.plot_channel_time_course_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_channel_time_course_comparison</span></a><span class="p">,</span>
+    <a href="../../generated/mne_denoise.viz.plot_component_psd_comparison.html#mne_denoise.viz.plot_component_psd_comparison" title="mne_denoise.viz.plot_component_psd_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_psd_comparison</span></a><span class="p">,</span>
+    <a href="../../generated/mne_denoise.viz.plot_component_summary.html#mne_denoise.viz.plot_component_summary" title="mne_denoise.viz.plot_component_summary" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_summary</span></a><span class="p">,</span>
+    <a href="../../generated/mne_denoise.viz.plot_psd_comparison.html#mne_denoise.viz.plot_psd_comparison" title="mne_denoise.viz.plot_psd_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_psd_comparison</span></a><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="part-0-single-frequency-peakfilterbias">
+<h2>Part 0: Single Frequency (PeakFilterBias)<a class="headerlink" href="#part-0-single-frequency-peakfilterbias" title="Link to this heading">#</a></h2>
+<p>PeakFilterBias applies a narrow bandpass filter at a single frequency.
+Simpler than CombFilterBias, useful for extracting single oscillations.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">--- Part 0: Single Frequency Extraction (PeakFilterBias) ---"</span><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="numpy.random.Generator" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rng</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="numpy.random.default_rng" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span></a><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a> <span class="o">=</span> <span class="mi">250</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_seconds</span></a> <span class="o">=</span> <span class="mi">10</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_seconds</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a> <span class="o">=</span> <span class="mi">16</span>
+
+<span class="c1"># Simulate alpha rhythm (10 Hz) embedded in noise</span>
+<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_freq</span></a> <span class="o">=</span> <span class="mf">10.0</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">times</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times</span></a><span class="p">)</span> <span class="o">/</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a>
+
+<span class="c1"># Pink noise background</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.cumsum.html#numpy.cumsum" title="numpy.cumsum" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times</span></a><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise</span></a> <span class="o">=</span> <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html#scipy.signal.detrend" title="scipy.signal.detrend" class="sphx-glr-backref-module-scipy-signal sphx-glr-backref-type-py-function"><span class="n">detrend</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise</span></a><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Alpha source</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_source</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">sin</span></a><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">pi</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_freq</span></a> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">times</span></a><span class="p">)</span>
+
+<span class="c1"># Mix into occipital channels</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">mixing</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">mixing</span></a><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]</span>  <span class="c1"># Strong in channels 0, 1</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_component</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.outer.html#numpy.outer" title="numpy.outer" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">outer</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">mixing</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_source</span></a><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_alpha</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise</span></a> <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_component</span></a>
+
+<span class="c1"># Create MNE Raw with montage</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch_names</span></a> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"Oz"</span><span class="p">,</span>
+    <span class="s2">"O1"</span><span class="p">,</span>
+    <span class="s2">"O2"</span><span class="p">,</span>
+    <span class="s2">"Pz"</span><span class="p">,</span>
+    <span class="s2">"P3"</span><span class="p">,</span>
+    <span class="s2">"P4"</span><span class="p">,</span>
+    <span class="s2">"P7"</span><span class="p">,</span>
+    <span class="s2">"P8"</span><span class="p">,</span>
+    <span class="s2">"Cz"</span><span class="p">,</span>
+    <span class="s2">"C3"</span><span class="p">,</span>
+    <span class="s2">"C4"</span><span class="p">,</span>
+    <span class="s2">"Fz"</span><span class="p">,</span>
+    <span class="s2">"F3"</span><span class="p">,</span>
+    <span class="s2">"F4"</span><span class="p">,</span>
+    <span class="s2">"F7"</span><span class="p">,</span>
+    <span class="s2">"F8"</span><span class="p">,</span>
+<span class="p">]</span>
+<a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.create_info.html#mne.create_info" title="mne.create_info" class="sphx-glr-backref-module-mne sphx-glr-backref-type-py-function"><span class="n">mne</span><span class="o">.</span><span class="n">create_info</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch_names</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span> <span class="s2">"eeg"</span><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.channels.DigMontage.html#mne.channels.DigMontage" title="mne.channels.DigMontage" class="sphx-glr-backref-module-mne-channels sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">montage</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.channels.make_standard_montage.html#mne.channels.make_standard_montage" title="mne.channels.make_standard_montage" class="sphx-glr-backref-module-mne-channels sphx-glr-backref-type-py-function"><span class="n">mne</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">make_standard_montage</span></a><span class="p">(</span><span class="s2">"standard_1020"</span><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info.set_montage" title="mne.Info.set_montage" class="sphx-glr-backref-module-mne sphx-glr-backref-type-py-method"><span class="n">info</span><span class="o">.</span><span class="n">set_montage</span></a><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.channels.DigMontage.html#mne.channels.DigMontage" title="mne.channels.DigMontage" class="sphx-glr-backref-module-mne-channels sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">montage</span></a><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_alpha</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class"><span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_alpha</span></a><span class="p">,</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Simulated </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_seconds</span></a><span class="si">}</span><span class="s2">s, </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="si">}</span><span class="s2"> channels, </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="si">}</span><span class="s2"> Hz"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Alpha at </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_freq</span></a><span class="si">}</span><span class="s2"> Hz (channels Oz, O1)"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Part 0: Single Frequency Extraction (PeakFilterBias) ---
+Creating RawArray with float64 data, n_channels=16, n_times=2500
+    Range : 0 ... 2499 =      0.000 ...     9.996 secs
+Ready.
+Simulated 10s, 16 channels, 250 Hz
+Alpha at 10.0 Hz (channels Oz, O1)
+</pre></div>
+</div>
+<section id="apply-dss-with-peakfilterbias">
+<h3>Apply DSS with PeakFilterBias<a class="headerlink" href="#apply-dss-with-peakfilterbias" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">peak_bias</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">PeakFilterBias</span></a><span class="p">(</span><span class="n">freq</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_freq</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span> <span class="n">q_factor</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_peak</span></a> <span class="o">=</span> <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class"><span class="n">DSS</span></a><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">peak_bias</span><span class="p">)</span>
+<a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_peak</span></a><span class="o">.</span><span class="n">fit</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_alpha</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">DSS Eigenvalues: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_peak</span><span class="o">.</span><span class="n">eigenvalues_</span></a><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_peak</span></a> <span class="o">=</span> <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_peak</span></a><span class="o">.</span><span class="n">transform</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_alpha</span></a><span class="p">)</span>
+
+<a href="../../generated/mne_denoise.viz.plot_component_summary.html#mne_denoise.viz.plot_component_summary" title="mne_denoise.viz.plot_component_summary" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_summary</span></a><span class="p">(</span>
+    <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_peak</span></a><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_alpha</span></a><span class="p">,</span>
+    <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info</span></a><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_alpha</span><span class="o">.</span><span class="n">info</span></a><span class="p">,</span>
+    <span class="n">picks</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="nb">len</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray.ch_names" title="mne.io.RawArray.ch_names" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-property"><span class="n">raw_alpha</span><span class="o">.</span><span class="n">ch_names</span></a><span class="p">)),</span>
+    <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_001.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_001.png" alt="Comp 0 Pattern, Comp 0 Time Course, PSD, Comp 1 Pattern, Comp 1 Time Course, PSD, Comp 2 Pattern, Comp 2 Time Course, PSD" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>DSS Eigenvalues: [0.06418189 0.00324281 0.00217234 0.00153842 0.00127606]
+</pre></div>
+</div>
+<p>Comparison</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../generated/mne_denoise.viz.plot_component_psd_comparison.html#mne_denoise.viz.plot_component_psd_comparison" title="mne_denoise.viz.plot_component_psd_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_psd_comparison</span></a><span class="p">(</span>
+    <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_alpha</span></a><span class="p">,</span>
+    <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_peak</span></a><span class="p">,</span>
+    <span class="n">component_indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span>
+    <span class="n">peak_freq</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">alpha_freq</span></a><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Single Frequency: Original PSD"</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Single Frequency: DSS Components PSD"</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_002.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_002.png" alt="Single Frequency: Original PSD, Single Frequency: DSS Components PSD" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Effective window size : 8.192 (s)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="part-1-ssvep-combfilterbias">
+<h2>Part 1: SSVEP (CombFilterBias)<a class="headerlink" href="#part-1-ssvep-combfilterbias" title="Link to this heading">#</a></h2>
+<p>CombFilterBias filters fundamental + harmonics, ideal for SSVEP.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">--- Part 1: SSVEP with Harmonics (CombFilterBias) ---"</span><span class="p">)</span>
+
+<span class="c1"># Simulate 12 Hz SSVEP with harmonics</span>
+<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a> <span class="o">=</span> <span class="mf">12.0</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ssvep_source</span></a> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">1.0</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">sin</span></a><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">pi</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">times</span></a><span class="p">)</span>  <span class="c1"># 12 Hz</span>
+    <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">sin</span></a><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">pi</span></a> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">times</span></a><span class="p">)</span>  <span class="c1"># 24 Hz</span>
+    <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">sin</span></a><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">pi</span></a> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">times</span></a><span class="p">)</span>  <span class="c1"># 36 Hz</span>
+<span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_ssvep</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.cumsum.html#numpy.cumsum" title="numpy.cumsum" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times</span></a><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_ssvep</span></a> <span class="o">=</span> <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.detrend.html#scipy.signal.detrend" title="scipy.signal.detrend" class="sphx-glr-backref-module-scipy-signal sphx-glr-backref-type-py-function"><span class="n">detrend</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_ssvep</span></a><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ssvep_component</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.outer.html#numpy.outer" title="numpy.outer" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">outer</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">mixing</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ssvep_source</span></a><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_ssvep</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_ssvep</span></a> <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ssvep_component</span></a>
+
+<a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class"><span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_ssvep</span></a><span class="p">,</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"SSVEP at </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a><span class="si">}</span><span class="s2"> Hz + harmonics (24, 36 Hz)"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Part 1: SSVEP with Harmonics (CombFilterBias) ---
+Creating RawArray with float64 data, n_channels=16, n_times=2500
+    Range : 0 ... 2499 =      0.000 ...     9.996 secs
+Ready.
+SSVEP at 12.0 Hz + harmonics (24, 36 Hz)
+</pre></div>
+</div>
+<section id="method-1-manual-dss-combfilterbias">
+<h3>Method 1: Manual DSS + CombFilterBias<a class="headerlink" href="#method-1-manual-dss-combfilterbias" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">comb_bias</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">CombFilterBias</span></a><span class="p">(</span>
+    <span class="n">fundamental_freq</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span> <span class="n">n_harmonics</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">q_factor</span><span class="o">=</span><span class="mi">30</span>
+<span class="p">)</span>
+
+<a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_comb</span></a> <span class="o">=</span> <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class"><span class="n">DSS</span></a><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">comb_bias</span><span class="p">)</span>
+<a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_comb</span></a><span class="o">.</span><span class="n">fit</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Manual DSS Eigenvalues: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_comb</span><span class="o">.</span><span class="n">eigenvalues_</span></a><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Harmonic frequencies: </span><span class="si">{</span><span class="n">comb_bias</span><span class="o">.</span><span class="n">harmonic_frequencies</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_comb</span></a> <span class="o">=</span> <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_comb</span></a><span class="o">.</span><span class="n">transform</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span></a><span class="p">)</span>
+
+<a href="../../generated/mne_denoise.viz.plot_component_summary.html#mne_denoise.viz.plot_component_summary" title="mne_denoise.viz.plot_component_summary" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_summary</span></a><span class="p">(</span>
+    <a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_comb</span></a><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span></a><span class="p">,</span>
+    <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info</span></a><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span><span class="o">.</span><span class="n">info</span></a><span class="p">,</span>
+    <span class="n">picks</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="nb">len</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray.ch_names" title="mne.io.RawArray.ch_names" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-property"><span class="n">raw_ssvep</span><span class="o">.</span><span class="n">ch_names</span></a><span class="p">)),</span>
+    <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_003.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_003.png" alt="Comp 0 Pattern, Comp 0 Time Course, PSD, Comp 1 Pattern, Comp 1 Time Course, PSD, Comp 2 Pattern, Comp 2 Time Course, PSD" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Manual DSS Eigenvalues: [0.05223386 0.00278024 0.00195946 0.0015991  0.00076182]
+Harmonic frequencies: [12.0, 24.0, 36.0]
+</pre></div>
+</div>
+</section>
+<section id="method-2-convenience-wrapper-ssvep-dss">
+<h3>Method 2: Convenience Wrapper (ssvep_dss)<a class="headerlink" href="#method-2-convenience-wrapper-ssvep-dss" title="Link to this heading">#</a></h3>
+<p>Same result, simpler API</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_wrapper</span></a> <span class="o">=</span> <span class="n">ssvep_dss</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span> <span class="n">stim_freq</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a><span class="p">,</span> <span class="n">n_harmonics</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<a href="../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_wrapper</span></a><span class="o">.</span><span class="n">fit</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Wrapper DSS Eigenvalues: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dss_wrapper</span><span class="o">.</span><span class="n">eigenvalues_</span></a><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"(Should match manual approach)"</span><span class="p">)</span>
+
+<span class="c1"># PSD comparison</span>
+<a href="../../generated/mne_denoise.viz.plot_component_psd_comparison.html#mne_denoise.viz.plot_component_psd_comparison" title="mne_denoise.viz.plot_component_psd_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_psd_comparison</span></a><span class="p">(</span>
+    <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ssvep</span></a><span class="p">,</span>
+    <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_comb</span></a><span class="p">,</span>
+    <span class="n">component_indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span>
+    <span class="n">peak_freq</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a><span class="p">,</span>
+    <span class="n">fmax</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"SSVEP: Original PSD"</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"SSVEP: DSS Components PSD"</span><span class="p">)</span>
+
+<span class="c1"># Mark harmonics</span>
+<span class="k">for</span> <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="matplotlib.axes.Axes" class="sphx-glr-backref-module-matplotlib-axes sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ax</span></a> <span class="ow">in</span> <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">:</span>
+    <span class="k">for</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">h</span></a> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+        <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.axvline.html#matplotlib.axes.Axes.axvline" title="matplotlib.axes.Axes.axvline" class="sphx-glr-backref-module-matplotlib-axes sphx-glr-backref-type-py-method"><span class="n">ax</span><span class="o">.</span><span class="n">axvline</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f_stim</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">h</span></a><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"orange"</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_004.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_004.png" alt="SSVEP: Original PSD, SSVEP: DSS Components PSD" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Wrapper DSS Eigenvalues: [0.05223386 0.00278024 0.00195946 0.0015991  0.00076182]
+(Should match manual approach)
+Effective window size : 8.192 (s)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="part-2-quasi-periodic-iterative-dss-multi-channel">
+<h2>Part 2: Quasi-Periodic (Iterative DSS + Multi-Channel)<a class="headerlink" href="#part-2-quasi-periodic-iterative-dss-multi-channel" title="Link to this heading">#</a></h2>
+<p>QuasiPeriodicDenoiser works with IterativeDSS for multi-channel spatial denoising.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">--- Part 2: Quasi-Periodic Denoising (IterativeDSS) ---"</span><span class="p">)</span>
+
+<span class="c1"># Simulate multi-channel heartbeat-like signal</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_beats</span></a> <span class="o">=</span> <span class="mi">10</span>
+<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_interval</span></a> <span class="o">=</span> <span class="mf">0.8</span>  <span class="c1"># seconds (~75 BPM)</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_samples</span></a> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_interval</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">)</span>
+
+<span class="c1"># Single beat template (QRS complex)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_beat</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="numpy.linspace" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linspace</span></a><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_samples</span></a><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_template</span></a> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mf">0.2</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">exp</span></a><span class="p">(</span><span class="o">-</span><span class="p">((</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_beat</span></a> <span class="o">-</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.001</span><span class="p">)</span>  <span class="c1"># Q wave</span>
+    <span class="o">+</span> <span class="mf">1.0</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">exp</span></a><span class="p">(</span><span class="o">-</span><span class="p">((</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_beat</span></a> <span class="o">-</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.0005</span><span class="p">)</span>  <span class="c1"># R wave</span>
+    <span class="o">+</span> <span class="o">-</span><span class="mf">0.3</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">exp</span></a><span class="p">(</span><span class="o">-</span><span class="p">((</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_beat</span></a> <span class="o">-</span> <span class="mf">0.3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.001</span><span class="p">)</span>  <span class="c1"># S wave</span>
+    <span class="o">+</span> <span class="mf">0.15</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">exp</span></a><span class="p">(</span><span class="o">-</span><span class="p">((</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_beat</span></a> <span class="o">-</span> <span class="mf">0.55</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.005</span><span class="p">)</span>  <span class="c1"># T wave</span>
+<span class="p">)</span>
+
+<span class="c1"># Multi-channel quasi-periodic signal</span>
+<a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="numpy.random.Generator" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rng2</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="numpy.random.default_rng" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span></a><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times_qp</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_beats</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_samples</span></a>
+
+<span class="c1"># Different channels have different ECG strengths (spatial pattern)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ecg_mixing</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span>
+    <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+<span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times_qp</span></a><span class="p">))</span>
+
+<span class="k">for</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">i</span></a> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_beats</span></a><span class="p">):</span>
+    <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">start_idx</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">i</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_samples</span></a>
+    <span class="c1"># Add variation per beat</span>
+    <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">amplitude</span></a> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.normal.html#numpy.random.Generator.normal" title="numpy.random.Generator.normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng2</span><span class="o">.</span><span class="n">normal</span></a><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">time_jitter</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.integers.html#numpy.random.Generator.integers" title="numpy.random.Generator.integers" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng2</span><span class="o">.</span><span class="n">integers</span></a><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_start</span></a> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">start_idx</span></a> <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">time_jitter</span></a><span class="p">)</span>
+    <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_end</span></a> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times_qp</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_start</span></a> <span class="o">+</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_samples</span></a><span class="p">)</span>
+    <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">beat_len</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_end</span></a> <span class="o">-</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_start</span></a>
+
+    <span class="c1"># Mix into channels with different strengths</span>
+    <span class="k">for</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch</span></a> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="p">):</span>
+        <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_start</span></a><span class="p">:</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">actual_end</span></a><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+            <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ecg_mixing</span></a><span class="p">[</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch</span></a><span class="p">]</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">amplitude</span></a> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_template</span></a><span class="p">[:</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">beat_len</span></a><span class="p">]</span>
+        <span class="p">)</span>
+
+<span class="c1"># Add noise</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noisy_qp_mc</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng2</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times_qp</span></a><span class="p">))</span>
+
+<span class="c1"># Create Raw</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch_names_short</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch_names</span></a>  <span class="c1"># Reuse</span>
+<a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info_qp</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.create_info.html#mne.create_info" title="mne.create_info" class="sphx-glr-backref-module-mne sphx-glr-backref-type-py-function"><span class="n">mne</span><span class="o">.</span><span class="n">create_info</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ch_names_short</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a><span class="p">,</span> <span class="s2">"eeg"</span><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info.set_montage" title="mne.Info.set_montage" class="sphx-glr-backref-module-mne sphx-glr-backref-type-py-method"><span class="n">info_qp</span><span class="o">.</span><span class="n">set_montage</span></a><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.channels.DigMontage.html#mne.channels.DigMontage" title="mne.channels.DigMontage" class="sphx-glr-backref-module-mne-channels sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">montage</span></a><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_qp</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class"><span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noisy_qp_mc</span></a><span class="p">,</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info_qp</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Multi-channel quasi-periodic: </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_channels</span></a><span class="si">}</span><span class="s2"> channels, </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_beats</span></a><span class="si">}</span><span class="s2"> beats"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Part 2: Quasi-Periodic Denoising (IterativeDSS) ---
+Creating RawArray with float64 data, n_channels=16, n_times=2000
+    Range : 0 ... 1999 =      0.000 ...     7.996 secs
+Ready.
+Multi-channel quasi-periodic: 16 channels, 10 beats
+</pre></div>
+</div>
+<section id="comparison-single-channel-vs-multi-channel-denoising">
+<h3>Comparison: Single-Channel vs Multi-Channel Denoising<a class="headerlink" href="#comparison-single-channel-vs-multi-channel-denoising" title="Link to this heading">#</a></h3>
+<p>First, apply QuasiPeriodicDenoiser to a single channel (no spatial info).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">qp_denoiser_single</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">QuasiPeriodicDenoiser</span></a><span class="p">(</span>
+    <span class="n">peak_distance</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_interval</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a> <span class="o">*</span> <span class="mf">0.7</span><span class="p">),</span>
+    <span class="n">peak_height_percentile</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+    <span class="n">smooth_template</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Denoise channel 0 only (strongest ECG)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">denoised_single</span></a> <span class="o">=</span> <span class="n">qp_denoiser_single</span><span class="o">.</span><span class="n">denoise</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noisy_qp_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Single-channel denoising: Uses only temporal information from 1 channel"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Single-channel denoising: Uses only temporal information from 1 channel
+</pre></div>
+</div>
+</section>
+<section id="apply-iterativedss-with-quasiperiodicdenoiser">
+<h3>Apply IterativeDSS with QuasiPeriodicDenoiser<a class="headerlink" href="#apply-iterativedss-with-quasiperiodicdenoiser" title="Link to this heading">#</a></h3>
+<p>Now use spatial information from all channels.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">qp_denoiser</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">QuasiPeriodicDenoiser</span></a><span class="p">(</span>
+    <span class="n">peak_distance</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">beat_interval</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a> <span class="o">*</span> <span class="mf">0.7</span><span class="p">),</span>
+    <span class="n">peak_height_percentile</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+    <span class="n">smooth_template</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<a href="../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">idss_qp</span></a> <span class="o">=</span> <a href="../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class"><span class="n">IterativeDSS</span></a><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">denoiser</span><span class="o">=</span><span class="n">qp_denoiser</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<a href="../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">idss_qp</span></a><span class="o">.</span><span class="n">fit</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_qp</span></a><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_qp</span></a> <span class="o">=</span> <a href="../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">idss_qp</span></a><span class="o">.</span><span class="n">transform</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_qp</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">IterativeDSS converged in </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">idss_qp</span><span class="o">.</span><span class="n">convergence_info_</span></a><span class="p">)</span><span class="si">}</span><span class="s2"> iterations"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Multi-channel denoising: Uses spatial + temporal information"</span><span class="p">)</span>
+
+<a href="../../generated/mne_denoise.viz.plot_component_summary.html#mne_denoise.viz.plot_component_summary" title="mne_denoise.viz.plot_component_summary" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_component_summary</span></a><span class="p">(</span>
+    <a href="../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS" class="sphx-glr-backref-module-mne_denoise-dss sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">idss_qp</span></a><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_qp</span></a><span class="p">,</span>
+    <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">info</span></a><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_qp</span><span class="o">.</span><span class="n">info</span></a><span class="p">,</span>
+    <span class="n">picks</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="nb">len</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray.ch_names" title="mne.io.RawArray.ch_names" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-property"><span class="n">raw_qp</span><span class="o">.</span><span class="n">ch_names</span></a><span class="p">)),</span>
+    <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_005.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_005.png" alt="Comp 0 Pattern, Comp 0 Time Course, PSD, Comp 1 Pattern, Comp 1 Time Course, PSD, Comp 2 Pattern, Comp 2 Time Course, PSD" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>IterativeDSS converged in 3 iterations
+Multi-channel denoising: Uses spatial + temporal information
+</pre></div>
+</div>
+</section>
+<section id="visualize-comparison-single-channel-vs-multi-channel">
+<h3>Visualize Comparison: Single-Channel vs Multi-Channel<a class="headerlink" href="#visualize-comparison-single-channel-vs-multi-channel" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_qp</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_times_qp</span></a><span class="p">)</span> <span class="o">/</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sfreq</span></a>
+
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure" title="matplotlib.figure.Figure" class="sphx-glr-backref-module-matplotlib-figure sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fig</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a> <span class="o">=</span> <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="matplotlib.pyplot.subplots" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="c1"># Ground truth</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_qp</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"k"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Ground Truth Quasi-Periodic (Channel 0)"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+<span class="c1"># Noisy</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_qp</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noisy_qp_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"gray"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Noisy Multi-Channel Data (Channel 0)"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+<span class="c1"># Single-channel denoising</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_qp</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">denoised_single</span></a><span class="p">,</span> <span class="s2">"orange"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"QuasiPeriodicDenoiser Only (Single Channel, No Spatial Info)"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+<span class="c1"># IterativeDSS component (spatial + temporal)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_qp</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_qp</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"green"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"IterativeDSS Component 0 (Multi-Channel, Spatial+Temporal)"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time (s)"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tight_layout.html#matplotlib.pyplot.tight_layout" title="matplotlib.pyplot.tight_layout" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span></a><span class="p">()</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_006.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_006.png" alt="Ground Truth Quasi-Periodic (Channel 0), Noisy Multi-Channel Data (Channel 0), QuasiPeriodicDenoiser Only (Single Channel, No Spatial Info), IterativeDSS Component 0 (Multi-Channel, Spatial+Temporal)" class = "sphx-glr-single-img"/></section>
+<section id="quantitative-comparison">
+<h3>Quantitative Comparison<a class="headerlink" href="#quantitative-comparison" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compute correlation with ground truth</span>
+<a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">corr_single</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.corrcoef.html#numpy.corrcoef" title="numpy.corrcoef" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">denoised_single</span></a><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">corr_multi</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.corrcoef.html#numpy.corrcoef" title="numpy.corrcoef" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_qp</span></a><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+
+<span class="c1"># Compute SNR improvement</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_snr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise</span></a><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">log10</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.var.html#numpy.var" title="numpy.var" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">var</span></a><span class="p">(</span><span class="n">signal</span><span class="p">)</span> <span class="o">/</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.var.html#numpy.var" title="numpy.var" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">var</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise</span></a><span class="p">))</span>
+
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_orig</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noisy_qp_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_single</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">denoised_single</span></a> <span class="o">-</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_multi</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sources_qp</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_orig</span></a> <span class="o">=</span> <span class="n">compute_snr</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_orig</span></a><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_single</span></a> <span class="o">=</span> <span class="n">compute_snr</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_single</span></a><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_multi</span></a> <span class="o">=</span> <span class="n">compute_snr</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">quasi_periodic_mc</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_multi</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">--- Performance Comparison ---"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Correlation with ground truth:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Single-channel denoiser: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">corr_single</span></a><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  IterativeDSS (multi-ch):  </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">corr_multi</span></a><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">SNR (dB):"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Original:                </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_orig</span></a><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Single-channel denoiser: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_single</span></a><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> (+</span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_single</span></a><span class="w"> </span><span class="o">-</span><span class="w"> </span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_orig</span></a><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  IterativeDSS (multi-ch): </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_multi</span></a><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> (+</span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_multi</span></a><span class="w"> </span><span class="o">-</span><span class="w"> </span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_orig</span></a><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">IterativeDSS improvement: +</span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_multi</span></a><span class="w"> </span><span class="o">-</span><span class="w"> </span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">snr_single</span></a><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> dB over single-channel"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Performance Comparison ---
+Correlation with ground truth:
+  Single-channel denoiser: 0.593
+  IterativeDSS (multi-ch):  -0.133
+
+SNR (dB):
+  Original:                -1.6
+  Single-channel denoiser: -1.9 (+-0.3)
+  IterativeDSS (multi-ch): -12.5 (+-10.8)
+
+IterativeDSS improvement: +-10.5 dB over single-channel
+</pre></div>
+</div>
+</section>
+</section>
+<section id="part-3-real-ecg-artifact-single-channel-denoising">
+<h2>Part 3: Real ECG Artifact (Single-Channel Denoising)<a class="headerlink" href="#part-3-real-ecg-artifact-single-channel-denoising" title="Link to this heading">#</a></h2>
+<p>For real data, we demonstrate single-channel QuasiPeriodicDenoiser.
+(Multi-channel IterativeDSS is already shown in Part 2 with synthetic data)</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">--- Part 3: Real ECG Artifact (Sample Dataset) ---"</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mne.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample</span>
+
+<a href="https://docs.python.org/3/library/pathlib.html#pathlib.PosixPath" title="pathlib.PosixPath" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.datasets.sample.data_path.html#mne.datasets.sample.data_path" title="mne.datasets.sample.data_path" class="sphx-glr-backref-module-mne-datasets-sample sphx-glr-backref-type-py-function"><span class="n">sample</span><span class="o">.</span><span class="n">data_path</span></a><span class="p">()</span>
+<a href="https://docs.python.org/3/library/pathlib.html#pathlib.PosixPath" title="pathlib.PosixPath" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_fname</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.PosixPath" title="pathlib.PosixPath" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">/</span> <span class="s2">"MEG"</span> <span class="o">/</span> <span class="s2">"sample"</span> <span class="o">/</span> <span class="s2">"sample_audvis_raw.fif"</span>
+
+<a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw" title="mne.io.Raw" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ecg</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.read_raw_fif.html#mne.io.read_raw_fif" title="mne.io.read_raw_fif" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-function"><span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_fif</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/pathlib.html#pathlib.PosixPath" title="pathlib.PosixPath" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_fname</span></a><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw.pick_types" title="mne.io.Raw.pick_types" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-method"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">pick_types</span></a><span class="p">(</span><span class="n">meg</span><span class="o">=</span><span class="s2">"grad"</span><span class="p">,</span> <span class="n">eog</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stim</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="s2">"bads"</span><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw.filter" title="mne.io.Raw.filter" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-method"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">filter</span></a><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">fir_design</span><span class="o">=</span><span class="s2">"firwin"</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw.crop" title="mne.io.Raw.crop" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-method"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">crop</span></a><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>  <span class="c1"># 20 seconds</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"MEG Data: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw.ch_names" title="mne.io.Raw.ch_names" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-property"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">ch_names</span></a><span class="p">)</span><span class="si">}</span><span class="s2"> channels, </span><span class="si">{</span><a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw.times" title="mne.io.Raw.times" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-property"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">times</span></a><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s"</span><span class="p">)</span>
+
+<span class="c1"># Select channel with ECG artifact</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">channel_data</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.Raw.html#mne.io.Raw.get_data" title="mne.io.Raw.get_data" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-method"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">get_data</span></a><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Part 3: Real ECG Artifact (Sample Dataset) ---
+NOTE: pick_types() is a legacy function. New code should use inst.pick(...).
+MEG Data: 203 channels, 20.0s
+</pre></div>
+</div>
+<section id="apply-quasiperiodicdenoiser-to-single-channel">
+<h3>Apply QuasiPeriodicDenoiser to Single Channel<a class="headerlink" href="#apply-quasiperiodicdenoiser-to-single-channel" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ecg_denoiser</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/abc.html#abc.ABC" title="abc.ABC" class="sphx-glr-backref-module-abc sphx-glr-backref-type-py-class"><span class="n">QuasiPeriodicDenoiser</span></a><span class="p">(</span>
+    <span class="n">peak_distance</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.6</span> <span class="o">*</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">info</span></a><span class="p">[</span><span class="s2">"sfreq"</span><span class="p">]),</span>  <span class="c1"># ~100 BPM</span>
+    <span class="n">peak_height_percentile</span><span class="o">=</span><span class="mi">85</span><span class="p">,</span>
+    <span class="n">smooth_template</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">denoised_channel</span></a> <span class="o">=</span> <span class="n">ecg_denoiser</span><span class="o">.</span><span class="n">denoise</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">channel_data</span></a><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Applied QuasiPeriodicDenoiser to MEG channel"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied QuasiPeriodicDenoiser to MEG channel
+</pre></div>
+</div>
+</section>
+<section id="visualize-results-with-viz-module">
+<h3>Visualize Results with Viz Module<a class="headerlink" href="#visualize-results-with-viz-module" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create Raw objects for viz functions</span>
+<a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_channel</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class"><span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span></a><span class="p">(</span>
+    <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">channel_data</span></a><span class="p">[</span><a href="https://numpy.org/doc/stable/reference/constants.html#numpy.newaxis" title="numpy.newaxis" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span></a><span class="p">,</span> <span class="p">:],</span> <a href="https://mne.tools/stable/generated/mne.create_info.html#mne.create_info" title="mne.create_info" class="sphx-glr-backref-module-mne sphx-glr-backref-type-py-function"><span class="n">mne</span><span class="o">.</span><span class="n">create_info</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">info</span></a><span class="p">[</span><span class="s2">"sfreq"</span><span class="p">],</span> <span class="s2">"eeg"</span><span class="p">)</span>
+<span class="p">)</span>
+<a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_denoised</span></a> <span class="o">=</span> <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class"><span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span></a><span class="p">(</span>
+    <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">denoised_channel</span></a><span class="p">[</span><a href="https://numpy.org/doc/stable/reference/constants.html#numpy.newaxis" title="numpy.newaxis" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span></a><span class="p">,</span> <span class="p">:],</span> <a href="https://mne.tools/stable/generated/mne.create_info.html#mne.create_info" title="mne.create_info" class="sphx-glr-backref-module-mne sphx-glr-backref-type-py-function"><span class="n">mne</span><span class="o">.</span><span class="n">create_info</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_ecg</span><span class="o">.</span><span class="n">info</span></a><span class="p">[</span><span class="s2">"sfreq"</span><span class="p">],</span> <span class="s2">"eeg"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Time series comparison</span>
+<a href="../../generated/mne_denoise.viz.plot_channel_time_course_comparison.html#mne_denoise.viz.plot_channel_time_course_comparison" title="mne_denoise.viz.plot_channel_time_course_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_channel_time_course_comparison</span></a><span class="p">(</span>
+    <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_channel</span></a><span class="p">,</span>
+    <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_denoised</span></a><span class="p">,</span>
+    <span class="n">picks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">times</span></a><span class="o">=</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray.times" title="mne.io.RawArray.times" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-property"><span class="n">raw_channel</span><span class="o">.</span><span class="n">times</span></a><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <a href="https://mne.tools/stable/generated/mne.Info.html#mne.Info" title="mne._fiff.meas_info.Info" class="sphx-glr-backref-module-mne-_fiff-meas_info sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_channel</span><span class="o">.</span><span class="n">info</span></a><span class="p">[</span><span class="s2">"sfreq"</span><span class="p">]),</span>  <span class="c1"># First 10 seconds</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">"ECG Artifact Removal: Time Series Comparison"</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_007.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_007.png" alt="ECG Artifact Removal: Time Series Comparison" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Creating RawArray with float64 data, n_channels=1, n_times=12013
+    Range : 0 ... 12012 =      0.000 ...    20.000 secs
+Ready.
+Creating RawArray with float64 data, n_channels=1, n_times=12013
+    Range : 0 ... 12012 =      0.000 ...    20.000 secs
+Ready.
+</pre></div>
+</div>
+<p>PSD comparison</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../generated/mne_denoise.viz.plot_psd_comparison.html#mne_denoise.viz.plot_psd_comparison" title="mne_denoise.viz.plot_psd_comparison" class="sphx-glr-backref-module-mne_denoise-viz sphx-glr-backref-type-py-function"><span class="n">plot_psd_comparison</span></a><span class="p">(</span><a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_channel</span></a><span class="p">,</span> <a href="https://mne.tools/stable/generated/mne.io.RawArray.html#mne.io.RawArray" title="mne.io.RawArray" class="sphx-glr-backref-module-mne-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_denoised</span></a><span class="p">,</span> <span class="n">fmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.gcf.html#matplotlib.pyplot.gcf" title="matplotlib.pyplot.gcf" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">gcf</span></a><span class="p">()</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"PSD Comparison: ECG Artifact Reduction"</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_05_periodic_dss_008.png" srcset="../../_images/sphx_glr_plot_05_periodic_dss_008.png" alt="PSD Comparison: ECG Artifact Reduction" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Effective window size : 3.410 (s)
+Effective window size : 3.410 (s)
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 5.193 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-dss-plot-05-periodic-dss-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/74f2c3a751a6b3d071d2545f6381a99c/plot_05_periodic_dss.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_05_periodic_dss.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/61a2d275468a5a2d0a2575e50dcd4592/plot_05_periodic_dss.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_05_periodic_dss.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8dfb6bb5593d23cc06c5d30367447a61/plot_05_periodic_dss.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_05_periodic_dss.zip</span></code></a></p>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_04_spectral_dss.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Denoising Rhythms (Spectral DSS).</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_06_temporal_dss.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Temporal Biases for Ordinary DSS</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-0-single-frequency-peakfilterbias">Part 0: Single Frequency (PeakFilterBias)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-dss-with-peakfilterbias">Apply DSS with PeakFilterBias</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-1-ssvep-combfilterbias">Part 1: SSVEP (CombFilterBias)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method-1-manual-dss-combfilterbias">Method 1: Manual DSS + CombFilterBias</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method-2-convenience-wrapper-ssvep-dss">Method 2: Convenience Wrapper (ssvep_dss)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-2-quasi-periodic-iterative-dss-multi-channel">Part 2: Quasi-Periodic (Iterative DSS + Multi-Channel)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-single-channel-vs-multi-channel-denoising">Comparison: Single-Channel vs Multi-Channel Denoising</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-iterativedss-with-quasiperiodicdenoiser">Apply IterativeDSS with QuasiPeriodicDenoiser</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize-comparison-single-channel-vs-multi-channel">Visualize Comparison: Single-Channel vs Multi-Channel</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantitative-comparison">Quantitative Comparison</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-3-real-ecg-artifact-single-channel-denoising">Part 3: Real ECG Artifact (Single-Channel Denoising)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-quasiperiodicdenoiser-to-single-channel">Apply QuasiPeriodicDenoiser to Single Channel</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize-results-with-viz-module">Visualize Results with Viz Module</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/mne-tools/mne-denoise/edit/main/docs/auto_examples/dss/plot_05_periodic_dss.rst">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/dss/plot_05_periodic_dss.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

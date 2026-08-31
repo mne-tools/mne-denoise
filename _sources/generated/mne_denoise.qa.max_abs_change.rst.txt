@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.max\_abs\_change
+================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: max_abs_change

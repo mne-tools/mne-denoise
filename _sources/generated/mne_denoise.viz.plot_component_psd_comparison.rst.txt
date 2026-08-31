@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_component\_psd\_comparison
+=================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_component_psd_comparison

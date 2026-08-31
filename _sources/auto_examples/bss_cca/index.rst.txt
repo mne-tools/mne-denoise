@@ -1,0 +1,70 @@
+
+
+.. _sphx_glr_auto_examples_bss_cca:
+
+Reference-free BSS-CCA
+----------------------
+
+Examples of reference-free BSS-CCA muscle-artifact attenuation on NumPy and
+MNE data, followed by deterministic demonstrations of the algorithm's
+assumptions, diagnostics, and failure modes.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example mixes narrow-band neural sources with broadband muscle sources, attenuates the muscle activity with BSS-CCA, and then runs the same workflow on an MNE Raw object.">
+
+.. only:: html
+
+  .. image:: /auto_examples/bss_cca/images/thumb/sphx_glr_plot_01_bss_cca_basics_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/bss_cca/plot_01_bss_cca_basics`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic reference-free BSS-CCA</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A deterministic, synthetic demonstration of what BSS-CCA does and where it breaks. This is not a replication of any published experiment — every signal here is simulated, and the numbers depend on the simulation.">
+
+.. only:: html
+
+  .. image:: /auto_examples/bss_cca/images/thumb/sphx_glr_plot_02_bss_cca_properties_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/bss_cca/plot_02_bss_cca_properties`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">BSS-CCA algorithm properties</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/bss_cca/plot_01_bss_cca_basics
+   /auto_examples/bss_cca/plot_02_bss_cca_properties
+

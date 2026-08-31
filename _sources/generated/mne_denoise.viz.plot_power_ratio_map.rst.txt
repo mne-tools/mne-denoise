@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_power\_ratio\_map
+========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_power_ratio_map

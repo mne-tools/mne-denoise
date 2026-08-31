@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.denoisers.LagAverageBias
+=========================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: LagAverageBias
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LagAverageBias.__init__
+      ~LagAverageBias.apply
+   
+   
+
+   
+   
+   

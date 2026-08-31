@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.suppression\_ratio
+==================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: suppression_ratio

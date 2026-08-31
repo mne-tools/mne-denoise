@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_time\_frequency\_mask
+============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_time_frequency_mask

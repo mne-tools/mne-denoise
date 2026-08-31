@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_metric\_tradeoff\_summary
+================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_metric_tradeoff_summary

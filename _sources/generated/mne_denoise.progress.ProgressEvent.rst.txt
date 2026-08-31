@@ -1,0 +1,33 @@
+﻿mne\_denoise.progress.ProgressEvent
+===================================
+
+.. currentmodule:: mne_denoise.progress
+
+.. autoclass:: ProgressEvent
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ProgressEvent.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ProgressEvent.method
+      ~ProgressEvent.stage
+      ~ProgressEvent.current
+      ~ProgressEvent.total
+      ~ProgressEvent.component
+      ~ProgressEvent.metric
+   
+   

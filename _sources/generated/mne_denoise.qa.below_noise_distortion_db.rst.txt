@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.below\_noise\_distortion\_db
+============================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: below_noise_distortion_db

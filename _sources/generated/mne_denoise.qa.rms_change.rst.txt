@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.rms\_change
+===========================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: rms_change

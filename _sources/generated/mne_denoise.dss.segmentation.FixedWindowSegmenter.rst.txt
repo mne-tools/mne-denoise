@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.segmentation.FixedWindowSegmenter
+==================================================
+
+.. currentmodule:: mne_denoise.dss.segmentation
+
+.. autoclass:: FixedWindowSegmenter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FixedWindowSegmenter.__init__
+      ~FixedWindowSegmenter.segment
+   
+   
+
+   
+   
+   

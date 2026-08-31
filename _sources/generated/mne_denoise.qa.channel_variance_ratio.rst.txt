@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.channel\_variance\_ratio
+========================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: channel_variance_ratio

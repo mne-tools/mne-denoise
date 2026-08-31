@@ -1,0 +1,361 @@
+
+
+.. _sphx_glr_auto_examples_asr:
+
+ASR Examples
+============
+
+Examples demonstrating Artifact Subspace Reconstruction (ASR) for burst-artifact
+repair in EEG (and MEG) data --- from a basic clean to a full preprocessing
+pipeline, with each method example grounded in its source paper.
+
+Getting started
+---------------
+
+- ``plot_01_asr_basics.py``: Standard ASR on synthetic multichannel bursts.
+- ``plot_02_mne_raw_qc.py``: MNE ``Raw`` usage with repair annotations and an
+  optional clean_windows-style final rejection mask.
+- ``plot_05_asr_visualization.py``: The ASR-specific ``mne_denoise.viz`` plots
+  (repair timeline, component reconstruction, calibration fraction) alongside the
+  generic before/after and PSD helpers.
+
+Cutoff and variants
+-------------------
+
+- ``plot_06_cutoff_tuning.py``: How ``cutoff`` trades data modified against
+  variance removed (Chang 2020).
+- ``plot_07_riemannian_asr.py``: Riemannian (``method="riemannian_windowed"``)
+  vs standard ASR on real blinks (Blum 2019).
+- ``plot_03_adaptive_asr.py``: AASR-style streaming with ``fit`` /
+  ``partial_fit`` / ``transform``.
+- ``plot_08_adaptive_variants.py``: Adaptive ``psp`` vs ``psw`` vs ``mw`` on
+  non-stationary data, with the moving-window adaptation trajectory (Tsai).
+- ``plot_04_juggler_asr.py``: Juggler DBSCAN calibration on dense short bursts.
+- ``plot_09_juggler_strategies.py``: Juggler ``dbscan`` vs ``gev`` reference
+  selection under heavy contamination (Kim 2025).
+- ``plot_10_choosing_a_variant.py``: Standard vs Riemannian vs Juggler on one
+  substrate, with a short recommendation.
+
+I/O, QC, and pipelines
+----------------------
+
+- ``plot_11_epochs_and_meg.py``: ASR on ``mne.Epochs`` and on MEG magnetometers.
+- ``plot_12_diagnostics_qc.py``: ``get_diagnostics`` / ``variance_removed``
+  / ``to_annotations`` and the three ASR diagnostic plots.
+- ``plot_13_pipeline_filter_asr_ica.py``: A realistic ``filter -> ASR -> ICA``
+  workflow on real EEG.
+
+Experimental research prototypes
+--------------------------------
+
+- ``plot_15_guided_asr.py``: DSS-guided soft ASR (``GuidedASR``), demonstrated
+  on synthetic data only.
+
+  .. warning::
+
+     ``GuidedASR`` is an unpublished, unvalidated research prototype. Its
+     current evidence is limited to unit tests and synthetic benchmarks. Do
+     not treat it as a validated EEG preprocessing method, and independently
+     verify signal preservation and artifact attenuation for your data.
+
+Notes
+-----
+
+Most examples use synthetic data so they run without downloads; ``plot_07`` and
+``plot_13`` (and the MEG part of ``plot_11``) use the MNE *sample* dataset.
+Apply ASR to real EEG only after bad-channel handling, referencing, and
+high-pass filtering in the surrounding MNE workflow.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates standard ASR on a synthetic multichannel EEG signal with short spatial burst artifacts.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_01_asr_basics_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_01_asr_basics`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Artifact Subspace Reconstruction: Basic Usage.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows ASR on an mne.io.RawArray with optional clean_windows- style final window rejection. The repaired spans and rejected spans are kept as annotations for downstream QC instead of deleting samples immediately.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_02_mne_raw_qc_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_02_mne_raw_qc`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Artifact Subspace Reconstruction: Raw QC and Annotations.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the AASR-style adaptive update workflow. The calibration state is initialized on one chunk, updated on a second chunk, and then applied to the full signal with MATLAB-style reconstruct.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_03_adaptive_asr_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_03_adaptive_asr`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Adaptive ASR with chunk updates</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example highlights Juggler-style calibration on a synthetic signal with frequent short bursts that leave little fully clean time window support.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_04_juggler_asr_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_04_juggler_asr`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">JugglerASR for dense short bursts</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="After cleaning EEG with ASR you usually want to see what happened: which segments were repaired, how aggressive the cleaning was, and how the variants compare. mne_denoise.viz keeps three ASR-specific diagnostics that have no generic equivalent --- the per-window repair timeline, the window-by-component reconstruction map, and the calibration / reference fraction --- and reuses the generic before/after plots (~mne_denoise.viz.plot_signal_overlay, plot_psd_comparison, plot_power_ratio_map) for everything else.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_05_asr_visualization_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_05_asr_visualization`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Visualizing ASR with mne_denoise.viz</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The ASR cutoff (standard-deviation threshold) is the single most important knob: lower values clean aggressively (and risk removing real high-variance brain activity), higher values are conservative. This example sweeps the cutoff and plots the two quantities Chang et al. (2020) use to characterise it --- the fraction of data modified and the variance removed --- reproducing the monotone trade-off of their Figs 2-3 and the commonly recommended 20-30 band.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_06_cutoff_tuning_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_06_cutoff_tuning`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Choosing the ASR cutoff.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Blum et al. (2019) replace ASR&#x27;s sample-covariance calibration with a Riemannian geometric median, making the clean-covariance estimate robust to the occasional contaminated calibration window. mne-denoise exposes this as method=&quot;riemannian_windowed&quot; --- it keeps the Riemannian robust calibration but applies a standard per-window eigendecomposition at processing time, so (unlike the MATLAB-parity method=&quot;riemannian&quot;) the cutoff knob still works.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_07_riemannian_asr_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_07_riemannian_asr`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Riemannian ASR versus standard ASR.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Adaptive ASR (Tsai et al.) keeps standard ASR&#x27;s burst reconstruction but lets the clean-subspace model track non-stationary recordings. mne-denoise exposes three calibration rules via AdaptiveASR:">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_08_adaptive_variants_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_08_adaptive_variants`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Adaptive ASR variants (PSP / PSW / MW).</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="On heavily contaminated recordings (mobile / MoBI EEG, dense brief bursts), ASR&#x27;s window-based clean-data selector starves --- too few windows are clean enough to calibrate. Kim et al. (2025) instead select clean samples point-by-point. mne-denoise exposes two selectors via JugglerASR:">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_09_juggler_strategies_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_09_juggler_strategies`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Juggler ASR: DBSCAN vs GEV reference selection.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A runnable version of the &quot;Choosing a variant&quot; section of the ASR user guide. mne-denoise ships several ASR backends; this example runs the three you will most often choose between on one substrate and prints a short recommendation:">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_10_choosing_a_variant_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_10_choosing_a_variant`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Choosing an ASR variant.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The same ASR estimator works across MNE container types and channel types. This example shows two cases the other examples do not:">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_11_epochs_and_meg_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_11_epochs_and_meg`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ASR on Epochs and on MEG.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Every fitted ASR estimator records what it did, so you can audit the cleaning instead of trusting it blindly. This example tours the QC surface:">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_12_diagnostics_qc_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_12_diagnostics_qc`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ASR diagnostics and quality control.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="ASR sits between high-pass filtering and ICA in a standard EEG pipeline: it repairs high-amplitude transients before ICA, so the decomposition is not dominated by a handful of huge bursts. This capstone runs the full filter -&gt; ASR -&gt; ICA workflow on real EEG (the MNE sample dataset) and shows that ICA fit on ASR-cleaned data has less extreme component activations.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_13_pipeline_filter_asr_ica_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_13_pipeline_filter_asr_ica`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">A realistic pipeline: filter, ASR, then ICA.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use ASR&#x27;s robust mathematical estimators independently of the full ASR pipeline to quantify the baseline noisiness of a dataset.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_14_rms_distribution_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_14_rms_distribution`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Quantifying Dataset Noise with RMS Statistics</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Standard ASR decides purely on variance, so a strong, spatially structured neural burst (here a transient 10 Hz oscillation) looks just as &quot;abnormal&quot; as an artifact and gets reconstructed away. GuidedASR keeps ASR&#x27;s abnormality detection but adds DSS-style bias operators that recognise the neural direction and a continuous reconstruction weight that rescues it, while still removing a genuine artifact.">
+
+.. only:: html
+
+  .. image:: /auto_examples/asr/images/thumb/sphx_glr_plot_15_guided_asr_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/asr/plot_15_guided_asr`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Guided ASR: preserving neural activity that ASR would over-clean.</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/asr/plot_01_asr_basics
+   /auto_examples/asr/plot_02_mne_raw_qc
+   /auto_examples/asr/plot_03_adaptive_asr
+   /auto_examples/asr/plot_04_juggler_asr
+   /auto_examples/asr/plot_05_asr_visualization
+   /auto_examples/asr/plot_06_cutoff_tuning
+   /auto_examples/asr/plot_07_riemannian_asr
+   /auto_examples/asr/plot_08_adaptive_variants
+   /auto_examples/asr/plot_09_juggler_strategies
+   /auto_examples/asr/plot_10_choosing_a_variant
+   /auto_examples/asr/plot_11_epochs_and_meg
+   /auto_examples/asr/plot_12_diagnostics_qc
+   /auto_examples/asr/plot_13_pipeline_filter_asr_ica
+   /auto_examples/asr/plot_14_rms_distribution
+   /auto_examples/asr/plot_15_guided_asr
+

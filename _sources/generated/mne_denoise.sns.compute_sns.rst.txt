@@ -1,0 +1,6 @@
+﻿mne\_denoise.sns.compute\_sns
+=============================
+
+.. currentmodule:: mne_denoise.sns
+
+.. autofunction:: compute_sns

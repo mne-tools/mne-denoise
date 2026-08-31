@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_evoked\_gfp\_comparison
+==============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_evoked_gfp_comparison

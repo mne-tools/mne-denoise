@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.themed\_legend
+===============================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: themed_legend

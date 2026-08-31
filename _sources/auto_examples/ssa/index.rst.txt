@@ -1,0 +1,69 @@
+
+
+.. _sphx_glr_auto_examples_ssa:
+
+Singular Spectrum Analysis
+==========================
+
+Examples of additive Basic SSA, frequency-guided grouping, and Teixeira local
+SSA on deterministic synthetic signals.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This network-free example separates a slow synthetic drift from an alpha rhythm. The frequency grouping is an mne-denoise extension, not a grouping rule prescribed by Basic SSA.">
+
+.. only:: html
+
+  .. image:: /auto_examples/ssa/images/thumb/sphx_glr_plot_01_ssa_basics_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/ssa/plot_01_ssa_basics`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic SSA decomposition and frequency-guided cleaning</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This is an algorithm demonstration, not a replication of Teixeira et al.&#x27;s figures. The desired signal is broadband so that the example exercises the paper&#x27;s high-energy-structure-versus-residual assumption without constructing an unrealistically perfect separability case.">
+
+.. only:: html
+
+  .. image:: /auto_examples/ssa/images/thumb/sphx_glr_plot_02_local_ssa_properties_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/ssa/plot_02_local_ssa_properties`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Local SSA properties on a synthetic signal</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/ssa/plot_01_ssa_basics
+   /auto_examples/ssa/plot_02_local_ssa_properties
+

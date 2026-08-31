@@ -1,0 +1,6 @@
+﻿mne\_denoise.bss\_cca.compute\_bss\_cca
+=======================================
+
+.. currentmodule:: mne_denoise.bss_cca
+
+.. autofunction:: compute_bss_cca

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_asr\_component\_reconstruction
+=====================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_asr_component_reconstruction

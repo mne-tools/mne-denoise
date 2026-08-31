@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.peak\_attenuation\_db
+=====================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: peak_attenuation_db

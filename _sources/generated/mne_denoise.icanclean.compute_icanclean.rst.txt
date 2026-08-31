@@ -1,0 +1,6 @@
+﻿mne\_denoise.icanclean.compute\_icanclean
+=========================================
+
+.. currentmodule:: mne_denoise.icanclean
+
+.. autofunction:: compute_icanclean

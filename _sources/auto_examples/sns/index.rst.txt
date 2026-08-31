@@ -1,0 +1,69 @@
+
+
+.. _sphx_glr_auto_examples_sns:
+
+Sensor Noise Suppression
+------------------------
+
+Examples of Sensor Noise Suppression on NumPy and MNE data, followed by
+deterministic demonstrations of the algorithm's assumptions and diagnostics.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example adds independent sensor noise to a spatially redundant signal, fits SNS, and applies the same workflow to an MNE Raw object.">
+
+.. only:: html
+
+  .. image:: /auto_examples/sns/images/thumb/sphx_glr_plot_01_sns_basics_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/sns/plot_01_sns_basics`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic Sensor Noise Suppression</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Deterministic simulations illustrate when SNS works: spatially redundant signals can be regenerated, independent sensor noise is attenuated, robust fitting limits the influence of brief glitches, and successive passes make progressively smaller changes.">
+
+.. only:: html
+
+  .. image:: /auto_examples/sns/images/thumb/sphx_glr_plot_02_algorithm_properties_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/sns/plot_02_algorithm_properties`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">SNS assumptions and diagnostics</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/sns/plot_01_sns_basics
+   /auto_examples/sns/plot_02_algorithm_properties
+

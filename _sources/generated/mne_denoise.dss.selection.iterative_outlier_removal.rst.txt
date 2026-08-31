@@ -1,0 +1,6 @@
+﻿mne\_denoise.dss.selection.iterative\_outlier\_removal
+======================================================
+
+.. currentmodule:: mne_denoise.dss.selection
+
+.. autofunction:: iterative_outlier_removal

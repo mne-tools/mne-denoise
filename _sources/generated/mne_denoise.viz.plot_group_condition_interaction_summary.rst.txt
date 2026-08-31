@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_group\_condition\_interaction\_summary
+=============================================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_group_condition_interaction_summary

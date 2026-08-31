@@ -1,0 +1,38 @@
+﻿mne\_denoise.asr.AdaptiveASR
+============================
+
+.. currentmodule:: mne_denoise.asr
+
+.. autoclass:: AdaptiveASR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AdaptiveASR.__init__
+      ~AdaptiveASR.fit
+      ~AdaptiveASR.fit_transform
+      ~AdaptiveASR.get_calibration_mask
+      ~AdaptiveASR.get_diagnostics
+      ~AdaptiveASR.get_metadata_routing
+      ~AdaptiveASR.get_params
+      ~AdaptiveASR.get_rejection_mask
+      ~AdaptiveASR.partial_fit
+      ~AdaptiveASR.reset_process_state
+      ~AdaptiveASR.set_fit_request
+      ~AdaptiveASR.set_output
+      ~AdaptiveASR.set_params
+      ~AdaptiveASR.set_partial_fit_request
+      ~AdaptiveASR.set_transform_request
+      ~AdaptiveASR.to_annotations
+      ~AdaptiveASR.transform
+   
+   
+
+   
+   
+   

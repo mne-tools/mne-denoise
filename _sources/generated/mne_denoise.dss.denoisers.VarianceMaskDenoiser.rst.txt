@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.denoisers.VarianceMaskDenoiser
+===============================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: VarianceMaskDenoiser
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VarianceMaskDenoiser.__init__
+      ~VarianceMaskDenoiser.denoise
+   
+   
+
+   
+   
+   

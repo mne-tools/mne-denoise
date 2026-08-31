@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_spectrogram\_comparison
+==============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_spectrogram_comparison

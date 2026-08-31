@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_grand\_average\_evokeds
+==============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_grand_average_evokeds

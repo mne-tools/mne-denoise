@@ -1,0 +1,6 @@
+﻿mne\_denoise.dss.selection.auto\_select\_components\_robust
+===========================================================
+
+.. currentmodule:: mne_denoise.dss.selection
+
+.. autofunction:: auto_select_components_robust

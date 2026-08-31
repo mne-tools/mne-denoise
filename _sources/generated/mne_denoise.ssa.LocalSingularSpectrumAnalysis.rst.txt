@@ -1,0 +1,30 @@
+﻿mne\_denoise.ssa.LocalSingularSpectrumAnalysis
+==============================================
+
+.. currentmodule:: mne_denoise.ssa
+
+.. autoclass:: LocalSingularSpectrumAnalysis
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LocalSingularSpectrumAnalysis.__init__
+      ~LocalSingularSpectrumAnalysis.fit
+      ~LocalSingularSpectrumAnalysis.fit_transform
+      ~LocalSingularSpectrumAnalysis.get_metadata_routing
+      ~LocalSingularSpectrumAnalysis.get_params
+      ~LocalSingularSpectrumAnalysis.set_output
+      ~LocalSingularSpectrumAnalysis.set_params
+      ~LocalSingularSpectrumAnalysis.set_transform_request
+      ~LocalSingularSpectrumAnalysis.transform
+   
+   
+
+   
+   
+   

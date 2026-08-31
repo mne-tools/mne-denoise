@@ -1,0 +1,1580 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>API reference &#8212; mne-denoise 0.0.2.dev222+gda6c79532 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="_static/documentation_options.js?v=0e70cacb"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mne_denoise.compute_covariance" href="generated/mne_denoise.compute_covariance.html" />
+    <link rel="prev" title="SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts" href="auto_examples/sspsir/plot_01_sspsir_basics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev222+gda6c79532" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.2.dev222+gda6c79532 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="development.html">
+    Development workflow
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="evaluation.html">
+    Evaluating denoising
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="dss.html">
+    Denoising Source Separation (DSS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="asr.html">
+    Artifact Subspace Reconstruction (ASR)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="bss_cca.html">
+    Reference-free BSS-CCA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="icanclean.html">
+    iCanClean
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="sns.html">
+    Sensor Noise Suppression (SNS)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="sound.html">
+    SOUND
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="spectrum_interpolation.html">
+    Spectrum interpolation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ssa.html">
+    Singular Spectrum Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="sspsir.html">
+    SSP-SIR
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="zapline.html">
+    ZapLine
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="citing.html">
+    Citing mne-denoise
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.compute_covariance.html">mne_denoise.compute_covariance</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.progress.ProgressEvent.html">mne_denoise.progress.ProgressEvent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.progress.TqdmProgress.html">mne_denoise.progress.TqdmProgress</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.ASR.html">mne_denoise.asr.ASR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.AdaptiveASR.html">mne_denoise.asr.AdaptiveASR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.JugglerASR.html">mne_denoise.asr.JugglerASR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.GuidedASR.html">mne_denoise.asr.GuidedASR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.calibrate_asr.html">mne_denoise.asr.calibrate_asr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.compute_clean_window_mask.html">mne_denoise.asr.compute_clean_window_mask</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.fit_rms_distribution.html">mne_denoise.asr.fit_rms_distribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.process_asr.html">mne_denoise.asr.process_asr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.process_guided_asr.html">mne_denoise.asr.process_guided_asr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.asr.select_juggler_reference_samples.html">mne_denoise.asr.select_juggler_reference_samples</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.compute_dss.html">mne_denoise.dss.compute_dss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.DSS.html">mne_denoise.dss.DSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.TimeShiftDSS.html">mne_denoise.dss.TimeShiftDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.iterative_dss.html">mne_denoise.dss.iterative_dss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.iterative_dss_one.html">mne_denoise.dss.iterative_dss_one</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.IterativeDSS.html">mne_denoise.dss.IterativeDSS</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.segmentation.CovarianceSegmenter.html">mne_denoise.dss.segmentation.CovarianceSegmenter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.segmentation.FixedWindowSegmenter.html">mne_denoise.dss.segmentation.FixedWindowSegmenter</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.selection.auto_select_components.html">mne_denoise.dss.selection.auto_select_components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.selection.auto_select_components_robust.html">mne_denoise.dss.selection.auto_select_components_robust</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.selection.detect_eigenvalue_knee.html">mne_denoise.dss.selection.detect_eigenvalue_knee</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.selection.iterative_outlier_removal.html">mne_denoise.dss.selection.iterative_outlier_removal</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.LinearDenoiser.html">mne_denoise.dss.denoisers.LinearDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.AverageBias.html">mne_denoise.dss.denoisers.AverageBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.CycleAverageBias.html">mne_denoise.dss.denoisers.CycleAverageBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.BandpassBias.html">mne_denoise.dss.denoisers.BandpassBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.LineNoiseBias.html">mne_denoise.dss.denoisers.LineNoiseBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.PeakFilterBias.html">mne_denoise.dss.denoisers.PeakFilterBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.CombFilterBias.html">mne_denoise.dss.denoisers.CombFilterBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.LagAverageBias.html">mne_denoise.dss.denoisers.LagAverageBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SmoothingBias.html">mne_denoise.dss.denoisers.SmoothingBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SpectrogramBias.html">mne_denoise.dss.denoisers.SpectrogramBias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.NonlinearDenoiser.html">mne_denoise.dss.denoisers.NonlinearDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.TanhMaskDenoiser.html">mne_denoise.dss.denoisers.TanhMaskDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.RobustTanhDenoiser.html">mne_denoise.dss.denoisers.RobustTanhDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.KurtosisDenoiser.html">mne_denoise.dss.denoisers.KurtosisDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SkewDenoiser.html">mne_denoise.dss.denoisers.SkewDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.GaussDenoiser.html">mne_denoise.dss.denoisers.GaussDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.WienerMaskDenoiser.html">mne_denoise.dss.denoisers.WienerMaskDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.VarianceMaskDenoiser.html">mne_denoise.dss.denoisers.VarianceMaskDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SpectrogramDenoiser.html">mne_denoise.dss.denoisers.SpectrogramDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.DCTDenoiser.html">mne_denoise.dss.denoisers.DCTDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.QuasiPeriodicDenoiser.html">mne_denoise.dss.denoisers.QuasiPeriodicDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SmoothTanhDenoiser.html">mne_denoise.dss.denoisers.SmoothTanhDenoiser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.beta_tanh.html">mne_denoise.dss.denoisers.beta_tanh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.beta_pow3.html">mne_denoise.dss.denoisers.beta_pow3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.denoisers.beta_gauss.html">mne_denoise.dss.denoisers.beta_gauss</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.variants.smooth_dss.html">mne_denoise.dss.variants.smooth_dss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.variants.narrowband_dss.html">mne_denoise.dss.variants.narrowband_dss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.variants.narrowband_scan.html">mne_denoise.dss.variants.narrowband_scan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.dss.variants.ssvep_dss.html">mne_denoise.dss.variants.ssvep_dss</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.zapline.ZapLine.html">mne_denoise.zapline.ZapLine</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html">mne_denoise.spectrum_interpolation.SpectrumInterpolation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.spectrum_interpolation.interpolate_spectrum.html">mne_denoise.spectrum_interpolation.interpolate_spectrum</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.icanclean.ICanClean.html">mne_denoise.icanclean.ICanClean</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.icanclean.compute_icanclean.html">mne_denoise.icanclean.compute_icanclean</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.icanclean.null_r2_threshold.html">mne_denoise.icanclean.null_r2_threshold</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sound.SOUND.html">mne_denoise.sound.SOUND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sound.compute_sound.html">mne_denoise.sound.compute_sound</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sound.compute_sound_ref_best.html">mne_denoise.sound.compute_sound_ref_best</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sspsir.SSPSIR.html">mne_denoise.sspsir.SSPSIR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sspsir.compute_sspsir.html">mne_denoise.sspsir.compute_sspsir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sspsir.compute_sir.html">mne_denoise.sspsir.compute_sir</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.quantify_overcorrection.html">mne_denoise.quantify_overcorrection</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.bss_cca.BSSCCA.html">mne_denoise.bss_cca.BSSCCA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.bss_cca.compute_bss_cca.html">mne_denoise.bss_cca.compute_bss_cca</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sns.SNS.html">mne_denoise.sns.SNS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sns.compute_sns.html">mne_denoise.sns.compute_sns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.sns.compute_sns_weights.html">mne_denoise.sns.compute_sns_weights</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.SingularSpectrumAnalysis.html">mne_denoise.ssa.SingularSpectrumAnalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.LocalSingularSpectrumAnalysis.html">mne_denoise.ssa.LocalSingularSpectrumAnalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.ssa_decompose.html">mne_denoise.ssa.ssa_decompose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.ssa_w_correlation.html">mne_denoise.ssa.ssa_w_correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.compute_basic_ssa.html">mne_denoise.ssa.compute_basic_ssa</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.ssa_clean_channel.html">mne_denoise.ssa.ssa_clean_channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.compute_local_ssa.html">mne_denoise.ssa.compute_local_ssa</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.ssa.local_ssa_clean_channel.html">mne_denoise.ssa.local_ssa_clean_channel</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.peak_attenuation_db.html">mne_denoise.qa.peak_attenuation_db</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.suppression_ratio.html">mne_denoise.qa.suppression_ratio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.noise_surround_ratio.html">mne_denoise.qa.noise_surround_ratio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.below_noise_distortion_db.html">mne_denoise.qa.below_noise_distortion_db</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.spectral_distortion.html">mne_denoise.qa.spectral_distortion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.overclean_proportion.html">mne_denoise.qa.overclean_proportion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.underclean_proportion.html">mne_denoise.qa.underclean_proportion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.geometric_mean_psd_ratio.html">mne_denoise.qa.geometric_mean_psd_ratio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.variance_removed.html">mne_denoise.qa.variance_removed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.compute_all_qa_metrics.html">mne_denoise.qa.compute_all_qa_metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.rms_change.html">mne_denoise.qa.rms_change</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.max_abs_change.html">mne_denoise.qa.max_abs_change</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.qa.channel_variance_ratio.html">mne_denoise.qa.channel_variance_ratio</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_asr_repair_timeline.html">mne_denoise.viz.plot_asr_repair_timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_asr_calibration_fraction.html">mne_denoise.viz.plot_asr_calibration_fraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_asr_component_reconstruction.html">mne_denoise.viz.plot_asr_component_reconstruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_guided_asr_weights.html">mne_denoise.viz.plot_guided_asr_weights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_summary.html">mne_denoise.viz.plot_component_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_selector.html">mne_denoise.viz.plot_component_selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_time_series.html">mne_denoise.viz.plot_component_time_series</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_spectrogram.html">mne_denoise.viz.plot_component_spectrogram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_score_curve.html">mne_denoise.viz.plot_component_score_curve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_window_score_traces.html">mne_denoise.viz.plot_window_score_traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_patterns.html">mne_denoise.viz.plot_component_patterns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_epochs_image.html">mne_denoise.viz.plot_component_epochs_image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_comparison.html">mne_denoise.viz.plot_psd_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_gallery.html">mne_denoise.viz.plot_psd_gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_overlay.html">mne_denoise.viz.plot_psd_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_zoom_comparison.html">mne_denoise.viz.plot_psd_zoom_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_evoked_gfp_comparison.html">mne_denoise.viz.plot_evoked_gfp_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_channel_time_course_comparison.html">mne_denoise.viz.plot_channel_time_course_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_power_ratio_map.html">mne_denoise.viz.plot_power_ratio_map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_spectrogram_comparison.html">mne_denoise.viz.plot_spectrogram_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_signal_overlay.html">mne_denoise.viz.plot_signal_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_psd_comparison.html">mne_denoise.viz.plot_component_psd_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_grand_average_evokeds.html">mne_denoise.viz.plot_grand_average_evokeds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_narrowband_score_scan.html">mne_denoise.viz.plot_narrowband_score_scan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_time_frequency_mask.html">mne_denoise.viz.plot_time_frequency_mask</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_bars.html">mne_denoise.viz.plot_metric_bars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_window_count_series.html">mne_denoise.viz.plot_window_count_series</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_tradeoff_scatter.html">mne_denoise.viz.plot_tradeoff_scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_comparison.html">mne_denoise.viz.plot_metric_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_slopes.html">mne_denoise.viz.plot_metric_slopes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_violins.html">mne_denoise.viz.plot_metric_violins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_null_distribution.html">mne_denoise.viz.plot_null_distribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_forest.html">mne_denoise.viz.plot_forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_harmonic_attenuation.html">mne_denoise.viz.plot_harmonic_attenuation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_tradeoff_summary.html">mne_denoise.viz.plot_metric_tradeoff_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_denoising_summary.html">mne_denoise.viz.plot_denoising_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_component_cleaning_summary.html">mne_denoise.viz.plot_component_cleaning_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_signal_diagnostics_summary.html">mne_denoise.viz.plot_signal_diagnostics_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_condition_interaction_summary.html">mne_denoise.viz.plot_condition_interaction_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_group_condition_interaction_summary.html">mne_denoise.viz.plot_group_condition_interaction_summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.plot_endpoint_metrics_summary.html">mne_denoise.viz.plot_endpoint_metrics_summary</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.set_theme.html">mne_denoise.viz.set_theme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.use_theme.html">mne_denoise.viz.use_theme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.get_theme_rc.html">mne_denoise.viz.get_theme_rc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.get_color.html">mne_denoise.viz.get_color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.get_series_color.html">mne_denoise.viz.get_series_color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.style_axes.html">mne_denoise.viz.style_axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.themed_figure.html">mne_denoise.viz.themed_figure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/mne_denoise.viz.themed_legend.html">mne_denoise.viz.themed_legend</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">API reference</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="api-reference">
+<h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
+<section id="api-stability">
+<h2>API stability<a class="headerlink" href="#api-stability" title="Link to this heading">#</a></h2>
+<p>The public API is the set of names documented here or exposed by the package
+facades. Names beginning with an underscore are private. APIs marked
+experimental have weaker stability guarantees.</p>
+</section>
+<section id="package-utilities">
+<h2>Package utilities<a class="headerlink" href="#package-utilities" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.compute_covariance.html#mne_denoise.compute_covariance" title="mne_denoise.compute_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.compute_covariance</span></code></a></p></td>
+<td><p>Estimate a channel covariance matrix from NumPy data.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="progress-callbacks">
+<h2>Progress callbacks<a class="headerlink" href="#progress-callbacks" title="Link to this heading">#</a></h2>
+<p>Callbacks receive immutable ProgressEvent objects after completed work units.
+The callback is supplied at runtime and is independent of verbose logging.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.progress.ProgressEvent.html#mne_denoise.progress.ProgressEvent" title="mne_denoise.progress.ProgressEvent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.progress.ProgressEvent</span></code></a></p></td>
+<td><p>Immutable description of one completed progress unit.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.progress.TqdmProgress.html#mne_denoise.progress.TqdmProgress" title="mne_denoise.progress.TqdmProgress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.progress.TqdmProgress</span></code></a></p></td>
+<td><p>Presentation adapter that renders ProgressEvent objects with tqdm.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="asr">
+<h2>ASR<a class="headerlink" href="#asr" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR" title="mne_denoise.asr.ASR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.ASR</span></code></a></p></td>
+<td><p>Artifact Subspace Reconstruction estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR" title="mne_denoise.asr.AdaptiveASR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.AdaptiveASR</span></code></a></p></td>
+<td><p>Adaptive Artifact Subspace Reconstruction estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.asr.JugglerASR.html#mne_denoise.asr.JugglerASR" title="mne_denoise.asr.JugglerASR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.JugglerASR</span></code></a></p></td>
+<td><p>JugglerASR estimator with pointwise reference-sample selection.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.asr.GuidedASR.html#mne_denoise.asr.GuidedASR" title="mne_denoise.asr.GuidedASR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.GuidedASR</span></code></a></p></td>
+<td><p>Guided soft-reconstruction variant of ASR.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.asr.calibrate_asr.html#mne_denoise.asr.calibrate_asr" title="mne_denoise.asr.calibrate_asr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.calibrate_asr</span></code></a></p></td>
+<td><p>Calibrate an ASR state from continuous channel-first data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.asr.compute_clean_window_mask.html#mne_denoise.asr.compute_clean_window_mask" title="mne_denoise.asr.compute_clean_window_mask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.compute_clean_window_mask</span></code></a></p></td>
+<td><p>Compute a retained-sample mask from ASR window statistics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.asr.fit_rms_distribution.html#mne_denoise.asr.fit_rms_distribution" title="mne_denoise.asr.fit_rms_distribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.fit_rms_distribution</span></code></a></p></td>
+<td><p>Fit robust location and scale to RMS statistics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.asr.process_asr.html#mne_denoise.asr.process_asr" title="mne_denoise.asr.process_asr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.process_asr</span></code></a></p></td>
+<td><p>Apply a calibrated ASR state to continuous data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.asr.process_guided_asr.html#mne_denoise.asr.process_guided_asr" title="mne_denoise.asr.process_guided_asr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.process_guided_asr</span></code></a></p></td>
+<td><p>Apply a calibrated ASR state with guided reconstruction.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.asr.select_juggler_reference_samples.html#mne_denoise.asr.select_juggler_reference_samples" title="mne_denoise.asr.select_juggler_reference_samples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.asr.select_juggler_reference_samples</span></code></a></p></td>
+<td><p>Select calibration samples with JugglerASR rules.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="dss">
+<h2>DSS<a class="headerlink" href="#dss" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.compute_dss.html#mne_denoise.dss.compute_dss" title="mne_denoise.dss.compute_dss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.compute_dss</span></code></a></p></td>
+<td><p>Compute DSS spatial filters from baseline and biased covariances.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.DSS</span></code></a></p></td>
+<td><p>Denoising Source Separation transformer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.TimeShiftDSS.html#mne_denoise.dss.TimeShiftDSS" title="mne_denoise.dss.TimeShiftDSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.TimeShiftDSS</span></code></a></p></td>
+<td><p>Lag-augmented DSS estimator for repeated trials.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.iterative_dss.html#mne_denoise.dss.iterative_dss" title="mne_denoise.dss.iterative_dss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.iterative_dss</span></code></a></p></td>
+<td><p>Extract multiple components with iterative DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.iterative_dss_one.html#mne_denoise.dss.iterative_dss_one" title="mne_denoise.dss.iterative_dss_one"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.iterative_dss_one</span></code></a></p></td>
+<td><p>Extract one DSS component by fixed-point iteration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.IterativeDSS</span></code></a></p></td>
+<td><p>Iterative DSS transformer.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="dss-segmentation">
+<h3>DSS segmentation<a class="headerlink" href="#dss-segmentation" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.segmentation.CovarianceSegmenter.html#mne_denoise.dss.segmentation.CovarianceSegmenter" title="mne_denoise.dss.segmentation.CovarianceSegmenter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.segmentation.CovarianceSegmenter</span></code></a></p></td>
+<td><p>Segment data where windowed covariance changes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.segmentation.FixedWindowSegmenter.html#mne_denoise.dss.segmentation.FixedWindowSegmenter" title="mne_denoise.dss.segmentation.FixedWindowSegmenter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.segmentation.FixedWindowSegmenter</span></code></a></p></td>
+<td><p>Segment data into fixed-length windows.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="dss-component-selection">
+<h3>DSS component selection<a class="headerlink" href="#dss-component-selection" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.selection.auto_select_components.html#mne_denoise.dss.selection.auto_select_components" title="mne_denoise.dss.selection.auto_select_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.selection.auto_select_components</span></code></a></p></td>
+<td><p>Select a component count with <code class="xref py py-func docutils literal notranslate"><span class="pre">iterative_outlier_removal()</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.selection.auto_select_components_robust.html#mne_denoise.dss.selection.auto_select_components_robust" title="mne_denoise.dss.selection.auto_select_components_robust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.selection.auto_select_components_robust</span></code></a></p></td>
+<td><p>Combine outlier and knee component counts and return the larger count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.selection.detect_eigenvalue_knee.html#mne_denoise.dss.selection.detect_eigenvalue_knee" title="mne_denoise.dss.selection.detect_eigenvalue_knee"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.selection.detect_eigenvalue_knee</span></code></a></p></td>
+<td><p>Select components above the largest qualifying score drop.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.selection.iterative_outlier_removal.html#mne_denoise.dss.selection.iterative_outlier_removal" title="mne_denoise.dss.selection.iterative_outlier_removal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.selection.iterative_outlier_removal</span></code></a></p></td>
+<td><p>Count values removed by iterative mean-plus-sigma thresholding.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="denoisers">
+<h3>Denoisers<a class="headerlink" href="#denoisers" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.LinearDenoiser.html#mne_denoise.dss.denoisers.LinearDenoiser" title="mne_denoise.dss.denoisers.LinearDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.LinearDenoiser</span></code></a></p></td>
+<td><p>Base class for DSS bias transformations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.AverageBias.html#mne_denoise.dss.denoisers.AverageBias" title="mne_denoise.dss.denoisers.AverageBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.AverageBias</span></code></a></p></td>
+<td><p>Averaging bias for repeatable DSS structure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.CycleAverageBias.html#mne_denoise.dss.denoisers.CycleAverageBias" title="mne_denoise.dss.denoisers.CycleAverageBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.CycleAverageBias</span></code></a></p></td>
+<td><p>Fixed-window event-locked averaging bias.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.BandpassBias.html#mne_denoise.dss.denoisers.BandpassBias" title="mne_denoise.dss.denoisers.BandpassBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.BandpassBias</span></code></a></p></td>
+<td><p>Bandpass-filter bias for DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.LineNoiseBias.html#mne_denoise.dss.denoisers.LineNoiseBias" title="mne_denoise.dss.denoisers.LineNoiseBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.LineNoiseBias</span></code></a></p></td>
+<td><p>Line-frequency bias using IIR or FFT selection.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.PeakFilterBias.html#mne_denoise.dss.denoisers.PeakFilterBias" title="mne_denoise.dss.denoisers.PeakFilterBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.PeakFilterBias</span></code></a></p></td>
+<td><p>Second-order IIR peak-filter bias for DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.CombFilterBias.html#mne_denoise.dss.denoisers.CombFilterBias" title="mne_denoise.dss.denoisers.CombFilterBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.CombFilterBias</span></code></a></p></td>
+<td><p>Comb-filter bias for harmonic frequencies.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.LagAverageBias.html#mne_denoise.dss.denoisers.LagAverageBias" title="mne_denoise.dss.denoisers.LagAverageBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.LagAverageBias</span></code></a></p></td>
+<td><p>Lag-averaging bias for ordinary sensor-space DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SmoothingBias.html#mne_denoise.dss.denoisers.SmoothingBias" title="mne_denoise.dss.denoisers.SmoothingBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.SmoothingBias</span></code></a></p></td>
+<td><p>Causal running-mean bias for DSS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SpectrogramBias.html#mne_denoise.dss.denoisers.SpectrogramBias" title="mne_denoise.dss.denoisers.SpectrogramBias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.SpectrogramBias</span></code></a></p></td>
+<td><p>Fixed STFT-mask bias for DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.NonlinearDenoiser.html#mne_denoise.dss.denoisers.NonlinearDenoiser" title="mne_denoise.dss.denoisers.NonlinearDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.NonlinearDenoiser</span></code></a></p></td>
+<td><p>Base class for nonlinear DSS denoisers.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.TanhMaskDenoiser.html#mne_denoise.dss.denoisers.TanhMaskDenoiser" title="mne_denoise.dss.denoisers.TanhMaskDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.TanhMaskDenoiser</span></code></a></p></td>
+<td><p>Scaled hyperbolic-tangent nonlinearity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.RobustTanhDenoiser.html#mne_denoise.dss.denoisers.RobustTanhDenoiser" title="mne_denoise.dss.denoisers.RobustTanhDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.RobustTanhDenoiser</span></code></a></p></td>
+<td><p>Residual hyperbolic-tangent nonlinearity.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.KurtosisDenoiser.html#mne_denoise.dss.denoisers.KurtosisDenoiser" title="mne_denoise.dss.denoisers.KurtosisDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.KurtosisDenoiser</span></code></a></p></td>
+<td><p>Configurable ICA contrast nonlinearity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SkewDenoiser.html#mne_denoise.dss.denoisers.SkewDenoiser" title="mne_denoise.dss.denoisers.SkewDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.SkewDenoiser</span></code></a></p></td>
+<td><p>Squared-source nonlinearity for iterative DSS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.GaussDenoiser.html#mne_denoise.dss.denoisers.GaussDenoiser" title="mne_denoise.dss.denoisers.GaussDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.GaussDenoiser</span></code></a></p></td>
+<td><p>Gaussian nonlinearity for iterative DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.WienerMaskDenoiser.html#mne_denoise.dss.denoisers.WienerMaskDenoiser" title="mne_denoise.dss.denoisers.WienerMaskDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.WienerMaskDenoiser</span></code></a></p></td>
+<td><p>Local-variance Wiener mask for iterative DSS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.VarianceMaskDenoiser.html#mne_denoise.dss.denoisers.VarianceMaskDenoiser" title="mne_denoise.dss.denoisers.VarianceMaskDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.VarianceMaskDenoiser</span></code></a></p></td>
+<td><p>Local-variance mask for iterative DSS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SpectrogramDenoiser.html#mne_denoise.dss.denoisers.SpectrogramDenoiser" title="mne_denoise.dss.denoisers.SpectrogramDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.SpectrogramDenoiser</span></code></a></p></td>
+<td><p>STFT-mask denoiser for iterative DSS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.DCTDenoiser.html#mne_denoise.dss.denoisers.DCTDenoiser" title="mne_denoise.dss.denoisers.DCTDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.DCTDenoiser</span></code></a></p></td>
+<td><p>DCT-domain denoiser.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.QuasiPeriodicDenoiser.html#mne_denoise.dss.denoisers.QuasiPeriodicDenoiser" title="mne_denoise.dss.denoisers.QuasiPeriodicDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.QuasiPeriodicDenoiser</span></code></a></p></td>
+<td><p>Cycle-template denoiser for quasi-periodic source signals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.SmoothTanhDenoiser.html#mne_denoise.dss.denoisers.SmoothTanhDenoiser" title="mne_denoise.dss.denoisers.SmoothTanhDenoiser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.SmoothTanhDenoiser</span></code></a></p></td>
+<td><p>Uniformly smoothed hyperbolic-tangent nonlinearity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.beta_tanh.html#mne_denoise.dss.denoisers.beta_tanh" title="mne_denoise.dss.denoisers.beta_tanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.beta_tanh</span></code></a></p></td>
+<td><p>Return the tanh fixed-point coefficient.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.beta_pow3.html#mne_denoise.dss.denoisers.beta_pow3" title="mne_denoise.dss.denoisers.beta_pow3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.beta_pow3</span></code></a></p></td>
+<td><p>Return the cubic fixed-point coefficient <code class="docutils literal notranslate"><span class="pre">-3.0</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.denoisers.beta_gauss.html#mne_denoise.dss.denoisers.beta_gauss" title="mne_denoise.dss.denoisers.beta_gauss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.denoisers.beta_gauss</span></code></a></p></td>
+<td><p>Return the Gaussian fixed-point coefficient.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="variants">
+<h3>Variants<a class="headerlink" href="#variants" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.variants.smooth_dss.html#mne_denoise.dss.variants.smooth_dss" title="mne_denoise.dss.variants.smooth_dss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.variants.smooth_dss</span></code></a></p></td>
+<td><p>Create an ordinary DSS estimator with <code class="xref py py-class docutils literal notranslate"><span class="pre">SmoothingBias</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.variants.narrowband_dss.html#mne_denoise.dss.variants.narrowband_dss" title="mne_denoise.dss.variants.narrowband_dss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.variants.narrowband_dss</span></code></a></p></td>
+<td><p>Create a DSS estimator with a bandpass bias.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.dss.variants.narrowband_scan.html#mne_denoise.dss.variants.narrowband_scan" title="mne_denoise.dss.variants.narrowband_scan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.variants.narrowband_scan</span></code></a></p></td>
+<td><p>Scan candidate frequencies with narrowband DSS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.dss.variants.ssvep_dss.html#mne_denoise.dss.variants.ssvep_dss" title="mne_denoise.dss.variants.ssvep_dss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.dss.variants.ssvep_dss</span></code></a></p></td>
+<td><p>Create a DSS estimator configured with <code class="xref py py-class docutils literal notranslate"><span class="pre">CombFilterBias</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="zapline">
+<h2>ZapLine<a class="headerlink" href="#zapline" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine" title="mne_denoise.zapline.ZapLine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.zapline.ZapLine</span></code></a></p></td>
+<td><p>DSS-based line-noise removal estimator.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="spectrum-interpolation">
+<h2>Spectrum interpolation<a class="headerlink" href="#spectrum-interpolation" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html#mne_denoise.spectrum_interpolation.SpectrumInterpolation" title="mne_denoise.spectrum_interpolation.SpectrumInterpolation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.spectrum_interpolation.SpectrumInterpolation</span></code></a></p></td>
+<td><p>Line-noise remover based on amplitude spectrum interpolation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.spectrum_interpolation.interpolate_spectrum.html#mne_denoise.spectrum_interpolation.interpolate_spectrum" title="mne_denoise.spectrum_interpolation.interpolate_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.spectrum_interpolation.interpolate_spectrum</span></code></a></p></td>
+<td><p>Interpolate line-noise amplitudes in a 2-D signal spectrum.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="icanclean">
+<h2>iCanClean<a class="headerlink" href="#icanclean" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.icanclean.ICanClean.html#mne_denoise.icanclean.ICanClean" title="mne_denoise.icanclean.ICanClean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.icanclean.ICanClean</span></code></a></p></td>
+<td><p>Reference-based CCA artifact-removal estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.icanclean.compute_icanclean.html#mne_denoise.icanclean.compute_icanclean" title="mne_denoise.icanclean.compute_icanclean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.icanclean.compute_icanclean</span></code></a></p></td>
+<td><p>Compute one iCanClean pass on continuous NumPy arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.icanclean.null_r2_threshold.html#mne_denoise.icanclean.null_r2_threshold" title="mne_denoise.icanclean.null_r2_threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.icanclean.null_r2_threshold</span></code></a></p></td>
+<td><p>Estimate a circular-shift null threshold for squared CCA correlations.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="sound">
+<h2>SOUND<a class="headerlink" href="#sound" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND" title="mne_denoise.sound.SOUND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sound.SOUND</span></code></a></p></td>
+<td><p>SOUND estimator for source-informed noise suppression.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.sound.compute_sound.html#mne_denoise.sound.compute_sound" title="mne_denoise.sound.compute_sound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sound.compute_sound</span></code></a></p></td>
+<td><p>Compute the SOUND cleaning operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.sound.compute_sound_ref_best.html#mne_denoise.sound.compute_sound_ref_best" title="mne_denoise.sound.compute_sound_ref_best"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sound.compute_sound_ref_best</span></code></a></p></td>
+<td><p>Compute SOUND with a selected single-channel reference.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="ssp-sir">
+<h2>SSP-SIR<a class="headerlink" href="#ssp-sir" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.sspsir.SSPSIR.html#mne_denoise.sspsir.SSPSIR" title="mne_denoise.sspsir.SSPSIR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sspsir.SSPSIR</span></code></a></p></td>
+<td><p>Source-informed signal-space projection for TMS-evoked muscle artifact removal.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.sspsir.compute_sspsir.html#mne_denoise.sspsir.compute_sspsir" title="mne_denoise.sspsir.compute_sspsir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sspsir.compute_sspsir</span></code></a></p></td>
+<td><p>Build the projected SSP-SIR reconstruction operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.sspsir.compute_sir.html#mne_denoise.sspsir.compute_sir" title="mne_denoise.sspsir.compute_sir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sspsir.compute_sir</span></code></a></p></td>
+<td><p>Build the unprojected source-informed reconstruction operator.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="overcorrection-metrics">
+<h2>Overcorrection metrics<a class="headerlink" href="#overcorrection-metrics" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.quantify_overcorrection.html#mne_denoise.quantify_overcorrection" title="mne_denoise.quantify_overcorrection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.quantify_overcorrection</span></code></a></p></td>
+<td><p>Compute source-topography distortion metrics for a spatial operator.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="bss-cca">
+<h2>BSS-CCA<a class="headerlink" href="#bss-cca" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.bss_cca.BSSCCA.html#mne_denoise.bss_cca.BSSCCA" title="mne_denoise.bss_cca.BSSCCA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.bss_cca.BSSCCA</span></code></a></p></td>
+<td><p>Reference-free BSS-CCA estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.bss_cca.compute_bss_cca.html#mne_denoise.bss_cca.compute_bss_cca" title="mne_denoise.bss_cca.compute_bss_cca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.bss_cca.compute_bss_cca</span></code></a></p></td>
+<td><p>Learn and apply reference-free BSS-CCA to channel-first data.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="sns">
+<h2>SNS<a class="headerlink" href="#sns" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS" title="mne_denoise.sns.SNS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sns.SNS</span></code></a></p></td>
+<td><p>Sensor Noise Suppression estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.sns.compute_sns.html#mne_denoise.sns.compute_sns" title="mne_denoise.sns.compute_sns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sns.compute_sns</span></code></a></p></td>
+<td><p>Learn and apply Sensor Noise Suppression to channel-first data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.sns.compute_sns_weights.html#mne_denoise.sns.compute_sns_weights" title="mne_denoise.sns.compute_sns_weights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.sns.compute_sns_weights</span></code></a></p></td>
+<td><p>Compute SNS weights from a channel covariance matrix.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="ssa">
+<h2>SSA<a class="headerlink" href="#ssa" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.SingularSpectrumAnalysis.html#mne_denoise.ssa.SingularSpectrumAnalysis" title="mne_denoise.ssa.SingularSpectrumAnalysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.SingularSpectrumAnalysis</span></code></a></p></td>
+<td><p>Frequency-guided, channel-wise Basic SSA transformer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.LocalSingularSpectrumAnalysis.html#mne_denoise.ssa.LocalSingularSpectrumAnalysis" title="mne_denoise.ssa.LocalSingularSpectrumAnalysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.LocalSingularSpectrumAnalysis</span></code></a></p></td>
+<td><p>Channel-wise local-SSA transformer for high-amplitude artifact reconstruction.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.ssa_decompose.html#mne_denoise.ssa.ssa_decompose" title="mne_denoise.ssa.ssa_decompose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.ssa_decompose</span></code></a></p></td>
+<td><p>Decompose a one-dimensional series into Basic SSA components.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.ssa_w_correlation.html#mne_denoise.ssa.ssa_w_correlation" title="mne_denoise.ssa.ssa_w_correlation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.ssa_w_correlation</span></code></a></p></td>
+<td><p>Compute weighted correlations between SSA reconstructions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.compute_basic_ssa.html#mne_denoise.ssa.compute_basic_ssa" title="mne_denoise.ssa.compute_basic_ssa"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.compute_basic_ssa</span></code></a></p></td>
+<td><p>Apply frequency-guided Basic SSA independently to each channel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.ssa_clean_channel.html#mne_denoise.ssa.ssa_clean_channel" title="mne_denoise.ssa.ssa_clean_channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.ssa_clean_channel</span></code></a></p></td>
+<td><p>Clean one channel by frequency-grouping Basic SSA components.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.compute_local_ssa.html#mne_denoise.ssa.compute_local_ssa" title="mne_denoise.ssa.compute_local_ssa"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.compute_local_ssa</span></code></a></p></td>
+<td><p>Apply local SSA independently to each channel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.ssa.local_ssa_clean_channel.html#mne_denoise.ssa.local_ssa_clean_channel" title="mne_denoise.ssa.local_ssa_clean_channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.ssa.local_ssa_clean_channel</span></code></a></p></td>
+<td><p>Clean one channel with clustered local SSA reconstruction.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="quality-assurance">
+<h2>Quality assurance<a class="headerlink" href="#quality-assurance" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.peak_attenuation_db.html#mne_denoise.qa.peak_attenuation_db" title="mne_denoise.qa.peak_attenuation_db"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.peak_attenuation_db</span></code></a></p></td>
+<td><p>Compute peak attenuation around a target frequency.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.qa.suppression_ratio.html#mne_denoise.qa.suppression_ratio" title="mne_denoise.qa.suppression_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.suppression_ratio</span></code></a></p></td>
+<td><p>Compute the dB ratio of mean band power before and after cleaning.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.noise_surround_ratio.html#mne_denoise.qa.noise_surround_ratio" title="mne_denoise.qa.noise_surround_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.noise_surround_ratio</span></code></a></p></td>
+<td><p>Compute target-band power divided by surrounding power.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.qa.below_noise_distortion_db.html#mne_denoise.qa.below_noise_distortion_db" title="mne_denoise.qa.below_noise_distortion_db"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.below_noise_distortion_db</span></code></a></p></td>
+<td><p>Compute mean absolute log-power distortion outside excluded bands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.spectral_distortion.html#mne_denoise.qa.spectral_distortion" title="mne_denoise.qa.spectral_distortion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.spectral_distortion</span></code></a></p></td>
+<td><p>Compute RMS log-power distortion away from line-noise harmonics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.qa.overclean_proportion.html#mne_denoise.qa.overclean_proportion" title="mne_denoise.qa.overclean_proportion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.overclean_proportion</span></code></a></p></td>
+<td><p>Compute the fraction of channels whose surrounding floor is over-suppressed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.underclean_proportion.html#mne_denoise.qa.underclean_proportion" title="mne_denoise.qa.underclean_proportion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.underclean_proportion</span></code></a></p></td>
+<td><p>Compute the fraction of channels with a residual target peak.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.qa.geometric_mean_psd_ratio.html#mne_denoise.qa.geometric_mean_psd_ratio" title="mne_denoise.qa.geometric_mean_psd_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.geometric_mean_psd_ratio</span></code></a></p></td>
+<td><p>Compute the geometric mean of psd_after / psd_before over a frequency range.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.variance_removed.html#mne_denoise.qa.variance_removed" title="mne_denoise.qa.variance_removed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.variance_removed</span></code></a></p></td>
+<td><p>Compute percentage of total variance removed.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.qa.compute_all_qa_metrics.html#mne_denoise.qa.compute_all_qa_metrics" title="mne_denoise.qa.compute_all_qa_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.compute_all_qa_metrics</span></code></a></p></td>
+<td><p>Compute the package QA summary for two MNE Raw objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.rms_change.html#mne_denoise.qa.rms_change" title="mne_denoise.qa.rms_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.rms_change</span></code></a></p></td>
+<td><p>Compute the RMS of data_before - data_after.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.qa.max_abs_change.html#mne_denoise.qa.max_abs_change" title="mne_denoise.qa.max_abs_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.max_abs_change</span></code></a></p></td>
+<td><p>Compute the largest absolute sample-wise change.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.qa.channel_variance_ratio.html#mne_denoise.qa.channel_variance_ratio" title="mne_denoise.qa.channel_variance_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.qa.channel_variance_ratio</span></code></a></p></td>
+<td><p>Compute after/before variance for each channel.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="visualization">
+<h2>Visualization<a class="headerlink" href="#visualization" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_asr_repair_timeline.html#mne_denoise.viz.plot_asr_repair_timeline" title="mne_denoise.viz.plot_asr_repair_timeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_asr_repair_timeline</span></code></a></p></td>
+<td><p>Plot the per-window count of reconstructed components over time.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_asr_calibration_fraction.html#mne_denoise.viz.plot_asr_calibration_fraction" title="mne_denoise.viz.plot_asr_calibration_fraction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_asr_calibration_fraction</span></code></a></p></td>
+<td><p>Bar chart of the clean calibration fraction for one or more estimators.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_asr_component_reconstruction.html#mne_denoise.viz.plot_asr_component_reconstruction" title="mne_denoise.viz.plot_asr_component_reconstruction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_asr_component_reconstruction</span></code></a></p></td>
+<td><p>Heatmap of per-window component variance relative to rejection thresholds.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_guided_asr_weights.html#mne_denoise.viz.plot_guided_asr_weights" title="mne_denoise.viz.plot_guided_asr_weights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_guided_asr_weights</span></code></a></p></td>
+<td><p>Plot experimental GuidedASR soft weights by window and component.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_summary.html#mne_denoise.viz.plot_component_summary" title="mne_denoise.viz.plot_component_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_summary</span></code></a></p></td>
+<td><p>Plot a compact per-component summary dashboard.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_selector.html#mne_denoise.viz.plot_component_selector" title="mne_denoise.viz.plot_component_selector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_selector</span></code></a></p></td>
+<td><p>Plot an interactive component selector for DSS or standard ZapLine.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_time_series.html#mne_denoise.viz.plot_component_time_series" title="mne_denoise.viz.plot_component_time_series"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_time_series</span></code></a></p></td>
+<td><p>Plot stacked component time series with fixed vertical offsets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_spectrogram.html#mne_denoise.viz.plot_component_spectrogram" title="mne_denoise.viz.plot_component_spectrogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_spectrogram</span></code></a></p></td>
+<td><p>Plot a time-frequency power view for one component.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_score_curve.html#mne_denoise.viz.plot_component_score_curve" title="mne_denoise.viz.plot_component_score_curve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_score_curve</span></code></a></p></td>
+<td><p>Plot a 1D component score curve for a fitted estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_window_score_traces.html#mne_denoise.viz.plot_window_score_traces" title="mne_denoise.viz.plot_window_score_traces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_window_score_traces</span></code></a></p></td>
+<td><p>Plot per-window score traces from a 2D score matrix.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_patterns.html#mne_denoise.viz.plot_component_patterns" title="mne_denoise.viz.plot_component_patterns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_patterns</span></code></a></p></td>
+<td><p>Plot spatial component patterns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_epochs_image.html#mne_denoise.viz.plot_component_epochs_image" title="mne_denoise.viz.plot_component_epochs_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_epochs_image</span></code></a></p></td>
+<td><p>Plot component activity as an epoch-by-time image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_comparison.html#mne_denoise.viz.plot_psd_comparison" title="mne_denoise.viz.plot_psd_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_psd_comparison</span></code></a></p></td>
+<td><p>Plot PSD comparison for original and denoised data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_gallery.html#mne_denoise.viz.plot_psd_gallery" title="mne_denoise.viz.plot_psd_gallery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_psd_gallery</span></code></a></p></td>
+<td><p>Plot full-spectrum and zoomed PSD panels across multiple series.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_overlay.html#mne_denoise.viz.plot_psd_overlay" title="mne_denoise.viz.plot_psd_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_psd_overlay</span></code></a></p></td>
+<td><p>Plot full-spectrum and focused PSD overlays across multiple series.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_psd_zoom_comparison.html#mne_denoise.viz.plot_psd_zoom_comparison" title="mne_denoise.viz.plot_psd_zoom_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_psd_zoom_comparison</span></code></a></p></td>
+<td><p>Plot a PSD comparison plus zoomed panels around selected frequencies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_evoked_gfp_comparison.html#mne_denoise.viz.plot_evoked_gfp_comparison" title="mne_denoise.viz.plot_evoked_gfp_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_evoked_gfp_comparison</span></code></a></p></td>
+<td><p>Plot GFP comparison for before/after signals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_channel_time_course_comparison.html#mne_denoise.viz.plot_channel_time_course_comparison" title="mne_denoise.viz.plot_channel_time_course_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_channel_time_course_comparison</span></code></a></p></td>
+<td><p>Plot before/after channel time courses for explicit channel picks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_power_ratio_map.html#mne_denoise.viz.plot_power_ratio_map" title="mne_denoise.viz.plot_power_ratio_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_power_ratio_map</span></code></a></p></td>
+<td><p>Plot a topomap of preserved power ratio after denoising.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_spectrogram_comparison.html#mne_denoise.viz.plot_spectrogram_comparison" title="mne_denoise.viz.plot_spectrogram_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_spectrogram_comparison</span></code></a></p></td>
+<td><p>Compare before/after spectrograms averaged across selected channels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_signal_overlay.html#mne_denoise.viz.plot_signal_overlay" title="mne_denoise.viz.plot_signal_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_signal_overlay</span></code></a></p></td>
+<td><p>Overlay one before/after trace to inspect reconstruction quality.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_psd_comparison.html#mne_denoise.viz.plot_component_psd_comparison" title="mne_denoise.viz.plot_component_psd_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_psd_comparison</span></code></a></p></td>
+<td><p>Plot input PSD next to PSDs of selected components.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_grand_average_evokeds.html#mne_denoise.viz.plot_grand_average_evokeds" title="mne_denoise.viz.plot_grand_average_evokeds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_grand_average_evokeds</span></code></a></p></td>
+<td><p>Plot group-mean evoked responses with optional SEM bands.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_narrowband_score_scan.html#mne_denoise.viz.plot_narrowband_score_scan" title="mne_denoise.viz.plot_narrowband_score_scan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_narrowband_score_scan</span></code></a></p></td>
+<td><p>Plot score/eigenvalue profiles from a narrowband scan.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_time_frequency_mask.html#mne_denoise.viz.plot_time_frequency_mask" title="mne_denoise.viz.plot_time_frequency_mask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_time_frequency_mask</span></code></a></p></td>
+<td><p>Visualize a time-frequency mask matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_bars.html#mne_denoise.viz.plot_metric_bars" title="mne_denoise.viz.plot_metric_bars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_metric_bars</span></code></a></p></td>
+<td><p>Plot grouped bar charts for one or more scalar metrics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_window_count_series.html#mne_denoise.viz.plot_window_count_series" title="mne_denoise.viz.plot_window_count_series"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_window_count_series</span></code></a></p></td>
+<td><p>Plot a per-window count or metric series.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_tradeoff_scatter.html#mne_denoise.viz.plot_tradeoff_scatter" title="mne_denoise.viz.plot_tradeoff_scatter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_tradeoff_scatter</span></code></a></p></td>
+<td><p>Plot a grouped x/y trade-off scatter with optional group means.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_comparison.html#mne_denoise.viz.plot_metric_comparison" title="mne_denoise.viz.plot_metric_comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_metric_comparison</span></code></a></p></td>
+<td><p>Plot one metric as grouped bars or paired subject trajectories.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_slopes.html#mne_denoise.viz.plot_metric_slopes" title="mne_denoise.viz.plot_metric_slopes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_metric_slopes</span></code></a></p></td>
+<td><p>Plot subject-level paired trajectories for one or more metrics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_violins.html#mne_denoise.viz.plot_metric_violins" title="mne_denoise.viz.plot_metric_violins"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_metric_violins</span></code></a></p></td>
+<td><p>Plot violin + strip distributions with optional paired subject lines.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_null_distribution.html#mne_denoise.viz.plot_null_distribution" title="mne_denoise.viz.plot_null_distribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_null_distribution</span></code></a></p></td>
+<td><p>Plot a null-distribution histogram with observed statistic and CI.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_forest.html#mne_denoise.viz.plot_forest" title="mne_denoise.viz.plot_forest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_forest</span></code></a></p></td>
+<td><p>Plot per-subject point estimates with confidence intervals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_harmonic_attenuation.html#mne_denoise.viz.plot_harmonic_attenuation" title="mne_denoise.viz.plot_harmonic_attenuation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_harmonic_attenuation</span></code></a></p></td>
+<td><p>Plot grouped per-harmonic attenuation bars for line-noise studies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_metric_tradeoff_summary.html#mne_denoise.viz.plot_metric_tradeoff_summary" title="mne_denoise.viz.plot_metric_tradeoff_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_metric_tradeoff_summary</span></code></a></p></td>
+<td><p>Plot a two-panel metric trade-off summary.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_denoising_summary.html#mne_denoise.viz.plot_denoising_summary" title="mne_denoise.viz.plot_denoising_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_denoising_summary</span></code></a></p></td>
+<td><p>Plot a generic denoising diagnostics dashboard.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_component_cleaning_summary.html#mne_denoise.viz.plot_component_cleaning_summary" title="mne_denoise.viz.plot_component_cleaning_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_cleaning_summary</span></code></a></p></td>
+<td><p>Plot a generic component-cleaning dashboard.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_signal_diagnostics_summary.html#mne_denoise.viz.plot_signal_diagnostics_summary" title="mne_denoise.viz.plot_signal_diagnostics_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_signal_diagnostics_summary</span></code></a></p></td>
+<td><p>Plot grouped time-domain signal diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_condition_interaction_summary.html#mne_denoise.viz.plot_condition_interaction_summary" title="mne_denoise.viz.plot_condition_interaction_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_condition_interaction_summary</span></code></a></p></td>
+<td><p>Plot condition-by-group interaction traces.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_group_condition_interaction_summary.html#mne_denoise.viz.plot_group_condition_interaction_summary" title="mne_denoise.viz.plot_group_condition_interaction_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_group_condition_interaction_summary</span></code></a></p></td>
+<td><p>Plot group-wise condition interaction traces.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.plot_endpoint_metrics_summary.html#mne_denoise.viz.plot_endpoint_metrics_summary" title="mne_denoise.viz.plot_endpoint_metrics_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_endpoint_metrics_summary</span></code></a></p></td>
+<td><p>Plot a generic endpoint-metric storyboard.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="visualization-theme">
+<h3>Visualization theme<a class="headerlink" href="#visualization-theme" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.set_theme.html#mne_denoise.viz.set_theme" title="mne_denoise.viz.set_theme"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.set_theme</span></code></a></p></td>
+<td><p>Apply the mne-denoise plotting theme to matplotlib rcParams.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.use_theme.html#mne_denoise.viz.use_theme" title="mne_denoise.viz.use_theme"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.use_theme</span></code></a></p></td>
+<td><p>Context manager that temporarily applies the mne-denoise theme.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.get_theme_rc.html#mne_denoise.viz.get_theme_rc" title="mne_denoise.viz.get_theme_rc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.get_theme_rc</span></code></a></p></td>
+<td><p>Return the theme rcParams, optionally merged with overrides.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.get_color.html#mne_denoise.viz.get_color" title="mne_denoise.viz.get_color"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.get_color</span></code></a></p></td>
+<td><p>Return a color from the shared viz palettes by key.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.get_series_color.html#mne_denoise.viz.get_series_color" title="mne_denoise.viz.get_series_color"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.get_series_color</span></code></a></p></td>
+<td><p>Return a color from the shared spectral series palette.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.style_axes.html#mne_denoise.viz.style_axes" title="mne_denoise.viz.style_axes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.style_axes</span></code></a></p></td>
+<td><p>Apply per-axes theme overrides.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mne_denoise.viz.themed_figure.html#mne_denoise.viz.themed_figure" title="mne_denoise.viz.themed_figure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.themed_figure</span></code></a></p></td>
+<td><p>Create a figure + axes with the package plotting defaults.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mne_denoise.viz.themed_legend.html#mne_denoise.viz.themed_legend" title="mne_denoise.viz.themed_legend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mne_denoise.viz.themed_legend</span></code></a></p></td>
+<td><p>Add a clean, minimal legend.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="mne_denoise.viz.ComponentSelector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mne_denoise.viz.</span></span><span class="sig-name descname"><span class="pre">ComponentSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SelectionState</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mne_denoise/viz/interactive_selection.html#ComponentSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mne_denoise.viz.ComponentSelector" title="Link to this definition">#</a></dt>
+<dd><p>Selection controller returned by <a class="reference internal" href="generated/mne_denoise.viz.plot_component_selector.html#mne_denoise.viz.plot_component_selector" title="mne_denoise.viz.plot_component_selector"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_component_selector()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<a class="reference internal" href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS" title="mne_denoise.dss.DSS"><em>DSS</em></a><em> | </em><a class="reference internal" href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS" title="mne_denoise.dss.IterativeDSS"><em>IterativeDSS</em></a><em> | </em><a class="reference internal" href="generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine" title="mne_denoise.zapline.ZapLine"><em>ZapLine</em></a>) – Fitted estimator associated with the selection. Direct construction is
+an internal operation; normally this is supplied by
+<a class="reference internal" href="generated/mne_denoise.viz.plot_component_selector.html#mne_denoise.viz.plot_component_selector" title="mne_denoise.viz.plot_component_selector"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_component_selector()</span></code></a>.</p></li>
+<li><p><strong>data</strong> (<em>Raw</em><em> | </em><em>Epochs</em><em> | </em><em>Evoked</em><em> | </em><em>ndarray</em><em> | </em><em>None</em>) – Cached input used by the selector’s preview and by <a class="reference internal" href="#mne_denoise.viz.ComponentSelector.apply" title="mne_denoise.viz.ComponentSelector.apply"><code class="xref py py-meth docutils literal notranslate"><span class="pre">apply()</span></code></a> when
+no replacement data is supplied.</p></li>
+<li><p><strong>fig</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure" title="(in Matplotlib v3.11.1)"><em>matplotlib.figure.Figure</em></a>) – Figure owned by the selector.</p></li>
+<li><p><strong>state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a>) – Internal cached component-state object created by
+<a class="reference internal" href="generated/mne_denoise.viz.plot_component_selector.html#mne_denoise.viz.plot_component_selector" title="mne_denoise.viz.plot_component_selector"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_component_selector()</span></code></a>.</p></li>
+<li><p><strong>excluded</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Component indices initially excluded from the reconstruction.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mne_denoise.viz.ComponentSelector.apply">
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span></span><a class="reference internal" href="_modules/mne_denoise/viz/interactive_selection.html#ComponentSelector.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mne_denoise.viz.ComponentSelector.apply" title="Link to this definition">#</a></dt>
+<dd><p>Apply the current selection while preserving the input data type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>Raw</em><em> | </em><em>Epochs</em><em> | </em><em>Evoked</em><em> | </em><em>ndarray</em><em> | </em><em>None</em><em>, </em><em>default=None</em>) – Data to reconstruct. If None, use the cached snapshot supplied to
+<a class="reference internal" href="generated/mne_denoise.viz.plot_component_selector.html#mne_denoise.viz.plot_component_selector" title="mne_denoise.viz.plot_component_selector"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_component_selector()</span></code></a>. Passing data explicitly computes
+fresh component sources for that input.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>cleaned</strong> – Reconstructed data with the same type and layout as the input.
+Channels not used by the fitted estimator are preserved for MNE
+objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Raw | Epochs | Evoked | ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mne_denoise.viz.ComponentSelector.excluded">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">excluded</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mne_denoise.viz.ComponentSelector.excluded" title="Link to this definition">#</a></dt>
+<dd><p>Return sorted component indices excluded from the clean output.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="auto_examples/sspsir/plot_01_sspsir_basics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="generated/mne_denoise.compute_covariance.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">mne_denoise.compute_covariance</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-stability">API stability</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-utilities">Package utilities</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#progress-callbacks">Progress callbacks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#asr">ASR</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dss">DSS</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dss-segmentation">DSS segmentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dss-component-selection">DSS component selection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#denoisers">Denoisers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variants">Variants</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zapline">ZapLine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spectrum-interpolation">Spectrum interpolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#icanclean">iCanClean</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sound">SOUND</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssp-sir">SSP-SIR</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overcorrection-metrics">Overcorrection metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bss-cca">BSS-CCA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sns">SNS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssa">SSA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quality-assurance">Quality assurance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization">Visualization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-theme">Visualization theme</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mne_denoise.viz.ComponentSelector"><code class="docutils literal notranslate"><span class="pre">ComponentSelector</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#mne_denoise.viz.ComponentSelector.apply"><code class="docutils literal notranslate"><span class="pre">ComponentSelector.apply()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#mne_denoise.viz.ComponentSelector.excluded"><code class="docutils literal notranslate"><span class="pre">ComponentSelector.excluded</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/mne-tools/mne-denoise/edit/main/docs/api.rst">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/api.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

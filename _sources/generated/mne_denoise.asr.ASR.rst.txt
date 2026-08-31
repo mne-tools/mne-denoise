@@ -1,0 +1,35 @@
+﻿mne\_denoise.asr.ASR
+====================
+
+.. currentmodule:: mne_denoise.asr
+
+.. autoclass:: ASR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ASR.__init__
+      ~ASR.fit
+      ~ASR.fit_transform
+      ~ASR.get_calibration_mask
+      ~ASR.get_diagnostics
+      ~ASR.get_metadata_routing
+      ~ASR.get_params
+      ~ASR.get_rejection_mask
+      ~ASR.set_fit_request
+      ~ASR.set_output
+      ~ASR.set_params
+      ~ASR.set_transform_request
+      ~ASR.to_annotations
+      ~ASR.transform
+   
+   
+
+   
+   
+   

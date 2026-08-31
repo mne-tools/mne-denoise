@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.denoisers.TanhMaskDenoiser
+===========================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: TanhMaskDenoiser
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TanhMaskDenoiser.__init__
+      ~TanhMaskDenoiser.denoise
+   
+   
+
+   
+   
+   

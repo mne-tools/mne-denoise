@@ -1,0 +1,6 @@
+﻿mne\_denoise.dss.variants.narrowband\_scan
+==========================================
+
+.. currentmodule:: mne_denoise.dss.variants
+
+.. autofunction:: narrowband_scan

@@ -1,0 +1,6 @@
+﻿mne\_denoise.asr.process\_guided\_asr
+=====================================
+
+.. currentmodule:: mne_denoise.asr
+
+.. autofunction:: process_guided_asr

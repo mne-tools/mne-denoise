@@ -1,0 +1,23 @@
+﻿mne\_denoise.progress.TqdmProgress
+==================================
+
+.. currentmodule:: mne_denoise.progress
+
+.. autoclass:: TqdmProgress
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TqdmProgress.__init__
+      ~TqdmProgress.close
+   
+   
+
+   
+   
+   

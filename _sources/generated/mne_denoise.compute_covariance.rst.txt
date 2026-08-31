@@ -1,0 +1,6 @@
+﻿mne\_denoise.compute\_covariance
+================================
+
+.. currentmodule:: mne_denoise
+
+.. autofunction:: compute_covariance

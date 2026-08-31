@@ -1,0 +1,6 @@
+﻿mne\_denoise.icanclean.null\_r2\_threshold
+==========================================
+
+.. currentmodule:: mne_denoise.icanclean
+
+.. autofunction:: null_r2_threshold

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.get\_theme\_rc
+===============================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: get_theme_rc

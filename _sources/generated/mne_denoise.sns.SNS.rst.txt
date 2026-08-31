@@ -1,0 +1,31 @@
+﻿mne\_denoise.sns.SNS
+====================
+
+.. currentmodule:: mne_denoise.sns
+
+.. autoclass:: SNS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SNS.__init__
+      ~SNS.fit
+      ~SNS.fit_transform
+      ~SNS.get_metadata_routing
+      ~SNS.get_params
+      ~SNS.set_fit_request
+      ~SNS.set_output
+      ~SNS.set_params
+      ~SNS.set_transform_request
+      ~SNS.transform
+   
+   
+
+   
+   
+   

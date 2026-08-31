@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_harmonic\_attenuation
+============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_harmonic_attenuation

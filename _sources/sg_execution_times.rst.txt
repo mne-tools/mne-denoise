@@ -1,0 +1,160 @@
+
+:orphan:
+
+.. _sphx_glr_sg_execution_times:
+
+
+Computation times
+=================
+**02:34.350** total execution time for 42 files **from all galleries**:
+
+.. container::
+
+  .. raw:: html
+
+    <style scoped>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" class="init">
+    $(document).ready( function () {
+        $('table.sg-datatable').DataTable({order: [[1, 'desc']]});
+    } );
+    </script>
+
+  .. list-table::
+   :header-rows: 1
+   :class: table table-striped sg-datatable
+
+   * - Example
+     - Time
+     - Mem (MB)
+   * - :ref:`sphx_glr_auto_examples_sspsir_plot_01_sspsir_basics.py` (``../examples/sspsir/plot_01_sspsir_basics.py``)
+     - 00:17.909
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_02_artifact_correction.py` (``../examples/dss/plot_02_artifact_correction.py``)
+     - 00:13.566
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_01_dss_fundamentals.py` (``../examples/dss/plot_01_dss_fundamentals.py``)
+     - 00:12.783
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_07_spectrogram_dss.py` (``../examples/dss/plot_07_spectrogram_dss.py``)
+     - 00:10.895
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_03_evoked_responses.py` (``../examples/dss/plot_03_evoked_responses.py``)
+     - 00:10.620
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_04_spectral_dss.py` (``../examples/dss/plot_04_spectral_dss.py``)
+     - 00:08.826
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_07_riemannian_asr.py` (``../examples/asr/plot_07_riemannian_asr.py``)
+     - 00:06.456
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_11_epochs_and_meg.py` (``../examples/asr/plot_11_epochs_and_meg.py``)
+     - 00:05.895
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_08_adaptive_variants.py` (``../examples/asr/plot_08_adaptive_variants.py``)
+     - 00:05.798
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_05_periodic_dss.py` (``../examples/dss/plot_05_periodic_dss.py``)
+     - 00:05.193
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_sound_plot_01_sound_basics.py` (``../examples/sound/plot_01_sound_basics.py``)
+     - 00:04.905
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_06_cutoff_tuning.py` (``../examples/asr/plot_06_cutoff_tuning.py``)
+     - 00:04.902
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_13_pipeline_filter_asr_ica.py` (``../examples/asr/plot_13_pipeline_filter_asr_ica.py``)
+     - 00:04.207
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_zapline_plot_05_adaptive_advanced.py` (``../examples/zapline/plot_05_adaptive_advanced.py``)
+     - 00:04.167
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_06_temporal_dss.py` (``../examples/dss/plot_06_temporal_dss.py``)
+     - 00:04.145
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_zapline_plot_04_adaptive_mode.py` (``../examples/zapline/plot_04_adaptive_mode.py``)
+     - 00:03.824
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_09_juggler_strategies.py` (``../examples/asr/plot_09_juggler_strategies.py``)
+     - 00:03.748
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_08_blind_source_separation.py` (``../examples/dss/plot_08_blind_source_separation.py``)
+     - 00:03.420
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_zapline_plot_02_parameter_tuning.py` (``../examples/zapline/plot_02_parameter_tuning.py``)
+     - 00:02.953
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_zapline_plot_03_epoched_data.py` (``../examples/zapline/plot_03_epoched_data.py``)
+     - 00:02.428
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_04_juggler_asr.py` (``../examples/asr/plot_04_juggler_asr.py``)
+     - 00:02.152
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_05_asr_visualization.py` (``../examples/asr/plot_05_asr_visualization.py``)
+     - 00:02.015
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_10_choosing_a_variant.py` (``../examples/asr/plot_10_choosing_a_variant.py``)
+     - 00:01.973
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_sns_plot_02_algorithm_properties.py` (``../examples/sns/plot_02_algorithm_properties.py``)
+     - 00:01.313
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_12_diagnostics_qc.py` (``../examples/asr/plot_12_diagnostics_qc.py``)
+     - 00:01.127
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_15_guided_asr.py` (``../examples/asr/plot_15_guided_asr.py``)
+     - 00:01.122
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_zapline_plot_01_basic_usage.py` (``../examples/zapline/plot_01_basic_usage.py``)
+     - 00:01.102
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_03_adaptive_asr.py` (``../examples/asr/plot_03_adaptive_asr.py``)
+     - 00:00.765
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_bss_cca_plot_02_bss_cca_properties.py` (``../examples/bss_cca/plot_02_bss_cca_properties.py``)
+     - 00:00.747
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_02_mne_raw_qc.py` (``../examples/asr/plot_02_mne_raw_qc.py``)
+     - 00:00.643
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_12_joint_dss.py` (``../examples/dss/plot_12_joint_dss.py``)
+     - 00:00.603
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_zapline_plot_06_ctf_meg.py` (``../examples/zapline/plot_06_ctf_meg.py``)
+     - 00:00.539
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_ssa_plot_01_ssa_basics.py` (``../examples/ssa/plot_01_ssa_basics.py``)
+     - 00:00.489
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_sns_plot_01_sns_basics.py` (``../examples/sns/plot_01_sns_basics.py``)
+     - 00:00.473
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_13_cardiac_composition.py` (``../examples/dss/plot_13_cardiac_composition.py``)
+     - 00:00.459
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_01_asr_basics.py` (``../examples/asr/plot_01_asr_basics.py``)
+     - 00:00.450
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_bss_cca_plot_01_bss_cca_basics.py` (``../examples/bss_cca/plot_01_bss_cca_basics.py``)
+     - 00:00.427
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_09_custom_bias.py` (``../examples/dss/plot_09_custom_bias.py``)
+     - 00:00.410
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_ssa_plot_02_local_ssa_properties.py` (``../examples/ssa/plot_02_local_ssa_properties.py``)
+     - 00:00.281
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_dss_plot_11_wiener_masking.py` (``../examples/dss/plot_11_wiener_masking.py``)
+     - 00:00.248
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_asr_plot_14_rms_distribution.py` (``../examples/asr/plot_14_rms_distribution.py``)
+     - 00:00.196
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_spectrum_interpolation_plot_01_spectrum_interpolation.py` (``../examples/spectrum_interpolation/plot_01_spectrum_interpolation.py``)
+     - 00:00.177
+     - 0.0

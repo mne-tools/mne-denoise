@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_component\_patterns
+==========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_component_patterns

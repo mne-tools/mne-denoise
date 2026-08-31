@@ -1,0 +1,6 @@
+﻿mne\_denoise.ssa.ssa\_clean\_channel
+====================================
+
+.. currentmodule:: mne_denoise.ssa
+
+.. autofunction:: ssa_clean_channel

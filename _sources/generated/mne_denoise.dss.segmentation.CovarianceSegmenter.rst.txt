@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.segmentation.CovarianceSegmenter
+=================================================
+
+.. currentmodule:: mne_denoise.dss.segmentation
+
+.. autoclass:: CovarianceSegmenter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CovarianceSegmenter.__init__
+      ~CovarianceSegmenter.segment
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_null\_distribution
+=========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_null_distribution

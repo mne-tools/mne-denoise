@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.compute\_all\_qa\_metrics
+=========================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: compute_all_qa_metrics

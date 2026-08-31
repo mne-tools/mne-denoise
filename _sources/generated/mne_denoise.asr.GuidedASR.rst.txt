@@ -1,0 +1,35 @@
+﻿mne\_denoise.asr.GuidedASR
+==========================
+
+.. currentmodule:: mne_denoise.asr
+
+.. autoclass:: GuidedASR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GuidedASR.__init__
+      ~GuidedASR.fit
+      ~GuidedASR.fit_transform
+      ~GuidedASR.get_calibration_mask
+      ~GuidedASR.get_diagnostics
+      ~GuidedASR.get_metadata_routing
+      ~GuidedASR.get_params
+      ~GuidedASR.get_rejection_mask
+      ~GuidedASR.set_fit_request
+      ~GuidedASR.set_output
+      ~GuidedASR.set_params
+      ~GuidedASR.set_transform_request
+      ~GuidedASR.to_annotations
+      ~GuidedASR.transform
+   
+   
+
+   
+   
+   

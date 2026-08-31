@@ -1,0 +1,31 @@
+﻿mne\_denoise.bss\_cca.BSSCCA
+============================
+
+.. currentmodule:: mne_denoise.bss_cca
+
+.. autoclass:: BSSCCA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BSSCCA.__init__
+      ~BSSCCA.fit
+      ~BSSCCA.fit_transform
+      ~BSSCCA.get_metadata_routing
+      ~BSSCCA.get_params
+      ~BSSCCA.set_fit_request
+      ~BSSCCA.set_output
+      ~BSSCCA.set_params
+      ~BSSCCA.set_transform_request
+      ~BSSCCA.transform
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_component\_time\_series
+==============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_component_time_series

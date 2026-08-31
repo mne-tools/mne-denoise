@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_denoising\_summary
+=========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_denoising_summary

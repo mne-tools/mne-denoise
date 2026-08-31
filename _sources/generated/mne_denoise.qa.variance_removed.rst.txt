@@ -1,0 +1,6 @@
+﻿mne\_denoise.qa.variance\_removed
+=================================
+
+.. currentmodule:: mne_denoise.qa
+
+.. autofunction:: variance_removed

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_forest
+=============================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_forest
