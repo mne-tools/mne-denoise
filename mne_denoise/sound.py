@@ -376,8 +376,9 @@ class SOUND(BaseEstimator, TransformerMixin):
     """SOUND estimator for source-informed noise suppression.
 
     SOUND estimates channel noise levels and fits a forward-model-based linear
-    operator. A spherical lead field is built from the montage when no forward
-    solution is supplied.
+    operator. For compatible EEG MNE input with a montage, a spherical lead field
+    is built when no forward solution is supplied. MEG or mixed-channel MNE input
+    and NumPy input require an explicit forward solution.
 
     Parameters
     ----------
@@ -388,7 +389,9 @@ class SOUND(BaseEstimator, TransformerMixin):
     tol : float or None, default=None
         Convergence tolerance; None runs n_iter iterations.
     forward : mne.Forward or None, default=None
-        Optional forward solution. None builds a spherical lead field.
+        Optional explicit forward solution. For compatible EEG MNE input with a
+        montage, None uses a spherical fallback; MEG or mixed-channel MNE input
+        and NumPy input require an explicit forward.
     reference : {"best", "average"}, default="best"
         Reference handling. "best" selects a low-noise single-channel reference
         and reconstructs an average-referenced output; "average" uses all channels
@@ -418,7 +421,7 @@ class SOUND(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    SNS
+    mne_denoise.sns.SNS
         Spatial-redundancy sensor-noise suppression without a lead field.
     compute_sound
         All-channel SOUND functional interface.
@@ -442,10 +445,12 @@ class SOUND(BaseEstimator, TransformerMixin):
     A preloaded MNE ``Raw`` object with a compatible EEG montage can use the
     spherical fallback lead field:
 
-        from mne_denoise.sound import SOUND
+    .. code-block:: python
 
-        model = SOUND(reference="best")
-        clean = model.fit_transform(raw)
+       from mne_denoise.sound import SOUND
+
+       model = SOUND(reference="best")
+       clean = model.fit_transform(raw)
     """
 
     def __init__(

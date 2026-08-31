@@ -248,7 +248,9 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     n_components : int or float
         Number of artifact components, or high-frequency variance fraction in (0, 1).
     forward : mne.Forward or None, default=None
-        Optional forward solution; None builds a spherical lead field.
+        Optional explicit forward solution. For compatible EEG MNE input with a
+        montage, None uses a spherical fallback; MEG or mixed-channel MNE input
+        and NumPy input require an explicit forward.
     art_window : tuple of float or None, default=None
         Artifact interval (tmin, tmax) in seconds; None derives a high-frequency
         envelope from the epoch.
@@ -263,7 +265,7 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     sfreq : float or None, default=None
         Sampling frequency for NumPy input.
     n_dipoles : int, default=5000
-        Dipoles for a generated spherical lead field.
+        Dipoles for a generated spherical EEG lead field.
     verbose : bool, str, int, or None, default=None
         Logging level.
 
@@ -294,7 +296,7 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         Construct the projected source-informed reconstruction operator.
     compute_sir
         Construct the unprojected source-informed reconstruction operator.
-    SOUND
+    mne_denoise.sound.SOUND
         Another forward-model-based denoising method with a different noise model.
 
     Notes
@@ -312,15 +314,18 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     Examples
     --------
     A preloaded MNE ``Epochs`` object with a compatible EEG montage and a
-    sampling rate above the high-pass cutoff can use the spherical fallback:
+    sampling rate whose Nyquist frequency is above the configured high-pass
+    cutoff can use the spherical fallback:
 
-        from mne_denoise.sspsir import SSPSIR
+    .. code-block:: python
 
-        model = SSPSIR(
-            n_components=3,
-            art_window=(0.005, 0.050),
-        )
-        clean = model.fit_transform(epochs)
+       from mne_denoise.sspsir import SSPSIR
+
+       model = SSPSIR(
+           n_components=3,
+           art_window=(0.005, 0.050),
+       )
+       clean = model.fit_transform(epochs)
     """
 
     def __init__(

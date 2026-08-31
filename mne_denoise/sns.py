@@ -417,7 +417,7 @@ class SNS(BaseEstimator, TransformerMixin):
         One-shot SNS operation for channel-first arrays.
     compute_sns_weights
         Construct the local sensor reconstruction operator.
-    SOUND
+    mne_denoise.sound.SOUND
         Forward-model-based sensor-noise suppression.
 
     Notes

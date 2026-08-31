@@ -161,7 +161,7 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
     --------
     interpolate_spectrum
         One-shot array interface.
-    ZapLine
+    mne_denoise.zapline.ZapLine
         DSS-based spatial line-noise removal.
 
     Notes
@@ -183,7 +183,7 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
     >>> from mne_denoise.spectrum_interpolation import SpectrumInterpolation
     >>> rng = np.random.default_rng(0)
     >>> data = rng.standard_normal((8, 2000))
-    >>> model = SpectrumInterpolation(sfreq=250.0, line_freq=60.0, n_harmonics=3)
+    >>> model = SpectrumInterpolation(sfreq=250.0, line_freq=60.0, n_harmonics=2)
     >>> clean = model.fit_transform(data)
     """
 

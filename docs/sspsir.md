@@ -20,9 +20,9 @@ clean = model.fit_transform(epochs)
 - art_window=(tmin, tmax) estimates the artifact subspace in that interval.
   blend="constant" applies the projected operator throughout; the default can
   use a time-local blend.
-- An individual forward solution is preferred. With MNE input and no forward,
-  the package builds a spherical lead-field approximation from the montage;
-  NumPy input requires a compatible forward.
+- An individual forward solution is preferred. Compatible EEG MNE input with a
+  montage can use the spherical fallback when `forward` is omitted. MEG or
+  mixed-channel MNE input and NumPy input require an explicit forward.
 - NumPy input uses (n_channels, n_times) or
   (n_epochs, n_channels, n_times). Supported MNE containers are copied.
 - The fitted lead field, artifact topographies, operators, kernel, and effective

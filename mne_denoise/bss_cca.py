@@ -606,7 +606,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    ICanClean
+    mne_denoise.icanclean.ICanClean
         Reference-based CCA cleaning using physical or derived reference signals.
     compute_bss_cca
         One-shot functional interface for array data.

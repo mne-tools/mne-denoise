@@ -631,7 +631,7 @@ class ICanClean(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    BSSCCA
+    mne_denoise.bss_cca.BSSCCA
         Reference-free CCA using a lagged copy of the primary signal.
     compute_icanclean
         One-shot functional interface for continuous array data.

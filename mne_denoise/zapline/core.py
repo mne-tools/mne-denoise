@@ -94,9 +94,9 @@ class ZapLine(DSS):
 
     See Also
     --------
-    SpectrumInterpolation
+    mne_denoise.spectrum_interpolation.SpectrumInterpolation
         Spectral-amplitude interpolation around line frequencies.
-    DSS
+    mne_denoise.dss.DSS
         General DSS estimator underlying standard ZapLine decomposition.
 
     Notes

@@ -34,8 +34,7 @@ state, `transform` applies it without mutating the input, and
   `JugglerASR` changes reference-sample selection
   {footcite:p}`tsai2024_adaptive_asr,kim2025_juggler_asr`.
 - `GuidedASR` adds artifact and preserve covariance guidance. Soft guided
-  reconstruction is an unpublished, unvalidated experimental research prototype
-  and requires explicit `experimental=True`.
+  reconstruction is experimental and requires explicit `experimental=True`.
 - Inspect the fitted diagnostics and repaired spans. Artifact attenuation alone
   does not establish preservation of the signal of interest.
 

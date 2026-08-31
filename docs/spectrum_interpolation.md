@@ -9,7 +9,7 @@ original phase {footcite:p}`leske_dalal2019_spectrum`.
 ```python
 from mne_denoise.spectrum_interpolation import SpectrumInterpolation
 
-model = SpectrumInterpolation(line_freq=60.0, n_harmonics=3)
+model = SpectrumInterpolation(line_freq=60.0, n_harmonics=2)
 clean = model.fit_transform(raw)
 ```
 

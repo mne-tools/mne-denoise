@@ -327,7 +327,7 @@ class DSS(BaseEstimator, TransformerMixin):
         Nonlinear iterative DSS.
     TimeShiftDSS
         Lag-augmented DSS for repeated trials.
-    ZapLine
+    mne_denoise.zapline.ZapLine
         DSS-based line-noise removal.
 
     Notes
