@@ -30,10 +30,10 @@ The callback is supplied at runtime and is independent of verbose logging.
    mne_denoise.progress.ProgressEvent
    mne_denoise.progress.TqdmProgress
 
-```python
-events = []
-model.fit(data, callback=events.append)
-```
+.. code-block:: python
+
+   events = []
+   model.fit(data, callback=events.append)
 
 ASR
 ---

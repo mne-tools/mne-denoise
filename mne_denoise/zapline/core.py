@@ -92,6 +92,13 @@ class ZapLine(DSS):
     adaptive_results_ : dict or None
         Diagnostics from adaptive processing.
 
+    See Also
+    --------
+    SpectrumInterpolation
+        Spectral-amplitude interpolation around line frequencies.
+    DSS
+        General DSS estimator underlying standard ZapLine decomposition.
+
     Notes
     -----
     Standard fit followed by transform uses a fitted operator. Adaptive mode requires
@@ -102,6 +109,15 @@ class ZapLine(DSS):
     :footcite:p:`decheveigne2020_zapline,klug_kloosterman2022_zapline_plus`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.zapline import ZapLine
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> model = ZapLine(sfreq=1000.0, line_freq=50.0, n_select="auto")
+    >>> clean = model.fit_transform(data)
     """
 
     def __init__(

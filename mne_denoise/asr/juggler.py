@@ -231,6 +231,13 @@ class JugglerASR(ASR):
     verbose : bool, str, int, or None, default=None
         Logging level.
 
+    See Also
+    --------
+    ASR
+        Standard ASR calibration and reconstruction.
+    AdaptiveASR
+        Adaptive calibration-state updates rather than pointwise sample selection.
+
     Notes
     -----
     The fitted calibration mask is sample-based rather than window-based.

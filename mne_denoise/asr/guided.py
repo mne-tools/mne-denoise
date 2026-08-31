@@ -337,15 +337,16 @@ class GuidedASR(ASR):
     See Also
     --------
     ASR
-        Standard Artifact Subspace Reconstruction.
+        Standard ASR without guidance covariances.
     process_guided_asr
-        Low-level guided processing function.
+        Low-level array processing with a calibrated ASR state.
 
     Notes
     -----
     With reconstruction="hard" and no bias operators, this uses the
-    riemannian_windowed ASR backend. The soft path is an experimental API and
-    requires independent evaluation of artifact attenuation and signal preservation.
+    riemannian_windowed ASR backend. The soft path is an unpublished, unvalidated
+    experimental research API and requires independent evaluation of artifact
+    attenuation and signal preservation.
     """
 
     _progress_method = "guided_asr"

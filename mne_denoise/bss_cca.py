@@ -604,6 +604,13 @@ class BSSCCA(BaseEstimator, TransformerMixin):
     lag_samples_ : int
         Resolved lag in samples.
 
+    See Also
+    --------
+    ICanClean
+        Reference-based CCA cleaning using physical or derived reference signals.
+    compute_bss_cca
+        One-shot functional interface for array data.
+
     Notes
     -----
     With segment_len set, transform requires the same number of samples used during
@@ -615,6 +622,15 @@ class BSSCCA(BaseEstimator, TransformerMixin):
     :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.bss_cca import BSSCCA
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> model = BSSCCA(sfreq=250.0, lag_samples=1, n_remove=1)
+    >>> clean = model.fit_transform(data)
     """
 
     def __init__(

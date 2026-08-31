@@ -368,6 +368,13 @@ class LocalSingularSpectrumAnalysis(_BaseSSATransformer):
     subspace_dimensions_ : list
         Selected local subspace dimensions.
 
+    See Also
+    --------
+    SingularSpectrumAnalysis
+        Frequency-guided Basic SSA.
+    compute_local_ssa
+        One-shot Local SSA interface.
+
     Notes
     -----
     The estimator is transductive: each transform clusters and reconstructs the
@@ -378,6 +385,15 @@ class LocalSingularSpectrumAnalysis(_BaseSSATransformer):
     References
     ----------
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.ssa import LocalSingularSpectrumAnalysis
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 200))
+    >>> model = LocalSingularSpectrumAnalysis(window_length=40, n_clusters="auto")
+    >>> clean = model.fit_transform(data)
     """
 
     _progress_method = "local_ssa"

@@ -1,9 +1,9 @@
 # Sensor Noise Suppression (SNS)
 
-SNS estimates sensor-specific noise from spatially redundant neighboring
-channels and subtracts its local reconstruction. The assumption is that each
-sensor contains noise that can be predicted from nearby sensors
-{footcite:p}`decheveigne_simon2008_spatial`.
+SNS suppresses sensor-specific noise by reconstructing each sensor from
+spatially redundant neighboring sensors. It assumes that signals of interest
+are represented across multiple sensors, whereas the targeted sensor noise is
+specific to individual sensors {footcite:p}`decheveigne_simon2008_sensor`.
 
 ## Usage
 

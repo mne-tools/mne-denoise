@@ -113,6 +113,13 @@ class AdaptiveASR(ASR):
     verbose : bool, str, int, or None, default=None
         Logging level.
 
+    See Also
+    --------
+    ASR
+        Standard fixed-calibration Artifact Subspace Reconstruction.
+    JugglerASR
+        Alternative calibration selection without adaptive state updates.
+
     Notes
     -----
     partial_fit updates the adaptive calibration state for variant="psp" or
@@ -125,6 +132,17 @@ class AdaptiveASR(ASR):
     :footcite:p:`tsai2024_adaptive_asr,chang2020_asr`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.asr import AdaptiveASR
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 8000))
+    >>> model = AdaptiveASR(sfreq=250.0, variant="psw")
+    >>> _ = model.fit(data[:, :4000])
+    >>> _ = model.partial_fit(data[:, 4000:])
+    >>> clean = model.transform(data)
     """
 
     def __init__(

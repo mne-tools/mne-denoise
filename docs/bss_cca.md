@@ -10,7 +10,11 @@ muscle-artifact strategy without a reference channel
 ```python
 from mne_denoise.bss_cca import BSSCCA
 
-model = BSSCCA(sfreq=250.0, lag=1, n_remove=2)
+model = BSSCCA(
+    sfreq=250.0,
+    lag_samples=1,
+    n_remove=2,
+)
 clean = model.fit_transform(data)  # data: (n_channels, n_times)
 ```
 
@@ -19,8 +23,10 @@ clean = model.fit_transform(data)  # data: (n_channels, n_times)
 - Input is channel-first 2-D data or MNE Raw, Epochs, or Evoked where
   supported; fit learns operators and transform reuses them.
 - Choose n_remove or use rho_threshold to determine the removed components.
-  reject controls whether selected components are rejected or retained.
-- lag and preprocessing affect the canonical-correlation ordering.
+  reject chooses whether the low- or high-correlation end of the
+  canonical-correlation spectrum is treated as artifactual.
+- lag_samples or lag_seconds and preprocessing affect the
+  canonical-correlation ordering.
 - Segmented operation fits one operator per block; overlap controls block
   overlap and diagnostics report the fitted block operators.
 

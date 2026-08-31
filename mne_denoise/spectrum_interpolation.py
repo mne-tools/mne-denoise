@@ -50,6 +50,11 @@ def interpolate_spectrum(
     ndarray, shape (n_channels, n_times)
         Cleaned data with the same shape and units as data.
 
+    See Also
+    --------
+    SpectrumInterpolation
+        Estimator that resolves target frequencies and preserves MNE containers.
+
     Notes
     -----
     Amplitudes in target bins are replaced using neighboring amplitudes while the
@@ -60,6 +65,14 @@ def interpolate_spectrum(
     :footcite:p:`leske_dalal2019_spectrum`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.spectrum_interpolation import interpolate_spectrum
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> clean = interpolate_spectrum(data, sfreq=250.0, freqs=np.array([60.0, 120.0]))
     """
     if np.iscomplexobj(data):
         raise ValueError("data must be real-valued")
@@ -144,6 +157,13 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
     freqs_ : ndarray
         Resolved target frequencies.
 
+    See Also
+    --------
+    interpolate_spectrum
+        One-shot array interface.
+    ZapLine
+        DSS-based spatial line-noise removal.
+
     Notes
     -----
     NumPy input uses 2-D or 3-D channel-first layouts; 3-D records are processed
@@ -156,6 +176,15 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
     :footcite:p:`leske_dalal2019_spectrum`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.spectrum_interpolation import SpectrumInterpolation
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> model = SpectrumInterpolation(sfreq=250.0, line_freq=60.0, n_harmonics=3)
+    >>> clean = model.fit_transform(data)
     """
 
     def __init__(

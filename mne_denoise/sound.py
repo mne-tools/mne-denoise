@@ -416,6 +416,15 @@ class SOUND(BaseEstimator, TransformerMixin):
     convergence_ : ndarray
         Relative noise-level change by iteration.
 
+    See Also
+    --------
+    SNS
+        Spatial-redundancy sensor-noise suppression without a lead field.
+    compute_sound
+        All-channel SOUND functional interface.
+    compute_sound_ref_best
+        Best-reference SOUND functional interface.
+
     Notes
     -----
     NumPy input is (n_channels, n_times) or (n_epochs, n_channels, n_times).
@@ -427,6 +436,16 @@ class SOUND(BaseEstimator, TransformerMixin):
     :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`
 
     .. footbibliography::
+
+    Examples
+    --------
+    A preloaded MNE ``Raw`` object with a compatible EEG montage can use the
+    spherical fallback lead field:
+
+        from mne_denoise.sound import SOUND
+
+        model = SOUND(reference="best")
+        clean = model.fit_transform(raw)
     """
 
     def __init__(

@@ -79,6 +79,11 @@ def compute_dss(
     eigenvalues : ndarray, shape (n_components,)
         Biased-to-baseline variance ratios.
 
+    See Also
+    --------
+    DSS
+        Estimator that learns and applies the decomposition to recordings.
+
     Notes
     -----
     The baseline covariance is whitened, the biased covariance is diagonalized in
@@ -87,9 +92,20 @@ def compute_dss(
     References
     ----------
     This implementation follows the linear DSS formulation
-    :footcite:p:`sarela2005_dss,decheveigne_simon2008_spatial`.
+    :footcite:p:`sarela2005_dss`.
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.dss import compute_dss
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> biased_data = data + 0.1 * rng.standard_normal(data.shape)
+    >>> baseline = np.cov(data)
+    >>> biased = np.cov(biased_data)
+    >>> filters, patterns, scores = compute_dss(baseline, biased, n_components=3)
     """
     # Check shapes
     if covariance_baseline.shape != covariance_biased.shape:
@@ -303,12 +319,39 @@ class DSS(BaseEstimator, TransformerMixin):
     segment_results_ : list of dict or None
         Per-segment results from adaptive ``fit_transform``.
 
+    See Also
+    --------
+    compute_dss
+        Low-level covariance-based DSS decomposition.
+    IterativeDSS
+        Nonlinear iterative DSS.
+    TimeShiftDSS
+        Lag-augmented DSS for repeated trials.
+    ZapLine
+        DSS-based line-noise removal.
+
     Notes
     -----
     NumPy input uses ``(n_channels, n_times)`` or
     ``(n_channels, n_times, n_epochs)``. MNE ``Epochs`` uses its native
     ``(n_epochs, n_channels, n_times)`` layout. ``extract`` returns source data;
     ``retain`` and ``subtract`` return the input layout or a copied MNE container.
+
+    References
+    ----------
+    :footcite:p:`sarela2005_dss`
+
+    .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.dss import BandpassBias, DSS
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> bias = BandpassBias(freq_band=(8.0, 12.0), sfreq=250.0)
+    >>> dss = DSS(bias=bias, n_components=3, component_action="extract")
+    >>> sources = dss.fit_transform(data)
     """
 
     def __init__(

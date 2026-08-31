@@ -164,6 +164,21 @@ def compute_sns_weights(
         Effective neighbor count.
     neighbor_ranks : ndarray, shape (n_channels,)
         Numerical rank of each selected neighbor covariance.
+
+    See Also
+    --------
+    SNS
+        Estimator that fits and reuses the SNS operator.
+    compute_sns
+        One-shot SNS operation for channel-first data.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.sns import compute_sns_weights
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 1000))
+    >>> weights, n_neighbors, ranks = compute_sns_weights(np.cov(data), n_neighbors=4)
     """
     callback = _validate_callback(callback)
     cov = np.asarray(cov, dtype=np.float64)
@@ -230,12 +245,14 @@ def compute_sns(
 
     Notes
     -----
-    SNS estimates each channel from spatial neighbors using the channel covariance.
-    With centered data, the learned operator is applied in channel space.
+    SNS reconstructs each channel from spatially redundant signals in other
+    channels using the channel covariance. It targets noise specific to individual
+    sensors rather than a source or artifact shared across the array. With centered
+    data, the learned operator is applied in channel space.
 
     References
     ----------
-    :footcite:p:`decheveigne_simon2008_spatial`
+    :footcite:p:`decheveigne_simon2008_sensor`
 
     .. footbibliography::
     """
@@ -394,16 +411,37 @@ class SNS(BaseEstimator, TransformerMixin):
     neighbor_ranks_per_iteration_ : tuple of ndarray
         Local covariance ranks by iteration.
 
+    See Also
+    --------
+    compute_sns
+        One-shot SNS operation for channel-first arrays.
+    compute_sns_weights
+        Construct the local sensor reconstruction operator.
+    SOUND
+        Forward-model-based sensor-noise suppression.
+
     Notes
     -----
     Channel-first NumPy arrays and MNE Raw, Epochs, and Evoked inputs are supported;
-    transform returns the corresponding type without mutating the input.
+    transform returns the corresponding type without mutating the input. SNS
+    reconstructs each channel from spatially redundant signals in other channels;
+    it is intended for noise specific to individual sensors, not for a source or
+    artifact shared across the array.
 
     References
     ----------
-    :footcite:p:`decheveigne_simon2008_spatial`
+    :footcite:p:`decheveigne_simon2008_sensor`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.sns import SNS
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 1000))
+    >>> model = SNS(n_neighbors=4)
+    >>> clean = model.fit_transform(data)
     """
 
     def __init__(

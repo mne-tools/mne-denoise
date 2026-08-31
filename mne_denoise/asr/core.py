@@ -107,17 +107,37 @@ class ASR(BaseEstimator, TransformerMixin):
     verbose : bool, str, int, or None, default=None
         Logging level.
 
+    See Also
+    --------
+    AdaptiveASR
+        Adaptive calibration variants for changing recording statistics.
+    JugglerASR
+        Alternative calibration-sample selection for high-motion recordings.
+    GuidedASR
+        Experimental guidance-aware reconstruction.
+
     Notes
     -----
     NumPy input uses (n_channels, n_times). MNE Raw and Epochs are supported;
     fit does not accept Evoked, while transform preserves the input container and
-    metadata. Transformations do not mutate their input.
+    metadata. Transformations do not mutate their input. Real applications should
+    calibrate on representative clean data; the synthetic example only illustrates
+    the estimator lifecycle.
 
     References
     ----------
     :footcite:p:`kothe_jung2016_asr,chang2018_asr,chang2020_asr`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.asr import ASR
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> asr = ASR(sfreq=250.0, cutoff=20.0)
+    >>> clean = asr.fit_transform(data)
     """
 
     _progress_method = "asr"

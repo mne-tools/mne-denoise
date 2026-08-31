@@ -4,7 +4,7 @@
 DSS learns spatial filters that maximize a reproducible, spectral, temporal, or
 other user-supplied bias relative to a baseline covariance. The family includes
 linear, iterative, temporal, and lag-augmented variants
-{footcite:p}`sarela2005_dss,decheveigne_simon2008_spatial`.
+{footcite:p}`sarela2005_dss`.
 
 ## Usage
 
@@ -20,9 +20,10 @@ dss = DSS(bias=bias, n_components=3, component_action="extract")
 sources = dss.fit_transform(data)
 ```
 
-`DSS` also accepts supported MNE `Raw`, `Epochs`, and `Evoked` objects. It
-returns a copied container and preserves its metadata; exact channel and array
-layout rules are in the API reference.
+`DSS` accepts supported MNE `Raw`, `Epochs`, and `Evoked` objects. `extract`
+returns component arrays, while `retain` and `subtract` return copied
+sensor-space containers with metadata preserved. Exact channel and array-layout
+rules are in the API reference.
 
 ## Component operations
 
@@ -74,6 +75,7 @@ from mne_denoise.dss import TimeShiftDSS
 model = TimeShiftDSS(
     lag_samples=[0, 1, 2],
     n_components=2,
+    rank=4,
     n_select=1,
     component_action="extract",
 )

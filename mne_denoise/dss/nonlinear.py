@@ -653,11 +653,35 @@ class IterativeDSS:
     convergence_info_ : ndarray, shape (n_components, 2)
         Iteration count and convergence flag per component.
 
+    See Also
+    --------
+    DSS
+        Linear covariance-bias DSS.
+    iterative_dss
+        Functional iterative DSS interface.
+
     Notes
     -----
     ``transform`` returns source arrays. ``inverse_transform`` reconstructs arrays
     using the fitted patterns; MNE metadata is used for channel extraction during
     fitting and transformation.
+
+    References
+    ----------
+    :footcite:p:`sarela2005_dss`
+
+    .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.dss import IterativeDSS
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> model = IterativeDSS(
+    ...     lambda source: source**3, n_components=2, rank=4, random_state=0
+    ... )
+    >>> sources = model.fit_transform(data)
     """
 
     def __init__(

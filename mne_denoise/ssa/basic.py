@@ -431,6 +431,13 @@ class SingularSpectrumAnalysis(_BaseSSATransformer):
     dropped_frequencies_ : list
         Dominant frequencies of rejected components.
 
+    See Also
+    --------
+    LocalSingularSpectrumAnalysis
+        Local delay-vector clustering and reconstruction.
+    compute_basic_ssa
+        One-shot Basic SSA interface.
+
     Notes
     -----
     The estimator is transductive: fit records the operating point and channel
@@ -440,6 +447,15 @@ class SingularSpectrumAnalysis(_BaseSSATransformer):
     References
     ----------
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.ssa import SingularSpectrumAnalysis
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> model = SingularSpectrumAnalysis(sfreq=250.0, drop_freq_max=3.0)
+    >>> clean = model.fit_transform(data)
     """
 
     _requires_sfreq = True

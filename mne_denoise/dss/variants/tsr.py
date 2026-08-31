@@ -178,6 +178,13 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
     verbose : bool, str, int, or None, default=None
         Logging level.
 
+    See Also
+    --------
+    DSS
+        Ordinary spatial DSS without lag augmentation.
+    AverageBias
+        Trial-average bias used by ordinary DSS.
+
     Notes
     -----
     Input must be repeated-trial data: NumPy arrays use
@@ -191,6 +198,21 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
     :footcite:p:`decheveigne2010_time_shift`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.dss import TimeShiftDSS
+    >>> rng = np.random.default_rng(0)
+    >>> epochs = rng.standard_normal((8, 200, 20))
+    >>> model = TimeShiftDSS(
+    ...     lag_samples=[0, 1, 2],
+    ...     n_components=2,
+    ...     rank=4,
+    ...     n_select=1,
+    ...     component_action="extract",
+    ... )
+    >>> sources = model.fit_transform(epochs)
     """
 
     def __init__(

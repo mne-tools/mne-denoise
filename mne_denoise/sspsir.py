@@ -122,11 +122,30 @@ def compute_sspsir(
     ndarray, shape (n_channels, n_channels)
         Artifact-suppressing operator.
 
+    See Also
+    --------
+    SSPSIR
+        Estimator that fits the artifact subspace and applies the operator.
+    compute_sir
+        Unprojected source-informed reconstruction operator.
+
     References
     ----------
     :footcite:p:`mutanen2016_sspsir`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.sspsir import compute_sspsir
+    >>> rng = np.random.default_rng(0)
+    >>> leadfield = rng.standard_normal((8, 16))
+    >>> leadfield -= leadfield.mean(axis=0, keepdims=True)
+    >>> artifact_topographies = rng.standard_normal((8, 2))
+    >>> artifact_topographies -= artifact_topographies.mean(axis=0, keepdims=True)
+    >>> artifact_topographies = np.linalg.qr(artifact_topographies)[0][:, :2]
+    >>> operator = compute_sspsir(leadfield, artifact_topographies, M=3)
     """
     leadfield = _validate_leadfield(leadfield)
     artifact_topographies = np.asarray(artifact_topographies, dtype=float)
@@ -172,6 +191,23 @@ def compute_sir(leadfield: np.ndarray, M: int) -> np.ndarray:
     -------
     ndarray, shape (n_channels, n_channels)
         Rank-truncated source-informed operator.
+
+    See Also
+    --------
+    SSPSIR
+        Estimator that fits the artifact subspace and applies source-informed
+        reconstruction.
+    compute_sspsir
+        Projected source-informed reconstruction operator.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.sspsir import compute_sir
+    >>> rng = np.random.default_rng(0)
+    >>> leadfield = rng.standard_normal((8, 16))
+    >>> leadfield -= leadfield.mean(axis=0, keepdims=True)
+    >>> operator = compute_sir(leadfield, M=3)
     """
     leadfield = _validate_leadfield(leadfield)
     u, _, _ = _truncated_svd(leadfield, M, "the lead field")
@@ -252,6 +288,15 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     projs_ : list of mne.Projection
         Artifact directions when fitted on named MNE data.
 
+    See Also
+    --------
+    compute_sspsir
+        Construct the projected source-informed reconstruction operator.
+    compute_sir
+        Construct the unprojected source-informed reconstruction operator.
+    SOUND
+        Another forward-model-based denoising method with a different noise model.
+
     Notes
     -----
     NumPy input uses (n_channels, n_times) or (n_epochs, n_channels, n_times).
@@ -263,6 +308,19 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     :footcite:p:`mutanen2016_sspsir,mutanen2022_source_artifact,mutanen2024_sspsir_simulation,hernandez_pavon2022_tms_review`
 
     .. footbibliography::
+
+    Examples
+    --------
+    A preloaded MNE ``Epochs`` object with a compatible EEG montage and a
+    sampling rate above the high-pass cutoff can use the spherical fallback:
+
+        from mne_denoise.sspsir import SSPSIR
+
+        model = SSPSIR(
+            n_components=3,
+            art_window=(0.005, 0.050),
+        )
+        clean = model.fit_transform(epochs)
     """
 
     def __init__(

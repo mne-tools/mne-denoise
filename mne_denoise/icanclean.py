@@ -87,11 +87,27 @@ def null_r2_threshold(
     float
         Quantile of the maximum surrogate squared canonical correlation.
 
+    See Also
+    --------
+    ICanClean
+        Estimator that applies the threshold within its cleaning workflow.
+
     Notes
     -----
     Circular shifts preserve within-channel temporal structure while disrupting
     alignment between the two blocks. The threshold addresses finite-sample shared
-    correlation; it does not identify whether shared variance is artifact.
+    correlation; it does not identify whether shared variance is artifact. This is
+    package functionality around the published iCanClean workflow, not a claim
+    about its original core method.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.icanclean import null_r2_threshold
+    >>> rng = np.random.default_rng(0)
+    >>> X_cca = rng.standard_normal((1000, 4))
+    >>> Y_cca = rng.standard_normal((1000, 2))
+    >>> threshold = null_r2_threshold(X_cca, Y_cca, n_surrogate=20, random_state=0)
     """
     rng = np.random.default_rng(random_state)
     n_times = X_cca.shape[0]
@@ -613,6 +629,16 @@ class ICanClean(BaseEstimator, TransformerMixin):
     primary_channels_, ref_channels_ : list
         Fitted channel selections.
 
+    See Also
+    --------
+    BSSCCA
+        Reference-free CCA using a lagged copy of the primary signal.
+    compute_icanclean
+        One-shot functional interface for continuous array data.
+    null_r2_threshold
+        Package circular-shift surrogate threshold for squared canonical
+        correlations; this is an extension around the published method.
+
     Notes
     -----
     NumPy input is channel-first; MNE Raw, Epochs, and Evoked inputs are supported
@@ -624,6 +650,15 @@ class ICanClean(BaseEstimator, TransformerMixin):
     :footcite:p:`downey_ferris2022_icanclean,downey_ferris2023_icanclean_phantom,gonsisko2023_icanclean_ica`
 
     .. footbibliography::
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mne_denoise.icanclean import ICanClean
+    >>> rng = np.random.default_rng(0)
+    >>> data = rng.standard_normal((8, 2000))
+    >>> model = ICanClean(sfreq=250.0, ref_channels=[6, 7])
+    >>> clean = model.fit_transform(data)
     """
 
     def __init__(
