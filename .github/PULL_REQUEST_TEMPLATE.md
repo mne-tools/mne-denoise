@@ -1,32 +1,16 @@
-# Pull Request
+<!--
+Please read CONTRIBUTING.md before opening a pull request.
 
-## Description
+Keep this pull request focused and link the relevant issue when one exists.
+Explain the motivation and the behavior implemented or fixed. For scientific
+changes, identify the primary reference and explain intentional deviations or
+extensions. Add or update tests, documentation, and a changelog fragment when
+applicable. Disclose AI assistance according to CONTRIBUTING.md, including the
+tool, manner, and scope of assistance.
+-->
 
-<!-- Provide a general summary of your changes in the Title above -->
-<!-- Please describe your changes in detail -->
+#### Reference issue (if any)
 
-## Related Issue
+#### What does this implement/fix?
 
-<!-- This project only accepts pull requests related to open issues -->
-<!-- If suggesting a new feature or change, please discuss it in an issue first -->
-<!-- If fixing a bug, there should be an issue describing it with steps to reproduce -->
-<!-- Please link to the issue here: -->
-
-## Type of Change
-
-<!-- Please delete options that are not relevant -->
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## Checklist
-
-<!-- Please check each item below -->
-
-- [ ] My code follows the code style of this project (`spin lint`)
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] I have run the full test suite and all tests pass
-- [ ] I have updated the documentation accordingly (`spin docs` builds without warnings)
-- [ ] I have added a numbered Towncrier fragment in `docs/changes/devel/` (if applicable)
+#### Additional information

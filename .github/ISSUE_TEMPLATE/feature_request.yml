@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a capability or scientific enhancement for mne-denoise.
+title: "[ENH] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or scientific use case
+      description: What are you trying to accomplish, and what is currently missing?
+      placeholder: Describe the user or scientific need.
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-behavior
+    attributes:
+      label: Desired behavior
+      description: What capability or change would help?
+      placeholder: Describe the outcome you would like.
+    validations:
+      required: true
+
+  - type: input
+    id: scientific-reference
+    attributes:
+      label: Scientific reference (optional)
+      description: Add a paper, DOI, or other reference when the request concerns a published method.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and additional context (optional)
+      description: Share workarounds, alternatives, examples, or other context. Implementation details are not required.

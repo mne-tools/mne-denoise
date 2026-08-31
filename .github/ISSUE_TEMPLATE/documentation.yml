@@ -1,0 +1,27 @@
+name: Documentation issue
+description: Report unclear, missing, incorrect, or stale documentation.
+title: "[DOC] "
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Give the page, docstring, example, or API entry where the problem appears.
+      placeholder: Paste a URL or file and section name.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is incorrect, unclear, missing, or stale?
+      placeholder: Describe the documentation problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested improvement (optional)
+      description: If you have an idea for a correction, share it here.

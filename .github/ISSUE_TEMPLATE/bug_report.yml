@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a reproducible problem in mne-denoise.
+title: "[BUG] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Usage and support questions belong on the [MNE Forum](https://mne.discourse.group/).
+        Use this form for suspected bugs in mne-denoise.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the incorrect behavior and when it occurs.
+      placeholder: Tell us what went wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproducible-example
+    attributes:
+      label: Minimal reproducible example
+      description: Provide the smallest runnable example that reproduces the problem. Use the public API.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: data-context
+    attributes:
+      label: Data and context (optional)
+      description: Include data characteristics or a small sample only when they are needed to reproduce the problem.
+
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: Expected result
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-result
+    attributes:
+      label: Actual result
+      description: What happened? Include the complete traceback or relevant output when available.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the versions and operating system used for the reproducer.
+      placeholder: |
+        Python:
+        mne-denoise:
+        MNE-Python (if relevant):
+        Operating system:
+    validations:
+      required: true
