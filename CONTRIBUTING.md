@@ -1,455 +1,104 @@
 # Contributing to mne-denoise
 
-Thank you for your interest in contributing to `mne-denoise`! This guide will help you get started with contributing code, documentation, or bug reports.
+Thanks for your interest in contributing. Contributions may include bug
+fixes, scientific improvements, tests, documentation, examples, or
+maintenance.
 
-## Table of Contents
+## Questions, bugs, and feature ideas
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Environment](#development-environment)
-- [Workflow](#workflow)
-- [Code Style](#code-style)
-- [Testing](#testing)
-- [Documentation](#documentation)
-- [Public API and compatibility](#public-api-and-compatibility)
-- [Submitting Changes](#submitting-changes)
-- [Issue Guidelines](#issue-guidelines)
+Please search existing issues and discussions first.
 
-## Code of Conduct
+- Usage and support questions belong on the [MNE Forum](https://mne.discourse.group/).
+- Reproducible bugs belong in the [bug report form](https://github.com/mne-tools/mne-denoise/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml).
+- Feature or scientific enhancement ideas belong in the [feature request form](https://github.com/mne-tools/mne-denoise/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
+- Documentation problems belong in the [documentation form](https://github.com/mne-tools/mne-denoise/blob/main/.github/ISSUE_TEMPLATE/documentation.yml).
 
-This project follows the [MNE-Python Code of Conduct](https://github.com/mne-tools/mne-python/blob/main/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+## Code of Conduct and communication
 
-## Getting Started
+Contributors must follow the project's [Code of Conduct](https://github.com/mne-tools/mne-denoise/blob/main/CODE_OF_CONDUCT.md).
+GitHub technical review is often concise and matter-of-fact; short feedback
+should not automatically be interpreted as a lack of interest or friendliness.
+Focus on the technical content, while keeping every interaction consistent
+with the Code of Conduct.
 
-### Prerequisites
+## AI-assisted contributions
 
-- Python 3.12 or higher
-- Git
-- A GitHub account
+Fully automated issue or pull-request generation without human review is not
+acceptable. The contributor is responsible for every submitted line and must
+understand, review, and test AI-assisted work. Scientific algorithm changes
+deserve particular scrutiny for correctness, provenance, and licensing.
 
-### Fork and Clone
+If AI tools were used, disclose the tool, manner, and scope of assistance in
+the pull-request description. Do not use AI-generated text as a substitute for
+understanding reviewer discussion.
 
-1. **Fork** the repository on GitHub by clicking the "Fork" button.
+## Development setup
 
-2. **Clone** your fork locally:
-
-   ```bash
-   git clone https://github.com/<your-username>/mne-denoise.git
-   cd mne-denoise
-   ```
-
-3. **Add the upstream remote**:
-
-   ```bash
-   git remote add upstream https://github.com/mne-tools/mne-denoise.git
-   ```
-
-## Development Environment
-
-We recommend using a virtual environment for development.
-
-### Using venv (recommended)
+Use an isolated development environment. The [Scientific Python development
+guides](https://learn.scientific-python.org/development/) provide general
+environment guidance; this repository-specific setup is:
 
 ```bash
-# Create virtual environment
-python -m venv .venv
-
-# Activate it
-# On macOS/Linux:
-source .venv/bin/activate
-# On Windows:
-.venv\Scripts\activate
-
-# Upgrade pip
-python -m pip install --upgrade pip
-
-# Install in editable mode with the development dependency group
-python -m pip install -e . --group dev
-
-# Install the repository hooks
-prek install
-```
-
-### Using conda
-
-```bash
-# Create environment
-conda create -n mne-denoise python=3.12
-conda activate mne-denoise
-
-# Install in editable mode
-python -m pip install --upgrade pip
 python -m pip install -e . --group dev
 prek install
 ```
 
-### Development commands
+## Development commands
 
-The development dependency group includes `uv`-compatible project tooling,
-`spin`, and `prek`. Spin is the project task interface, not an environment
-manager:
+Use the canonical repository commands:
 
 ```bash
-spin test                 # run pytest
-spin test -- -k asr       # forward arguments to pytest
-spin lint                 # run every repository hook
-spin docs                 # build docs with warnings as errors
-spin build                # build and validate distributions
-spin check                # lint, test, and validate distributions
-```
-
-Use `prek install` once to install the local Git hooks, and
-`prek run --all-files` to run them directly.
-
-## Workflow
-
-### 1. Create a Branch
-
-Always create a new branch for your work:
-
-```bash
-# Sync with upstream first
-git fetch upstream
-git checkout main
-git merge upstream/main
-
-# Create feature branch
-git checkout -b feature/my-new-feature
-# or for bug fixes:
-git checkout -b fix/issue-123
-```
-
-### 2. Make Your Changes
-
-- Write clean, readable code
-- Follow the code style guidelines (see below)
-- Add tests for new functionality
-- Update documentation as needed
-
-### 3. Commit Your Changes
-
-Write clear, descriptive commit messages:
-
-```bash
-git add .
-git commit -m "Add support for custom frequency bands in BandpassBias"
-```
-
-**Commit message guidelines:**
-
-- Use present tense ("Add feature" not "Added feature")
-- Use imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Keep the first line under 72 characters
-- Reference issues when relevant ("Fix #123: ...")
-
-### 4. Keep Your Branch Updated
-
-```bash
-git fetch upstream
-git rebase upstream/main
-```
-
-### 5. Add Changelog Entry
-
-We use [towncrier](https://towncrier.readthedocs.io/) to manage our changelog. This prevents merge conflicts and ensures standardized release notes.
-
-When you create a Pull Request, add a changelog fragment in
-`docs/changes/devel/`. Name it `<PR>.<type>.rst`, for example
-`123.feature.rst`. During local development, an unnumbered `feature.rst` or
-`bugfix.rst` can be renamed with `python scripts/rename_towncrier.py
---pr-number 123`; the pull-request automation performs the same conversion.
-
-For detailed instructions and available types, see [docs/changes/README.md](https://github.com/mne-tools/mne-denoise/blob/main/docs/changes/README.md).
-
-**Author Attribution**: We encourage contributors to include their name in the changelog entry if they wish to be highlighted. In Markdown, you can link to your GitHub profile (e.g., `... (by [@YourUser](...))`).
-
-## Code Style
-
-We use **Ruff** for linting and formatting, configured to follow PEP 8 with NumPy docstring conventions.
-
-### Automatic Formatting
-
-Repository hooks automatically format your code on commit. To run them manually:
-
-```bash
-# Run the complete repository quality suite
+spin test
 spin lint
-
-# Run hooks directly
-prek run --all-files
+spin docs
+spin build
+spin check
 ```
 
-### Docstring Style
+Focused `pytest` commands are fine during development and debugging.
 
-We use NumPy-style docstrings. Example:
+## Scientific contributions
 
-```python
-def compute_dss(data, bias, n_components=None):
-    """Compute DSS spatial filters.
+Changes to scientific algorithms should:
 
-    Parameters
-    ----------
-    data : ndarray, shape (n_channels, n_times)
-        Input data matrix.
-    bias : LinearDenoiser
-        Bias function that emphasizes signal of interest.
-    n_components : int, optional
-        Number of components to return. If None, returns all.
+- identify the primary scientific source(s);
+- explain intentional deviations or extensions;
+- include meaningful numerical or behavioral tests;
+- update scientific documentation and docstrings; and
+- avoid treating historical output parity alone as evidence of correctness.
 
-    Returns
-    -------
-    filters : ndarray, shape (n_channels, n_components)
-        Spatial filters sorted by eigenvalue.
-    eigenvalues : ndarray, shape (n_components,)
-        Corresponding eigenvalues.
+See [AGENTS.md](https://github.com/mne-tools/mne-denoise/blob/main/AGENTS.md) for the detailed source hierarchy and test
+ownership conventions.
 
-    Examples
-    --------
-    >>> from mne_denoise.dss import compute_dss, AverageBias
-    >>> filters, eigenvalues = compute_dss(data, AverageBias())
+## Tests and public API
 
-    See Also
-    --------
-    DSS : Scikit-learn compatible transformer.
-
-    References
-    ----------
-    .. [1] de Cheveigné, A., & Simon, J. Z. (2008). Denoising based on
-           spatial filtering. Journal of Neuroscience Methods.
-    """
-```
-
-## Testing
-
-We use **pytest** for testing. All new code should have tests.
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=mne_denoise --cov-report=html
-
-# Run specific test file
-pytest tests/test_linear_dss.py
-
-# Run specific test
-pytest tests/test_linear_dss.py::test_dss_epochs -v
-
-# Run tests matching a pattern
-pytest -k "zapline" -v
-```
-
-### Writing Tests
-
-- Place tests in the `tests/` directory
-- Name test files `test_*.py`
-- Name test functions `test_*`
-- Use descriptive test names that explain what is being tested
-- Use fixtures for common setup
-- Plotting tests use the non-interactive Matplotlib backend configured in
-  `tests/conftest.py`, and figures are closed automatically after each test
-- Pass `show=False` when testing plotting functions
-- For optional dependencies, prefer `pytest.importorskip(...)`
-
-#### Test design principles
-
-- Organize tests around scientific, public API, and integration contracts.
-- Keep historical bug scenarios when they protect a durable contract; give
-  them the contract's owner rather than a separate regression category.
-- Keep each test scenario coherent and meaningful. Parametrize independent
-  scientific modes or layouts, and use labelled loops for equivalent
-  validation spellings that do not need separate test nodes.
-- Prefer deterministic behavioral or numerical assertions over coverage-only
-  execution, private implementation details, and shape-only checks.
-- Keep shared estimator and MNE-container behavior in the central contract
-  suites. Test MNE metadata and lifecycle behavior at the public boundary,
-  and keep algorithm-specific numerical behavior with its algorithm tests.
-- Preserve distinct scientific regimes as separate scenarios, including
-  SSP-SIR's blended artifact-window behavior.
-
-Example test:
-
-```python
-import numpy as np
-import pytest
-from mne_denoise.dss import DSS, AverageBias
-
-
-@pytest.fixture
-def sample_epochs():
-    """Create sample epochs for testing."""
-    rng = np.random.default_rng(42)
-    return rng.standard_normal((10, 32, 1000))
-
-
-def test_dss_retain_reconstructs_all_components(sample_epochs):
-    """Retaining every fitted component reconstructs the input."""
-    dss = DSS(bias=AverageBias(), component_action="retain")
-    retained = dss.fit_transform(sample_epochs)
-
-    np.testing.assert_allclose(retained, sample_epochs, rtol=1e-9, atol=1e-9)
-```
-
-### Coverage Reports
-
-- Use coverage to find untested behavior, but treat it as a diagnostic rather
-  than a target that overrides meaningful contract tests.
-- The CI will report coverage; check the Codecov report on your PR
-- View local coverage report: `open htmlcov/index.html`
+New functionality should have appropriate tests. mne-denoise centralizes
+shared estimator, MNE-container, public-API, and progress contracts. Before
+adding dedicated tests or new public helpers, read [AGENTS.md](https://github.com/mne-tools/mne-denoise/blob/main/AGENTS.md).
 
 ## Documentation
 
-Documentation is built with Sphinx and hosted on GitHub Pages.
+Update public-facing documentation, docstrings, and examples when applicable.
+Documentation must build without warnings, and primary scientific sources
+should support scientific claims. `spin docs` is the canonical full check.
 
-### Building Docs Locally
+## Changelog
 
-```bash
-# Build HTML documentation with warnings as errors
-spin docs
+For changes that need a release note, add a fragment under
+`docs/changes/devel/` using the `<PR>.<type>.rst` naming scheme. The available
+types are `feature`, `bugfix`, `doc`, `removal`, and `misc`. Do not edit
+`CHANGELOG.md` in a pull request. See [docs/changes/README.md](https://github.com/mne-tools/mne-denoise/blob/main/docs/changes/README.md)
+for details and local draft instructions.
 
-# Populate the real-data cache before a full gallery build
-python scripts/prefetch_docs_data.py
+## Pull requests
 
-# View in browser
-open docs/_build/html/index.html  # macOS
-xdg-open docs/_build/html/index.html  # Linux
-start docs/_build/html/index.html  # Windows
-```
+Keep the pull request focused, reference an issue where applicable, and
+explain what changed and why. Disclose AI assistance as described above, run
+the relevant checks, and respond to review feedback. Maintainers merge changes
+after approval.
 
-### Documentation Structure
+## Repository architecture for agents and advanced contributors
 
-- `docs/api.rst` - API reference (auto-generated from docstrings)
-- `docs/getting-started.rst` - Installation and quick start
-- `docs/dss.md` - DSS module guide
-- `examples/` - Gallery examples (rendered by sphinx-gallery)
-
-Documentation CI executes the complete gallery. Its MNE Sample, Somato, and
-EEGBCI downloads are prefetched and cached using an inventory-derived key; a
-twice-weekly trusted build keeps that cache available to pull requests. When
-adding a new real dataset to an example, also add it to
-`scripts/prefetch_docs_data.py` so failures happen before Sphinx starts.
-
-### Adding Examples
-
-Examples are Python scripts in the `examples/` directory:
-
-1. Create a file with prefix `plot_` (e.g., `plot_my_example.py`)
-2. Follow the sphinx-gallery format with docstring headers
-3. Examples are automatically built and included in the gallery
-
-Example template:
-
-```python
-"""
-Title of Example
-================
-
-Brief description of what this example demonstrates.
-"""
-
-# %%
-# Section Header
-# --------------
-# Explanation text...
-
-import mne_denoise
-
-# Your code here...
-```
-
-## Public API and compatibility
-
-### Public API
-
-The public API is defined by intentional documentation and canonical public
-namespaces, not by every Python name that happens to be importable.
-
-### Before 1.0
-
-Before version 1.0, a formal warning or deprecation cycle is not required.
-Contributors changing public API should still:
-
-- explain the reason for the change;
-- update tests;
-- update documentation;
-- add a changelog fragment;
-- provide the replacement path or API where relevant.
-
-### Private and experimental names
-
-Names or modules beginning with `_` have no compatibility guarantee.
-Experimental or research-prototype APIs may evolve more rapidly.
-
-### Starting at 1.0
-
-Backward-incompatible changes to stable public API should normally go through
-a documented deprecation process.
-
-## Submitting Changes
-
-### Pull Request Process
-
-1. **Push your branch** to your fork:
-
-   ```bash
-   git push origin feature/my-new-feature
-   ```
-
-2. **Open a Pull Request** on GitHub against the `main` branch.
-
-3. **Fill out the PR template** with:
-   - Description of changes
-   - Related issue(s)
-   - Type of change
-   - Checklist items
-
-4. **Wait for CI** to complete. All checks must pass.
-
-5. **Address review feedback** by pushing additional commits.
-
-6. **Squash and merge** once approved (maintainers will do this).
-
-### PR Checklist
-
-Before submitting, ensure:
-
-- [ ] Code follows the project style (`spin lint` passes)
-- [ ] All tests pass (`pytest` exits cleanly)
-- [ ] New code has tests with good coverage
-- [ ] Documentation is updated if needed
-- [ ] Documentation builds cleanly (`spin docs`)
-- [ ] A numbered Towncrier fragment is included for user-facing changes
-- [ ] Commit messages are clear and descriptive
-
-## Issue Guidelines
-
-### Reporting Bugs
-
-When reporting a bug, please include:
-
-1. **Description**: What happened vs. what you expected
-2. **Reproduction steps**: Minimal code to reproduce the issue
-3. **Environment**: Python version, OS, package versions
-4. **Error message**: Full traceback if applicable
-
-Use the bug report template when creating an issue.
-
-### Requesting Features
-
-For feature requests:
-
-1. Check if it already exists or is planned
-2. Describe the use case and motivation
-3. Provide examples of how it would be used
-4. Consider if you'd like to implement it yourself
-
-## Questions?
-
-- Open a [Discussion](https://github.com/mne-tools/mne-denoise/discussions) for questions
-- Check existing issues and discussions first
-- Join the [MNE-Python community](https://mne.tools/stable/overview/get_help.html)
-
-Thank you for contributing!
+For repository-specific architecture, public API ownership, shared test
+contracts, CI expectations, scientific source hierarchy, and guidance for AI
+coding agents, see [AGENTS.md](https://github.com/mne-tools/mne-denoise/blob/main/AGENTS.md).
