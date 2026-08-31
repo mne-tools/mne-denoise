@@ -1,18 +1,4 @@
-"""Basic Singular Spectrum Analysis and dominant-frequency grouping.
-
-Basic SSA embeds a scalar series in a Hankel trajectory matrix, decomposes it
-with a singular-value decomposition, and maps every elementary matrix back to
-the time domain by anti-diagonal averaging. The reconstructed components are
-additive and sum to the input to floating-point precision.
-
-The dominant-frequency rejection rule provided here is an application-specific
-grouping strategy. It is not part of the mathematical definition of Basic SSA.
-
-References
-----------
-.. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum Analysis for
-       Time Series. Springer. https://doi.org/10.1007/978-3-642-34913-3
-"""
+"""Basic Singular Spectrum Analysis."""
 
 from __future__ import annotations
 
@@ -44,59 +30,44 @@ def ssa_decompose(
     sfreq: float | None = None,
     max_window: int = 100,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Decompose a one-dimensional series into additive Basic SSA components.
+    """Decompose a one-dimensional series into Basic SSA components.
 
     Parameters
     ----------
     x : array-like, shape (n_times,)
         Finite scalar time series.
     window_length : int | None, default=None
-        Embedding dimension in samples. It must satisfy
-        ``2 <= window_length <= (n_times + 1) // 2``. If None, an automatic
-        value is selected.
+        Embedding dimension in samples. If None, choose it automatically.
     window_seconds : float | None, default=None
-        Embedding duration in seconds. It is mutually exclusive with
-        ``window_length`` and requires ``sfreq``.
+        Embedding duration in seconds; mutually exclusive with window_length and
+        requiring sfreq.
     sfreq : float | None, default=None
-        Sampling frequency in Hz. It converts ``window_seconds`` to samples and
-        sets the automatic window to at most 0.5 seconds.
+        Sampling frequency in Hz, used with window_seconds and automatic selection.
     max_window : int, default=100
-        Maximum embedding dimension used by automatic selection.
+        Maximum automatic embedding dimension.
 
     Returns
     -------
-    components : ndarray, shape (window_length, n_times)
-        Elementary reconstructed series ordered by decreasing singular value.
-        Their sum reconstructs ``x`` to floating-point precision.
+    components : ndarray, shape (n_components, n_times)
+        Reconstructed elementary components in decreasing singular-value order.
     info : dict
-        Resolved embedding dimension, trajectory-matrix shape, singular values,
-        and numerical rank.
+        Resolved window, trajectory shape, singular values, and numerical rank.
+
+    Notes
+    -----
+    The trajectory matrix is decomposed by SVD and reconstructed by anti-diagonal
+    averaging. :footcite:p:`golyandina_zhigljavsky2013_ssa`.
+
+    References
+    ----------
+    .. footbibliography::
 
     Raises
     ------
     TypeError
         If a scalar parameter has an invalid type.
     ValueError
-        If ``x`` is not a finite one-dimensional series or the requested
-        embedding is invalid.
-
-    See Also
-    --------
-    ssa_w_correlation : Measure weighted component separability.
-    ssa_clean_channel : Group and subtract components by dominant frequency.
-
-    Notes
-    -----
-    Direct SVD of the trajectory matrix is algebraically equivalent to
-    eigendecomposition of its lag-covariance matrix, without squaring the
-    condition number. Anti-diagonal averaging includes the smaller edge
-    multiplicities described for Basic SSA [1]_.
-
-    References
-    ----------
-    .. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum
-           Analysis for Time Series. Springer.
-           https://doi.org/10.1007/978-3-642-34913-3
+        If x or the requested embedding is invalid.
     """
     x = np.asarray(x, dtype=np.float64)
     if x.ndim != 1:
@@ -139,36 +110,25 @@ def ssa_w_correlation(components: np.ndarray, window_length: int) -> np.ndarray:
     Parameters
     ----------
     components : array-like, shape (n_components, n_times)
-        Reconstructed time series, typically returned by
-        :func:`ssa_decompose`.
+        Reconstructed components.
     window_length : int
-        Embedding dimension used to produce ``components``.
+        Embedding dimension used to obtain components.
 
     Returns
     -------
     correlation : ndarray, shape (n_components, n_components)
-        Symmetric weighted-correlation matrix. Zero-energy components have a
-        zero row and column.
-
-    Raises
-    ------
-    TypeError
-        If ``window_length`` is not an integer.
-    ValueError
-        If the component array or embedding dimension is invalid.
+        Symmetric weighted-correlation matrix; zero-energy components have zero
+        rows and columns.
 
     Notes
     -----
-    The weights equal the anti-diagonal multiplicities of the trajectory
-    matrix. Magnitudes near zero indicate stronger separability; magnitudes
-    near one indicate that two reconstructed components are strongly mixed.
-    W-correlation is a diagnostic, not an artifact-selection rule [1]_.
+    The weights are the anti-diagonal multiplicities of the trajectory matrix.
+    This is a separability diagnostic, not an artifact-selection rule.
+    :footcite:p:`golyandina_zhigljavsky2013_ssa`.
 
     References
     ----------
-    .. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum
-           Analysis for Time Series. Springer.
-           https://doi.org/10.1007/978-3-642-34913-3
+    .. footbibliography::
     """
     components = np.asarray(components, dtype=np.float64)
     if components.ndim != 2 or components.shape[1] < 1:
@@ -245,7 +205,7 @@ def ssa_clean_channel(
     window_seconds: float | None = None,
     return_info: bool = False,
 ) -> np.ndarray | tuple[np.ndarray, dict[str, Any]]:
-    """Clean one channel by grouping Basic SSA components by frequency.
+    """Clean one channel by frequency-grouping Basic SSA components.
 
     Parameters
     ----------
@@ -254,20 +214,18 @@ def ssa_clean_channel(
     sfreq : float
         Sampling frequency in Hz.
     window_length : int | None, default=None
-        Embedding dimension in samples. If None, it is selected automatically.
+        Embedding dimension in samples; None selects it automatically.
     drop_freq_max : float, default=3.0
-        Reject components whose dominant frequency is at or below this value
-        in Hz. Ignored as a selection bound when ``drop_band`` is supplied.
+        Upper bound, in Hz, for the dominant-frequency rejection rule when
+        drop_band is None.
     drop_band : tuple of float | None, default=None
-        Inclusive ``(low, high)`` dominant-frequency rejection band in Hz.
+        Inclusive dominant-frequency interval to reject, in Hz.
     n_check : int | None, default=None
-        Restrict selection to this many leading numerical-rank components.
-        None examines every numerical-rank component.
+        Number of leading numerical-rank components to inspect; None inspects all.
     max_window : int, default=100
-        Maximum embedding dimension used by automatic window selection.
+        Maximum automatic embedding dimension.
     window_seconds : float | None, default=None
-        Embedding duration in seconds, mutually exclusive with
-        ``window_length``.
+        Embedding duration in seconds, mutually exclusive with window_length.
     return_info : bool, default=False
         If True, also return decomposition and grouping diagnostics.
 
@@ -276,31 +234,12 @@ def ssa_clean_channel(
     x_clean : ndarray, shape (n_times,)
         Cleaned time series.
     info : dict
-        Returned only when ``return_info=True``. Contains reconstructed
-        components, singular values, dominant frequencies, rejected component
-        indices and frequencies, the reconstructed artifact, and the resolved
-        embedding information.
-
-    Raises
-    ------
-    TypeError
-        If a scalar parameter has an invalid type.
-    ValueError
-        If the time series, frequency bounds, or embedding is invalid.
-
-    See Also
-    --------
-    compute_basic_ssa : Apply the same rule independently across channels.
-    ssa_decompose : Return the complete additive decomposition.
+        Diagnostics returned only when return_info=True.
 
     Notes
     -----
-    Dominant frequency is the maximum-magnitude bin of an ``n_times``-point
-    real FFT. DC is included and ties select the lower-frequency bin. This
-    grouping rule and its thresholds are mne-denoise choices rather than
-    defining steps of Basic SSA. A broadband component can therefore be
-    classified by a narrow peak, and decisions near a threshold depend on the
-    FFT resolution ``sfreq / n_times``.
+    Dominant frequency is the largest real-FFT magnitude bin; DC is included.
+    The frequency grouping and thresholds are package heuristics.
     """
     sfreq, drop_freq_max, drop_band, n_check = _check_frequency_parameters(
         sfreq, drop_freq_max, drop_band, n_check
@@ -358,61 +297,42 @@ def compute_basic_ssa(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Apply frequency-guided Basic SSA independently to every channel.
+    """Apply frequency-guided Basic SSA independently to each channel.
 
     Parameters
     ----------
     X : array-like, shape (n_channels, n_times)
-        Finite channel-first data. Channels are never mixed.
+        Finite channel-first data. Channels are not mixed.
     sfreq : float
         Sampling frequency in Hz.
     window_length : int | None, default=None
-        Embedding dimension in samples. If None, it is selected automatically.
+        Embedding dimension in samples; None selects it automatically.
     drop_freq_max : float, default=3.0
-        Reject components whose dominant frequency is at or below this value
-        in Hz.
+        Dominant-frequency upper bound in Hz.
     drop_band : tuple of float | None, default=None
-        Inclusive ``(low, high)`` dominant-frequency rejection band in Hz.
+        Inclusive dominant-frequency rejection interval in Hz.
     n_check : int | None, default=None
-        Restrict selection to this many leading numerical-rank components.
-        None examines every numerical-rank component.
+        Number of leading numerical-rank components to inspect.
     max_window : int, default=100
-        Maximum embedding dimension used by automatic window selection.
+        Maximum automatic embedding dimension.
     window_seconds : float | None, default=None
-        Embedding duration in seconds, mutually exclusive with
-        ``window_length``.
+        Embedding duration in seconds, mutually exclusive with window_length.
     callback : callable | None, default=None
-        Called synchronously after each completed channel with a structured
-        ``basic_ssa`` channel progress event. Callback return values are
-        ignored and callback exceptions propagate unchanged.
-    verbose : bool | str | int | None
-        MNE-style logging level. Channel helpers remain silent; this function
-        reports one aggregate result at INFO.
+        Synchronous callback after each channel; return values are ignored and
+        callback exceptions propagate.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Returns
     -------
     X_clean : ndarray, shape (n_channels, n_times)
-        Cleaned data with the same shape as ``X``.
+        Independently cleaned channels.
     info : dict
-        Per-channel component-selection diagnostics and the common resolved
-        operating point.
-
-    Raises
-    ------
-    TypeError
-        If a scalar parameter has an invalid type.
-    ValueError
-        If ``X``, the frequency bounds, or the embedding is invalid.
-
-    See Also
-    --------
-    ssa_clean_channel : Canonical single-channel implementation.
-    SingularSpectrumAnalysis : MNE/scikit-learn estimator interface.
+        Per-channel selection diagnostics and the resolved operating point.
 
     Notes
     -----
-    This function calls :func:`ssa_clean_channel` independently for every
-    channel. It implements repeated univariate SSA, not multivariate SSA.
+    This is repeated univariate SSA, not a multivariate decomposition.
     """
     callback = _validate_callback(callback)
     X = check_channel_first_data(
@@ -474,85 +394,52 @@ def compute_basic_ssa(
 
 
 class SingularSpectrumAnalysis(_BaseSSATransformer):
-    """Frequency-guided per-channel Basic SSA transformer.
+    """Frequency-guided, channel-wise Basic SSA transformer.
 
     Parameters
     ----------
     sfreq : float | None, default=None
-        Sampling frequency in Hz. NumPy input requires an explicit value. MNE
-        input supplies it from metadata and must agree with an explicit value.
+        Sampling frequency in Hz. NumPy input requires it; MNE input supplies it
+        from metadata.
     window_length : int | None, default=None
-        Embedding dimension in samples. It is mutually exclusive with
-        ``window_seconds``. None selects an automatic value.
+        Embedding dimension in samples.
     drop_freq_max : float, default=3.0
-        Reject components whose dominant frequency is at or below this value
-        in Hz.
+        Dominant-frequency upper bound in Hz.
     drop_band : tuple of float | None, default=None
-        Inclusive ``(low, high)`` dominant-frequency rejection band in Hz. If
-        supplied, it replaces ``drop_freq_max`` as the component-selection
-        interval.
+        Inclusive dominant-frequency rejection interval in Hz.
     n_check : int | None, default=None
-        Restrict selection to this many leading numerical-rank components.
-        None examines every numerical-rank component.
+        Number of leading numerical-rank components to inspect.
     max_window : int, default=100
-        Maximum embedding dimension used by automatic window selection.
-    verbose : bool | str | int | None, default=None
-        MNE-style logging level.
+        Maximum automatic embedding dimension.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
     window_seconds : float | None, default=None
-        Embedding duration in seconds, mutually exclusive with
-        ``window_length``.
+        Embedding duration in seconds, mutually exclusive with window_length.
 
     Attributes
     ----------
     sfreq_ : float
-        Validated sampling frequency used during fitting.
+        Sampling frequency used for fitting.
     n_channels_in_ : int
-        Number of data channels seen during fitting.
+        Number of fitted data channels.
     ch_names_in_ : tuple of str | None
-        Fitted MNE channel names and order, or None for NumPy input.
+        Fitted MNE channel names and order, or None for arrays.
     diagnostics_ : dict | list of dict
-        Diagnostics from the most recent transformation. Epoched input stores
-        one dictionary per epoch.
+        Diagnostics from the most recent transform.
     dropped_counts_ : ndarray
-        Number of rejected components per channel, or per epoch and channel.
+        Number of rejected components per channel or epoch and channel.
     dropped_frequencies_ : list
-        Dominant frequencies of rejected components for every channel.
-
-    See Also
-    --------
-    compute_basic_ssa : Functional interface for channel-first arrays.
-    ssa_clean_channel : Canonical single-channel implementation.
-    ssa_decompose : Complete additive Basic SSA decomposition.
-    mne_denoise.ssa.LocalSingularSpectrumAnalysis : Local clustered SSA.
+        Dominant frequencies of rejected components.
 
     Notes
     -----
-    The estimator is transductive. ``fit`` validates the operating point and
-    records the channel layout; every ``transform`` decomposes the records
-    supplied to that call. Changing record or epoch boundaries can therefore
-    change the trajectory matrix, Fourier bins, and selected components. The
-    additive decomposition follows Basic SSA [1]_; dominant-frequency rejection
-    is an application-specific grouping rule.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.ssa import SingularSpectrumAnalysis
-    >>> sfreq = 100.0
-    >>> time = np.arange(500) / sfreq
-    >>> data = np.vstack(
-    ...     [np.sin(2 * np.pi * 1.0 * time), np.sin(2 * np.pi * 10.0 * time)]
-    ... )
-    >>> model = SingularSpectrumAnalysis(sfreq=sfreq, drop_freq_max=3.0)
-    >>> cleaned = model.fit_transform(data)
-    >>> cleaned.shape
-    (2, 500)
+    The estimator is transductive: fit records the operating point and channel
+    layout, while each transform decomposes its input records independently.
+    :footcite:p:`golyandina_zhigljavsky2013_ssa`.
 
     References
     ----------
-    .. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum
-           Analysis for Time Series. Springer.
-           https://doi.org/10.1007/978-3-642-34913-3
+    .. footbibliography::
     """
 
     _requires_sfreq = True

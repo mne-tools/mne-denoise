@@ -1,48 +1,4 @@
-"""Lead-field construction shared by the forward-model denoisers.
-
-SOUND and SSP-SIR are both forward-model methods: they need a lead-field matrix
-``L`` whose columns are the scalp topographies that cortical current sources
-produce, and they use it as a prior for what a plausible brain signal looks
-like.  Whatever a sensor records that ``L`` cannot explain is treated as noise
-or artifact, so the lead field is what separates "brain" from "everything
-else" in both algorithms.
-
-An individualised forward model computed from the participant's anatomy is
-always the better input.  When none is available, both methods fall back to a
-three-layer spherical head model derived from the electrode montage alone
-(Mutanen et al., 2016, 2018).  That is workable because neither algorithm uses
-``L`` directly — only ``L @ L.T``, the lead-field covariance describing the
-typical cross-correlations between channels — so a head model needs to capture
-those correlations, not the anatomy that produced them.
-
-This module centralises the construction so the two estimators resolve their
-lead field identically:
-
-- :class:`SphericalHeadModel` — the shell radii and conductivities of the
-  fallback head model, with the published values as :data:`REFERENCE_HEAD`.
-- :func:`fibonacci_sphere` — deterministic, quasi-uniform directions on a
-  sphere, used to place the source dipoles.
-- :func:`make_spherical_leadfield` — build the fallback lead field from a
-  montage.
-- :func:`resolve_leadfield` — choose between a user-supplied forward model and
-  that fallback; this is the entry point the estimators call.
-
-Every lead field returned here is average referenced, the reference both
-algorithms operate in.
-
-References
-----------
-Mutanen, T. P., Kukkonen, M., Nieminen, J. O., Stenroos, M., Sarvas, J., &
-Ilmoniemi, R. J. (2016). Recovering TMS-evoked EEG responses masked by muscle
-artifacts. NeuroImage, 139, 157-166.
-
-Mutanen, T. P., Metsomaa, J., Liljander, S., & Ilmoniemi, R. J. (2018).
-Automatic and robust noise suppression in EEG and MEG: The SOUND algorithm.
-NeuroImage, 166, 135-151.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Lead-field construction helpers."""
 
 from __future__ import annotations
 
@@ -69,47 +25,22 @@ __all__ = [
 
 @dataclass(frozen=True)
 class SphericalHeadModel:
-    """Three-layer spherical head model for the fallback lead field.
-
-    Radii are millimetres, as published, and the derived properties convert
-    them to the relative form MNE-Python's sphere model expects.  Keeping
-    millimetres as the single source of truth means each published value
-    appears exactly once, the shells cannot drift out of proportion with one
-    another, and the whole geometry rescales coherently when a montage's
-    best-fit head radius differs from ``scalp``.
+    """Three-layer spherical head model used by the fallback lead field.
 
     Parameters
     ----------
-    inner_skull : float
-        Inner-skull radius in mm. Default 81.
-    outer_skull : float
-        Outer-skull radius in mm. Default 85.
-    scalp : float
-        Scalp radius in mm, the radius the others are expressed relative to.
-        Default 88.
-    dipole_shell : float
-        Radius in mm of the shell on which the source dipoles are placed.
-        Default 76.
-    brain_conductivity : float
-        Conductivity of the brain compartment in S/m. Default 0.33.
-    scalp_conductivity : float
-        Conductivity of the scalp compartment in S/m. Default 0.33.
-    skull_conductivity_ratio : float
-        Skull conductivity as a fraction of the brain's. Default 1/50, the
-        contrast used in the publications this fallback follows.
+    inner_skull, outer_skull, scalp : float, default=81, 85, 88
+        Shell radii in millimetres.
+    dipole_shell : float, default=76
+        Radius of the source shell in millimetres.
+    brain_conductivity, scalp_conductivity : float, default=0.33
+        Conductivities in S/m.
+    skull_conductivity_ratio : float, default=1 / 50
+        Skull-to-brain conductivity ratio.
 
     See Also
     --------
-    REFERENCE_HEAD : The published defaults, pre-instantiated.
-
-    Examples
-    --------
-    >>> from mne_denoise._leadfield import SphericalHeadModel
-    >>> head = SphericalHeadModel()
-    >>> [round(r, 4) for r in head.relative_radii]
-    [0.9205, 0.9659, 1.0]
-    >>> round(head.conductivities[1], 4)  # skull, 1/50 of brain
-    0.0066
+    REFERENCE_HEAD : Default model instance.
     """
 
     inner_skull: float = 81.0
@@ -167,29 +98,17 @@ def _validate_leadfield(
 
 
 def fibonacci_sphere(n_points: int) -> np.ndarray:
-    """Generate unit vectors quasi-uniformly covering the sphere.
-
-    Points are placed on a Fibonacci lattice, which spreads them more evenly
-    than random sampling and, being deterministic, makes any lead field built
-    from them reproducible run to run.
+    """Generate deterministic unit vectors on a Fibonacci sphere.
 
     Parameters
     ----------
     n_points : int
-        Number of directions to generate. Must be at least 1.
+        Number of directions; must be positive.
 
     Returns
     -------
     directions : ndarray, shape (n_points, 3)
-        Unit vectors. The same ``n_points`` always yields the same set.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise._leadfield import fibonacci_sphere
-    >>> directions = fibonacci_sphere(100)
-    >>> bool(np.allclose(np.linalg.norm(directions, axis=1), 1.0))
-    True
+        Unit vectors.
     """
     if n_points < 1:
         raise ValueError(f"n_points must be >= 1, got {n_points}.")
@@ -212,52 +131,28 @@ def make_spherical_leadfield(
     head_model: SphericalHeadModel = REFERENCE_HEAD,
     verbose: bool = False,
 ) -> np.ndarray:
-    """Build an average-referenced lead field from a spherical head model.
-
-    Radially oriented dipoles are placed on a shell inside the inner skull and
-    their topographies computed with MNE-Python's forward solver.  The sphere
-    is fitted to the montage, so the geometry follows the participant's head
-    size even though no anatomy is available.
+    """Build an average-referenced spherical lead field with MNE-Python.
 
     Parameters
     ----------
     info : mne.Info
-        Measurement info carrying EEG channel positions; a montage must be set.
-    n_dipoles : int
-        Number of source dipoles on the shell. Default 5000, at which
-        ``L @ L.T`` is converged for practical purposes — halving it changes
-        the lead-field covariance by only a few percent.
-    head_model : SphericalHeadModel
-        Shell radii and conductivities. Defaults to :data:`REFERENCE_HEAD`.
-    verbose : bool
-        Passed through to the MNE-Python forward routines.
+        EEG measurement info with a montage.
+    n_dipoles : int, default=5000
+        Number of radial source dipoles.
+    head_model : SphericalHeadModel, default=REFERENCE_HEAD
+        Shell geometry and conductivities.
+    verbose : bool, default=False
+        Verbosity passed to MNE forward routines.
 
     Returns
     -------
     leadfield : ndarray, shape (n_channels, n_dipoles)
-        Average-referenced lead field with fixed (radial) source orientations.
-
-    See Also
-    --------
-    resolve_leadfield : Choose between this and a user-supplied forward model.
+        Average-referenced lead field.
 
     Notes
     -----
-    Only ``leadfield @ leadfield.T`` enters SOUND and SSP-SIR, where it acts as
-    the source-covariance prior: it sets the minimum-norm weighting in SOUND
-    and the truncation scale of the source-informed reconstruction in SSP-SIR.
-    Its *spectrum* therefore matters, not merely its span, which is why the
-    published shell-of-radial-dipoles geometry is followed rather than a volume
-    grid.  A volume grid with free orientations spans a comparable subspace
-    (mean principal-angle cosine ~0.94 over the leading topographies for a
-    32-channel montage) but has a visibly faster-decaying spectrum, changing
-    the effective regularisation.
-
-    The published construction draws the dipoles at random; a deterministic
-    lattice is used here instead.  Two random 5000-dipole draws differ from
-    each other in ``L @ L.T`` by roughly 13%, and the lattice sits about 10%
-    from such a draw — inside that sampling spread, while being exactly
-    repeatable.
+    The source shell follows the fitted scalp radius. Dipoles use the deterministic
+    Fibonacci construction above.
     """
     if (
         isinstance(n_dipoles, (bool, np.bool_))
@@ -316,48 +211,24 @@ def resolve_leadfield(
     n_dipoles: int = 5000,
     head_model: SphericalHeadModel = REFERENCE_HEAD,
 ) -> np.ndarray:
-    """Resolve the lead field an estimator should use.
-
-    Both :class:`~mne_denoise.sound.SOUND` and
-    :class:`~mne_denoise.sspsir.SSPSIR` accept the same three kinds of input,
-    and this function is where that choice is made once for both:
-
-    - **MNE object, no forward** — build the spherical fallback from its
-      montage.
-    - **MNE object with a forward** — use the forward, reordering its rows to
-      the object's channel order so the two line up by name.
-    - **Plain array with a forward** — use the forward as given; with no
-      channel names to match on, only the channel *count* can be checked.
-
-    A plain array without a forward carries no channel positions at all and
-    raises.
-
-    All arguments are keyword-only, because ``ch_names`` matters only on the
-    MNE-object paths and ``n_channels`` only on the array path; naming them at
-    the call site keeps which-applies-when visible.
+    """Resolve an average-referenced lead field for SOUND or SSP-SIR.
 
     Parameters
     ----------
-    inst : mne.io.BaseRaw | mne.Epochs | mne.Evoked | None
-        The MNE object being cleaned, or None for plain-array input.
+    inst : mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked | None
+        MNE input, or None for array input.
     ch_names : list of str | None
-        Names of the channels being processed. Used to pick the montage and to
-        align ``forward``; ignored when ``inst`` is None.
+        Processed MNE channel names, or None for arrays.
     n_channels : int
-        Number of channels in the data. Used to validate ``forward`` on the
-        array path, where no names are available.
+        Number of array-input channels.
     method : str
-        Name of the calling method, used in the error raised when no channel
-        positions can be found.
-    forward : mne.Forward | None
-        Pre-computed forward solution. Preferred over the spherical fallback
-        whenever an anatomically accurate model is available.
-    n_dipoles : int
-        Number of dipoles for the spherical fallback. See
-        :func:`make_spherical_leadfield`.
-    head_model : SphericalHeadModel
-        Head model for the spherical fallback. Defaults to
-        :data:`REFERENCE_HEAD`.
+        Calling method name used in errors.
+    forward : mne.Forward | None, default=None
+        Forward solution; its rows are reordered to MNE channel order.
+    n_dipoles : int, default=5000
+        Number of dipoles for the spherical fallback.
+    head_model : SphericalHeadModel, default=REFERENCE_HEAD
+        Model for the spherical fallback.
 
     Returns
     -------
@@ -367,13 +238,7 @@ def resolve_leadfield(
     Raises
     ------
     ValueError
-        If no channel positions are available, if ``forward`` is missing
-        channels present in the data, or if its channel count disagrees with
-        the data on the array path.
-
-    See Also
-    --------
-    make_spherical_leadfield : The fallback this dispatches to.
+        If channel positions or a compatible forward solution are unavailable.
     """
     if inst is not None:
         _mne.require_mne("MNE lead-field resolution")

@@ -1,8 +1,4 @@
-"""MNE Annotations helpers for ASR diagnostics.
-
-This module converts internal boolean masks and window diagnostics into
-MNE-Python ``Annotations`` objects for visualization and subsequent processing.
-"""
+"""ASR annotation helpers."""
 
 from typing import Any
 
@@ -15,25 +11,7 @@ from ._windowing import _mask_to_sample_spans, _merge_sample_spans
 def _repair_annotations(
     diagnostics: dict[str, Any], sfreq: float, min_components: int, description: str
 ):
-    """Create annotations for ASR burst repair periods.
-
-    Parameters
-    ----------
-    diagnostics : dict
-        ASR transform diagnostics dictionary containing 'window_starts',
-        'window_stops', and 'n_components_reconstructed'.
-    sfreq : float
-        The sampling frequency of the data.
-    min_components : int
-        The minimum number of reconstructed components in a window to be annotated.
-    description : str
-        The annotation description string.
-
-    Returns
-    -------
-    mne.Annotations
-        An MNE Annotations object containing the repair spans.
-    """
+    """Create annotations for ASR burst repair periods."""
     _mne.require_mne("ASR repair annotations")
     starts = diagnostics["window_starts"]
     stops = diagnostics["window_stops"]
@@ -52,22 +30,7 @@ def _repair_annotations(
 def _rejection_annotations(
     rejection_sample_mask: np.ndarray, sfreq: float, description: str
 ):
-    """Create annotations for rejected (unreparable) data segments.
-
-    Parameters
-    ----------
-    rejection_sample_mask : ndarray of bool, shape (n_times,)
-        Boolean mask where False indicates a rejected sample.
-    sfreq : float
-        The sampling frequency of the data.
-    description : str
-        The annotation description string.
-
-    Returns
-    -------
-    mne.Annotations
-        An MNE Annotations object containing the rejected spans.
-    """
+    """Create annotations for rejected (unreparable) data segments."""
     _mne.require_mne("ASR rejection annotations")
     mask = np.asarray(rejection_sample_mask, dtype=bool)
     if mask.ndim != 1:
@@ -89,24 +52,7 @@ def _calibration_annotations(
     sfreq: float,
     description: str,
 ):
-    """Create annotations for the calibration reference segments.
-
-    Parameters
-    ----------
-    calibration_mask_kind : str
-        The type of calibration mask used. Must be "sample".
-    reference_sample_mask : ndarray of bool, shape (n_times,)
-        Boolean mask where True indicates a sample was used for calibration.
-    sfreq : float
-        The sampling frequency of the data.
-    description : str
-        The annotation description string.
-
-    Returns
-    -------
-    mne.Annotations
-        An MNE Annotations object containing the reference spans.
-    """
+    """Create annotations for the calibration reference segments."""
     _mne.require_mne("ASR calibration annotations")
     if calibration_mask_kind != "sample":
         raise RuntimeError(

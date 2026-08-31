@@ -1,21 +1,4 @@
-"""ASR-specific visualization diagnostics.
-
-This module provides plotting helpers for diagnostics that are intrinsic to
-Artifact Subspace Reconstruction and have no generic equivalent:
-
-- :func:`plot_asr_repair_timeline` -- per-window count of reconstructed
-  components over time.
-- :func:`plot_asr_calibration_fraction` -- bar chart comparing the fraction
-  of data retained as clean calibration across one or more estimators.
-- :func:`plot_asr_component_reconstruction` -- heatmap of per-window
-  component variance relative to the rejection threshold.
-- :func:`plot_guided_asr_weights` -- heatmap of the experimental GuidedASR
-  soft component weights.
-
-For before/after signal overlays, PSD comparisons, per-channel power-ratio
-topographies, grand averages, and metric scatters, use the generic
-:mod:`mne_denoise.viz` helpers which work on any denoiser's input/output.
-"""
+"""ASR diagnostic plots."""
 
 from __future__ import annotations
 
@@ -47,24 +30,7 @@ __all__ = [
 
 
 def _finish(fig, ax, *, show: bool, fname: str | None):
-    """Apply the save-and-show convention shared by every plot in this module.
-
-    Parameters
-    ----------
-    fig : matplotlib.figure.Figure
-        The figure to save/show.
-    ax : matplotlib.axes.Axes
-        The axes object to return.
-    show : bool
-        If True, call ``plt.show()``.
-    fname : str | None
-        If not None, save the figure to this path.
-
-    Returns
-    -------
-    fig : matplotlib.figure.Figure
-    ax : matplotlib.axes.Axes
-    """
+    """Apply the save-and-show convention shared by every plot in this module."""
     if fname is not None:
         fig.savefig(fname, dpi=fig.dpi, bbox_inches="tight")
     if show and plt is not None:
@@ -86,11 +52,6 @@ def plot_asr_repair_timeline(
     fname: str | None = None,
 ):
     """Plot the per-window count of reconstructed components over time.
-
-    Visualizes whether ASR surgically repaired isolated bursts (sparse
-    activity is good) or modified a large portion of the recording
-    (potential over-cleaning). The data is read from the fitted
-    estimator's ``diagnostics_`` attribute.
 
     Parameters
     ----------
@@ -161,12 +122,6 @@ def plot_asr_calibration_fraction(
     fname: str | None = None,
 ):
     """Bar chart of the clean calibration fraction for one or more estimators.
-
-    Compares how much of the candidate calibration data was retained as
-    clean reference material. For standard ASR this is the fraction of
-    clean *windows*; for JugglerASR it is the fraction of clean *samples*
-    selected by DBSCAN or GEV. Too small a fraction suggests the cutoff
-    or data quality needs adjustment.
 
     Parameters
     ----------
@@ -243,11 +198,6 @@ def plot_asr_component_reconstruction(
     fname: str | None = None,
 ):
     """Heatmap of per-window component variance relative to rejection thresholds.
-
-    Displays a 2D image where each column is a processing window and each
-    row is a principal component. The color encodes the ratio of the
-    component's variance to the rejection threshold: values above 1.0
-    indicate components that ASR reconstructed in that window.
 
     Parameters
     ----------
@@ -342,12 +292,6 @@ def plot_guided_asr_weights(
         Figure containing the heatmap.
     ax : matplotlib.axes.Axes
         Axes containing the heatmap.
-
-    Notes
-    -----
-    GuidedASR is an unpublished, unvalidated research prototype. This plot is
-    a diagnostic aid and does not establish that the selected weights separate
-    neural activity from artifacts correctly.
     """
     diag = getattr(estimator, "diagnostics_", None)
     if not diag or "soft_weights" not in diag:

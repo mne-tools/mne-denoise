@@ -1,22 +1,4 @@
-"""Local Singular Spectrum Analysis for high-amplitude artifact removal.
-
-Local SSA embeds a scalar series as overlapping delay vectors, partitions those
-vectors into locally similar states, and estimates a separate principal
-subspace in every cluster. Minimum-description-length model selection controls
-the local subspace dimensions. Reversing the clustering and applying
-anti-diagonal averaging yields a coherent, high-energy reconstruction that is
-treated as artifact and subtracted from the observation [1]_.
-
-This signal interpretation is method-specific: genuine high-amplitude neural
-activity can also occupy the leading local subspaces and be attenuated.
-
-References
-----------
-.. [1] Teixeira, A. R., Tome, A. M., Lang, E. W., Gruber, P., & Martins da
-       Silva, A. (2006). Automatic removal of high-amplitude artefacts from
-       single-channel electroencephalograms. Computer Methods and Programs in
-       Biomedicine, 83, 125-138. https://doi.org/10.1016/j.cmpb.2006.06.003
-"""
+"""Local Singular Spectrum Analysis."""
 
 from __future__ import annotations
 
@@ -42,12 +24,7 @@ from ._common import (
 
 
 def _mdl_order(eigenvalues: np.ndarray, n_observations: int) -> tuple[int, np.ndarray]:
-    """Select a local PCA dimension using Teixeira et al. Eqs. (4)-(6).
-
-    The likelihood term compares the geometric and arithmetic means of the
-    discarded covariance eigenvalues. The complexity penalty increases with
-    the candidate subspace dimension.
-    """
+    """Select a local PCA dimension with the implemented MDL scores."""
     eigenvalues = np.asarray(eigenvalues, dtype=np.float64)
     n_dimensions = eigenvalues.size
     if n_dimensions < 2:
@@ -72,15 +49,7 @@ def _fit_local_clusters(
     max_clusters: int,
     random_state: int | None,
 ) -> tuple[np.ndarray, list[dict[str, Any]]]:
-    """Cluster delay vectors and fit the local PCA/MDL models.
-
-    Automatic selection searches from the largest admissible cluster count
-    downward. A clustering is admissible when every cluster contains at least
-    one observation per embedding dimension; its MDL result is considered
-    reliable when no selected local dimension exceeds half the embedding
-    dimension. Explicit cluster counts retain the MDL result after enforcing
-    only the observation-count condition.
-    """
+    """Cluster delay vectors and fit one local PCA model per cluster."""
     window_length, n_vectors = trajectory.shape
     if n_clusters == "auto" and np.all(trajectory == trajectory[:, :1]):
         n_clusters = 1
@@ -139,7 +108,7 @@ def _check_local_parameters(
     max_clusters: int,
     random_state: int | None,
 ) -> tuple[int | str, int, int | None]:
-    """Validate local SSA clustering parameters."""
+    """Validate local-SSA clustering parameters."""
     if n_clusters != "auto":
         n_clusters = check_positive_integer(n_clusters, name="n_clusters")
     max_clusters = check_positive_integer(max_clusters, name="max_clusters")
@@ -162,90 +131,47 @@ def local_ssa_clean_channel(
     random_state: int | None = 0,
     return_info: bool = False,
 ) -> np.ndarray | tuple[np.ndarray, dict[str, Any]]:
-    """Remove a locally reconstructed high-energy artifact from one channel.
-
-    Delay vectors are clustered, projected onto cluster-specific subspaces
-    selected by MDL, returned to their temporal positions, and averaged along
-    trajectory-matrix anti-diagonals.
+    """Clean one channel with clustered local SSA reconstruction.
 
     Parameters
     ----------
     x : array-like, shape (n_times,)
         Finite scalar time series.
     window_length : int | None, default=None
-        Delay-vector dimension in samples. It must satisfy the canonical SSA
-        orientation and is mutually exclusive with ``window_seconds``.
+        Delay-vector dimension in samples; None selects it automatically.
     window_seconds : float | None, default=None
-        Delay-vector duration in seconds. It requires ``sfreq`` and is mutually
-        exclusive with ``window_length``.
+        Delay-vector duration in seconds, requiring sfreq and mutually exclusive
+        with window_length.
     sfreq : float | None, default=None
-        Sampling frequency in Hz. Required for ``window_seconds`` and used by
-        automatic window selection when available.
-    n_clusters : int | "auto", default="auto"
-        Number of delay-vector clusters. ``"auto"`` searches downward from the
-        largest admissible value until the reliability conditions are met.
+        Sampling frequency in Hz.
+    n_clusters : int or "auto", default="auto"
+        Number of delay-vector clusters, or automatic reliable selection.
     max_clusters : int, default=10
-        Upper bound for automatic cluster-count selection. The source does not
-        prescribe this computational bound.
+        Upper bound for automatic cluster selection.
     max_window : int, default=100
-        Maximum delay-vector dimension used by automatic window selection.
+        Maximum automatic delay-vector dimension.
     random_state : int | None, default=0
-        Random seed passed to k-means. None permits nondeterministic
-        initialization.
+        Seed passed to k-means.
     return_info : bool, default=False
-        If True, also return clustering, eigenspectrum, MDL, and reconstructed
-        artifact diagnostics.
+        If True, also return clustering and reconstruction diagnostics.
 
     Returns
     -------
     x_clean : ndarray, shape (n_times,)
         Residual after subtracting the local-subspace reconstruction.
     info : dict
-        Returned only when ``return_info=True``. Contains the artifact,
-        trajectory shape, cluster labels and sizes, covariance eigenvalues, MDL
-        scores, and selected subspace dimensions.
-
-    Raises
-    ------
-    TypeError
-        If a scalar parameter has an invalid type.
-    ValueError
-        If ``x``, the embedding, or the requested clustering is invalid, or no
-        reliable automatic clustering can be found.
-
-    See Also
-    --------
-    compute_local_ssa : Apply local SSA independently across channels.
-    LocalSingularSpectrumAnalysis : MNE/scikit-learn estimator interface.
+        Diagnostics returned only when return_info=True.
 
     Notes
     -----
-    The method assumes that coherent, high-energy structure belongs to the
-    artifact and that desired EEG is represented more strongly in the residual
-    subspace. This assumption can fail for genuine rhythmic neural activity.
-    K-means initialization, the maximum cluster count, and zero-eigenvalue
-    regularization are explicit numerical choices because the source does not
-    uniquely specify them [1]_.
+    Delay vectors are clustered, projected onto the cluster-specific MDL-selected
+    subspaces, and reconstructed by anti-diagonal averaging. Genuine structure
+    matching the selected subspaces can also be removed.
+    :footcite:p:`teixeira2006_local_ssa`.
 
     References
     ----------
-    .. [1] Teixeira, A. R., Tome, A. M., Lang, E. W., Gruber, P., & Martins da
-           Silva, A. (2006). Automatic removal of high-amplitude artefacts from
-           single-channel electroencephalograms. Computer Methods and Programs
-           in Biomedicine, 83, 125-138.
-           https://doi.org/10.1016/j.cmpb.2006.06.003
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.ssa import local_ssa_clean_channel
-    >>> time = np.arange(300) / 100.0
-    >>> observed = np.sin(2 * np.pi * 0.5 * time)
-    >>> cleaned = local_ssa_clean_channel(
-    ...     observed, window_length=20, n_clusters=2, random_state=0
-    ... )
-    >>> cleaned.shape
-    (300,)
+    .. footbibliography::
     """
     n_clusters, max_clusters, random_state = _check_local_parameters(
         n_clusters, max_clusters, random_state
@@ -314,83 +240,43 @@ def compute_local_ssa(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Apply local SSA independently to every input channel.
-
-    This is the channel-first functional interface to
-    :func:`local_ssa_clean_channel`. It returns both cleaned data and the local
-    model diagnostics required to assess the reconstruction.
+    """Apply local SSA independently to each channel.
 
     Parameters
     ----------
     X : array-like, shape (n_channels, n_times)
-        Finite channel-first data. Channels are never mixed.
+        Finite channel-first data. Channels are not mixed.
     window_length : int | None, default=None
-        Delay-vector dimension in samples. If None, it is selected
-        automatically.
+        Delay-vector dimension in samples; None selects it automatically.
     window_seconds : float | None, default=None
-        Delay-vector duration in seconds, mutually exclusive with
-        ``window_length``.
+        Delay-vector duration in seconds, requiring sfreq and mutually exclusive
+        with window_length.
     sfreq : float | None, default=None
-        Sampling frequency in Hz. Required for ``window_seconds`` and used by
-        automatic window selection when available.
-    n_clusters : int | "auto", default="auto"
+        Sampling frequency in Hz.
+    n_clusters : int or "auto", default="auto"
         Number of delay-vector clusters, or automatic reliable selection.
     max_clusters : int, default=10
-        Upper bound for automatic cluster-count selection.
+        Upper bound for automatic cluster selection.
     max_window : int, default=100
-        Maximum delay-vector dimension used by automatic window selection.
+        Maximum automatic delay-vector dimension.
     random_state : int | None, default=0
-        Random seed passed to k-means.
+        Seed passed to k-means.
     callback : callable | None, default=None
-        Called synchronously after each completed channel with a structured
-        ``local_ssa`` channel progress event. Callback return values are
-        ignored and callback exceptions propagate unchanged.
-    verbose : bool | str | int | None
-        MNE-style logging level. Channel helpers remain silent; this function
-        reports one aggregate result at INFO.
+        Synchronous callback after each channel; return values are ignored and
+        callback exceptions propagate.
+    verbose : bool, str, int, or None
+        Logging level.
 
     Returns
     -------
     X_clean : ndarray, shape (n_channels, n_times)
-        Residual data after independently subtracting each channel's local
-        reconstruction.
+        Independently cleaned channels.
     info : dict
-        Per-channel cluster counts, cluster sizes, selected dimensions,
-        covariance eigenvalues, MDL scores, and reconstructed artifacts.
-
-    Raises
-    ------
-    TypeError
-        If a scalar parameter has an invalid type.
-    ValueError
-        If ``X``, the embedding, or the requested clustering is invalid.
-
-    See Also
-    --------
-    local_ssa_clean_channel : Canonical single-channel implementation.
-    LocalSingularSpectrumAnalysis : MNE/scikit-learn estimator interface.
+        Per-channel cluster, subspace, and reconstruction diagnostics.
 
     Notes
     -----
-    This function calls :func:`local_ssa_clean_channel` independently for every
-    channel. It is repeated univariate local SSA, not multivariate SSA. No
-    spatial covariance or cross-channel trajectory matrix is estimated.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.ssa import compute_local_ssa
-    >>> time = np.arange(300) / 100.0
-    >>> observed = np.vstack(
-    ...     [np.sin(2 * np.pi * 0.5 * time), np.sin(2 * np.pi * 1.0 * time)]
-    ... )
-    >>> cleaned, info = compute_local_ssa(
-    ...     observed, window_length=20, n_clusters=2, random_state=0
-    ... )
-    >>> cleaned.shape
-    (2, 300)
-    >>> info["n_clusters"].shape
-    (2,)
+    This is repeated univariate local SSA, not multivariate SSA.
     """
     callback = _validate_callback(callback)
     X = check_channel_first_data(
@@ -445,91 +331,53 @@ def compute_local_ssa(
 
 
 class LocalSingularSpectrumAnalysis(_BaseSSATransformer):
-    """Local-SSA high-amplitude artifact transformer.
-
-    The estimator applies the clustered local-subspace reconstruction of
-    Teixeira et al. independently to each selected channel and exposes the
-    fitted clustering diagnostics after transformation.
+    """Channel-wise local-SSA transformer for high-amplitude artifact reconstruction.
 
     Parameters
     ----------
     window_length : int | None, default=None
-        Delay-vector dimension in samples. It is mutually exclusive with
-        ``window_seconds``. None selects an automatic value.
+        Delay-vector dimension in samples; None selects it automatically.
     window_seconds : float | None, default=None
-        Delay-vector duration in seconds. It requires a sampling frequency and
-        is mutually exclusive with ``window_length``.
+        Delay-vector duration in seconds, requiring sfreq and mutually exclusive
+        with window_length.
     sfreq : float | None, default=None
-        Sampling frequency in Hz. MNE input supplies it from metadata and must
-        agree with an explicit value.
-    n_clusters : int | "auto", default="auto"
+        Sampling frequency in Hz.
+    n_clusters : int or "auto", default="auto"
         Number of delay-vector clusters, or automatic reliable selection.
     max_clusters : int, default=10
-        Upper bound for automatic cluster-count selection.
+        Upper bound for automatic cluster selection.
     max_window : int, default=100
-        Maximum delay-vector dimension used by automatic window selection.
+        Maximum automatic delay-vector dimension.
     random_state : int | None, default=0
-        Random seed passed to k-means.
-    verbose : bool | str | int | None, default=None
-        MNE-style logging level.
+        Seed passed to k-means.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Attributes
     ----------
     sfreq_ : float | None
-        Validated sampling frequency, or None when sample-based parameters and
-        NumPy input do not require one.
+        Validated sampling frequency.
     n_channels_in_ : int
-        Number of data channels seen during fitting.
-    ch_names_in_ : tuple of str | None
-        Fitted MNE channel names and order, or None for NumPy input.
+        Number of fitted data channels.
+    ch_names_in_ : tuple of str or None
+        Fitted MNE channel names and order, or None for arrays.
     diagnostics_ : dict | list of dict
-        Diagnostics from the most recent transformation. Epoched input stores
-        one dictionary per epoch.
+        Diagnostics from the most recent transform.
     n_clusters_ : ndarray
-        Effective cluster count per channel, or per epoch and channel.
+        Effective cluster counts.
     subspace_dimensions_ : list
-        Selected local subspace dimensions for every channel.
-
-    See Also
-    --------
-    compute_local_ssa : Functional interface for channel-first arrays.
-    local_ssa_clean_channel : Canonical single-channel implementation.
-    mne_denoise.ssa.SingularSpectrumAnalysis : Basic SSA with frequency grouping.
+        Selected local subspace dimensions.
 
     Notes
     -----
-    The estimator is transductive. ``fit`` validates the operating point and
-    records the channel layout; every ``transform`` clusters and decomposes the
-    records supplied to that call. Record and epoch boundaries can therefore
-    change the delay vectors, clusters, covariance spectra, and reconstruction.
-
-    Local SSA assumes that coherent, high-energy structure is artifact. Genuine
-    neural activity that satisfies the same local-subspace model can be removed
-    [1]_.
+    The estimator is transductive: each transform clusters and reconstructs the
+    records supplied to it. Local SSA can remove genuine structure that matches
+    the learned local subspaces.
+    :footcite:p:`teixeira2006_local_ssa`.
 
     References
     ----------
-    .. [1] Teixeira, A. R., Tome, A. M., Lang, E. W., Gruber, P., & Martins da
-           Silva, A. (2006). Automatic removal of high-amplitude artefacts from
-           single-channel electroencephalograms. Computer Methods and Programs
-           in Biomedicine, 83, 125-138.
-           https://doi.org/10.1016/j.cmpb.2006.06.003
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.ssa import LocalSingularSpectrumAnalysis
-    >>> sfreq = 100.0
-    >>> time = np.arange(500) / sfreq
-    >>> data = np.vstack(
-    ...     [np.sin(2 * np.pi * 0.5 * time), np.sin(2 * np.pi * 10.0 * time)]
-    ... )
-    >>> model = LocalSingularSpectrumAnalysis(
-    ...     window_length=20, n_clusters=2, random_state=0
-    ... )
-    >>> cleaned = model.fit_transform(data)
-    >>> cleaned.shape
-    (2, 500)
+    .. footbibliography::
     """
 
     _progress_method = "local_ssa"

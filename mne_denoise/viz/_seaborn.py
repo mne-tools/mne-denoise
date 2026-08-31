@@ -1,4 +1,4 @@
-"""Internal seaborn helpers for viz modules."""
+"""Internal seaborn helpers."""
 
 from __future__ import annotations
 

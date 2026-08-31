@@ -1,39 +1,4 @@
-"""ZapLine: Line noise removal using Denoising Source Separation.
-
-This module implements the ZapLine algorithm for removing power line noise (50/60 Hz)
-and its harmonics from M/EEG recordings using Denoising Source Separation (DSS).
-
-The algorithm works by:
-1. Decomposing data into a smooth component and a residual (line-frequency related)
-2. Applying DSS to the residual to find components that maximize line noise power
-3. Projecting out the selected noise components. Signal preservation must be
-   assessed separately on the application data.
-
-This module contains:
-1. `ZapLine`: Scikit-learn/MNE compatible Transformer (inherits from DSS)
-
-The adaptive mode (ZapLine-plus) extends this with:
-- Automatic noise frequency detection
-- Data segmentation based on covariance stationarity
-- Per-segment adaptive parameter tuning
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
-       power line artifacts. NeuroImage, 207, 116356.
-       https://doi.org/10.1016/j.neuroimage.2019.116356
-
-.. [2] Klug, M., & Kloosterman, N. A. (2022). Zapline-plus: A Zapline extension for
-       automatic and adaptive removal of frequency-specific noise artifacts in M/EEG.
-       Human Brain Mapping, 43(9), 2743-2758.
-       https://doi.org/10.1002/hbm.25832
-
-.. [3] de Cheveigné, A., & Simon, J. Z. (2008). Denoising based on spatial filtering.
-       Journal of Neuroscience Methods, 171(2), 331-339.
-"""
+"""ZapLine line-noise removal."""
 
 from __future__ import annotations
 
@@ -70,167 +35,73 @@ from .adaptive import (
 
 
 class ZapLine(DSS):
-    r"""ZapLine Transformer for line noise removal.
+    r"""DSS-based line-noise removal estimator.
 
-    Implements the ZapLine algorithm [1]_ for removing power line noise (50/60 Hz)
-    and its harmonics from M/EEG recordings. Inherits from :class:`DSS` and is
-    compatible with scikit-learn and MNE-Python objects.
-
-    The algorithm uses Denoising Source Separation (DSS) to find spatial filters
-    that maximize power at the line-noise frequency, then projects out the
-    selected noise components. Reduced line-noise power does not by itself
-    establish preservation of neural signals.
-
-    The cleaning process follows these steps:
-
-    1. **Smoothing**: Apply a moving average filter with period matching the line
-       frequency to separate slowly-varying ("smooth") and fast ("residual") components
-    2. **DSS**: Apply DSS to the residual using :class:`LineNoiseBias` to find
-       components that maximize line noise power
-    3. **Artifact removal**: Project out the top noise components from the residual
-    4. **Reconstruction**: Add back the smooth component to obtain cleaned data
+    ZapLine fits spatial filters for a line frequency and removes selected
+    components. Adaptive mode performs the ZapLine-plus frequency, segmentation, and
+    per-segment processing path.
 
     Parameters
     ----------
     sfreq : float
-        Sampling frequency in Hz. Required.
-    line_freq : float | None, default=60.0
-        Line noise frequency in Hz (typically 50 or 60 Hz).
-        If ``None`` and ``adaptive=True``, the frequency is auto-detected.
-        If ``None`` and ``adaptive=False``, raises an error.
-    n_select : int | 'auto', default='auto'
-        Number of noise components to remove. Inherited from :class:`DSS`;
-        ``'auto'`` first uses :meth:`DSS.auto_select` and, when that returns
-        zero despite a spectral artifact at ``line_freq``, evaluates
-        successive leading DSS components with ZapLine's spectral quality
-        assessment. An ``int`` removes exactly that many. The resolved count
-        is stored in :attr:`n_removed_`.
-    n_harmonics : int | None, default=None
-        Number of harmonics to include in the bias function.
-        If ``None``, auto-determined based on Nyquist frequency.
-    segmenter : CovarianceSegmenter | FixedWindowSegmenter | None, default=None
-        Segmentation strategy for ``adaptive=True``. If ``None``, the
-        covariance-stationarity segmenter is created from the adaptive
-        parameters. Ignored in standard mode.
+        Sampling frequency in Hz.
+    line_freq : float or None, default=60.0
+        Fundamental line frequency in Hz. Required in standard mode; None enables
+        detection in adaptive mode.
+    n_select : int or {"auto"}, default="auto"
+        Number of DSS components to remove, or automatic selection.
+    n_harmonics : int or None, default=None
+        Number of harmonics; None uses harmonics below Nyquist.
     nfft : int, default=1024
-        FFT length for the spectral bias function.
-    nkeep : int | None, default=None
-        Number of PCA components to retain before DSS.
-        If ``None``, uses ``rank`` or auto-determined from data.
-    rank : int | None, default=None
-        Rank of the data for whitening. If ``None``, auto-determined.
+        FFT length for the line-noise bias.
+    nkeep : int or None, default=None
+        Number of dimensions retained before DSS.
+    rank : int or None, default=None
+        Whitening rank.
     reg : float, default=1e-9
-        Regularization parameter for DSS covariance inversion.
+        DSS covariance regularization.
     threshold : float, default=3.0
-        Sigma threshold for iterative outlier removal when ``n_select='auto'``.
+        Outlier threshold for automatic component selection.
     knee_rel_floor : float, default=0.01
-        Relative-to-max anchor for the knee-detection fallback used when
-        ``n_select='auto'``. Eigenvalues below this fraction of the largest
-        are excluded from knee selection. See
-        :func:`mne_denoise.dss.selection.detect_eigenvalue_knee`.
+        Relative score floor for knee selection.
     knee_min_ratio : float, default=3.0
-        Minimum linear-scale drop between consecutive eigenvalues required to
-        qualify as a knee. Defaults to a factor-of-3 drop. Lower values make
-        knee detection more permissive; higher values make it stricter.
+        Minimum score ratio for knee selection.
     adaptive : bool, default=False
-        Inherited from :class:`DSS`. If ``True``, use adaptive ZapLine-plus
-        mode [2]_ with:
-        - Automatic frequency detection
-        - Data segmentation based on covariance stationarity
-        - Per-segment parameter adaptation
-    adaptive_params : dict | None, default=None
-        Parameters for adaptive mode. See Notes for available options.
+        Use adaptive ZapLine-plus processing.
+    adaptive_params : dict or None, default=None
+        Parameters for adaptive frequency detection and segment processing.
+    segmenter : object or None, default=None
+        Segmenter used in adaptive mode.
     crossfade : float, default=0.0
-        Duration in seconds of the raised-cosine cross-fade applied at segment
-        boundaries in adaptive mode. Each segment is cleaned with its own
-        filters, so hard concatenation (the default, matching ZapLine-plus)
-        leaves a step discontinuity at every boundary — broadband in frequency,
-        and therefore smeared across the very spectrum being cleaned. Set to
-        ``0.5``–``2.0`` s to blend the boundaries instead. Ignored when
-        ``adaptive=False``.
+        Boundary crossfade duration in seconds in adaptive mode.
     whiten : bool, default=False
-        If ``True``, jointly process all supported data channel types after
-        MNE-style pre-whitening. The default keeps the existing homogeneous
-        channel-type selection.
-    noise_cov : mne.Covariance | None, default=None
-        Noise covariance used when ``whiten=True``. It requires an MNE input.
-        If ``None``, MNE inputs are standardized by channel type and NumPy
-        arrays are standardized per channel.
-    verbose : bool | str | int | None, default=None
-        Control logging verbosity.
+        Pre-whiten supported MNE data channels before processing.
+    noise_cov : mne.Covariance or None, default=None
+        Noise covariance used when whiten=True.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Attributes
     ----------
-    filters_ : ndarray, shape (n_removed, n_channels)
-        Spatial filters (unmixing matrix) for the removed noise components.
-    patterns_ : ndarray, shape (n_channels, n_removed)
-        Spatial patterns (mixing matrix) for the removed noise components.
-    eigenvalues_ : ndarray, shape (n_components,)
-        DSS eigenvalues (ratio of line-noise power to total power).
+    filters_, patterns_, eigenvalues_
+        Fitted DSS filters, patterns, and eigenvalues.
     n_removed_ : int
-        Number of components actually removed.
-    n_harmonics_ : int | None
-        Number of harmonics used by the bias function.
-    adaptive_results_ : dict | None
-        Results from adaptive mode, including chunk information.
-
-    See Also
-    --------
-    DSS : Parent class implementing Denoising Source Separation.
-    LineNoiseBias : Bias function for line noise.
-    mne_denoise.zapline.adaptive : Adaptive ZapLine-plus utilities.
+        Number of removed components or adaptive component passes.
+    n_harmonics_ : int or None
+        Number of harmonics used by the bias.
+    adaptive_results_ : dict or None
+        Diagnostics from adaptive processing.
 
     Notes
     -----
-    **Adaptive Mode Parameters** (``adaptive_params`` dict):
-
-    - ``fmin`` : float (default 17.0) - Minimum frequency for noise detection
-    - ``fmax`` : float (default 99.0) - Maximum frequency for noise detection
-    - ``process_harmonics`` : bool (default False) - Process detected harmonics
-    - ``max_harmonics`` : int - Maximum number of harmonics to process
-    - ``hybrid_fallback`` : bool (default False) - Use notch filter fallback
-    - ``min_chunk_len`` : float (default 30.0) - Minimum segment length in seconds
-    - ``n_remove_params`` : dict
-      Adaptive per-segment component-selection settings:
-      ``sigma`` is the selection threshold (defaults to ``threshold``),
-      ``min_remove`` is the minimum number of components removed when an
-      artifact is present (defaults to 1), and ``max_prop`` is the maximum
-      proportion of channels removed (defaults to 0.2)
-    - ``qa_params`` : dict - Parameters for QA (max_sigma, min_sigma)
-
-    Examples
-    --------
-    Basic usage with MNE Raw object:
-
-    >>> from mne_denoise.zapline import ZapLine
-    >>> # Remove 50 Hz line noise
-    >>> zapline = ZapLine(sfreq=1000, line_freq=50.0)
-    >>> raw_clean = zapline.fit_transform(raw)
-
-    Using automatic component selection:
-
-    >>> zapline = ZapLine(sfreq=1000, line_freq=60.0, n_select="auto")
-    >>> zapline.fit(data)
-    >>> print(f"Removed {zapline.n_removed_} components")
-    >>> cleaned = zapline.transform(data)
-
-    Adaptive mode (ZapLine-plus):
-
-    >>> zapline = ZapLine(
-    ...     sfreq=1000,
-    ...     line_freq=None,
-    ...     adaptive=True,
-    ...     adaptive_params={"n_remove_params": {"min_remove": 1, "max_prop": 0.2}},
-    ... )
-    >>> cleaned = zapline.fit_transform(epochs)  # Auto-detects noise frequencies
+    Standard fit followed by transform uses a fitted operator. Adaptive mode requires
+    fit_transform because fitting and cleaning are performed per segment.
 
     References
     ----------
-    .. [1] de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
-           power line artifacts. NeuroImage, 207, 116356.
-    .. [2] Klug, M., & Kloosterman, N. A. (2022). Zapline-plus: A Zapline extension
-           for automatic and adaptive removal of frequency-specific noise artifacts
-           in M/EEG. Human Brain Mapping, 43(9), 2743-2758.
+    :footcite:p:`decheveigne2020_zapline,klug_kloosterman2022_zapline_plus`
+
+    .. footbibliography::
     """
 
     def __init__(
@@ -317,42 +188,26 @@ class ZapLine(DSS):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Fit ZapLine spatial filters to data.
-
-        Computes DSS filters that maximize power at the line noise frequency.
-        Only available in standard mode (``adaptive=False``).
+        """Fit standard-mode ZapLine filters.
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
-            The data to fit. Can be:
-
-            - MNE Raw, Epochs, or Evoked object
-            - NumPy array of shape ``(n_channels, n_times)`` for continuous data
-            - NumPy array of shape ``(n_epochs, n_channels, n_times)`` for epoched data
-
-        y : None
-            Ignored. Present for scikit-learn API compatibility.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : Raw, Epochs, Evoked, or ndarray
+            Data used to fit the filters.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        self : ZapLine
+        ZapLine
             The fitted estimator.
 
         Raises
         ------
         RuntimeError
-            If ``adaptive=True``. Use :meth:`fit_transform` instead.
-        ValueError
-            If ``line_freq`` is ``None``.
-
-        See Also
-        --------
-        transform : Apply the fitted filters to remove noise.
-        fit_transform : Fit and transform in one step.
+            If adaptive=True; use fit_transform instead.
         """
         if self.adaptive:
             raise RuntimeError(
@@ -401,36 +256,24 @@ class ZapLine(DSS):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Apply ZapLine cleaning to remove line noise.
-
-        Uses the fitted spatial filters to project out noise components.
-        Only available in standard mode (``adaptive=False``).
+        """Apply fitted standard-mode ZapLine filters.
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
-            The data to clean. Must have the same number of channels as the
-            data used for fitting.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : Raw, Epochs, Evoked, or ndarray
+            Data with the fitted channel layout.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        X_clean : Raw | Epochs | Evoked | ndarray
-            Cleaned data with line noise removed. Returns the same type as input.
+        same type as X
+            Cleaned data.
 
         Raises
         ------
         RuntimeError
-            If ``adaptive=True``. Use :meth:`fit_transform` instead.
-        RuntimeError
-            If the estimator has not been fitted.
-
-        See Also
-        --------
-        fit : Fit the spatial filters.
-        fit_transform : Fit and transform in one step.
+            If adaptive=True or the estimator is not fitted.
         """
         if self.adaptive:
             raise RuntimeError(
@@ -473,47 +316,25 @@ class ZapLine(DSS):
         verbose: bool | str | int | None = None,
         **fit_params,
     ):
-        """Fit and transform data in one step.
-
-        This method works for both standard and adaptive modes:
-
-        - **Standard mode** (``adaptive=False``): Fits DSS filters and applies
-          noise removal in one step.
-        - **Adaptive mode** (``adaptive=True``): Runs the full ZapLine-plus
-          algorithm with automatic frequency detection, data segmentation,
-          and per-segment parameter adaptation.
+        """Fit and transform with standard or adaptive ZapLine.
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
-            The data to process.
-        y : None
-            Ignored. Present for scikit-learn API compatibility.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None, default=None
-            Called synchronously after each completed target-frequency pass in
-            adaptive mode. The event metric is the completed target frequency
-            in Hz. Standard mode emits no progress callbacks.
+        X : Raw, Epochs, Evoked, or ndarray
+            Data to clean.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        callback : callable or None, default=None
+            Synchronous progress callback in adaptive mode.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
         **fit_params : dict
-            Additional parameters passed to the parent :meth:`DSS.fit_transform`
-            in standard mode.
+            Additional parameters passed to the standard DSS fit_transform path.
 
         Returns
         -------
-        X_clean : Raw | Epochs | Evoked | ndarray
-            Cleaned data with line noise removed. Returns the same type as input.
-
-        Notes
-        -----
-        In adaptive mode, results are stored in :attr:`adaptive_results_` with:
-
-        - ``cleaned``: The cleaned data array
-        - ``removed``: The removed artifact array
-        - ``n_removed``: Total components removed across all chunks
-        - ``line_freq``: Detected line frequency
-        - ``chunk_info``: List of per-chunk processing information
+        same type as X
+            Cleaned data with the input layout.
         """
         callback = _validate_callback(callback)
         if not self.adaptive:
@@ -582,19 +403,7 @@ class ZapLine(DSS):
         return reconstruct_mne_object(cleaned, orig_inst, mne_type, picks=picks)
 
     def _fit_dss(self, data: np.ndarray):
-        """Fit DSS spatial filters to residual data.
-
-        Core internal fitting logic that:
-        1. Separates data into smooth and residual components
-        2. Fits DSS on the residual using ``LineNoiseBias``
-        3. Determines number of components to remove
-        4. Truncates filters to noise-relevant components
-
-        Parameters
-        ----------
-        data : ndarray, shape (n_channels, n_times)
-            Continuous data to fit.
-        """
+        """Fit DSS filters to residual data and choose removals."""
         if self.whiten:
             data_work = self._prewhiten_sensor_data(
                 data,
@@ -688,31 +497,7 @@ class ZapLine(DSS):
         full_filters: np.ndarray,
         full_mixing: np.ndarray,
     ) -> int:
-        """Find the smallest DSS subspace that passes spectral QA.
-
-        This is a ZapLine-specific fallback for the case where the generic DSS
-        eigenvalue selector finds no component boundary despite a detected line
-        artifact. The DSS decomposition is already fitted; only the number of
-        leading components used for reconstruction changes between candidates.
-
-        Parameters
-        ----------
-        data_smooth : ndarray, shape (n_channels, n_times)
-            Smooth branch from the fitted data.
-        data_residual : ndarray, shape (n_channels, n_times)
-            Residual branch from the fitted data.
-        full_filters : ndarray, shape (n_components, n_channels)
-            Complete DSS filter matrix.
-        full_mixing : ndarray, shape (n_channels, n_components)
-            Complete DSS mixing matrix.
-
-        Returns
-        -------
-        n_selected : int
-            Smallest candidate for which :func:`check_spectral_qa` returns
-            ``"ok"``. If no candidate passes, the largest candidate before an
-            over-cleaning result is returned and a warning is emitted.
-        """
+        """Find the smallest DSS subspace that passes spectral QA."""
         n_candidates = full_filters.shape[0]
         last_status = None
         best_before_overcleaning = 0
@@ -751,21 +536,7 @@ class ZapLine(DSS):
         return best_before_overcleaning
 
     def _apply_standard_cleaning(self, data: np.ndarray) -> np.ndarray:
-        """Apply noise cleaning using fitted DSS filters.
-
-        Removes line noise by projecting out the artifact subspace from
-        the residual (high-frequency) component of the data.
-
-        Parameters
-        ----------
-        data : ndarray, shape (n_channels, n_times)
-            Continuous data to clean.
-
-        Returns
-        -------
-        cleaned : ndarray, shape (n_channels, n_times)
-            Cleaned data with line noise removed.
-        """
+        """Apply cleaning with fitted DSS filters."""
         if self.n_removed_ <= 0:
             return data.copy()
 
@@ -786,25 +557,7 @@ class ZapLine(DSS):
         return cleaned
 
     def _get_smooth_residual(self, data: np.ndarray, warn: bool = False):
-        """Decompose data into smooth and residual components.
-
-        Uses a moving average filter with period matching the line frequency
-        to separate slowly-varying and fast (line-frequency related) components.
-
-        Parameters
-        ----------
-        data : ndarray, shape (n_channels, n_times)
-            Input data to decompose.
-        warn : bool, default=False
-            If ``True``, warn when ``sfreq/line_freq`` is not close to an integer.
-
-        Returns
-        -------
-        data_smooth : ndarray, shape (n_channels, n_times)
-            Smoothed (low-frequency) component.
-        data_residual : ndarray, shape (n_channels, n_times)
-            Residual (high-frequency) component containing line noise.
-        """
+        """Split data into smooth and residual components."""
         # Use self.sfreq directly
         # If line_freq=0 (unlikely here if fit passed), period undefined.
         # Check integrity
@@ -845,26 +598,7 @@ class ZapLine(DSS):
         return data_smooth, data_residual
 
     def _fractional_smooth(self, data: np.ndarray, period: float) -> np.ndarray:
-        """Apply fractional-period smoothing with a boxcar kernel.
-
-        This mirrors NoiseTools ``nt_smooth`` behavior used by ``nt_zapline``:
-        for non-integer period ``T``, the kernel is ``[1 ... 1 frac] / T``
-        where ``frac = T - floor(T)``. This preserves the period-locked
-        decomposition used by ZapLine and avoids switching to a generic
-        highpass/lowpass split.
-
-        Parameters
-        ----------
-        data : ndarray, shape (n_channels, n_times)
-            Input data.
-        period : float
-            Exact (possibly non-integer) smoothing period in samples.
-
-        Returns
-        -------
-        smoothed : ndarray, shape (n_channels, n_times)
-            Smoothed (baseline) component.
-        """
+        """Apply fractional-period boxcar smoothing."""
         from scipy.signal import lfilter
 
         n_times = data.shape[-1]
@@ -907,26 +641,7 @@ class ZapLine(DSS):
         *,
         callback: _ProgressCallback | None = None,
     ) -> dict:
-        """Run ZapLine-plus adaptive algorithm.
-
-        Orchestrates:
-        1. Noise frequency detection (if line_freq is None)
-        2. Data segmentation based on covariance stationarity
-        3. Per-chunk processing with QA loop
-
-        Parameters
-        ----------
-        data : ndarray (n_channels, n_times)
-            Continuous data.
-        callback : callable | None, default=None
-            Already-validated callback called after each completed
-            target-frequency pass.
-
-        Returns
-        -------
-        results : dict
-            Contains 'cleaned', 'removed', 'n_removed', 'chunk_info', etc.
-        """
+        """Run the adaptive ZapLine processing path."""
         n_channels, n_times = data.shape
         params = self.adaptive_params.copy()
 
@@ -1030,31 +745,7 @@ class ZapLine(DSS):
         }
 
     def _process_segment(self, chunk: np.ndarray) -> dict:
-        """Clean one segment with ZapLine's spectral-QA retry loop.
-
-        Overrides :meth:`DSS._process_segment`. Everything around this — the
-        segmentation, the cross-fade, the per-segment bookkeeping — is handled
-        by :meth:`DSS._run_segmented`; only the ZapLine-specific behaviour
-        lives here:
-
-        1. refine the coarse target frequency to a fine peak,
-        2. check whether the artifact is actually present in this segment,
-        3. loop, adjusting sigma and the removal floor until
-           :func:`check_spectral_qa` reports neither over- nor under-cleaning,
-        4. optionally fall back to a notch filter if cleaning stays weak.
-
-        Parameters
-        ----------
-        chunk : ndarray, shape (n_channels, n_times)
-            Data segment supplied by the segmented engine.
-
-        Returns
-        -------
-        result : dict
-            The keys :meth:`DSS._process_segment` promises, plus ZapLine's
-            ``'fine_freq'`` and ``'artifact_present'`` diagnostics, which the
-            engine stores verbatim in :attr:`segment_results_`.
-        """
+        """Clean one segment with the ZapLine spectral-QA retry loop."""
         params = self.adaptive_params
         n_remove_params = params.get("n_remove_params", {})
         qa_params = params.get("qa_params", {})

@@ -1,16 +1,4 @@
-"""Spectral bias functions for DSS.
-
-Implements bandpass filters and unified line noise removal (Notch/FFT).
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-.. [2] de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
-       power line artifacts. NeuroImage, 207, 116356.
-"""
+"""Spectral bias functions for DSS."""
 
 from __future__ import annotations
 
@@ -23,36 +11,18 @@ from .base import LinearDenoiser
 
 
 class BandpassBias(LinearDenoiser):
-    """Bandpass filter bias for narrow-band rhythm extraction.
-
-    Applies a bandpass filter to emphasize a specific frequency band,
-    useful for extracting oscillatory sources (alpha, beta, etc.).
-
+    """Bandpass-filter bias for DSS.
 
     Parameters
     ----------
     freq_band : tuple of float
-        (low_freq, high_freq) defining the passband in Hz.
+        Lower and upper passband edges in Hz.
     sfreq : float
         Sampling frequency in Hz.
-    order : int
-        Filter order. Default 4.
-    method : str
-        Filter design method: 'butter' or 'fir'. Default 'butter'.
-
-    Examples
-    --------
-    >>> from mne_denoise.dss.denoisers import BandpassBias
-    >>> bias = BandpassBias(freq_band=(8, 12), sfreq=250)  # Alpha band
-    >>> dss.fit(data)
-
-    See Also
-    --------
-    mne_denoise.dss.denoisers.PeakFilterBias : For strictly periodic signals.
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.2 "DENOISING BASED ON FREQUENCY CONTENT"
+    order : int, default=4
+        Butterworth filter order.
+    method : {"butter"}, default="butter"
+        Filter design method. Only the Butterworth design is implemented.
     """
 
     def __init__(
@@ -91,17 +61,17 @@ class BandpassBias(LinearDenoiser):
             raise ValueError(f"Unknown filter method: {self.method}")
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply bandpass filter bias.
+        """Apply the bandpass bias.
 
         Parameters
         ----------
         data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-            Input data.
+            Channel-first data.
 
         Returns
         -------
-        biased : ndarray, same shape as input
-            Bandpass filtered data.
+        ndarray
+            Bandpass-filtered data with the input shape.
         """
         if data.ndim not in (2, 3):
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
@@ -111,39 +81,36 @@ class BandpassBias(LinearDenoiser):
 
 
 class LineNoiseBias(LinearDenoiser):
-    """A bias LinearDenoiser for line noise isolation (Notch/IIR or FFT/Harmonic).
-
-    Isolates power at a specific frequency (e.g., 50/60 Hz) and potentially
-    its harmonics. Supports two methods:
-
-    1. ``'fft'``: Use FFT masking to isolate exact frequency bins (ZapLine style).
-       Best for sharp line noise with harmonics.
-    2. ``'iir'``: Use a narrow bandpass (notch) filter.
-       Simpler, but affects broader band.
+    """Line-frequency bias using IIR or FFT selection.
 
     Parameters
     ----------
     freq : float
-        Line frequency in Hz.
+        Fundamental line frequency in Hz.
     sfreq : float
         Sampling frequency in Hz.
-    method : {'fft', 'iir'}
-        Method to use. Default 'fft'.
-    n_harmonics : int, optional
-        Number of harmonics (for 'fft' method). If None, all up to Nyquist.
-    bandwidth : float, optional
-        Bandwidth in Hz (for 'iir' method). Default 1.0.
-    order : int, optional
-        Filter order (for 'iir' method). Default 4.
-    nfft : int, optional
-        FFT window size (for 'fft' method). Default 1024.
-    overlap : float, optional
-        Overlap fraction (for 'fft' method). Default 0.5.
+    method : {"fft", "iir"}, default="fft"
+        Use exact FFT-bin selection or a narrow IIR bandpass.
+    n_harmonics : int or None, default=None
+        Number of harmonics in FFT mode; ``None`` includes valid harmonics below
+        Nyquist.
+    bandwidth : float, default=1.0
+        IIR bandpass width in Hz.
+    order : int, default=4
+        IIR bandpass order.
+    nfft : int, default=1024
+        FFT block length.
+    overlap : float, default=0.5
+        Accepted for API compatibility; the current FFT implementation does not
+        use this value.
 
-    Examples
-    --------
-    >>> bias = LineNoiseBias(freq=50, sfreq=1000, method="fft")
-    >>> biased = bias.apply(data)
+    Notes
+    -----
+    FFT mode retains one rounded positive-frequency bin per harmonic and its
+    conjugate bin. It processes rectangular, non-overlapping blocks of length
+    ``nfft``; a trailing short block is zero-padded and truncated on output.
+    Three-dimensional channel-first input is processed epoch by epoch. IIR mode
+    uses :class:`BandpassBias` around the fundamental frequency.
     """
 
     def __init__(
@@ -190,18 +157,17 @@ class LineNoiseBias(LinearDenoiser):
             raise ValueError(f"Unknown method '{method}', must be 'fft' or 'iir'.")
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply the selected line-noise bias.
+        """Apply the configured line-frequency bias.
 
         Parameters
         ----------
         data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-            Channel-first data. Three-dimensional input is processed one epoch
-            at a time.
+            Channel-first data.
 
         Returns
         -------
-        biased : ndarray, same shape as ``data``
-            Data containing the selected line-frequency content.
+        ndarray
+            Selected line-frequency content with the input shape.
         """
         if self.method == "iir":
             return self._bandpass.apply(data)
@@ -223,12 +189,7 @@ class LineNoiseBias(LinearDenoiser):
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
 
     def _get_target_indices(self, nfft: int) -> list:
-        """Get FFT bin indices for target frequencies.
-
-        Selects exactly one bin per harmonic (no neighbor padding).
-        Negative-frequency conjugates are included automatically for
-        real-valued IFFT reconstruction.
-        """
+        """Return positive and conjugate FFT-bin indices for the harmonics."""
         target_indices = []
 
         for f in self._harmonic_freqs:
@@ -245,13 +206,7 @@ class LineNoiseBias(LinearDenoiser):
         return target_indices
 
     def _apply_fft_2d(self, data: np.ndarray) -> np.ndarray:
-        """Apply bias to 2D data using FFT.
-
-        Process the data in non-overlapping rectangular blocks of length
-        *nfft* (no windowing, no overlap-add). Short trailing blocks are
-        zero-padded to *nfft* and the output is truncated to the true block
-        length.
-        """
+        """Apply the FFT bias to non-overlapping rectangular blocks."""
         n_channels, n_times = data.shape
 
         # Use data length or nfft, whichever is smaller

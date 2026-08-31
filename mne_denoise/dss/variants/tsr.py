@@ -1,12 +1,4 @@
-"""Temporal DSS variants.
-
-Time-shift DSS augments every sensor with delayed copies, then composes the
-package's :class:`DSS` estimator with :class:`AverageBias` across trials. The
-initial public contract implements the repeated-trial contrast evaluated by
-de Cheveigne (2010); arbitrary bias operators are intentionally outside that
-claim. :func:`smooth_dss` remains the lightweight ordinary-DSS smoothing
-configuration.
-"""
+"""Time-shift DSS and smoothing variants."""
 
 from __future__ import annotations
 
@@ -154,59 +146,51 @@ def _observation_weights(
 
 
 class TimeShiftDSS(BaseEstimator, TransformerMixin):
-    """Trial-average DSS in a lag-augmented sensor space.
+    """Lag-augmented DSS estimator for repeated trials.
+
+    The estimator augments each sensor with delayed copies, fits a trial-average
+    DSS decomposition in the resulting spatiotemporal space, and supports source
+    extraction or sensor-space retain/subtract operations.
 
     Parameters
     ----------
-    lag_samples : sequence of int | None
-        Explicit lag grid in samples. It must contain zero and at least one
-        nonzero lag. Positive lags contribute ``X(t - lag)``.
-    lag_times : sequence of float | None
-        Explicit lag grid in seconds. Every value must lie on the sampling
-        grid. Exactly one lag representation must be provided.
-    sfreq : float | None
-        Sampling frequency for array data when ``lag_times`` is used. MNE
-        metadata is authoritative and must agree with a supplied value.
+    lag_samples : sequence of int or None, default=None
+        Explicit lag grid in samples. It must contain zero and a nonzero lag.
+    lag_times : sequence of float or None, default=None
+        Explicit lag grid in seconds. Exactly one lag representation is required;
+        values must lie on the sampling grid.
+    sfreq : float or None, default=None
+        Sampling frequency for array data when ``lag_times`` is used.
     n_components : int
-        Number of lag-space DSS components to fit. Selection is explicit;
-        there is no in-sample automatic selector.
+        Number of lag-space DSS components.
     rank : int
-        Explicit whitening rank in the augmented feature space.
-    n_select : int | None
-        Size of the leading component subspace used by :meth:`score` and by
-        sensor-space ``retain`` or ``subtract``. It is required for those
-        operations; extraction itself can leave it unset.
-    component_action : {'extract', 'retain', 'subtract'}
-        Component extraction or sensor-space operation. Sensor operations
-        preserve input shape and leave samples outside the common lag support
-        unchanged.
-    center : bool
-        If ``False`` (default), use source-aligned uncentered second moments.
-        If ``True``, fit one weighted augmented-feature mean and reuse it for
-        every transform. Epoch-wise and transform-batch centering are never
-        performed.
-    distortion_control : {None, 'cca'}
-        Optional paper step 7. ``'cca'`` rotates the fitted reproducible
-        subspace to the single variate most correlated with undelayed training
-        data. It returns one component and requires ``n_select=1`` for sensor
-        operations.
-    reg : float
-        Relative numerical rank tolerance used by DSS and optional CCA.
-    verbose : bool | str | int | None
-        Logging verbosity.
+        Whitening rank in the augmented feature space.
+    n_select : int or None, default=None
+        Leading components used by ``score``, ``retain``, or ``subtract``.
+    component_action : {"extract", "retain", "subtract"}, default="extract"
+        Source extraction or sensor-space operation.
+    center : bool, default=False
+        Fit and reuse one augmented-feature mean when true.
+    distortion_control : {None, "cca"}, default=None
+        Optional CCA rotation of the fitted reproducible subspace.
+    reg : float, default=1e-9
+        Relative numerical rank tolerance.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Notes
     -----
-    Array input is ``(n_channels, n_times, n_epochs)``. MNE Epochs input is
-    accepted natively. Continuous and Evoked inputs are intentionally rejected
-    by this initial repeated-trial implementation.
+    Input must be repeated-trial data: NumPy arrays use
+    ``(n_channels, n_times, n_epochs)`` and MNE ``Epochs`` use their native
+    layout. Lags define the common valid support; samples outside it are unchanged
+    by sensor-space operations. A sampling frequency is required when lags are
+    specified in seconds.
 
-    Lag augmentation is the TSDSS-specific layer. The fitted decomposition is
-    available as ``dss_`` and is an ordinary :class:`DSS` configured with
-    ``AverageBias(axis="epochs")``.
+    References
+    ----------
+    :footcite:p:`decheveigne2010_time_shift`
 
-    Component interpretation and parameter choice require held-out and
-    surrogate validation.
+    .. footbibliography::
     """
 
     def __init__(
@@ -307,36 +291,23 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         sample_weight: np.ndarray | None = None,
         verbose: bool | str | int | None = None,
     ) -> TimeShiftDSS:
-        """Fit lag-augmented repeated-trial DSS filters.
+        """Fit the lag-augmented repeated-trial DSS decomposition.
 
         Parameters
         ----------
-        X : mne.BaseEpochs | ndarray, shape (n_epochs, n_channels, n_times) or (n_channels, n_times, n_epochs)
-            Repeated-trial data. MNE ``Epochs`` are read in their native
-            epoch-first layout; NumPy input uses the channel-first
-            ``(n_channels, n_times, n_epochs)`` layout.
+        X : mne.BaseEpochs or ndarray
+            Repeated-trial input.
         y : None, default=None
             Ignored for scikit-learn compatibility.
-        sample_weight : ndarray | None, default=None
-            Non-negative observation weights with shape ``(n_times,)`` or
-            ``(n_times, n_epochs)``. Lagged observations receive the minimum
-            weight across all samples touched by a lag tuple.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        sample_weight : ndarray or None, default=None
+            Non-negative weights with shape ``(n_times,)`` or ``(n_times, n_epochs)``.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        self : TimeShiftDSS
-            Fitted estimator. The fitted lag grid is in ``lag_samples_`` and
-            ``lag_times_``; ``valid_slice_`` identifies the common no-padding
-            support.
-
-        Raises
-        ------
-        ValueError
-            If the data is not repeated-trial 3D data, the lag declaration is
-            invalid, or rank/component/weight settings are incompatible.
+        TimeShiftDSS
+            The fitted estimator.
         """
         del y
         self._validate_parameters()
@@ -496,34 +467,22 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         *,
         sample_weight: np.ndarray | None = None,
     ) -> float:
-        """Score the leading fitted subspace on held-out repeated trials.
-
-        The score is the trial-average power divided by total power, summed
-        over the first ``n_select`` components. A fixed ``n_select`` therefore
-        defines one scalar model score suitable for whole-epoch validation.
+        """Score the fitted leading subspace on repeated trials.
 
         Parameters
         ----------
-        X : mne.BaseEpochs | ndarray
-            Held-out repeated-trial data in the same layout accepted by
-            :meth:`fit`.
+        X : mne.BaseEpochs or ndarray
+            Held-out repeated-trial input.
         y : None, default=None
             Ignored for scikit-learn compatibility.
-        sample_weight : ndarray | None, default=None
-            Optional non-negative weights with shape ``(n_times,)`` or
-            ``(n_times, n_epochs)``.
+        sample_weight : ndarray or None, default=None
+            Optional observation weights.
 
         Returns
         -------
-        score : float
-            Ratio of weighted trial-average power to weighted total power for
-            the selected leading components. Returns ``0.0`` when their total
-            power is zero.
-
-        Notes
-        -----
-        The score measures repeatability in the fitted component subspace; it
-        is not an artifact-removal or neural-signal-preservation guarantee.
+        float
+            Weighted trial-average power divided by weighted total power for the
+            selected leading components.
         """
         del y
         check_is_fitted(self, "dss_")
@@ -560,25 +519,20 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ) -> BaseEpochs | np.ndarray:
-        """Extract components or apply the fitted sensor-space operation.
+        """Apply the fitted lag-augmented DSS operation.
 
         Parameters
         ----------
-        X : mne.BaseEpochs | ndarray
-            Repeated-trial data in the same layout accepted by :meth:`fit`.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : mne.BaseEpochs or ndarray
+            Repeated-trial input compatible with :meth:`fit`.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        out : ndarray | mne.BaseEpochs
-            For ``component_action='extract'``, source data with shape
-            ``(n_components, n_valid_times, n_epochs)`` for NumPy input or
-            ``(n_epochs, n_components, n_valid_times)`` for MNE input. For
-            ``'retain'`` and ``'subtract'``, the original container family and
-            full time axis are preserved; samples outside the common lag
-            support are unchanged.
+        ndarray or mne.BaseEpochs
+            Sources or sensor-space output according to ``component_action``; samples
+            outside the common lag support are preserved.
         """
         check_is_fitted(self, "dss_")
         self._validate_parameters()
@@ -614,21 +568,21 @@ def smooth_dss(
     n_components: int | None = None,
     **dss_kws,
 ) -> DSS:
-    """Create an ordinary DSS configured for temporally smooth sources.
+    """Create an ordinary DSS estimator with :class:`SmoothingBias`.
 
     Parameters
     ----------
-    window : int
+    window : int, default=10
         Smoothing window in samples.
-    n_components : int | None
-        Number of DSS components to fit. ``None`` keeps the available rank.
+    n_components : int or None, default=None
+        Number of DSS components.
     **dss_kws
-        Additional keyword arguments passed to :class:`DSS`.
+        Additional keyword arguments for :class:`~mne_denoise.dss.DSS`.
 
     Returns
     -------
-    dss : DSS
-        DSS configured with :class:`~mne_denoise.dss.SmoothingBias`.
+    DSS
+        Configured estimator.
     """
     bias = SmoothingBias(window=window)
     return DSS(bias=bias, n_components=n_components, **dss_kws)

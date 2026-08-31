@@ -1,30 +1,4 @@
-"""Guided ASR: DSS-biased soft Artifact Subspace Reconstruction (experimental).
-
-Standard ASR detects *when/where* an EEG subspace is statistically abnormal
-(its variance exceeds a clean-calibration threshold) and removes it with a
-**binary** keep/reject decision. Its documented weakness, acute in mobile/MoBI
-EEG, is over-cleaning: because the decision is variance-only, it can reconstruct
-away real high-variance neural activity (task ERPs, SSVEP, gait-locked rhythms).
-
-``GuidedASR`` keeps ASR's abnormality detection but adds two things:
-
-1. **Bias operators** (reused from the DSS machinery) score *what kind* each
-   flagged component direction is -- artifact-like vs brain-like -- via the
-   quadratic form of the direction against bank covariances ``C_artifact`` and
-   ``C_preserve``.
-2. **Soft reconstruction** replaces binary rejection of an ASR-flagged
-   component with a continuous keep weight ``w in [0, 1]`` (1 = keep, 0 =
-   suppress, intermediate = partial attenuation).
-
-The soft weight rescues components ASR would wrongly remove when they are
-brain-like, while leaving artifact-like abnormal components suppressed. The
-estimator is built on the ``method="riemannian_windowed"`` backbone, so with
-``reconstruction="hard"`` and no bias operators it is mathematically identical
-to :class:`mne_denoise.asr.ASR` with ``method="riemannian_windowed"``.
-
-This is an **experimental proof-of-concept** and must be opted into with
-``experimental=True``.
-"""
+"""Guided soft-reconstruction variant of ASR."""
 
 from __future__ import annotations
 
@@ -81,95 +55,57 @@ def process_guided_asr(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """
-    Apply a calibrated ASR state with guided soft reconstruction.
-
-    This function follows the same streaming contract as
-    :func:`mne_denoise.asr.process_asr`. It uses the shared windowed ASR
-    processor and changes only the component keep weights.
+    """Apply a calibrated ASR state with guided reconstruction.
 
     Parameters
     ----------
     X : ndarray, shape (n_channels, n_times)
-        Continuous data in the channel order used for calibration.
+        Continuous data in the calibrated channel order.
     sfreq : float
         Sampling frequency in Hz.
     state : ASRState
-        Fitted calibration state returned by
-        :func:`mne_denoise.asr.calibrate_asr`.
-    artifact_cov : ndarray, shape (n_channels, n_channels) | None
-        Covariance describing directions that should be attenuated. The
-        covariance is validated and symmetrized. Component scores are divided
-        by its trace so only spatial structure affects guidance.
-    preserve_cov : ndarray, shape (n_channels, n_channels) | None
-        Covariance describing directions that should be preserved. The
-        covariance is validated and symmetrized. Component scores are divided
-        by its trace so only spatial structure affects guidance.
-    reconstruction : {'soft', 'hard'}
-        Reconstruction rule. ``'soft'`` applies guidance-aware continuous
-        weights. ``'hard'`` exactly follows windowed ASR and requires both
-        guidance covariances to be ``None``.
-    guidance_strength : float
-        Guidance contribution in ``[0, 1]``. Zero returns baseline soft-ASR
-        weights; one applies the full artifact/preserve adjustment.
-    window_length : float
+        Calibration state returned by calibrate_asr.
+    artifact_cov : ndarray, shape (n_channels, n_channels), or None, default=None
+        Covariance describing directions to attenuate.
+    preserve_cov : ndarray, shape (n_channels, n_channels), or None, default=None
+        Covariance describing directions to preserve.
+    reconstruction : {"soft", "hard"}, default="soft"
+        Use guidance-aware continuous weights or standard binary ASR weights.
+    guidance_strength : float, default=1.0
+        Guidance contribution in [0, 1].
+    window_length : float, default=0.5
         Processing window length in seconds.
-    window_overlap : float
-        Accepted for parity with :func:`mne_denoise.asr.process_asr`.
-    max_dims : float | int
-        Maximum number or fraction of components reconstructed per window.
-    regularization : float
-        Relative eigenvalue floor for covariance calculations.
-    store_reconstruction_matrices : bool
-        If True, include per-window reconstruction matrices in diagnostics.
-    max_mem_mb : int | None
-        Memory bound controlling full-stack versus rolling covariance updates.
-    lookahead : float | None
-        Processing lookahead in seconds. ``None`` uses half a window.
-    stepsize : int | None
-        Samples between reconstruction-matrix updates. ``None`` uses half a
-        window.
-    callback : callable | None
-        Called synchronously after each completed reconstruction-matrix update
-        with a GuidedASR window progress event. Callback return values are
-        ignored and callback exceptions propagate unchanged.
-    verbose : bool | str | int | None
-        MNE-style logging level. Guided reconstruction details are emitted at
-        DEBUG; the estimator owns the user-facing INFO report.
+    window_overlap : float, default=0.66
+        Processing-window overlap.
+    max_dims : float or int, default=0.66
+        Maximum fraction or number of reconstructed components.
+    regularization : float, default=1e-8
+        Relative covariance eigenvalue floor.
+    store_reconstruction_matrices : bool, default=False
+        Include reconstruction matrices in diagnostics.
+    max_mem_mb : int or None, default=512
+        Memory bound for covariance processing.
+    lookahead : float or None, default=None
+        Processing lookahead in seconds.
+    stepsize : int or None, default=None
+        Samples between reconstruction updates.
+    callback : callable or None, default=None
+        Synchronous progress callback.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Returns
     -------
     X_clean : ndarray, shape (n_channels, n_times)
         Reconstructed data.
     diagnostics : dict
-        Standard ASR processing diagnostics plus ``soft_weights``,
-        ``mean_soft_weight``, and ``reconstruction``.
-
-    See Also
-    --------
-    process_asr : Apply a calibrated standard ASR model.
-    GuidedASR : MNE- and scikit-learn-compatible guided estimator.
+        ASR diagnostics with guided weights and reconstruction mode.
 
     Notes
     -----
-    Soft GuidedASR is an unpublished and unvalidated research prototype. Its
-    output must be evaluated independently for signal preservation and
-    artifact attenuation.
-
-    Guidance changes only components for which ``variance >= threshold``.
-    Unflagged components retain weight one. For a flagged component, baseline
-    soft-ASR weight is ``threshold / variance``. Only a covariance score above
-    the isotropic reference ``1 / n_channels`` counts as directional evidence.
-    The normalized preserve-minus-artifact evidence moves the weight toward
-    one or zero under the linear control of ``guidance_strength``.
-
-    Examples
-    --------
-    Apply soft reconstruction after calibrating a state:
-
-    >>> clean, diagnostics = process_guided_asr(
-    ...     data, sfreq=250.0, state=state, reconstruction="soft"
-    ... )
+    Hard reconstruction requires both guidance covariances to be None. Soft
+    reconstruction requires the GuidedASR experimental opt-in when used through the
+    estimator.
     """
     callback = _validate_callback(callback)
     if reconstruction not in ("soft", "hard"):
@@ -322,118 +258,94 @@ def process_guided_asr(
 
 
 class GuidedASR(ASR):
-    """
-    DSS-biased soft Artifact Subspace Reconstruction (experimental).
+    """Guided soft-reconstruction variant of ASR.
 
-    Extends :class:`mne_denoise.asr.ASR` (``method="riemannian_windowed"``
-    backbone) with soft, structure-aware reconstruction. See the module
-    docstring for the algorithm.
+    GuidedASR uses artifact and preserve bias covariances to modify ASR component
+    weights. Soft reconstruction requires experimental=True.
 
     Parameters
     ----------
-    sfreq : float | None, default=None
-        Sampling frequency in Hz. Required for NumPy input and inferred from
-        MNE objects otherwise.
+    sfreq : float or None, default=None
+        Sampling frequency in Hz; inferred from MNE metadata when available.
     cutoff : float, default=20.0
         ASR threshold multiplier.
     window_length : float, default=0.5
         Processing window length in seconds.
     window_overlap : float, default=0.66
-        Overlap used for processing and threshold-fitting windows.
+        Processing-window overlap.
     max_dropout_fraction : float, default=0.1
-        Fraction of low-RMS values ignored during threshold estimation.
+        Fraction of low-RMS values excluded from threshold estimation.
     min_clean_fraction : float, default=0.25
-        Minimum central fraction used to estimate clean RMS statistics.
-    picks : str | list of str | list of int | None, default='eeg'
-        Channels processed for MNE inputs. ``None`` processes every channel.
-    calibration : {'auto', 'manual'}, default='auto'
-        Whether calibration selects clean windows or uses all samples.
+        Minimum central fraction used for clean RMS statistics.
+    picks : str, list of str, list of int, or None, default="eeg"
+        MNE channels to process; NumPy input uses all rows.
+    calibration : {"auto", "manual"}, default="auto"
+        Calibration mode.
     calibration_window_length : float, default=1.0
-        Window length in seconds for automatic clean-window selection.
+        Automatic calibration-window length in seconds.
     calibration_window_overlap : float, default=0.66
-        Overlap for automatic clean-window selection.
+        Automatic calibration-window overlap.
     ref_max_bad_channels : float, default=0.075
-        Maximum bad-channel fraction in a clean calibration window.
-    ref_tolerances : tuple of float, default=(-inf, 5.5)
-        Robust z-score limits for clean calibration windows.
+        Maximum bad-channel fraction in a calibration window.
+    ref_tolerances : tuple of float, default=(-np.inf, 5.5)
+        Robust z-score bounds for calibration-window selection.
     blocksize : int, default=10
-        Samples averaged into each robust covariance block.
-    max_dims : float | int, default=0.66
-        Maximum number or fraction of reconstructed components per window.
+        Samples per calibration covariance block.
+    max_dims : float or int, default=0.66
+        Maximum fraction or number of reconstructed dimensions.
     reject_by_annotation : bool, default=True
-        Exclude bad annotations during Raw calibration and preserve annotated
-        samples during transform.
-    skip_by_annotation : tuple of str, default=('bad', 'bad_acq_skip')
+        Exclude bad annotated samples during calibration.
+    skip_by_annotation : tuple of str, default=("bad", "bad_acq_skip")
         Annotation prefixes treated as bad.
-    cov_estimator : {'geometric_median', 'mean', 'median'}, default='geometric_median'
-        Calibration covariance aggregation rule.
+    cov_estimator : {"geometric_median", "mean", "median"}, default="geometric_median"
+        Calibration-covariance aggregation rule.
     regularization : float, default=1e-8
-        Relative eigenvalue floor for covariance calculations.
-    filter_kind : {'none', 'asr', 'highpass'}, default='none'
-        Filter used only for ASR statistics.
-    window_criterion : float | int | None, default=None
-        Optional final retained-sample rejection criterion.
-    window_criterion_tolerances : tuple of float, default=(-inf, 7.0)
-        Robust z-score limits for final window rejection.
-    lookahead : float | None, default=None
-        Processing lookahead in seconds. ``None`` uses half a window.
-    stepsize : int | None, default=None
-        Samples between reconstruction updates. ``None`` uses half a window.
-    max_mem_mb : int | None, default=512
-        Bound selecting full-stack or rolling covariance updates.
+        Relative covariance eigenvalue floor.
+    filter_kind : {"none", "asr", "highpass"}, default="asr"
+        Filter used for ASR statistics.
+    window_criterion : float, int, or None, default=None
+        Optional final retained-sample criterion.
+    window_criterion_tolerances : tuple of float, default=(-np.inf, 7.0)
+        Robust z-score bounds for the final criterion.
+    lookahead : float or None, default=None
+        Processing lookahead in seconds.
+    stepsize : int or None, default=None
+        Samples between reconstruction updates.
+    max_mem_mb : int or None, default=512
+        Memory bound for covariance processing.
     copy : bool, default=True
-        Reserved for API compatibility. Transform returns a new object.
+        Reserved compatibility parameter; transformations return new outputs.
     store_reconstruction_matrices : bool, default=False
-        Store every reconstruction matrix in processing diagnostics.
-    artifact_biases : sequence of DSS bias operators | None, default=None
-        Operators (e.g. :class:`mne_denoise.dss.denoisers.LineNoiseBias`,
-        ``BandpassBias``) whose biased covariance defines the artifact-like
-        subspace ``C_artifact``. Each must accept ``(n_channels, n_times)`` and
-        return the same shape (the ``LinearDenoiser`` ``.apply`` contract).
-        Multiple operators contribute equally after trace normalization.
-    preserve_biases : sequence of DSS bias operators | None, default=None
-        Operators defining the brain-like subspace ``C_preserve`` to protect
-        (e.g. ``PeakFilterBias`` for SSVEP, ``BandpassBias`` for a target band).
-        Multiple operators contribute equally after trace normalization.
-    reconstruction : {'soft', 'hard'}, default='soft'
-        ``'soft'`` uses continuous weights only for ASR-flagged components;
-        ``'hard'`` reproduces standard ASR's binary keep/reject.
+        Store per-window reconstruction matrices in diagnostics.
+    artifact_biases : sequence or None, default=None
+        DSS bias operators defining artifact-like covariance directions.
+    preserve_biases : sequence or None, default=None
+        DSS bias operators defining directions to preserve.
+    reconstruction : {"soft", "hard"}, default="soft"
+        Guided continuous weights or binary ASR reconstruction.
     guidance_strength : float, default=1.0
-        Guidance contribution in ``[0, 1]``. Zero gives baseline soft-ASR
-        weights and one applies the full artifact/preserve adjustment.
+        Guidance contribution in [0, 1].
     experimental : bool, default=False
-        Must be ``True`` to use the guided soft reconstruction.
-    random_state : int | None, default=None
-        Reserved for future stochastic calibration strategies.
-    n_jobs : int | None, default=None
+        Must be true for soft reconstruction.
+    random_state : int or None, default=None
+        Reserved for stochastic calibration.
+    n_jobs : int or None, default=None
         Reserved for future parallel processing.
-    verbose : bool | str | int | None, default=None
-        Controls ASR progress logging.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     See Also
     --------
-    ASR : Standard Artifact Subspace Reconstruction estimator.
-    process_guided_asr : Low-level guided processing function.
+    ASR
+        Standard Artifact Subspace Reconstruction.
+    process_guided_asr
+        Low-level guided processing function.
 
     Notes
     -----
-    ``GuidedASR`` soft reconstruction is an unpublished, unvalidated research
-    prototype. Its current evidence is limited to unit tests and synthetic
-    benchmarks. It must not be treated as a validated EEG preprocessing method
-    without independent checks on the target data and scientific endpoints.
-
-    With ``reconstruction="hard"`` and no bias operators, ``GuidedASR`` is
-    identical to ``ASR(method="riemannian_windowed")``.
-
-    Equal bias weighting, the isotropic evidence reference, and the linear
-    guidance equation are explicit experimental modeling choices.
-
-    Examples
-    --------
-    Create an explicitly opted-in estimator:
-
-    >>> from mne_denoise.asr import GuidedASR
-    >>> guided = GuidedASR(sfreq=250.0, experimental=True)
+    With reconstruction="hard" and no bias operators, this uses the
+    riemannian_windowed ASR backend. The soft path is an experimental API and
+    requires independent evaluation of artifact attenuation and signal preservation.
     """
 
     _progress_method = "guided_asr"
@@ -526,52 +438,27 @@ class GuidedASR(ASR):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> GuidedASR:
-        """Calibrate ASR and fit optional guidance covariances.
-
-        Standard ASR calibration is delegated to :meth:`ASR.fit`. Bias-bank
-        covariances are then estimated from the target data only when guidance
-        operators are configured.
+        """Fit ASR calibration and optional guidance covariances.
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
-            Target data. It supplies ASR calibration when ``calibration`` is
-            ``None`` and always supplies the data used to fit bias operators.
-        y : None
-            Ignored.
-        calibration : Raw | Epochs | ndarray | None, default=None
-            Optional separate data used only for standard ASR calibration.
-        calibration_mask : ndarray | None, default=None
-            Optional boolean sample mask for two-dimensional calibration data
-            or Raw input after annotation exclusion.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each shared ASR threshold calibration
-            component completes. Callback return values are ignored and
-            callback exceptions propagate unchanged.
+        X : Raw, Epochs, or ndarray
+            Target data; it also supplies calibration when calibration is None.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        calibration : Raw, Epochs, or ndarray, default=None
+            Optional separate ASR calibration data.
+        calibration_mask : ndarray of bool or None, default=None
+            Optional mask for calibration samples.
+        callback : callable or None, default=None
+            Synchronous calibration progress callback.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
         GuidedASR
-            Fitted estimator.
-
-        See Also
-        --------
-        ASR.fit : Fit standard ASR calibration.
-
-        Notes
-        -----
-        The base :class:`ASR` fit performs threshold calibration. GuidedASR
-        then performs one additional pass over ``X`` only when bias operators
-        need artifact or preserve covariances.
-
-        Examples
-        --------
-        Fit the estimator using a separate clean calibration recording:
-
-        >>> guided.fit(target_raw, calibration=clean_raw)
+            The fitted estimator.
         """
         callback = _validate_callback(callback)
         if self.reconstruction not in ("soft", "hard"):

@@ -1,4 +1,4 @@
-"""Visualization functions for MNE-Denoise."""
+"""Visualization functions for mne-denoise."""
 
 try:
     import matplotlib as _matplotlib  # noqa: F401

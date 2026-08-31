@@ -1,10 +1,4 @@
-"""ASR processing: reconstruct artifact subspaces in incoming data.
-
-``process_asr`` applies the fitted calibration window by window, rejecting and
-reconstructing the principal subspaces whose variance exceeds the
-per-direction thresholds (raised-cosine blended, with lookahead). The
-Riemannian variants implement the experimental SPD-geometry backends.
-"""
+"""ASR reconstruction helpers."""
 
 from __future__ import annotations
 
@@ -195,66 +189,45 @@ def process_asr(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Apply a calibrated ASR model to continuous data.
+    """Apply a calibrated ASR state to continuous data.
 
     Parameters
     ----------
     X : ndarray, shape (n_channels, n_times)
-        Continuous data in the same channel order and units used for
-        calibration.
+        Data in the fitted channel order and units.
     sfreq : float
         Sampling frequency in Hz.
     state : ASRState
-        Fitted calibration state from :func:`calibrate_asr`.
-    window_length : float
+        State returned by calibrate_asr.
+    window_length : float, default=0.5
         Processing window length in seconds.
-    window_overlap : float
-        Calibration threshold-window overlap. Processing follows the
-        standard streaming ASR algorithm and uses ``stepsize`` for
-        reconstruction-matrix updates.
-    max_dims : float | int
-        Maximum number of dimensions reconstructed per window. Floats in
-        ``[0, 1]`` are interpreted as a fraction of channels.
-    regularization : float
-        Relative eigenvalue floor for window covariances.
-    store_reconstruction_matrices : bool
-        If True, store all window reconstruction matrices in diagnostics.
-    max_mem_mb : int | None
-        Reserved memory limit for future chunking. Present for API stability.
-    lookahead : float | None
-        Processing lookahead in seconds. If None, use ``window_length / 2``.
-    stepsize : int | None
-        Number of samples between reconstruction-matrix updates. If None, use
-        ``floor(sfreq * window_length / 2)``, matching the standard algorithm defaults.
-    method : {'standard', 'riemannian'} | None
-        Covariance geometry for processing. If ``None``, use ``state.method``.
-    callback : callable | None
-        Called synchronously after each completed reconstruction-matrix update
-        with an ASR window progress event. Callback return values are ignored
-        and callback exceptions propagate unchanged.
-    verbose : bool | str | int | None
-        MNE-style logging level. Processing details are emitted at DEBUG; the
-        owning estimator reports the user-facing result at INFO.
+    window_overlap : float, default=0.66
+        Overlap used for threshold windows.
+    max_dims : float or int, default=0.66
+        Maximum reconstructed dimensions; fractions are relative to channel count.
+    regularization : float, default=1e-8
+        Relative covariance eigenvalue floor.
+    store_reconstruction_matrices : bool, default=False
+        Store window matrices in diagnostics.
+    max_mem_mb : int or None, default=512
+        Memory cap for covariance processing.
+    lookahead : float or None, default=None
+        Processing lookahead in seconds.
+    stepsize : int or None, default=None
+        Samples between reconstruction updates.
+    method : {"standard", "riemannian", "riemannian_windowed"} or None, default=None
+        Covariance backend; None uses state.method.
+    callback : callable or None, default=None
+        Synchronous callback after each reconstruction update.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Returns
     -------
     X_clean : ndarray, shape (n_channels, n_times)
-        Cleaned data.
+        Reconstructed data.
     diagnostics : dict
         Processing diagnostics.
-
-    Examples
-    --------
-    Process a new array of task data using a previously calibrated ASR state:
-
-    >>> import numpy as np
-    >>> from mne_denoise.asr import process_asr
-    >>> rng = np.random.default_rng(42)
-    >>> task_data = rng.standard_normal((10, 2000))
-    >>> # Assuming 'state' is an ASRState returned by calibrate_asr
-    >>> cleaned_data, diagnostics = process_asr(task_data, sfreq=250.0, state=state)
-    >>> print(f"Cleaned data shape: {cleaned_data.shape}")
-    Cleaned data shape: (10, 2000)
     """
     callback = _validate_callback(callback)
     if method is None:
@@ -531,19 +504,7 @@ def process_asr(
 
 
 def _empty_process_diagnostics(n_times: int) -> dict[str, Any]:
-    """Return identity-processing diagnostics.
-
-    Parameters
-    ----------
-    n_times : int
-        Number of time samples in the processed block.
-
-    Returns
-    -------
-    diagnostics : dict
-        A diagnostic dictionary describing a trivial identity reconstruction
-        where no components were removed.
-    """
+    """Return diagnostics for an identity reconstruction."""
     return {
         "window_starts": np.array([0], dtype=int),
         "window_stops": np.array([n_times], dtype=int),
@@ -577,42 +538,7 @@ def _process_asr_riemannian(
     store_reconstruction_matrices: bool,
     callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Apply the standard Riemannian chunk covariance backend.
-
-    Parameters
-    ----------
-    data_stream : ndarray
-        The padded, lookahead-applied data stream.
-    X_stats : ndarray
-        The filtered subset of the data stream used for covariance calculations.
-    state : ASRState
-        Fitted calibration state containing mixing/threshold matrices.
-    n_times : int
-        Original number of time samples before padding.
-    n_stream_input : int
-        Number of input samples in the data stream.
-    lookahead_samples : int
-        Number of samples used for window lookahead padding.
-    update_at : ndarray
-        Array of sample indices at which to update reconstruction matrices.
-    max_bad : int
-        Maximum allowable number of rejected components per window.
-    stepsize : int
-        Sample step size between consecutive window matrix updates.
-    win_len : int
-        Length of the running processing window in samples.
-    regularization : float
-        Regularization applied to the symmetric positive definite covariance.
-    store_reconstruction_matrices : bool
-        If True, diagnostic dictionaries will contain per-window reconstruction matrices.
-
-    Returns
-    -------
-    X_clean : ndarray
-        The cleaned original data block.
-    diagnostics : dict
-        A dictionary containing processing diagnostic metadata.
-    """
+    """Apply the standard Riemannian chunk covariance backend."""
     n_channels = data_stream.shape[0]
     eye = np.eye(n_channels)
     Cw = (X_stats @ X_stats.T) / n_stream_input
@@ -738,53 +664,7 @@ def _process_asr_windowed(
     | None = None,
     return_component_weights: bool = False,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Process windowed ASR with binary or custom soft component weights.
-
-    Standard ``riemannian_windowed`` ASR uses the binary keep mask when
-    ``component_weight_function`` is None. Experimental extensions can provide
-    a callable that returns continuous keep weights without duplicating the
-    covariance, eigendecomposition, blending, and diagnostics loop.
-
-    Parameters
-    ----------
-    data_stream : ndarray
-        The padded, lookahead-applied data stream.
-    X_stats : ndarray
-        The filtered subset of the data stream used for covariance calculations.
-    state : ASRState
-        Fitted calibration state containing mixing/threshold matrices.
-    n_times : int
-        Original number of time samples before padding.
-    n_stream_input : int
-        Number of input samples in the data stream.
-    lookahead_samples : int
-        Number of samples used for window lookahead padding.
-    update_at : ndarray
-        Array of sample indices at which to update reconstruction matrices.
-    max_bad : int
-        Maximum allowable number of rejected components per window.
-    stepsize : int
-        Sample step size between consecutive window matrix updates.
-    win_len : int
-        Length of the running processing window in samples.
-    store_reconstruction_matrices : bool
-        If True, diagnostic dictionaries will contain per-window reconstruction matrices.
-    use_rolling_covariance : bool
-        Whether to optimize performance by iteratively updating the window covariance.
-    component_weight_function : callable | None
-        Optional callable receiving ``(variances, eigenvectors, thresholds,
-        forced_keep)`` and returning one keep weight in ``[0, 1]`` per
-        component. ``None`` selects standard binary ASR reconstruction.
-    return_component_weights : bool
-        If True, include binary or soft component weights in diagnostics.
-
-    Returns
-    -------
-    X_clean : ndarray
-        The cleaned original data block.
-    diagnostics : dict
-        A dictionary containing processing diagnostic metadata.
-    """
+    """Process windowed ASR with binary or custom soft component weights."""
     n_channels = data_stream.shape[0]
 
     if use_rolling_covariance:
@@ -977,45 +857,7 @@ def _process_adaptive_chunk(
     max_mem_mb: int | float | None,
     callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any], dict[str, Any]]:
-    """Mirror the AASR ``reconstruct()`` wrapper around ``asr_process``.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times)
-        The input data chunk to be reconstructed.
-    sfreq : float
-        The sampling frequency of the data.
-    state : ASRState
-        The current calibration state of the ASR algorithm.
-    process_state : dict
-        A dictionary containing stateful values carried over from the previous
-        chunk (e.g., streaming carry, filter states, and the adaptive learner).
-    window_length : float
-        The length of the moving window in seconds.
-    lookahead : float | None
-        The lookahead duration in seconds. If None, defaults to half the window length.
-    stepsize : int | None
-        The processing step size in samples.
-    max_dims : float | int
-        The maximum number of dimensions to reconstruct.
-    store_reconstruction_matrices : bool
-        If True, returns the mixing matrices used for reconstruction.
-    adaptive_variant : str
-        The variant of the adaptive updating rule used (e.g., 'psw').
-    max_mem_mb : int | float | None
-        The maximum memory allowed for block computations.
-    callback : callable | None
-        Called synchronously after each completed reconstruction-matrix update.
-
-    Returns
-    -------
-    X_clean : ndarray
-        The cleaned (reconstructed) data chunk.
-    diagnostics : dict
-        Diagnostic information about the chunk processing.
-    next_process_state : dict
-        The updated process state dictionary to carry forward to the next chunk.
-    """
+    """Mirror the AASR ``reconstruct()`` wrapper around ``asr_process``."""
     X = _validate_array_2d(X)
     n_channels, n_times = X.shape
     lookahead_samples = (

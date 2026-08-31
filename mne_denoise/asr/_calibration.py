@@ -1,15 +1,4 @@
-"""ASR Calibration Module.
-
-This module is responsible for fitting the core Artifact Subspace Reconstruction
-(ASR) statistical model from continuous reference data.
-
-The primary entry point, ``calibrate_asr``, executes a multi-step pipeline:
-1. Automatically identifies "clean" spatial covariance windows.
-2. Aggregates these windows using robust geometry (Standard or Riemannian).
-3. Derives the mixing square-root matrix ``M`` to map data into principal space.
-4. Fits a generalized Gaussian distribution to windowed RMS values to calculate
-   the direction-dependent threshold cutoff matrix ``T``.
-"""
+"""ASR calibration helpers."""
 
 from __future__ import annotations
 
@@ -65,79 +54,57 @@ def calibrate_asr(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[ASRState, dict[str, Any]]:
-    """Calibrate a standard ASR model from continuous data.
+    """Calibrate an ASR state from continuous channel-first data.
 
     Parameters
     ----------
     X : ndarray, shape (n_channels, n_times)
-        Continuous calibration data.
+        Calibration data.
     sfreq : float
         Sampling frequency in Hz.
-    cutoff : float
-        ASR threshold multiplier. Lower values clean more aggressively.
-    window_length : float
-        Processing/statistics window length in seconds.
-    window_overlap : float
-        Overlap fraction for threshold-fitting windows.
-    calibration : {'auto', 'manual'}
-        Whether to select clean calibration windows automatically or use all
-        supplied samples.
-    calibration_window_length : float
-        Window length in seconds for automatic clean-window selection.
-    calibration_window_overlap : float
-        Overlap fraction for automatic clean-window selection.
-    ref_max_bad_channels : float
-        Maximum fraction of channels that may exceed ``ref_tolerances`` for a
-        calibration window to be retained.
-    ref_tolerances : tuple of float
-        Lower and upper robust z-score tolerances for clean-window selection.
-    blocksize : int
-        Number of successive samples averaged into each covariance block for
-        robust calibration covariance estimation.
-    max_dropout_fraction : float
-        Fraction of the lowest RMS values excluded while fitting thresholds.
-    min_clean_fraction : float
-        Minimum central fraction used to estimate clean RMS statistics.
-    cov_estimator : {'geometric_median', 'mean', 'median'}
-        Robust aggregation rule for calibration-window covariance matrices.
-    regularization : float
-        Relative eigenvalue floor used for SPD regularization.
-    filter_kind : {'none', 'asr', 'highpass'}
-        Statistics-only filter. ``'asr'`` applies the original inverse-EEG
-        Yule-Walker pre-emphasis filter, ``'highpass'`` applies a lightweight
-        high-pass filter, and ``'none'`` avoids implicit filtering.
-    method : {'standard', 'riemannian', 'riemannian_windowed'}, default='standard'
-        Covariance geometry used by the calibration. ``'standard'`` uses the
-        Euclidean ASR calibration; the two Riemannian options use the
-        corresponding package backends.
-    max_mem_mb : int | None
-        Reserved memory limit for future chunking. Present for API stability.
-    callback : callable | None
-        Called synchronously after each principal-component threshold is fitted
-        with an ASR calibration progress event. Callback return values are
-        ignored and callback exceptions propagate unchanged.
-    verbose : bool | str | int | None
-        MNE-style logging level. Calibration details are emitted at DEBUG;
-        the owning estimator reports the user-facing calibration result.
+    cutoff : float, default=20.0
+        ASR threshold multiplier.
+    window_length : float, default=0.5
+        Processing window length in seconds.
+    window_overlap : float, default=0.66
+        Overlap fraction for processing windows.
+    calibration : {"auto", "manual"}, default="auto"
+        Clean-window selection rule.
+    calibration_window_length : float, default=1.0
+        Automatic calibration-window length in seconds.
+    calibration_window_overlap : float, default=0.66
+        Overlap fraction for calibration windows.
+    ref_max_bad_channels : float, default=0.075
+        Maximum bad-channel fraction for a retained calibration window.
+    ref_tolerances : tuple of float, default=(-np.inf, 5.5)
+        Lower and upper robust z-score limits for calibration windows.
+    blocksize : int, default=10
+        Samples per covariance block.
+    max_dropout_fraction : float, default=0.1
+        Low-tail fraction excluded while fitting RMS thresholds.
+    min_clean_fraction : float, default=0.25
+        Minimum clean fraction used for RMS fitting.
+    cov_estimator : {"geometric_median", "mean", "median"}, default="geometric_median"
+        Covariance aggregation rule.
+    regularization : float, default=1e-8
+        Relative SPD eigenvalue floor.
+    filter_kind : {"none", "asr", "highpass"}, default="none"
+        Statistics-only filter.
+    method : {"standard", "riemannian", "riemannian_windowed"}, default="standard"
+        Covariance backend.
+    max_mem_mb : int or None, default=512
+        Memory cap for covariance aggregation.
+    callback : callable or None, default=None
+        Synchronous threshold-progress callback.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Returns
     -------
     state : ASRState
-        Fitted ASR state containing the threshold matrix T and mixing matrix M.
+        Calibrated state.
     diagnostics : dict
-        Calibration diagnostics, including filter state and geometry info.
-
-    Examples
-    --------
-    Calibrate an ASR model from a 10-channel, 1000-sample array:
-
-    >>> import numpy as np
-    >>> from mne_denoise.asr import calibrate_asr
-    >>> rng = np.random.default_rng(42)
-    >>> data = rng.standard_normal((10, 1000))
-    >>> state, diagnostics = calibrate_asr(data, sfreq=250.0, cutoff=20.0)
-    >>> print(f"Threshold matrix shape: {state.T.shape}")
-    Threshold matrix shape: (10, 10)
+        Calibration diagnostics.
     """
     callback = _validate_callback(callback)
     _validate_common_params(
@@ -309,40 +276,7 @@ def _fit_component_thresholds(
     max_dropout_fraction: float,
     callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    """Fit threshold statistics for all principal components.
-
-    Projects the continuous clean data into the principal subspace defined by V,
-    calculates the windowed RMS for each component, and fits the generalized
-    Gaussian distribution to determine robust cutoff thresholds.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times)
-        The clean calibration data array.
-    V : ndarray, shape (n_channels, n_components)
-        The mixing matrix defining the principal subspace.
-    sfreq : float
-        The sampling frequency in Hz.
-    window_length : float
-        Length of the sliding window for RMS calculation, in seconds.
-    window_overlap : float
-        Overlap fraction of the sliding windows.
-    cutoff : float
-        Multiplier for the robust standard deviation to determine the threshold.
-    min_clean_fraction : float
-        Minimum central fraction used to estimate clean RMS statistics.
-    max_dropout_fraction : float
-        Fraction of the lowest RMS values excluded as dropouts.
-
-    Returns
-    -------
-    thresholds : ndarray, shape (n_components,)
-        The final calculated upper RMS thresholds for each component.
-    info : dict
-        A dictionary containing the full set of diagnostic arrays for each
-        component, including 'mu', 'sigma', 'beta', 'fit_error', and
-        'fit_interval'.
-    """
+    """Fit threshold statistics for all principal components."""
     win_len = _round_half_up(window_length * sfreq)
     starts = _get_fractional_window_starts(X.shape[1], win_len, window_overlap)
     projected = V.T @ X

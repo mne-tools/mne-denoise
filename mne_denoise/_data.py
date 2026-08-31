@@ -1,4 +1,4 @@
-"""Shared data extraction and reconstruction for arrays and MNE objects."""
+"""Array and MNE data-boundary helpers."""
 
 from __future__ import annotations
 
@@ -121,24 +121,18 @@ def _resolve_mne_picks(
 
 
 def epochs_to_continuous(data: np.ndarray) -> np.ndarray:
-    """Convert standard epoch-major data to continuous channel-first data.
+    """Convert epoch-major data to channel-first continuous data.
 
     Parameters
     ----------
-    data : ndarray, shape (n_channels, n_times) | (n_epochs, n_channels, n_times)
-        Standard MNE-style data. Two-dimensional input has shape
-        ``(n_channels, n_times)`` and is returned unchanged. Three-dimensional
-        input has shape ``(n_epochs, n_channels, n_times)`` and is concatenated
-        epoch-by-epoch along time.
+    data : ndarray, shape (n_channels, n_times) or (n_epochs, n_channels, n_times)
+        Two-dimensional input is returned unchanged; three-dimensional input is
+        concatenated epoch-by-epoch along time.
 
     Returns
     -------
-    continuous : ndarray, shape (n_channels, n_times) | (n_channels, n_epochs * n_times)
-        Continuous channel-first data.
-
-    See Also
-    --------
-    continuous_to_epochs : Inverse operation.
+    continuous : ndarray
+        Channel-first data.
     """
     data = np.asarray(data)
     if data.ndim == 2:
@@ -149,26 +143,19 @@ def epochs_to_continuous(data: np.ndarray) -> np.ndarray:
 
 
 def continuous_to_epochs(continuous: np.ndarray, shape: tuple[int, ...]) -> np.ndarray:
-    """Convert continuous data to the original standard epoch-major shape.
+    """Convert channel-first continuous data to an original epoch layout.
 
     Parameters
     ----------
-    continuous : ndarray, shape (n_channels, n_epochs * n_times)
-        Continuous channel-first data, typically the output of
-        :func:`epochs_to_continuous`.
+    continuous : ndarray, shape (n_channels, n_samples)
+        Continuous data.
     shape : tuple
-        Original shape. It must represent either ``(n_channels, n_times)`` or
-        ``(n_epochs, n_channels, n_times)``. A two-dimensional shape returns
-        ``continuous`` unchanged.
+        Target shape, either 2-D or (n_epochs, n_channels, n_times).
 
     Returns
     -------
-    epoched : ndarray, shape (n_epochs, n_channels, n_times)
-        Data reshaped to the original standard epoch-major representation.
-
-    See Also
-    --------
-    epochs_to_continuous : Forward operation.
+    epoched : ndarray
+        Data in the requested epoch-major shape.
     """
     if len(shape) == 2:
         return continuous
@@ -199,67 +186,44 @@ def extract_data_from_mne(
     channel_first_epochs: bool = False,
     exclude_bads: bool = False,
 ) -> tuple[np.ndarray, float | None, str, Any, np.ndarray | None, list[str] | None]:
-    """
-    Extract data and metadata from an MNE object or NumPy-compatible array.
-
-    The function centralizes channel selection and type detection. Epoched
-    inputs can optionally be concatenated along time for algorithms that fit a
-    single spatial model across epochs.
+    """Extract data, sampling frequency, and channel metadata.
 
     Parameters
     ----------
     X : Raw | Epochs | Evoked | array
         Input data.
     ch_names : list of str | None, default=None
-        Explicit list of channel names to extract. If None and X is an MNE object,
-        the function auto-picks a single homogeneous channel type (if auto_pick=True).
-    auto_pick : bool | 'data', default=True
-        Channel selection when ``ch_names`` is None. If True, automatically pick
-        one homogeneous channel type. If ``'data'``, pick all supported data
-        channels jointly. If False, retain every channel.
+        Explicit MNE channels to extract.
+    auto_pick : bool or "data", default=True
+        MNE channel-selection policy: one homogeneous type, all supported data
+        channels ("data"), or every channel when False.
     concatenate_epochs : bool, default=False
-        If True, convert three-dimensional ``(n_epochs, n_channels, n_times)``
-        data to ``(n_channels, n_epochs * n_times)``. The returned ``mne_type``
-        remains ``'epochs'`` for MNE Epochs input.
+        Concatenate epoch-major data along time.
     channel_first_epochs : bool, default=False
-        If True, return MNE Epochs as
-        ``(n_channels, n_times, n_epochs)``. Cannot be combined with
-        ``concatenate_epochs=True``.
+        Return MNE Epochs as (n_channels, n_times, n_epochs).
     exclude_bads : bool, default=False
-        If True, omit channels listed in ``X.info['bads']`` from automatic
-        channel selection. This has no effect when ``ch_names`` explicitly
-        defines the fitted channel contract.
+        Exclude MNE bad channels from automatic selection.
 
     Returns
     -------
-    data : array
-        Extracted data. MNE Epochs are returned as
-        ``(n_epochs, n_channels, n_times)`` unless
-        ``concatenate_epochs=True`` or ``channel_first_epochs=True``.
-    sfreq : float | None
+    data : ndarray
+        Extracted data. Epochs use their standard layout unless one of the epoch
+        conversion options is selected.
+    sfreq : float or None
         Sampling frequency.
-    mne_type : str
-        'raw', 'epochs', 'evoked', or 'array'.
-    orig_inst : object
-        Original MNE instance (or None).
-    picks : array of int | None
-        Indices of channels extracted (if any filtering occurred).
-    extracted_ch_names : list of str | None
-        Names of the extracted channels (if an MNE object was passed).
+    mne_type : {"raw", "epochs", "evoked", "array"}
+        Detected input type.
+    orig_inst : MNE object or None
+        Original object for reconstruction.
+    picks : ndarray or None
+        Selected channel indices.
+    extracted_ch_names : list of str or None
+        Selected channel names.
 
-    See Also
-    --------
-    reconstruct_mne_object : Rebuild an MNE object after processing.
-
-    Examples
-    --------
-    Concatenate an epoched array along its time axis:
-
-    >>> import numpy as np
-    >>> epochs = np.arange(24).reshape(2, 3, 4)
-    >>> continuous, *_ = extract_data_from_mne(epochs, concatenate_epochs=True)
-    >>> continuous.shape
-    (3, 8)
+    Raises
+    ------
+    ValueError
+        If incompatible epoch options or an unsupported array shape is supplied.
     """
     sfreq = None
     mne_type = "array"
@@ -318,19 +282,19 @@ def reconstruct_mne_object(
 
     Parameters
     ----------
-    data : array
-        The cleaned/processed data.
-    orig_inst : object
-        The original MNE instance (template).
+    data : ndarray
+        Processed selected-channel data.
+    orig_inst : MNE object
+        Input object used as the reconstruction template.
     mne_type : str
-        Type string returned by extract_data_from_mne ('raw', 'epochs', 'evoked', 'array').
-    picks : array of int | None
-        If provided, `data` is re-inserted into a copy of `orig_inst` only at these channel indices.
+        Type returned by extract_data_from_mne.
+    picks : ndarray of int | None, default=None
+        Channels receiving data; None replaces all channels.
 
     Returns
     -------
-    out : Raw | Epochs | Evoked | array
-        Reconstructed object or the data array.
+    out : MNE object or ndarray
+        Reconstructed copy, or data unchanged for array input.
     """
     if mne_type == "array" or orig_inst is None:
         return data

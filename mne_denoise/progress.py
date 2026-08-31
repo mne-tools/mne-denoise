@@ -1,23 +1,4 @@
-"""Structured computational progress events and callback helpers.
-
-The package-wide progress API is a synchronous observer interface. A callback
-is a callable receiving one immutable :class:`ProgressEvent`; its return value
-is ignored and an exception raised by the callback propagates unchanged.
-Callbacks and logging are independent: ``verbose`` controls package logs,
-whereas ``callback`` controls structured events. A callback is runtime observer
-state, not an estimator hyperparameter, and public APIs expect it to be passed
-by keyword.
-
-Events normally report a 1-based count of completed work. ``total`` is the
-known number of work units, or ``None`` only when that number is genuinely
-unknown. The current method vocabulary includes ``sound``, ``iterative_dss``,
-``asr``, ``guided_asr``, ``adaptive_asr``, ``dss``, ``zapline``,
-``narrowband_scan``, ``bss_cca``, ``icanclean``, ``basic_ssa``, ``local_ssa``,
-and ``sns``. Current stages include ``iteration``, ``calibration``,
-``window``, ``epoch``, ``segment``, ``frequency``, ``block``, and ``channel``.
-These are documented identifiers, not a closed enum; the contract remains open
-to additional semantic strings.
-"""
+"""Structured progress events and callback helpers."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -28,53 +9,27 @@ __all__ = ["ProgressEvent", "TqdmProgress"]
 
 @dataclass(frozen=True, slots=True)
 class ProgressEvent:
-    """Describe a completed unit of computational progress.
+    """Immutable description of one completed progress unit.
 
     Parameters
     ----------
     method : str
-        Stable string identifier for the algorithm emitting the event. Current
-        identifiers include ``"sound"``, ``"iterative_dss"``, ``"asr"``,
-        ``"guided_asr"``, ``"adaptive_asr"``, ``"dss"``, ``"zapline"``,
-        ``"narrowband_scan"``, ``"bss_cca"``, ``"icanclean"``,
-        ``"basic_ssa"``, ``"local_ssa"``, and ``"sns"``. This is an open
-        string contract rather than a Python enum.
+        Algorithm identifier. The value is an open string.
     stage : str
-        Singular semantic phase within the algorithm. Current stages include
-        ``"iteration"``, ``"calibration"``, ``"window"``, ``"epoch"``,
-        ``"segment"``, ``"frequency"``, ``"block"``, and ``"channel"``.
-        This is an open string contract rather than a Python enum.
-    current : int | None
-        Normally the 1-based count of the progress unit that has just
-        completed. ``None`` is used only when a meaningful count is unavailable.
-    total : int | None
-        Total planned units when known. ``None`` is used only when the total is
-        genuinely unknown. For an iterative algorithm with early convergence,
-        this may be the maximum possible number of iterations rather than the
-        number eventually run.
-    component : int | None
-        Optional 1-based component index for nested component-based
-        algorithms, such as deflationary iterative DSS. ``None`` is used when
-        component identity is not semantically useful.
-    metric : float | None
-        Optional scalar diagnostic associated with the event. Its
-        interpretation is specific to the method and stage, such as a
-        convergence change, threshold, rank, component count, or frequency.
+        Semantic phase identifier. The value is an open string.
+    current : int or None, default=None
+        Completed-unit count, normally 1-based.
+    total : int or None, default=None
+        Planned unit count when known.
+    component : int or None, default=None
+        Optional 1-based component index.
+    metric : float or None, default=None
+        Optional method- and stage-specific diagnostic.
 
     Notes
     -----
-    Progress events represent completed work. Emitters report after an
-    iteration, calibration unit, window, frequency, block, channel, or other
-    meaningful unit completes and after its diagnostic metric is known. Thus,
-    ``current=1`` means that one unit is complete, not that unit 1 is about to
-    start.
-
-    Logging and structured callbacks are independent. Setting ``verbose=True``
-    does not enable callbacks, and providing a callback does not alter logging
-    level or logging content. Callback return values are ignored and callback
-    exceptions propagate unchanged. Callbacks are synchronous and should be
-    supplied by keyword; they are runtime observer state, not estimator
-    hyperparameters.
+    Events are emitted after work and its metric complete. Callback return values
+    are ignored; callback exceptions propagate unchanged.
     """
 
     method: str
@@ -98,15 +53,15 @@ def _load_tqdm() -> Any:
 
 
 class TqdmProgress:
-    """Render structured progress events with one optional tqdm bar.
+    """Presentation adapter that renders ProgressEvent objects with tqdm.
 
     Parameters
     ----------
-    leave : bool
-        Whether completed bars should remain visible. Defaults to ``False``.
+    leave : bool, default=False
+        Keep completed bars visible.
     **tqdm_kwargs : dict
-        Additional keyword arguments passed to tqdm. The adapter controls
-        ``total`` and ``initial`` from the first event of each stream.
+        Additional keyword arguments passed to tqdm. total and initial are controlled
+        by the adapter.
     """
 
     def __init__(self, *, leave: bool = False, **tqdm_kwargs: Any) -> None:
@@ -119,18 +74,7 @@ class TqdmProgress:
         self._previous_event: ProgressEvent | None = None
 
     def __call__(self, event: ProgressEvent) -> None:
-        """Render one completed-work progress event.
-
-        Parameters
-        ----------
-        event : ProgressEvent
-            Immutable event describing the completed work unit.
-
-        Returns
-        -------
-        None
-            The adapter updates its active bar in place.
-        """
+        """Render one completed progress event."""
         if self._starts_new_stream(event):
             self.close()
             bar_kwargs = dict(self._tqdm_kwargs)
@@ -164,31 +108,16 @@ class TqdmProgress:
         )
 
     def __enter__(self) -> "TqdmProgress":
-        """Return this callback for use in a context manager."""
+        """Return this adapter as a callback."""
         return self
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> bool:
-        """Close the active bar without suppressing exceptions.
-
-        Parameters
-        ----------
-        exc_type : type | None
-            Exception type supplied by the context-manager protocol.
-        exc_value : BaseException | None
-            Exception instance supplied by the context-manager protocol.
-        traceback : types.TracebackType | None
-            Traceback supplied by the context-manager protocol.
-
-        Returns
-        -------
-        bool
-            Always ``False`` so exceptions propagate.
-        """
+        """Close the active bar and propagate exceptions."""
         self.close()
         return False
 
     def close(self) -> None:
-        """Close the active bar and clear its state."""
+        """Close the active progress bar and clear its state."""
         if self._bar is not None:
             self._bar.close()
         self._bar = None
@@ -199,7 +128,7 @@ _ProgressCallback = Callable[[ProgressEvent], object]
 
 
 def _validate_callback(callback: object) -> _ProgressCallback | None:
-    """Validate a progress callback without inspecting or invoking it."""
+    """Validate a callback without invoking it."""
     if callback is None:
         return None
     if not callable(callback):
@@ -219,7 +148,7 @@ def _emit_progress(
     component: int | None = None,
     metric: float | None = None,
 ) -> None:
-    """Emit one structured progress event to ``callback`` when provided."""
+    """Emit one ProgressEvent when callback is provided."""
     if callback is None:
         return
     callback(

@@ -1,2 +1,0 @@
-Audited public docstrings and scientific documentation, centralized method
-references and citation guidance, and reconciled the documented public API.

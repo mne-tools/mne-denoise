@@ -17,24 +17,9 @@ statistical, and source-informed denoising. Many methods accept MNE `Raw`,
 `Epochs`, and `Evoked` objects directly, and sklearn-style estimators are
 provided where that interface fits the method.
 
-## Methods
-
-| Method | Typical purpose |
-| --- | --- |
-| ASR | Detect and reconstruct transient, high-variance artifact subspaces. |
-| BSS-CCA | Suppress lagged-correlation components associated with muscle artifacts. |
-| DSS | Extract or suppress components selected by reproducibility, spectral, temporal, or other bias functions. |
-| iCanClean | Suppress components shared with reference or pseudo-reference channels. |
-| SNS | Suppress sensor-specific noise using spatially correlated neighboring channels. |
-| SOUND | Suppress channel-specific noise with a forward-model-based Wiener filter. |
-| Spectrum interpolation | Attenuate narrow-band line noise by interpolating FFT amplitudes while preserving phase. |
-| SSA | Decompose and reconstruct time series for frequency-guided or local artifact cleaning. |
-| SSP-SIR | Project an artifact subspace and reconstruct through a forward model, especially for TMS-evoked muscle artifacts. |
-| ZapLine | Remove power-line noise and harmonics with DSS, including an adaptive mode. |
-
 See the [user guide](https://mne.tools/mne-denoise/getting-started.html) and
-[API reference](https://mne.tools/mne-denoise/api.html) to choose and
-understand a method. Experimental APIs are identified in the documentation.
+[API reference](https://mne.tools/mne-denoise/api.html) for method selection
+and exact contracts. Experimental APIs are identified in the documentation.
 
 ## Installation
 

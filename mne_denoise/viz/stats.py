@@ -1,30 +1,4 @@
-"""Visualization helpers for grouped metrics and summary statistics.
-
-This module provides reusable, study-agnostic metric plots for grouped
-comparisons, paired subject trajectories, and distribution summaries.
-
-Input model
------------
-Grouped-stat functions in this module assume column-oriented input:
-
-1. Mapping-like object with ``.items()`` (for example: ``dict``).
-2. Columns should be 1D and aligned by row.
-3. Metric columns should be numeric when used in computations.
-
-Public plots
-------------
-1. :func:`plot_metric_bars`
-2. :func:`plot_tradeoff_scatter`
-3. :func:`plot_metric_comparison`
-4. :func:`plot_metric_slopes`
-5. :func:`plot_metric_violins`
-6. :func:`plot_null_distribution`
-7. :func:`plot_forest`
-8. :func:`plot_harmonic_attenuation` (line-noise-specific helper)
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Metric and summary-statistic plots."""
 
 from __future__ import annotations
 
@@ -221,18 +195,6 @@ def plot_metric_bars(
     -------
     fig : matplotlib.figure.Figure
         Figure handle.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_metric_bars
-    >>> data = {
-    ...     "group": np.array(["A", "A", "B", "B"]),
-    ...     "score": np.array([0.9, 1.0, 0.7, 0.8]),
-    ... }
-    >>> fig = plot_metric_bars(
-    ...     data, metric_cols=["score"], group_col="group", show=False
-    ... )
     """
     columns = {name: np.asarray(values) for name, values in data.items()}
     groups = np.asarray(columns[group_col], dtype=object)
@@ -392,19 +354,6 @@ def plot_tradeoff_scatter(
     -------
     fig : matplotlib.figure.Figure
         Figure handle.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_tradeoff_scatter
-    >>> data = {
-    ...     "group": np.array(["A", "A", "B", "B"]),
-    ...     "distortion": np.array([0.1, 0.2, 0.4, 0.3]),
-    ...     "attenuation": np.array([8.0, 9.0, 5.0, 6.0]),
-    ... }
-    >>> fig = plot_tradeoff_scatter(
-    ...     data, group_col="group", x_col="distortion", y_col="attenuation", show=False
-    ... )
     """
     columns = {name: np.asarray(values) for name, values in data.items()}
     groups = np.asarray(columns[group_col], dtype=object)
@@ -550,23 +499,6 @@ def plot_metric_comparison(
     -------
     fig : matplotlib.figure.Figure
         Figure containing the plot.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_metric_comparison
-    >>> data = {
-    ...     "subject": np.array(["s1", "s1", "s2", "s2"]),
-    ...     "group": np.array(["A", "B", "A", "B"]),
-    ...     "score": np.array([1.1, 0.8, 1.0, 0.7]),
-    ... }
-    >>> fig = plot_metric_comparison(
-    ...     data,
-    ...     group_col="group",
-    ...     subject_col="subject",
-    ...     metric_col="score",
-    ...     show=False,
-    ... )
     """
     columns = {name: np.asarray(values) for name, values in data.items()}
     groups = np.asarray(columns[group_col], dtype=object)
@@ -716,11 +648,6 @@ def plot_harmonic_attenuation(
     -------
     fig : matplotlib.figure.Figure
         Figure handle.
-
-    Notes
-    -----
-    This helper is intentionally domain-specific (line-frequency harmonics)
-    and complements the otherwise study-agnostic grouped-stat plots.
     """
     if series_order is None:
         series_order = list(cleaned_psds.keys())
@@ -829,19 +756,6 @@ def plot_metric_slopes(
     -------
     fig : matplotlib.figure.Figure
         Figure handle.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_metric_slopes
-    >>> data = {
-    ...     "subject": np.array(["s1", "s1", "s2", "s2"]),
-    ...     "group": np.array(["A", "B", "A", "B"]),
-    ...     "metric": np.array([1.0, 0.8, 1.1, 0.7]),
-    ... }
-    >>> fig = plot_metric_slopes(
-    ...     data, metric_cols=["metric"], group_col="group", show=False
-    ... )
     """
     columns = {name: np.asarray(values) for name, values in data.items()}
     subject_values = np.asarray(columns[subject_col], dtype=object)
@@ -976,19 +890,6 @@ def plot_metric_violins(
     ------
     ImportError
         If seaborn is unavailable.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_metric_violins
-    >>> data = {
-    ...     "subject": np.array(["s1", "s1", "s2", "s2"]),
-    ...     "group": np.array(["A", "B", "A", "B"]),
-    ...     "metric": np.array([0.2, 0.6, 0.1, 0.5]),
-    ... }
-    >>> fig = plot_metric_violins(
-    ...     data, ["metric"], group_col="group", subject_col="subject", show=False
-    ... )
     """
     columns = {name: np.asarray(values) for name, values in data.items()}
     sns = _try_import_seaborn()
@@ -1183,14 +1084,6 @@ def plot_null_distribution(
         Figure handle.
     p_value : float
         Two-sided empirical p-value under ``null_values``.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_null_distribution
-    >>> rng = np.random.default_rng(0)
-    >>> null = rng.normal(0.0, 0.1, 1000)
-    >>> fig, p = plot_null_distribution(null, observed=0.25, show=False)
     """
     null_values = np.asarray(null_values)
     if figsize is None:
@@ -1335,17 +1228,6 @@ def plot_forest(
     -------
     fig : matplotlib.figure.Figure
         Figure handle.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_forest
-    >>> data = {
-    ...     "subject": np.array(["s1", "s2", "s1", "s2"]),
-    ...     "group": np.array(["A", "A", "B", "B"]),
-    ...     "effect": np.array([0.2, 0.4, 0.8, 0.9]),
-    ... }
-    >>> fig = plot_forest(data, metric_col="effect", group_col="group", show=False)
     """
     columns = {name: np.asarray(values) for name, values in data.items()}
     groups_col = np.asarray(columns[group_col], dtype=object)

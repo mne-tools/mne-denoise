@@ -1,23 +1,22 @@
 """
-=================================================
-Temporal Biases for Ordinary DSS.
-=================================================
+========================================
+Temporal Biases for Ordinary DSS
+========================================
 
 This example demonstrates DSS for extracting **temporally structured** signals:
 autocorrelated components, slow drifts, and smooth waveforms.
 
-These ordinary-DSS bias operators do not perform lag-space ``TimeShiftDSS``;
-see the dedicated TimeShiftDSS guide for that repeated-trial FIR estimator.
+These ordinary-DSS bias operators do not perform lag-space ``TimeShiftDSS``.
+Here ``LagAverageBias`` and ``SmoothingBias`` act on ordinary DSS data, whereas
+``TimeShiftDSS`` augments repeated trials with an explicit lag grid.
 
 We cover both **linear biases** (LagAverageBias, SmoothingBias) and
-**nonlinear denoisers** (DCTDenoiser, TemporalSmoothnessDenoiser).
+**nonlinear denoisers** (DCTDenoiser).
 
 The examples move from synthetic slow drifts to lag-averaging and smoothing
 biases, then to DCT-based iterative denoising and a real EEG slow-potential
 example.
 
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
 """
 
 # %%

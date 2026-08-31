@@ -1,15 +1,4 @@
-"""Adaptive learning rate (gamma) optimization for DSS.
-
-This module implements helper classes to adaptively adjust the spectral shift
-(gamma) or learning rate during Iterative DSS convergence.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-"""
+"""DSS convergence helpers."""
 
 from __future__ import annotations
 
@@ -17,22 +6,7 @@ import numpy as np
 
 
 class Gamma179:
-    """Detects oscillation by comparing consecutive weight deltas.
-
-    If the angle between deltas is > 90°, reduces gamma to 0.5.
-
-
-
-    Usage
-    -----
-    >>> from mne_denoise.dss._convergence import Gamma179
-    >>> gamma_fn = Gamma179()
-    >>> # idss = IterativeDSS(..., gamma=gamma_fn) (Illustrative)
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 2.5 "Spectral Shift" and 3.3 "Spectral Shift Revisited"
-    """
+    """Reduce the DSS step size when successive weight updates oscillate."""
 
     def __init__(self):
         self.gamma = 1.0
@@ -65,20 +39,7 @@ class Gamma179:
 
 
 class GammaPredictive:
-    """Adjusts gamma based on correlation between consecutive weight deltas.
-
-    More aggressive than gamma_179.
-
-    Usage
-    -----
-    >>> from mne_denoise.dss._convergence import GammaPredictive
-    >>> gamma_fn = GammaPredictive()
-    >>> # idss = IterativeDSS(..., gamma=gamma_fn)
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 3.4 "Detection of Overfitting"
-    """
+    """Adjust the DSS step size from successive weight updates."""
 
     def __init__(self, min_gamma: float = 0.5):
         self.gamma = 1.0

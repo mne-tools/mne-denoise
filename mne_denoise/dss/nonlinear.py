@@ -1,16 +1,4 @@
-"""Core nonlinear/iterative DSS algorithm and Estimator.
-
-This module contains:
-1. `iterative_dss`: The core mathematical implementation of Nonlinear DSS.
-2. `IterativeDSS`: The Scikit-learn estimator compatible with MNE-Python objects or NumPy arrays.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-"""
+"""Iterative DSS algorithms."""
 
 from __future__ import annotations
 
@@ -49,82 +37,54 @@ def iterative_dss_one(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, int, bool]:
-    """Fixed-point iteration for extracting a single DSS component.
-
-    This implements Algorithm 1 from Särelä & Valpola (2005) [1]_ with optional
-    Newton step acceleration (FastICA equivalence).
-
-    The algorithm finds a spatial filter **w** that maximizes the objective:
-
-    .. math:: J(w) = E[f(w^T X)^2]
-
-    where f(·) is the nonlinear denoising function.
-
-    **Algorithm**::
-
-        Initialize: w = random unit vector
-
-        Repeat until converged:
-            1. source = w @ X                    # Project data → 1D source
-            2. source_denoised = f(source)       # Apply nonlinearity
-            3. source_denoised *= alpha          # (optional) signal normalization
-            4. w_new = E[X · source_denoised]    # Gradient direction
-            5. w_new += beta · w                 # (optional) Newton step
-            6. w_new = normalize(w_new)          # Unit norm constraint
-            7. w = w_old + gamma·(w_new - w_old) # (optional) relaxation
-            8. Check convergence: |w · w_old| ≈ 1
+    """Extract one DSS component by fixed-point iteration.
 
     Parameters
     ----------
-    X_whitened : ndarray, shape (n_components, n_times)
-        Whitened data matrix. Must have identity covariance.
+    X_whitened : ndarray, shape (n_features, n_times)
+        Whitened data matrix.
     denoiser : callable
-        Nonlinear denoising function f(s) → s_denoised.
-        Examples: TanhMaskDenoiser, GaussDenoiser, WienerMaskDenoiser.
-    w_init : ndarray, shape (n_components,), optional
-        Initial weight vector. If None, random initialization.
-    max_iter : int
-        Maximum iterations. Default 100.
-    tol : float
-        Convergence tolerance. Default 1e-6.
-    alpha : float or callable, optional
-        Signal normalization factor applied after denoising:
-        ``source_denoised *= alpha``.
-        Useful for denoisers with different output variance.
-    beta : float or callable, optional
-        Spectral shift parameter for Newton-like acceleration.
-        For tanh denoiser: ``beta = -E[1 - tanh(s)²]`` (use ``beta_tanh``).
-        For cubic denoiser: ``beta = -3`` (use ``beta_pow3``).
-    gamma : float or callable, optional
-        Learning rate / relaxation parameter. Controls step size:
-        ``w = w_old + gamma · (w_new - w_old)``.
-        Default None (gamma=1, full step).
-    random_state : int | numpy.random.Generator | None, default=None
-        Seed or generator used for random initialization when ``w_init`` is
-        ``None``.
-    callback : callable | None
-        Called synchronously after each completed fixed-point iteration with a
-        progress event having ``method="iterative_dss"`` and
-        ``stage="iteration"``. Callback return values are ignored and callback
-        exceptions propagate unchanged. The event metric is the convergence
-        change; it is ``None`` for a degenerate reinitialization iteration.
-    verbose : bool | str | int | None
-        MNE-style logging level. Iteration state is emitted at DEBUG.
+        Nonlinear source transformation.
+    w_init : ndarray, shape (n_features,), or None, default=None
+        Initial unit-vector estimate. ``None`` uses random initialization.
+    max_iter : int, default=100
+        Maximum number of iterations.
+    tol : float, default=1e-6
+        Sign-insensitive convergence tolerance.
+    alpha : float, callable, or None, default=None
+        Optional source-normalization factor.
+    beta : float, callable, or None, default=None
+        Optional Newton/fixed-point correction.
+    gamma : float, callable, or None, default=None
+        Optional relaxation factor.
+    random_state : int, numpy.random.Generator, or None, default=None
+        Random state for initialization.
+    callback : callable or None, default=None
+        Synchronous progress callback receiving ``ProgressEvent`` objects.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Returns
     -------
-    w : ndarray, shape (n_components,)
-        Optimal spatial filter (unit norm).
+    w : ndarray, shape (n_features,)
+        Unit-norm spatial filter.
     source : ndarray, shape (n_times,)
-        Extracted source time series.
+        Extracted source.
     n_iter : int
         Number of iterations performed.
     converged : bool
-        Whether the algorithm converged within max_iter.
+        Whether the tolerance was reached.
+
+    Notes
+    -----
+    Convergence compares the absolute dot product of successive unit filters, so a
+    sign flip is treated as no change.
 
     References
     ----------
-    .. [1] Särelä & Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.
+    :footcite:p:`sarela2005_dss`
+
+    .. footbibliography::
     """
     callback = _validate_callback(callback)
     return _iterative_dss_one(
@@ -303,114 +263,53 @@ def iterative_dss(
     random_state: int | np.random.Generator | None = None,
     callback=None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Extract multiple DSS components using iterative (nonlinear) algorithm.
-
-    This implements the Iterative DSS algorithm from Särelä & Valpola (2005) [1]_.
-    Unlike linear DSS which uses a closed-form eigendecomposition, iterative DSS
-    uses fixed-point iteration with a nonlinear denoising function.
-
-    **Algorithm Overview**::
-
-        1. Center data: X = X - mean(X)
-        2. Whiten data: X_white = Whitener @ X  (identity covariance)
-        3. Extract components using deflation or symmetric method:
-
-           Deflation (sequential):
-               For each component i = 1..n_components:
-                   w_i = iterative_dss_one(X_deflated)
-                   Orthogonalize w_i against w_1..w_{i-1}
-                   Deflate: X_deflated -= w_i @ w_i.T @ X_deflated
-
-           Symmetric (parallel):
-               Initialize W = [w_1, ..., w_n] randomly
-               Repeat until converged:
-                   Update all w_i simultaneously
-                   W = symmetric_orthogonalize(W)
-
-        4. Convert filters to sensor space: filters = W @ Whitener
+    """Extract multiple components with iterative DSS.
 
     Parameters
     ----------
-    data : ndarray, shape (n_channels, n_times) or (n_epochs, n_channels, n_times)
-        Input multichannel data.
-    denoiser : callable or NonlinearDenoiser
-        Nonlinear denoising function f(s) → s_denoised.
-        Examples: TanhMaskDenoiser, GaussDenoiser, WienerMaskDenoiser.
+    data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
+        Channel-first data; epochs are flattened for the solve.
+    denoiser : callable
+        Nonlinear source transformation.
     n_components : int
-        Number of components to extract.
-    method : {'deflation', 'symmetric'}
-        Component extraction method:
-
-        - ``'deflation'``: Extract one-by-one, orthogonalizing after each.
-          More stable, but order-dependent.
-        - ``'symmetric'``: Update all simultaneously, then orthogonalize.
-          Order-independent, may be less stable.
-
-        Default ``'deflation'``.
-    rank : int, optional
-        Rank for whitening. If None, auto-determined from eigenvalue threshold.
-    reg : float
-        Regularization for whitening eigenvalue cutoff. Default 1e-9.
-    max_iter : int
-        Maximum iterations per component. Default 100.
-    tol : float
-        Convergence tolerance. Default 1e-6.
-    w_init : ndarray, shape (n_components, n_whitened), optional
-        Initial weight matrix. If None, random initialization.
-    verbose : bool | str | int | None
-        MNE-style logging level. Convergence details are emitted at DEBUG and
-        the final numerical result is summarized at INFO.
-    alpha : float or callable, optional
-        Signal normalization factor (see ``iterative_dss_one``).
-    beta : float or callable, optional
-        Newton step parameter (see ``iterative_dss_one``).
-    gamma : float or callable, optional
-        Learning rate / relaxation (see ``iterative_dss_one``).
-    random_state : int | numpy.random.Generator | None, default=None
-        Seed or generator used for random initialization.
-    callback : callable | None
-        Called synchronously after each completed fixed-point iteration with a
-        progress event having ``method="iterative_dss"`` and
-        ``stage="iteration"``. The event metric is the convergence change.
-        For deflationary extraction, ``component`` is the 1-based component
-        being extracted; it is ``None`` for symmetric extraction. Callback
-        return values are ignored and callback exceptions propagate unchanged.
+        Number of components to extract, limited by the whitening rank.
+    method : {"deflation", "symmetric"}, default="deflation"
+        Sequential deflation or simultaneous symmetric extraction.
+    rank : int or None, default=None
+        Whitening rank.
+    reg : float, default=1e-9
+        Relative whitening threshold.
+    max_iter : int, default=100
+        Maximum iterations per component or symmetric solve.
+    tol : float, default=1e-6
+        Convergence tolerance.
+    w_init : ndarray or None, default=None
+        Initial filter vector or matrix.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
+    alpha, beta, gamma : float, callable, or None
+        Optional fixed-point parameters passed to :func:`iterative_dss_one`.
+    random_state : int, numpy.random.Generator, or None, default=None
+        Random state for initialization.
+    callback : callable or None, default=None
+        Synchronous progress callback for fixed-point iterations.
 
     Returns
     -------
     filters : ndarray, shape (n_components, n_channels)
-        DSS spatial filters in sensor space.
-        Apply as: ``sources = filters @ data``.
+        Sensor-space spatial filters.
     sources : ndarray, shape (n_components, n_times)
-        Extracted source time series.
+        Extracted sources.
     patterns : ndarray, shape (n_channels, n_components)
-        Spatial patterns for visualization / reconstruction.
-        Note: These are returned in original sensor units (not normalized),
-        satisfying the identity :math:`X_{recon} = patterns @ sources`.
+        Sensor-space mixing patterns.
     convergence_info : ndarray, shape (n_components, 2)
-        ``[n_iterations, converged]`` for each component.
-
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.dss import iterative_dss
-    >>> from mne_denoise.dss.denoisers import TanhMaskDenoiser
-    >>> # Basic usage with numpy array
-    >>> data = np.random.randn(10, 1000)
-    >>> denoiser = TanhMaskDenoiser()
-    >>> filters, sources, patterns, _ = iterative_dss(
-    ...     data, denoiser, n_components=2, method="symmetric"
-    ... )
-
-    See Also
-    --------
-    iterative_dss_one : Single component extraction.
-    IterativeDSS : Sklearn-style estimator wrapper.
+        Iteration count and convergence flag for each component.
 
     References
     ----------
-    .. [1] Särelä & Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.
+    :footcite:p:`sarela2005_dss`
+
+    .. footbibliography::
     """
     callback = _validate_callback(callback)
     data_2d, _, _, _, _, _ = extract_data_from_mne(
@@ -508,43 +407,7 @@ def _iterative_dss_deflation(
     random_state: int | np.random.Generator | None = None,
     callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Extract components one-by-one using deflation.
-
-    **Algorithm**::
-
-        For i = 1..n_components:
-            1. w_i = iterative_dss_one(X_deflated)     # Extract one component
-            2. Orthogonalize: w_i -= W_prev.T @ (W_prev @ w_i)
-            3. Normalize: w_i = w_i / ||w_i||
-            4. s_i = w_i @ X_whitened                  # Extract source
-            5. Deflate: X_deflated -= w_i @ w_i.T @ X_deflated
-
-    Parameters
-    ----------
-    X_whitened : ndarray, shape (n_whitened, n_times)
-        Whitened data with identity covariance.
-    denoiser : callable
-        Nonlinear denoising function.
-    n_components : int
-        Number of components to extract.
-    max_iter, tol : int, float
-        Convergence parameters passed to ``iterative_dss_one``.
-    w_init : ndarray, optional
-        Initial weight matrix.
-    verbose : bool | str | int | None
-        Print progress.
-    alpha, beta, gamma : optional
-        Passed to ``iterative_dss_one``.
-
-    Returns
-    -------
-    W : ndarray, shape (n_components, n_whitened)
-        Weight matrix (spatial filters in whitened space).
-    sources : ndarray, shape (n_components, n_times)
-        Extracted source time series.
-    convergence_info : ndarray, shape (n_components, 2)
-        [n_iter, converged] per component.
-    """
+    """Extract components sequentially with deflation."""
     n_whitened, n_times = X_whitened.shape
 
     # Initialize RNG (handle both int and Generator)
@@ -635,46 +498,7 @@ def _iterative_dss_symmetric(
     random_state: int | np.random.Generator | None = None,
     callback: _ProgressCallback | None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Extract components simultaneously with symmetric orthogonalization.
-
-    **Algorithm**::
-
-        Initialize: W = random (n_components, n_whitened)
-        W = symmetric_orthogonalize(W)
-
-        Repeat until converged:
-            S = W @ X
-            S_denoised = f(S)
-            W_new = E[S_denoised @ X.T] + beta * W
-            W = symmetric_orthogonalize(W_new)
-            Check convergence
-
-    Parameters
-    ----------
-    X_whitened : ndarray, shape (n_whitened, n_times)
-        Whitened data with identity covariance.
-    denoiser : callable
-        Nonlinear denoising function.
-    n_components : int
-        Number of components to extract.
-    max_iter, tol : int, float
-        Convergence parameters.
-    w_init : ndarray, optional
-        Initial weight matrix.
-    verbose : bool | str | int | None
-        Print progress.
-    alpha, beta, gamma : optional
-        Iteration parameters.
-
-    Returns
-    -------
-    W : ndarray, shape (n_components, n_whitened)
-        Weight matrix (spatial filters in whitened space).
-    sources : ndarray, shape (n_components, n_times)
-        Extracted source time series.
-    convergence_info : ndarray, shape (n_components, 2)
-        [n_iter, converged] (same for all components in symmetric).
-    """
+    """Extract components jointly with symmetric orthogonalization."""
     n_whitened, n_times = X_whitened.shape
 
     # Initialize weight matrix
@@ -788,82 +612,52 @@ def _symmetric_orthogonalize(W: np.ndarray) -> np.ndarray:
 
 
 class IterativeDSS:
-    """Iterative (Nonlinear) Denoising Source Separation Transformer.
+    """Iterative DSS transformer.
 
-    Implements Iterative DSS as a scikit-learn compatible transformer that
-    fits natively on MNE-Python objects (Raw, Epochs) or numpy arrays.
-
-    Unlike linear DSS which uses closed-form eigendecomposition, Iterative DSS
-    uses fixed-point iteration with a nonlinear denoising function, making it
-    equivalent to FastICA when using ICA contrast functions (tanh, gauss, cube).
+    The estimator fits fixed-point nonlinear DSS filters on NumPy arrays or MNE
+    ``Raw``/``Epochs`` inputs.
 
     Parameters
     ----------
-    denoiser : callable or NonlinearDenoiser
-        Nonlinear denoising function f(s) → s_denoised. Must be an instance of
-        `mne_denoise.dss.NonlinearDenoiser` (e.g. `TanhMaskDenoiser`,
-        `WienerMaskDenoiser`) or a callable.
+    denoiser : callable
+        Nonlinear source transformation.
     n_components : int
         Number of components to extract.
-    method : {'deflation', 'symmetric'}
-        Component extraction method:
-
-        - ``'deflation'``: Extract one-by-one, orthogonalizing after each.
-        - ``'symmetric'``: Update all simultaneously, then orthogonalize.
-
-        Default ``'deflation'``.
-    rank : int, optional
-        Rank for whitening. If None, auto-determined from eigenvalue threshold.
-    reg : float
-        Regularization for whitening. Default 1e-9.
-    max_iter : int
-        Maximum iterations per component. Default 100.
-    tol : float
-        Convergence tolerance. Default 1e-6.
+    method : {"deflation", "symmetric"}, default="deflation"
+        Component extraction strategy.
+    rank : int or None, default=None
+        Whitening rank.
+    reg : float, default=1e-9
+        Relative whitening threshold.
     normalize_input : bool, default=True
-        If True, normalize each input channel by its fitted standard
-        deviation before fitting and undo that scaling on reconstruction.
-    verbose : bool | str | int | None
-        MNE-style logging level.
-    alpha : float or callable, optional
-        Signal normalization factor applied after denoising.
-    beta : float or callable, optional
-        Spectral shift (Newton step) for faster convergence.
-        Use ``beta_tanh`` for TanhMaskDenoiser, ``beta_pow3`` for cubic.
-    gamma : float or callable, optional
-        Learning rate / relaxation parameter.
-    random_state : int, RandomState, Generator, optional
-        Seed for random initialization.
+        Normalize channels during fitting and undo the scaling on reconstruction.
+    max_iter : int, default=100
+        Maximum fixed-point iterations.
+    tol : float, default=1e-6
+        Convergence tolerance.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
+    alpha, beta, gamma : float, callable, or None
+        Optional fixed-point parameters.
+    random_state : int, numpy.random.Generator, or None, default=None
+        Random state for initialization.
 
     Attributes
     ----------
-    filters_ : ndarray, shape (n_components, n_channels)
-        The spatial filters (un-mixing matrix). Apply as: ``sources = filters_ @ data``.
-    patterns_ : ndarray, shape (n_channels, n_components)
-        The spatial patterns (mixing matrix). Reconstruct as: ``data = patterns_ @ sources``.
-    sources_ : ndarray, shape (n_components, n_times)
-        Extracted sources from fit data.
+    filters_ : ndarray
+        Fitted sensor-space filters.
+    patterns_ : ndarray
+        Fitted sensor-space patterns.
+    sources_ : ndarray
+        Sources from the fit data.
     convergence_info_ : ndarray, shape (n_components, 2)
-        [n_iterations, converged] for each component.
+        Iteration count and convergence flag per component.
 
-    Examples
-    --------
-    >>> from mne_denoise.dss import IterativeDSS
-    >>> from mne_denoise.dss.denoisers import TanhMaskDenoiser, beta_tanh
-    >>>
-    >>> # With numpy array
-    >>> dss = IterativeDSS(denoiser=denoiser, n_components=3)
-    >>> dss.fit(data)
-    >>> sources = dss.transform(data)
-    >>>
-    >>> # With MNE Raw object
-    >>> dss.fit(raw)
-    >>> sources = dss.transform(raw)
-
-    See Also
-    --------
-    DSS : Linear DSS transformer.
-    iterative_dss : Functional API.
+    Notes
+    -----
+    ``transform`` returns source arrays. ``inverse_transform`` reconstructs arrays
+    using the fitted patterns; MNE metadata is used for channel extraction during
+    fitting and transformation.
     """
 
     def __init__(
@@ -912,31 +706,21 @@ class IterativeDSS:
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> IterativeDSS:
-        """Compute Iterative DSS spatial filters.
+        """Fit the iterative DSS filters.
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
-            The data to fit. Accepts:
-
-            - ``mne.io.Raw``: Continuous data
-            - ``mne.Epochs``: Epoched data
-            - ``ndarray``: Shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each completed fixed-point iteration
-            with a progress event whose ``method`` is ``"iterative_dss"`` and
-            whose ``stage`` is ``"iteration"``. Callback return values are
-            ignored and callback exceptions propagate unchanged. The event
-            metric is the convergence change; ``component`` is the 1-based
-            component for deflation and ``None`` for symmetric extraction.
+        X : mne.io.BaseRaw, mne.BaseEpochs, or ndarray
+            Training data in channel-first NumPy layout or an MNE container.
+        callback : callable or None, default=None
+            Synchronous fixed-point progress callback.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        self : IterativeDSS
-            The fitted transformer.
+        IterativeDSS
+            The fitted estimator.
         """
         callback = _validate_callback(callback)
         # Validate and extract data using shared helper
@@ -991,20 +775,19 @@ class IterativeDSS:
         *,
         verbose: bool | str | int | None = None,
     ) -> np.ndarray:
-        """Apply fitted filters to extract sources.
+        """Apply fitted filters and return source data.
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
-            Data to transform. Same formats as ``fit()``.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : mne.io.BaseRaw, mne.BaseEpochs, or ndarray
+            Data compatible with the fitted channel layout.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        sources : ndarray, shape (n_components, n_times) or (n_components, n_times, n_epochs)
-            Extracted source time series.
+        ndarray
+            Sources with continuous or epoch-preserving layout.
         """
         if self.filters_ is None:
             raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
@@ -1047,20 +830,19 @@ class IterativeDSS:
         *,
         verbose: bool | str | int | None = None,
     ) -> np.ndarray:
-        """Reconstruct data from sources.
+        """Reconstruct sensor data from fitted sources.
 
         Parameters
         ----------
-        sources : ndarray, shape (n_sources, n_times)
-            Source time series. Can use fewer sources than fitted.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        sources : ndarray, shape (n_components, n_times) or (n_epochs, n_components, n_times)
+            Source data.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        reconstructed : ndarray, shape (n_channels, n_times)
-            Reconstructed data: ``patterns_[:, :n_sources] @ sources``.
+        ndarray
+            Reconstructed sensor-space data.
         """
         if self.patterns_ is None:
             raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
@@ -1089,12 +871,12 @@ class IterativeDSS:
         return rec
 
     def get_normalized_patterns(self) -> np.ndarray:
-        """Get L2-normalized spatial patterns for visualization.
+        """Return L2-normalized fitted spatial patterns.
 
         Returns
         -------
-        patterns_norm : ndarray, shape (n_channels, n_components)
-            L2-normalized spatial patterns.
+        ndarray, shape (n_channels, n_components)
+            Normalized patterns.
         """
         if self.patterns_ is None:
             raise RuntimeError("IterativeDSS not fitted. Call fit() first.")
@@ -1114,24 +896,20 @@ class IterativeDSS:
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> np.ndarray:
-        """Fit and transform in one step.
+        """Fit the estimator and return the extracted sources.
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
-            Data to fit and transform.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each completed fixed-point iteration
-            during fitting. Callback return values are ignored and callback
-            exceptions propagate unchanged. Deflation events include the
-            1-based component; symmetric events use ``component=None``.
+        X : ndarray
+            Channel-first data.
+        callback : callable or None, default=None
+            Synchronous progress callback for fitting.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        sources : ndarray
+        ndarray
             Extracted sources.
         """
         return self.fit(X, callback=callback).transform(X)

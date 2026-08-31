@@ -1,4 +1,4 @@
-"""Shared mechanics for Basic and local Singular Spectrum Analysis."""
+"""Shared SSA helpers."""
 
 from __future__ import annotations
 

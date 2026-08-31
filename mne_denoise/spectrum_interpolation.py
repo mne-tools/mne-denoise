@@ -1,24 +1,4 @@
-"""Spectrum interpolation for power-line noise removal.
-
-Implements the FFT-based spectrum-interpolation method of Leske & Dalal (2019).
-The power-line frequency and its harmonics are removed by replacing the
-*amplitude* of the spectrum inside a narrow band around each line frequency
-with the mean amplitude of neighbouring frequency bins, while the original
-phase is preserved. The cleaned signal is obtained by an inverse transform.
-
-Unlike a notch filter, this leaves the phase spectrum untouched and only edits
-a thin amplitude band, so broadband activity around the line frequency is
-largely preserved.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Leske, S., & Dalal, S. S. (2019). Reducing power line noise in EEG and
-       MEG data via spectrum interpolation. NeuroImage, 189, 763-776.
-       https://doi.org/10.1016/j.neuroimage.2019.01.026
-"""
+"""Spectrum interpolation for line-noise removal."""
 
 from __future__ import annotations
 
@@ -50,38 +30,36 @@ def interpolate_spectrum(
     bandwidth: float = 1.0,
     neighbour_width: float = 2.0,
 ) -> np.ndarray:
-    """Remove line noise from 2D data by amplitude spectrum interpolation.
-
-    For each target frequency, the amplitude of the FFT bins inside a band of
-    half-width ``bandwidth`` is replaced by the mean amplitude of the
-    neighbouring reference bands. The original phase is kept, following
-    Leske & Dalal (2019) [1]_.
+    """Interpolate line-noise amplitudes in a 2-D signal spectrum.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input time series. Each channel is processed independently.
+        Real-valued channel-first data.
     sfreq : float
         Sampling frequency in Hz.
-    freqs : array-like of float
-        Target frequencies (e.g. the line frequency and its harmonics) in Hz.
-    bandwidth : float
-        Half-width in Hz of the band that is interpolated around each target
-        frequency. For example, ``bandwidth=1`` replaces 49--51 Hz around a
-        50 Hz target. Default 1.0.
-    neighbour_width : float
-        Width in Hz of the reference band used on each side of the interpolated
-        band to estimate the replacement amplitude. Default 2.0.
+    freqs : array-like
+        Target frequencies in Hz.
+    bandwidth : float, default=1.0
+        Half-width of each replaced target band in Hz.
+    neighbour_width : float, default=2.0
+        Width of the neighboring reference bands in Hz.
 
     Returns
     -------
-    cleaned : ndarray, shape (n_channels, n_times)
-        Line-noise-reduced time series, in the same units as ``data``.
+    ndarray, shape (n_channels, n_times)
+        Cleaned data with the same shape and units as data.
+
+    Notes
+    -----
+    Amplitudes in target bins are replaced using neighboring amplitudes while the
+    original FFT phase is retained.
 
     References
     ----------
-    .. [1] Leske, S., & Dalal, S. S. (2019). Reducing power line noise in EEG
-           and MEG data via spectrum interpolation. NeuroImage, 189, 763-776.
+    :footcite:p:`leske_dalal2019_spectrum`
+
+    .. footbibliography::
     """
     if np.iscomplexobj(data):
         raise ValueError("data must be real-valued")
@@ -141,61 +119,43 @@ def interpolate_spectrum(
 
 
 class SpectrumInterpolation(BaseEstimator, TransformerMixin):
-    """Remove power-line noise by amplitude spectrum interpolation.
-
-    Frequency-domain line-noise remover following Leske & Dalal (2019) [1]_.
-    The amplitude of a thin band around the line frequency (and its harmonics)
-    is replaced by the mean amplitude of neighbouring bins, while the phase is
-    preserved.
-
+    """Line-noise remover based on amplitude spectrum interpolation.
 
     Parameters
     ----------
-    sfreq : float, optional
-        Sampling frequency in Hz. Required for NumPy-array inputs; for MNE
-        objects it is read from ``info['sfreq']`` and overrides this value.
-    line_freq : float | array-like of float
-        Power-line frequency in Hz (e.g. 50 or 60). A sequence of explicit
-        frequencies may be given instead, in which case they are used directly.
-        Default 50.0.
-    n_harmonics : int, optional
-        Number of harmonics of ``line_freq`` to remove (including the
-        fundamental). If None, all harmonics below the Nyquist frequency are
-        removed. Ignored when ``line_freq`` is a sequence.
-    bandwidth : float
-        Half-width in Hz of the interpolated band around each frequency.
-        For example, ``bandwidth=1`` replaces 49--51 Hz around a 50 Hz target.
-        Default 1.0.
-    neighbour_width : float
-        Width in Hz of the reference band on each side used to estimate the
-        replacement amplitude. Default 2.0.
-    verbose : bool | str | int | None, default=None
-        MNE-style logging level for fitting and transformation.
+    sfreq : float or None, default=None
+        Sampling frequency in Hz; inferred from MNE metadata when available.
+    line_freq : float or array-like, default=50.0
+        Fundamental frequency or explicit target frequencies in Hz.
+    n_harmonics : int or None, default=None
+        Number of harmonics when line_freq is scalar; None uses all harmonics below
+        Nyquist.
+    bandwidth : float, default=1.0
+        Half-width of each replaced band in Hz.
+    neighbour_width : float, default=2.0
+        Width of each neighboring reference band in Hz.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Attributes
     ----------
     sfreq_ : float
-        Sampling frequency used during the fit.
+        Sampling frequency used during fit.
     freqs_ : ndarray
-        Resolved target frequencies (line frequency and harmonics).
-
-    Examples
-    --------
-    >>> from mne_denoise.spectrum_interpolation import SpectrumInterpolation
-    >>> si = SpectrumInterpolation(sfreq=1000.0, line_freq=60.0)
-    >>> clean = si.fit_transform(data)  # doctest: +SKIP
+        Resolved target frequencies.
 
     Notes
     -----
-    This FFT-based method is best suited to continuous recordings or long data
-    segments with stationary line noise. Short epochs can exhibit edge effects,
-    especially when their duration does not contain complete cycles of the
-    targeted frequencies. Inspect the result when processing short epochs.
+    NumPy input uses 2-D or 3-D channel-first layouts; 3-D records are processed
+    independently. MNE data channels are processed while non-data channels and
+    container metadata are preserved. Short segments may have limited spectral
+    resolution.
 
     References
     ----------
-    .. [1] Leske, S., & Dalal, S. S. (2019). Reducing power line noise in EEG
-           and MEG data via spectrum interpolation. NeuroImage, 189, 763-776.
+    :footcite:p:`leske_dalal2019_spectrum`
+
+    .. footbibliography::
     """
 
     def __init__(
@@ -273,21 +233,20 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ) -> SpectrumInterpolation:
-        """Resolve the sampling rate and target frequencies.
+        """Resolve the sampling frequency and target frequencies.
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
-            Data to clean. Only metadata (sampling frequency) is read here.
-        y : None
-            Ignored; present for scikit-learn API compatibility.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : Raw, Epochs, Evoked, or ndarray
+            Input whose metadata or shape is inspected.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        self : SpectrumInterpolation
+        SpectrumInterpolation
             The fitted estimator.
         """
         _, mne_sfreq, mne_type, _, _, _ = extract_data_from_mne(X, auto_pick=False)
@@ -320,21 +279,19 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ) -> Any:
-        """Apply spectrum interpolation to ``X``.
+        """Apply spectrum interpolation.
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
-            Data to clean. For MNE objects every data channel is processed and
-            non-data channels are returned unchanged.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : Raw, Epochs, Evoked, or ndarray
+            Data to clean.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        out : Raw | Epochs | Evoked | ndarray
-            Cleaned data, of the same type and shape as ``X``.
+        same type as X
+            Cleaned data with the same shape.
         """
         check_is_fitted(self, attributes=["sfreq_", "freqs_"])
 
@@ -376,23 +333,22 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
         verbose: bool | str | int | None = None,
         **fit_params: Any,
     ) -> Any:
-        """Fit then transform ``X`` in one step.
+        """Fit spectrum interpolation and transform X.
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
+        X : Raw, Epochs, Evoked, or ndarray
             Data to clean.
-        y : None
-            Ignored; present for scikit-learn API compatibility.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
         **fit_params : dict
-            Ignored; present for scikit-learn API compatibility.
+            Ignored for scikit-learn compatibility.
 
         Returns
         -------
-        out : Raw | Epochs | Evoked | ndarray
-            Cleaned data, of the same type and shape as ``X``.
+        same type as X
+            Cleaned data.
         """
         return self.fit(X, y).transform(X)

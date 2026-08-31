@@ -1,38 +1,4 @@
-"""Core reference-free BSS-CCA algorithm and estimator.
-
-This module contains:
-
-1. ``compute_bss_cca``: the canonical array implementation of BSS-CCA [1]_.
-2. ``BSSCCA``: the scikit-learn estimator, compatible with MNE-Python objects
-   or channel-first NumPy arrays.
-
-BSS-CCA solves canonical correlation analysis between the multichannel signal
-:math:`x(t)` and a delayed copy :math:`y(t) = x(t - 1)` of itself [1]_. The
-resulting components are ordered by decreasing lagged correlation. Muscle
-activity resembles temporally white noise and therefore concentrates in the
-**lowest** components, which are dropped before the signal is projected back to
-the sensors.
-
-The method assumes band-limited input. Both source papers band-pass filter
-before decomposition (0.3-35 Hz plus a notch in [2]_) and use an average
-reference montage; see :ref:`the user guide <bss_cca>` for why that matters.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] De Clercq, W., Vergult, A., Vanrumste, B., Van Paesschen, W., &
-       Van Huffel, S. (2006). Canonical correlation analysis applied to remove
-       muscle artifacts from the electroencephalogram. IEEE Transactions on
-       Biomedical Engineering, 53(12), 2583-2587.
-       https://doi.org/10.1109/TBME.2006.879459
-.. [2] Vergult, A., De Clercq, W., Palmini, A., Vanrumste, B., Dupont, P.,
-       Van Huffel, S., & Van Paesschen, W. (2007). Improving the interpretation
-       of ictal scalp EEG: BSS-CCA algorithm for muscle artifact removal.
-       Epilepsia, 48(5), 950-958.
-       https://doi.org/10.1111/j.1528-1167.2007.01031.x
-"""
+"""Reference-free BSS-CCA."""
 
 from __future__ import annotations
 
@@ -142,25 +108,7 @@ def _check_selection(
 
 
 def _lagged_pairs(X: np.ndarray, lag_samples: int) -> tuple[np.ndarray, np.ndarray]:
-    """Return current/past CCA views without wrap or epoch-boundary pairs.
-
-    For 3-D input the pairs are formed inside each epoch and then stacked, so
-    no pair ever spans an epoch boundary.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times) | (n_epochs, n_channels, n_times)
-        Channel-first data.
-    lag_samples : int
-        Positive lag.
-
-    Returns
-    -------
-    current : ndarray, shape (n_pairs, n_channels)
-        Samples ``t``.
-    past : ndarray, shape (n_pairs, n_channels)
-        Samples ``t - lag_samples``, aligned row-wise with ``current``.
-    """
+    """Return current and lagged CCA views without epoch-boundary pairs."""
     if X.ndim == 2:
         current = X[:, lag_samples:].T
         past = X[:, :-lag_samples].T
@@ -179,24 +127,7 @@ def _select_components(
     reject: str = "low",
     threshold_on: str = "rho",
 ) -> np.ndarray:
-    """Choose which canonical components to retain.
-
-    ``correlations`` is descending, so low-autocorrelation components are at the
-    tail and high-autocorrelation components at the head.
-
-    ``reject`` selects which end is artifactual:
-
-    ``'low'``
-        Drop the tail. Broadband, temporally incoherent sources -- muscle/EMG --
-        have low lag-1 autocorrelation, which is the regime De Clercq et al.
-        [1]_ target and the package's original behaviour.
-    ``'high'``
-        Drop the head. Strongly autocorrelated sources -- slow drift and
-        movement artifact -- sit at the top of the spectrum, the opposite end
-        from muscle.
-
-    ``n_remove`` drops that many components from the chosen end.
-    """
+    """Return the component mask selected by the requested rule."""
     n_components = correlations.size
     if n_remove is not None:
         if n_remove > n_components:
@@ -241,17 +172,7 @@ def _learn_operator(
     threshold_on: str,
     bound: tuple[int, int, int, int],
 ) -> dict[str, Any]:
-    """Learn one BSS-CCA channel-space operator and its diagnostics.
-
-    ``bound`` is ``(ext_start, ext_end, own_start, own_end)``: the operator is
-    fitted on ``[ext_start, ext_end)`` and is solely responsible for
-    ``[own_start, own_end)``. The two coincide unless blocks overlap.
-
-    The back-projection is obtained by least squares against the data rather
-    than by inverting the canonical filters. The two agree exactly when the
-    data is full rank, but only the least-squares form is correct when it is
-    not; see the warning in :mod:`mne_denoise._cca`.
-    """
+    """Learn one channel-space BSS-CCA operator and diagnostics."""
     ext_start, ext_end, own_start, own_end = bound
     data = X[..., ext_start:ext_end]
     current, past = _lagged_pairs(data, lag_samples)
@@ -315,12 +236,7 @@ def _learn_operator(
 def _signed_autocorrelations(
     current: np.ndarray, past: np.ndarray, filters_x: np.ndarray
 ) -> np.ndarray:
-    """Signed lag-1 autocorrelation of each canonical component.
-
-    The canonical correlation is non-negative by construction, so a component
-    dominated by near-Nyquist energy is *anti*-correlated at the lag yet ranks
-    highly. Applying the same filter to both views recovers the signed value.
-    """
+    """Return signed lagged autocorrelations for canonical components."""
     zc = current @ filters_x
     zp = past @ filters_x
     zc = zc - zc.mean(axis=0, keepdims=True)
@@ -331,12 +247,7 @@ def _signed_autocorrelations(
 
 
 def _filter_asymmetry(filters_x: np.ndarray, filters_y: np.ndarray) -> np.ndarray:
-    """Distance between the two canonical filters of each component.
-
-    Reading the canonical correlation as an autocorrelation presumes the two
-    views share a filter. This returns ``0`` when they do and grows to ``2``
-    when they are opposed, giving a per-component validity check.
-    """
+    """Return the signed-distance diagnostic between canonical filters."""
 
     def _unit(matrix: np.ndarray) -> np.ndarray:
         norms = np.linalg.norm(matrix, axis=0)
@@ -353,13 +264,7 @@ def _filter_asymmetry(filters_x: np.ndarray, filters_y: np.ndarray) -> np.ndarra
 def _segment_bounds(
     n_times: int, *, n_block: int, hop: int
 ) -> list[tuple[int, int, int, int]]:
-    """Return ``(ext_start, ext_end, own_start, own_end)`` per block.
-
-    ``ext`` is the range a block is fitted on; ``own`` is the range it is
-    solely responsible for. With ``hop == n_block`` the two coincide and the
-    blocks tile the recording exactly, matching the contiguous 10 s scheme
-    of [2]_.
-    """
+    """Return extended and owned half-open spans for each block."""
     if n_times <= n_block:
         return [(0, n_times, 0, n_times)]
 
@@ -394,114 +299,62 @@ def compute_bss_cca(
     callback=None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    r"""Learn and apply reference-free BSS-CCA to a channel-first array.
-
-    This is the canonical implementation of the algorithm of [1]_. It applies
-    the learned operator to the same data used to estimate it; use
-    :class:`BSSCCA` to fit and transform separate data.
-
-    Exactly one of ``n_remove`` or ``rho_threshold`` must be supplied. ``[1]_``
-    selects a component count and describes threshold-based selection as
-    unvalidated future work, so no default is assumed on your behalf.
+    r"""Learn and apply reference-free BSS-CCA to channel-first data.
 
     Parameters
     ----------
-    X : ndarray, shape (n_channels, n_times) | (n_epochs, n_channels, n_times)
+    X : ndarray, shape (n_channels, n_times) or (n_epochs, n_channels, n_times)
         Continuous or epoched channel-first data.
-    lag_samples : int | None, default=None
-        Positive lag in samples. ``None`` uses the paper's value of ``1``
-        unless ``lag_seconds`` is given.
-    lag_seconds : float | None, default=None
-        Positive lag in physical time. Requires ``sfreq``. Mutually exclusive
-        with ``lag_samples``.
-    sfreq : float | None, default=None
-        Sampling frequency, required by ``lag_seconds`` and ``segment_len``.
-    n_remove : int | None, default=None
-        Number of components to remove from the end selected by ``reject``,
-        the operating knob used in [1]_.
-    rho_threshold : float | None, default=None
-        Retain components whose canonical correlation is on the side of this
-        value selected by ``reject`` -- at least it for ``'low'``, at most it
-        for ``'high'``.
-    reject : {'low', 'high'}, default='low'
-        Which end of the autocorrelation spectrum is artifactual. ``'low'``
-        drops the least autocorrelated components, where muscle concentrates
-        [1]_. ``'high'`` drops the most autocorrelated components, where slow
-        drift and movement artifact concentrate.
-    threshold_on : {'rho', 'rsq'}, default='rho'
-        Scale on which ``rho_threshold`` is expressed: the canonical correlation
-        itself, or its square. Ignored when ``n_remove`` is used.
-    segment_len : float | None, default=None
-        Block length in seconds. ``None`` learns one operator for all data.
-        A value fits an independent operator per block, as in the contiguous
-        10 s scheme of [2]_. Blocks never span an epoch boundary.
+    lag_samples : int or None, default=None
+        Positive lag in samples. Defaults to one sample unless lag_seconds is set.
+    lag_seconds : float or None, default=None
+        Positive lag in seconds; requires sfreq and is mutually exclusive with
+        lag_samples.
+    sfreq : float or None, default=None
+        Sampling frequency, required for lag_seconds and segment_len.
+    n_remove : int or None, default=None
+        Number of components removed from the end selected by reject.
+    rho_threshold : float or None, default=None
+        Correlation threshold used instead of n_remove. Exactly one selection rule
+        must be supplied.
+    reject : {"low", "high"}, default="low"
+        End of the correlation spectrum treated as artifactual.
+    threshold_on : {"rho", "rsq"}, default="rho"
+        Scale for rho_threshold.
+    segment_len : float or None, default=None
+        Continuous-data block length in seconds. None uses one operator.
     overlap : float, default=0.0
-        Fraction of ``segment_len`` shared between consecutive blocks. ``0``
-        reproduces the paper's contiguous blocks; a positive value blends
-        neighbouring blocks and is a package extension.
+        Fraction shared by neighboring continuous-data blocks.
     preserve_mean : bool, default=True
-        Add the fitted channel mean back after cleaning. Equation (7) of [1]_
-        reconstructs mean-free data; restoring the mean keeps the output on
-        the same offset as the input.
-    callback : callable | None, default=None
-        Called synchronously after each completed BSS-CCA block in segmented
-        mode. Global mode emits no progress events. Callback return values are
-        ignored and callback exceptions propagate unchanged.
-    verbose : bool | str | int | None, default=None
-        MNE-style logging level.
+        Add the fitted channel mean after cleaning.
+    callback : callable or None, default=None
+        Synchronous block-progress callback in segmented mode.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Returns
     -------
     X_clean : ndarray
-        Cleaned data with the same shape as ``X``.
+        Cleaned data with the same shape as X.
     info : dict
-        Fitted operators, component diagnostics, and the resolved operating
-        point. Per-block entries are tuples ordered by block.
-
-    Raises
-    ------
-    TypeError
-        If a scalar parameter has an invalid type.
-    ValueError
-        If ``X``, the lag, the selection rule, or the blocking is invalid, or
-        if there are not more lagged pairs than channels.
-
-    See Also
-    --------
-    BSSCCA : Estimator interface with leakage-safe fit/transform.
-    mne_denoise.icanclean.compute_icanclean : Reference-based CCA cleaning.
+        Operators, resolved settings, and component diagnostics.
 
     Notes
     -----
-    Canonical correlations are non-negative, so a component dominated by
-    near-Nyquist energy is anti-correlated at the lag yet ranks near the top.
-    Band-limit the input as both source papers do, and check
-    ``info['autocorrelations']`` for negative entries.
+    CCA is computed between the signal and a lagged copy. With reject="low",
+    components with the lowest lagged correlation are removed; reject="high" removes
+    the highest. Segmented mode is continuous-only and cannot span epoch boundaries.
 
-    Examples
+    See Also
     --------
-    >>> import numpy as np
-    >>> from mne_denoise.bss_cca import compute_bss_cca
-    >>> rng = np.random.default_rng(0)
-    >>> t = np.arange(2500) / 250.0
-    >>> brain = np.sin(2 * np.pi * 10 * t) * rng.standard_normal((8, 1))
-    >>> observed = brain + 0.5 * rng.standard_normal((8, t.size))
-    >>> cleaned, info = compute_bss_cca(observed, n_remove=4)
-    >>> cleaned.shape
-    (8, 2500)
+    BSSCCA
+        Estimator that learns operators in fit and reuses them in transform.
 
     References
     ----------
-    .. [1] De Clercq, W., Vergult, A., Vanrumste, B., Van Paesschen, W., &
-           Van Huffel, S. (2006). Canonical correlation analysis applied to
-           remove muscle artifacts from the electroencephalogram. IEEE
-           Transactions on Biomedical Engineering, 53(12), 2583-2587.
-           https://doi.org/10.1109/TBME.2006.879459
-    .. [2] Vergult, A., De Clercq, W., Palmini, A., Vanrumste, B., Dupont, P.,
-           Van Huffel, S., & Van Paesschen, W. (2007). Improving the
-           interpretation of ictal scalp EEG: BSS-CCA algorithm for muscle
-           artifact removal. Epilepsia, 48(5), 950-958.
-           https://doi.org/10.1111/j.1528-1167.2007.01031.x
+    :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca,hotelling1936_cca`
+
+    .. footbibliography::
     """
     callback = _validate_callback(callback)
     X = check_channel_first_data(X, name="BSS-CCA")
@@ -661,7 +514,7 @@ def _apply_operators(
     *,
     preserve_mean: bool,
 ) -> np.ndarray:
-    """Apply one global operator, or blend per-block operators."""
+    """Apply one operator or blend block-wise operators."""
     continuous = epochs_to_continuous(X)
 
     if len(operators) == 1:
@@ -697,97 +550,71 @@ def _apply_operators(
 
 
 class BSSCCA(BaseEstimator, TransformerMixin):
-    """Reference-free BSS-CCA artifact-attenuation estimator.
+    """Reference-free BSS-CCA estimator.
 
-    Implements the blind source separation by canonical correlation analysis of
-    De Clercq et al. [1]_, solving CCA between the recording and a lagged copy
-    of itself and dropping the lowest-correlation components in which muscle
-    activity concentrates.
-
-    ``fit`` learns the channel mean and one or more fixed channel-space
-    operators; ``transform`` applies them without refitting, so a sample gets
-    the same result whether it is transformed alone, in a temporal chunk, or
-    among other epochs.
-
-    With ``segment_len`` set, the fitted operator is *piecewise in time*: block
-    ``k`` is applied to the samples block ``k`` was learned on. ``transform``
-    therefore requires input with the same number of samples as ``fit`` saw.
+    The estimator learns fixed channel-space operators from the fitted data and
+    reuses them during transform.
 
     Parameters
     ----------
-    lag_samples : int | None, default=None
-        Positive lag in samples. ``None`` uses the paper's value of ``1``
-        unless ``lag_seconds`` is given.
-    lag_seconds : float | None, default=None
-        Positive lag in physical time. MNE inputs supply their own sampling
-        frequency; NumPy inputs require ``sfreq``.
-    sfreq : float | None, default=None
-        Sampling frequency for NumPy data. A value supplied alongside an MNE
-        input must agree with ``info['sfreq']``.
-    n_remove : int | None, default=None
-        Number of components to remove from the end selected by ``reject``.
-    rho_threshold : float | None, default=None
-        Retain components whose canonical correlation is on the side of this
-        value selected by ``reject`` -- at least it for ``'low'``, at most it
-        for ``'high'``. Exactly one of ``n_remove`` or ``rho_threshold`` is
-        required.
-    reject : {'low', 'high'}, default='low'
-        Which end of the autocorrelation spectrum is artifactual. ``'low'``
-        drops the least autocorrelated components, where muscle concentrates
-        [1]_. ``'high'`` drops the most autocorrelated components, where slow
-        drift and movement artifact concentrate.
-    threshold_on : {'rho', 'rsq'}, default='rho'
-        Scale on which ``rho_threshold`` is expressed: the canonical correlation
-        itself, or its square. Ignored when ``n_remove`` is used.
-    segment_len : float | None, default=None
-        Block length in seconds. ``None`` learns one operator for all data.
+    lag_samples : int or None, default=None
+        Positive lag in samples.
+    lag_seconds : float or None, default=None
+        Positive lag in seconds; NumPy input then requires sfreq.
+    sfreq : float or None, default=None
+        Sampling frequency for NumPy data.
+    n_remove : int or None, default=None
+        Number of components to remove.
+    rho_threshold : float or None, default=None
+        Correlation threshold used instead of n_remove. Exactly one selection rule
+        is required.
+    reject : {"low", "high"}, default="low"
+        End of the correlation spectrum treated as artifactual.
+    threshold_on : {"rho", "rsq"}, default="rho"
+        Scale for rho_threshold.
+    segment_len : float or None, default=None
+        Continuous-data block length in seconds.
     overlap : float, default=0.0
-        Fraction of ``segment_len`` shared between consecutive blocks.
+        Fraction shared by neighboring blocks.
     preserve_mean : bool, default=True
-        Add the fitted channel mean back after cleaning.
-    verbose : bool | str | int | None, default=None
-        MNE-style logging level.
+        Add the fitted channel mean after cleaning.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Attributes
     ----------
-    cleaning_matrix_ : ndarray, shape (n_channels, n_channels)
-        Channel-space operator, applied to mean-centered data. A tuple of
-        matrices when ``segment_len`` is set.
-    filters_ : ndarray, shape (n_components, n_channels)
-        Canonical filters, rows ordered by decreasing correlation.
-    patterns_ : ndarray, shape (n_channels, n_components)
-        Least-squares mixing matrix; columns are sensor patterns.
-    correlations_ : ndarray, shape (n_components,)
-        Non-negative canonical correlations in descending order.
-    autocorrelations_ : ndarray, shape (n_components,)
-        Signed lag-1 autocorrelation of each component.
-    filter_asymmetry_ : ndarray, shape (n_components,)
-        Distance between the two canonical filters of each component.
-    kept_mask_ : ndarray of bool, shape (n_components,)
-        Components retained in the reconstruction.
-    training_mean_ : ndarray, shape (n_channels, 1)
-        Channel mean learned during ``fit``.
-    input_rank_ : int
-        Number of canonical components, below ``n_channels_in_`` when the
-        training data is rank deficient.
-    n_kept_, n_removed_ : int
-        Component counts.
-    n_channels_in_ : int
-        Channels seen during ``fit``.
-    feature_names_in_ : tuple of str | None
-        Channel names when fitted on an MNE object.
+    cleaning_matrix_ : ndarray or tuple of ndarray
+        Fitted channel-space operator(s).
+    filters_ : ndarray
+        Canonical filters ordered by decreasing correlation.
+    patterns_ : ndarray
+        Least-squares channel patterns.
+    correlations_ : ndarray
+        Canonical correlations.
+    autocorrelations_ : ndarray
+        Signed lagged autocorrelations.
+    filter_asymmetry_ : ndarray
+        Canonical-filter asymmetry diagnostic.
+    kept_mask_ : ndarray of bool
+        Retained component mask.
+    training_mean_ : ndarray
+        Fitted channel mean.
+    spans_ : tuple
+        Block spans when segmented.
+    lag_samples_ : int
+        Resolved lag in samples.
 
-    See Also
-    --------
-    compute_bss_cca : Canonical array implementation used by ``fit``.
+    Notes
+    -----
+    With segment_len set, transform requires the same number of samples used during
+    fit. MNE Raw, Epochs, and Evoked inputs preserve their container type and
+    channel metadata.
 
     References
     ----------
-    .. [1] De Clercq, W., Vergult, A., Vanrumste, B., Van Paesschen, W., &
-           Van Huffel, S. (2006). Canonical correlation analysis applied to
-           remove muscle artifacts from the electroencephalogram. IEEE
-           Transactions on Biomedical Engineering, 53(12), 2583-2587.
-           https://doi.org/10.1109/TBME.2006.879459
+    :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca`
+
+    .. footbibliography::
     """
 
     def __init__(
@@ -826,27 +653,23 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> BSSCCA:
-        """Learn the BSS-CCA operators.
+        """Fit the BSS-CCA operators.
 
         Parameters
         ----------
-        X : array-like | mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked
+        X : array-like or MNE Raw, Epochs, or Evoked
             Data used to learn the operators.
-        y : None
-            Ignored. Included for scikit-learn compatibility.
-        callback : callable | None, default=None
-            Called synchronously after each completed BSS-CCA block in
-            segmented mode. Global mode emits no progress events. Callback
-            return values are ignored and callback exceptions propagate
-            unchanged.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        callback : callable or None, default=None
+            Synchronous progress callback in segmented mode.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        self : BSSCCA
-            Fitted estimator.
+        BSSCCA
+            The fitted estimator.
         """
         del y
         callback = _validate_callback(callback)
@@ -897,22 +720,21 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ) -> Any:
-        """Apply the fitted operators to new data.
+        """Apply the fitted BSS-CCA operators.
 
         Parameters
         ----------
-        X : array-like | mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked
-            Data with the channel layout seen during ``fit``.
-        y : None
-            Ignored. Included for scikit-learn compatibility.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : array-like or MNE Raw, Epochs, or Evoked
+            Data with the fitted channel layout.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        X_clean : same type as X
-            A copy with the selected data channels replaced.
+        same type as X
+            A cleaned copy.
         """
         del y
         check_is_fitted(self, ("cleaning_matrix_", "training_mean_"))
@@ -949,29 +771,25 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         verbose: bool | str | int | None = None,
         **fit_params,
     ) -> Any:
-        """Fit on ``X`` and apply the fitted operators to ``X``.
+        """Fit BSS-CCA and apply the fitted operators to X.
 
         Parameters
         ----------
-        X : array-like | mne.io.BaseRaw | mne.BaseEpochs | mne.Evoked
+        X : array-like or MNE Raw, Epochs, or Evoked
             Data to fit and transform.
-        y : None
-            Ignored. Included for scikit-learn compatibility.
-        callback : callable | None, default=None
-            Called synchronously after each completed BSS-CCA block in
-            segmented mode. Global mode emits no progress events. Callback
-            return values are ignored and callback exceptions propagate
-            unchanged.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        callback : callable or None, default=None
+            Synchronous progress callback in segmented mode.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
         **fit_params : dict
             Reserved for scikit-learn compatibility.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
 
         Returns
         -------
-        X_clean : same type as X
-            Cleaned data.
+        same type as X
+            A cleaned copy.
         """
         if fit_params:
             unexpected = ", ".join(sorted(fit_params))

@@ -1,15 +1,4 @@
-"""Periodic filter biases for DSS.
-
-Implements peak and comb filter biases for extracting periodic/oscillatory
-signals, particularly useful for SSVEP analysis.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-"""
+"""Periodic bias functions for DSS."""
 
 from __future__ import annotations
 
@@ -20,11 +9,7 @@ from .base import LinearDenoiser, NonlinearDenoiser
 
 
 class PeakFilterBias(LinearDenoiser):
-    """Peak filter bias for single-frequency extraction.
-
-    Applies a narrow bandpass (peak) filter to emphasize activity at a
-    specific frequency. More selective than BandpassBias, using a
-    resonant filter design.
+    """Second-order IIR peak-filter bias for DSS.
 
     Parameters
     ----------
@@ -32,31 +17,13 @@ class PeakFilterBias(LinearDenoiser):
         Target frequency in Hz.
     sfreq : float
         Sampling frequency in Hz.
-    q_factor : float
-        Quality factor controlling bandwidth. Higher Q = narrower band.
-        Default 30 (roughly 1 Hz bandwidth at 30 Hz).
-    order : int
-        Filter order. Default 2.
-
-    Examples
-    --------
-    >>> # Extract 10 Hz alpha with tight filter
-    >>> from mne_denoise.dss.denoisers import PeakFilterBias
-    >>> bias = PeakFilterBias(freq=10, sfreq=250, q_factor=30)
-    >>> biased_data = bias.apply(data)
-
-    See Also
-    --------
-    mne_denoise.dss.denoisers.spectral.BandpassBias : For broader band rhythms.
-
-    Notes
-    -----
-    Uses a second-order IIR peak filter design. Q factor determines
-    the bandwidth: bandwidth ≈ freq / Q.
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.2 "DENOISING BASED ON FREQUENCY CONTENT"
+    q_factor : float, default=30.0
+        Quality factor passed to :func:`scipy.signal.iirpeak`; approximately,
+        ``bandwidth = freq / q_factor``.
+    order : int, default=2
+        Accepted and stored for API compatibility. The current implementation
+        always designs the filter with :func:`scipy.signal.iirpeak` and this
+        parameter does not change it.
     """
 
     def __init__(
@@ -97,17 +64,17 @@ class PeakFilterBias(LinearDenoiser):
         return sos
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply peak filter bias.
+        """Apply the peak-filter bias.
 
         Parameters
         ----------
         data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-            Input data.
+            Channel-first data.
 
         Returns
         -------
-        biased : ndarray, same shape as input
-            Peak-filtered data.
+        ndarray
+            Peak-filtered data with the input shape.
         """
         if data.ndim not in (2, 3):
             raise ValueError(f"Data must be 2D or 3D, got {data.ndim}D")
@@ -117,61 +84,30 @@ class PeakFilterBias(LinearDenoiser):
 
 
 class CombFilterBias(LinearDenoiser):
-    """Comb filter bias for harmonic frequency extraction.
-
-    Applies a comb filter that passes the fundamental frequency and its
-    harmonics. Ideal for SSVEP analysis where stimulus frequency creates
-    responses at multiple harmonic frequencies.
+    """Comb-filter bias for harmonic frequencies.
 
     Parameters
     ----------
     fundamental_freq : float
-        Fundamental frequency in Hz (e.g., 15 Hz for SSVEP).
+        Fundamental frequency in Hz.
     sfreq : float
         Sampling frequency in Hz.
-    n_harmonics : int
-        Number of harmonics to include (1 = fundamental only).
-        Default 3.
-    q_factor : float
-        Quality factor for each peak. Default 30.
-    q_mode : ``"fixed"`` | ``"proportional"``
-        How Q scales across harmonics. ``"fixed"`` uses the same
-        ``q_factor`` for every harmonic (bandwidth narrows as frequency
-        increases). ``"proportional"`` scales Q as ``q_factor * h`` for
-        the *h*-th harmonic, maintaining approximately constant absolute
-        bandwidth across all harmonics. Default ``"fixed"``.
-    weights : array-like, optional
-        Weights for each harmonic. If None, uses 1/harmonic_number
-        weighting (decreasing importance of higher harmonics).
-
-    Examples
-    --------
-    >>> # SSVEP at 15 Hz with 3 harmonics (15, 30, 45 Hz)
-    >>> from mne_denoise.dss.denoisers import CombFilterBias
-    >>> bias = CombFilterBias(fundamental_freq=50, sfreq=1000, n_harmonics=5)
-    >>> biased_data = bias.apply(data)
-    >>> # Custom weighting (equal weight for all harmonics)
-    >>> bias = CombFilterBias(
-    ...     fundamental_freq=12, sfreq=500, n_harmonics=4, weights=[1.0, 1.0, 1.0, 1.0]
-    ... )
-    >>> # Adaptive Q for constant bandwidth across harmonics
-    >>> bias = CombFilterBias(
-    ...     fundamental_freq=50, sfreq=1000, n_harmonics=3, q_mode="proportional"
-    ... )
-
-    See Also
-    --------
-    PeakFilterBias : For single frequency targets.
-
+    n_harmonics : int, default=3
+        Number of harmonics to consider.
+    q_factor : float, default=30.0
+        Quality factor passed to each peak filter.
+    q_mode : {"fixed", "proportional"}, default="fixed"
+        With ``"fixed"``, Q is constant and ``bandwidth = frequency / Q``
+        therefore increases in absolute width at higher harmonics. With
+        ``"proportional"``, Q is multiplied by the harmonic number, giving
+        approximately constant absolute bandwidth.
+    weights : array-like or None, default=None
+        Harmonic weights. ``None`` uses inverse harmonic-number weights.
 
     Notes
     -----
-    Implements a sum of peak filters at each harmonic. Harmonics above
-    Nyquist frequency are automatically excluded.
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.2 "DENOISING BASED ON FREQUENCY CONTENT"
+    The implementation sums peak-filter outputs and excludes harmonics at or
+    above 95 percent of Nyquist.
     """
 
     def __init__(
@@ -232,17 +168,17 @@ class CombFilterBias(LinearDenoiser):
             self._peak_filters.append((sos, weight))
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply comb filter bias.
+        """Apply the summed harmonic peak-filter bias.
 
         Parameters
         ----------
         data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-            Input data.
+            Channel-first data.
 
         Returns
         -------
-        biased : ndarray, same shape as input
-            Comb-filtered data (sum of harmonics).
+        ndarray
+            Weighted harmonic content with the input shape.
         """
         if len(self._peak_filters) == 0:
             raise ValueError("No valid harmonics within Nyquist frequency")
@@ -269,36 +205,25 @@ class CombFilterBias(LinearDenoiser):
 
 
 class QuasiPeriodicDenoiser(NonlinearDenoiser):
-    """Quasi-periodic denoiser via cycle averaging.
+    """Cycle-template denoiser for quasi-periodic source signals.
 
-    For signals with repeating structure (ECG, respiration, periodic artifacts):
-    1. Detect peaks/cycles in the source
-    2. Segment into individual cycles
-    3. Time-warp cycles to common length
-    4. Average to create template
-    5. Replace each cycle with time-warped template
+    Peaks are detected on the absolute source using the configured percentile and
+    minimum-distance rule. The resulting cycles are rescaled to a common duration,
+    averaged into a template, optionally smoothed, and mapped back to each cycle
+    with its original length and amplitude scaling. The reconstructed cycle
+    structure is returned; fewer than three detected peaks leave the source
+    unchanged.
 
     Parameters
     ----------
-    peak_distance : int
-        Minimum distance between peaks in samples. Default 100.
-    peak_height_percentile : float
-        Percentile of signal for peak detection threshold. Default 75.
-    warp_length : int, optional
-        Length to warp each cycle to. If None, use median cycle length.
-    smooth_template : bool
-        If True, smooth the template. Default True.
-
-    Examples
-    --------
-    >>> # For ECG-like signal at 250 Hz (peaks ~1 sec apart)
-    >>> from mne_denoise.dss.denoisers import QuasiPeriodicDenoiser
-    >>> denoiser = QuasiPeriodicDenoiser(peak_distance=200)
-    >>> denoised = denoiser.denoise(ecg_source)
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.4 "DENOISING OF QUASIPERIODIC SIGNALS"
+    peak_distance : int, default=100
+        Minimum peak distance in samples; values below 10 are set to 10.
+    peak_height_percentile : float, default=75.0
+        Percentile used as the absolute-source peak threshold.
+    warp_length : int or None, default=None
+        Common cycle length. ``None`` uses the median detected cycle length.
+    smooth_template : bool, default=True
+        Smooth the averaged template with a uniform filter.
     """
 
     def __init__(
@@ -315,17 +240,17 @@ class QuasiPeriodicDenoiser(NonlinearDenoiser):
         self.smooth_template = smooth_template
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply quasi-periodic denoising.
+        """Apply the cycle-template denoiser.
 
         Parameters
         ----------
         source : ndarray, shape (n_times,) or (n_times, n_epochs)
-            Source time series with quasi-periodic structure.
+            One source or sources arranged by columns.
 
         Returns
         -------
-        denoised : ndarray, same shape as input
-            Denoised source with cycles replaced by template.
+        ndarray
+            Reconstructed source with the input shape.
         """
         if source.ndim == 1:
             return self._denoise_1d(source)

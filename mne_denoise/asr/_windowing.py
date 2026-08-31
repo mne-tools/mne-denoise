@@ -1,9 +1,4 @@
-"""Windowing and clean-window selection for ASR calibration.
-
-This module provides signal segmenting utilities, computes window statistics (RMS),
-identifies robust signal periods for variance estimation, and constructs sample-level
-masks and annotation spans representing retained clean data.
-"""
+"""ASR calibration-window helpers."""
 
 from __future__ import annotations
 
@@ -20,22 +15,7 @@ from ._validation import (
 
 
 def _get_window_starts(n_times: int, win_len: int, overlap: float) -> np.ndarray:
-    """Compute sample indices for the start of overlapping sliding windows.
-
-    Parameters
-    ----------
-    n_times : int
-        The total number of samples in the data.
-    win_len : int
-        The length of each window in samples.
-    overlap : float
-        The overlap fraction between adjacent windows (0.0 to 1.0).
-
-    Returns
-    -------
-    starts : np.ndarray
-        A 1D integer array containing the start indices of each window.
-    """
+    """Compute sample indices for the start of overlapping sliding windows."""
     if win_len < 2:
         raise ValueError("window length must be at least 2 samples")
     if win_len > n_times:
@@ -55,22 +35,7 @@ def _get_fractional_window_starts(
     win_len: int,
     overlap: float,
 ) -> np.ndarray:
-    """Return window starts using precise fractional overlap step sizes.
-
-    Parameters
-    ----------
-    n_times : int
-        The total number of samples in the data.
-    win_len : int
-        The length of each window in samples.
-    overlap : float
-        The overlap fraction between adjacent windows (0.0 to 1.0).
-
-    Returns
-    -------
-    starts : np.ndarray
-        A 1D integer array of unique window start indices.
-    """
+    """Return window starts using precise fractional overlap step sizes."""
     if win_len < 2:
         raise ValueError("window length must be at least 2 samples")
     if win_len > n_times:
@@ -86,41 +51,14 @@ def _get_fractional_window_starts(
 
 
 def _get_window_weights(win_len: int) -> np.ndarray:
-    """Generate Hanning window weights for smooth cross-fading.
-
-    Parameters
-    ----------
-    win_len : int
-        The length of the window in samples.
-
-    Returns
-    -------
-    weights : np.ndarray
-        A 1D array of float window weights, scaled between 0 and 1.
-    """
+    """Generate Hanning weights for smooth cross-fading."""
     if win_len <= 2:
         return np.ones(win_len, dtype=np.float64)
     return np.hanning(win_len + 2)[1:-1].astype(np.float64)
 
 
 def _compute_window_rms(X: np.ndarray, starts: np.ndarray, win_len: int) -> np.ndarray:
-    """Compute per-channel RMS values over a set of windows.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data array of shape (n_channels, n_times).
-    starts : np.ndarray
-        A 1D array of window start indices.
-    win_len : int
-        The length of each window in samples.
-
-    Returns
-    -------
-    rms : np.ndarray
-        A 2D array of shape (n_channels, n_windows) containing the RMS
-        power for each channel within each window.
-    """
+    """Compute per-channel RMS values over a set of windows."""
     windows = starts[:, np.newaxis] + np.arange(win_len, dtype=int)[np.newaxis, :]
     squared = X[:, windows] ** 2
     return np.sqrt(np.sum(squared, axis=2) / win_len)
@@ -130,21 +68,7 @@ def _resolve_bad_channel_count(
     max_bad_channels: float | int,
     n_channels: int,
 ) -> int:
-    """Resolve the tolerated bad-channel fraction into an absolute count.
-
-    Parameters
-    ----------
-    max_bad_channels : float or int
-        The maximum fraction (if float < 1) or absolute number (if int) of
-        bad channels tolerated in a window.
-    n_channels : int
-        The total number of channels available.
-
-    Returns
-    -------
-    count : int
-        The absolute maximum number of bad channels to tolerate.
-    """
+    """Resolve the tolerated bad-channel fraction into an absolute count."""
     if isinstance(max_bad_channels, float) and 0 < max_bad_channels < 1:
         resolved = _round_half_up(n_channels * max_bad_channels)
     else:
@@ -163,32 +87,7 @@ def _select_clean_windows(
     max_dropout_fraction: float,
     min_clean_fraction: float,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Identify clean calibration windows using Z-scored channel RMS distributions.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The continuous input data of shape (n_channels, n_times).
-    starts : np.ndarray
-        A 1D array of window start indices.
-    win_len : int
-        The length of each window in samples.
-    ref_max_bad_channels : float
-        The maximum fraction of channels permitted to exceed the tolerance.
-    ref_tolerances : tuple of (float, float)
-        The standard deviation thresholds (z-scores) bounding clean data.
-    max_dropout_fraction : float
-        The maximum assumed fraction of missing data during fit.
-    min_clean_fraction : float
-        The minimal assumed fraction of clean data during fit.
-
-    Returns
-    -------
-    clean_mask : np.ndarray
-        A boolean array indicating whether each window was retained (True) or rejected (False).
-    zscores : np.ndarray
-        A 2D array of computed Z-scores of shape (n_windows, n_channels).
-    """
+    """Identify clean calibration windows using Z-scored channel RMS distributions."""
     diagnostics = _compute_window_diagnostics(
         X,
         starts,
@@ -217,35 +116,7 @@ def _compute_window_diagnostics(
     fit_quantiles: tuple[float, float] = (0.022, 0.6),
     beta_grid: np.ndarray | None = None,
 ) -> dict[str, Any]:
-    """Compute detailed window retention diagnostics over a predefined grid.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data of shape (n_channels, n_times).
-    starts : np.ndarray
-        A 1D array of window start indices.
-    win_len : int
-        The length of each window in samples.
-    max_bad_channels : float or int
-        The tolerated bad-channel count or fraction.
-    zthresholds : tuple of (float, float)
-        The bounds (z_low, z_high) dictating a valid channel RMS.
-    max_dropout_fraction : float
-        Maximum dropout fraction during distribution fitting.
-    min_clean_fraction : float
-        Minimum clean fraction during distribution fitting.
-    fit_quantiles : tuple of (float, float), optional
-        Quantiles utilized for fitting, by default (0.022, 0.6).
-    beta_grid : np.ndarray, optional
-        Grid to search for shape parameter, by default None.
-
-    Returns
-    -------
-    diagnostics : dict
-        A dictionary containing window-level analytics, fitting parameters,
-        masks, and Z-scores used for calibration QA.
-    """
+    """Compute detailed window retention diagnostics over a predefined grid."""
     n_channels = X.shape[0]
     rms = _compute_window_rms(X, starts, win_len)
 
@@ -307,22 +178,7 @@ def _concatenate_windows(
     starts: np.ndarray,
     win_len: int,
 ) -> np.ndarray:
-    """Concatenate a subset of windows into a continuous flat array.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The original input data array of shape (n_channels, n_times).
-    starts : np.ndarray
-        The selected 1D array of window start indices.
-    win_len : int
-        The length of each window in samples.
-
-    Returns
-    -------
-    out : np.ndarray
-        A 2D continuous array composed of strictly contiguous selected segments.
-    """
+    """Concatenate a subset of windows into a continuous flat array."""
     out = np.empty((X.shape[0], len(starts) * win_len), dtype=np.float64)
     for idx, start in enumerate(starts):
         out[:, idx * win_len : (idx + 1) * win_len] = X[:, start : start + win_len]
@@ -335,25 +191,7 @@ def _create_sample_mask_from_windows(
     win_len: int,
     window_remove_mask: np.ndarray,
 ) -> np.ndarray:
-    """Project window-level rejection decisions to a sample-level binary mask.
-
-    Parameters
-    ----------
-    n_times : int
-        The total number of samples in the source data.
-    starts : np.ndarray
-        A 1D array indicating the start index of every window.
-    win_len : int
-        The length of each window in samples.
-    window_remove_mask : np.ndarray
-        A boolean mask flagging windows that should be dropped.
-
-    Returns
-    -------
-    sample_mask : np.ndarray
-        A 1D boolean array of length `n_times`, where True indicates clean
-        samples, and False designates samples belonging to rejected windows.
-    """
+    """Project window-level rejection decisions to a sample-level binary mask."""
     sample_mask = np.ones(n_times, dtype=bool)
     for start in starts[np.asarray(window_remove_mask, dtype=bool)]:
         sample_mask[start : start + win_len] = False
@@ -363,21 +201,7 @@ def _create_sample_mask_from_windows(
 def _create_good_sample_mask_from_mne(
     raw: Any, prefixes: tuple[str, ...]
 ) -> np.ndarray:
-    """Create a sample mask identifying data not marked by specific MNE annotations.
-
-    Parameters
-    ----------
-    raw : Any
-        An MNE raw object instance (duck-typed).
-    prefixes : tuple of str
-        The annotation text prefixes denoting bad segments.
-
-    Returns
-    -------
-    mask : np.ndarray
-        A 1D boolean array of length `raw.n_times` where True denotes
-        clean data unflagged by the specified bad annotations.
-    """
+    """Create a sample mask identifying data not marked by specific MNE annotations."""
     n_times = raw.n_times
     mask = np.ones(n_times, dtype=bool)
     if not hasattr(raw, "annotations") or len(raw.annotations) == 0:
@@ -403,18 +227,7 @@ def _create_good_sample_mask_from_mne(
 
 
 def _merge_sample_spans(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
-    """Merge overlapping or adjacent (start, stop) sample index pairs.
-
-    Parameters
-    ----------
-    spans : list of tuple of (int, int)
-        An unsorted list of arbitrary [start, stop) index pairs.
-
-    Returns
-    -------
-    merged : list of tuple of (int, int)
-        An ordered, maximally-collapsed set of [start, stop) spans.
-    """
+    """Merge overlapping or adjacent half-open sample spans."""
     if not spans:
         return []
     spans = sorted(spans)
@@ -429,18 +242,7 @@ def _merge_sample_spans(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
 
 
 def _mask_to_sample_spans(mask: np.ndarray) -> list[tuple[int, int]]:
-    """Convert a 1D boolean mask into inclusive-exclusive sample spans.
-
-    Parameters
-    ----------
-    mask : np.ndarray
-        A 1D boolean array representing truthy data segments.
-
-    Returns
-    -------
-    spans : list of tuple of (int, int)
-        A list mapping contiguous True blocks to their [start, stop) index pairs.
-    """
+    """Convert a 1-D boolean mask to half-open sample spans."""
     mask = np.asarray(mask, dtype=bool).ravel()
     if mask.size == 0:
         return []
@@ -463,7 +265,7 @@ def compute_clean_window_mask(
     fit_quantiles: tuple[float, float] = (0.022, 0.6),
     beta_grid: np.ndarray | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Compute a statistical retained-sample mask for continuous data.
+    """Compute a retained-sample mask from ASR window statistics.
 
     Parameters
     ----------
@@ -471,48 +273,29 @@ def compute_clean_window_mask(
         Continuous data.
     sfreq : float
         Sampling frequency in Hz.
-    max_bad_channels : float | int
-        Maximum tolerated number or fraction of bad channels per retained
-        window.
-    zthresholds : tuple of float
-        Lower and upper robust z-score thresholds for channel RMS values.
-    window_length : float
+    max_bad_channels : float or int, default=0.2
+        Maximum bad-channel fraction or count per window.
+    zthresholds : tuple of float, default=(-3.5, 5.0)
+        Lower and upper channel-RMS z-score limits.
+    window_length : float, default=1.0
         Window length in seconds.
-    window_overlap : float
-        Overlap fraction between successive windows.
-    max_dropout_fraction : float
-        Maximum low-tail dropout fraction for robust RMS fitting.
-    min_clean_fraction : float
-        Minimum clean fraction for robust RMS fitting.
-    fit_quantiles : tuple of float
-        Lower and upper quantiles for the truncated generalized-Gaussian fit.
-    beta_grid : ndarray | None
-        Optional generalized-Gaussian beta grid.
+    window_overlap : float, default=0.66
+        Window overlap fraction.
+    max_dropout_fraction : float, default=0.1
+        Low-tail fraction ignored during RMS fitting.
+    min_clean_fraction : float, default=0.25
+        Minimum clean fraction used for RMS fitting.
+    fit_quantiles : tuple of float, default=(0.022, 0.6)
+        Quantile interval for the RMS fit.
+    beta_grid : ndarray or None, default=None
+        Optional generalized-Gaussian shape grid.
 
     Returns
     -------
     sample_mask : ndarray, shape (n_times,)
-        Boolean retained-sample mask. ``False`` entries indicate windows that
-        would be removed by clean_windows-style rejection.
+        Boolean mask of retained samples.
     diagnostics : dict
-        Window-level RMS, z-score, and retained/removed mask diagnostics.
-
-    Examples
-    --------
-    Compute a clean sample mask for a NumPy array:
-
-    >>> import numpy as np
-    >>> from mne_denoise.asr import compute_clean_window_mask
-    >>> sfreq = 250.0
-    >>> data = np.random.randn(5, 1000)  # 5 channels, 4 seconds of data
-    >>> # Inject a burst into channel 0 between samples 400 and 600
-    >>> data[0, 400:600] *= 25.0
-    >>> mask, info = compute_clean_window_mask(data, sfreq)
-    >>> print(f"Mask length: {len(mask)}")
-    Mask length: 1000
-    >>> # True denotes clean samples, False denotes bad samples
-    >>> print(f"Found {mask.sum()} clean samples.")
-    Found ... clean samples.
+        Window-level RMS, z-score, and mask diagnostics.
     """
     _validate_common_params(
         sfreq=sfreq,
@@ -574,38 +357,7 @@ def _extract_clean_calibration_samples(
     min_clean_fraction: float,
     beta_grid: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    """Extract a subset of continuous clean calibration data using robust diagnostics.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The continuous input data of shape (n_channels, n_times).
-    sfreq : float
-        Sampling frequency in Hz.
-    window_length : float
-        Window length in seconds.
-    window_overlap : float
-        Overlap fraction between successive windows.
-    max_bad_channels : float
-        Maximum fraction or count of channels permitted to exceed the tolerance.
-    zthresholds : tuple of (float, float)
-        The standard deviation thresholds bounding clean data.
-    max_dropout_fraction : float
-        The maximum assumed fraction of missing data during fit.
-    min_clean_fraction : float
-        The minimal assumed fraction of clean data during fit.
-    beta_grid : np.ndarray | None, optional
-        Grid to search for shape parameter, by default None.
-
-    Returns
-    -------
-    X_clean : np.ndarray
-        A 2D array of strictly clean samples, extracted from X.
-    sample_mask : np.ndarray
-        A 1D boolean mask of the clean samples from the original array.
-    diagnostics : dict
-        A dictionary containing window-level analytics.
-    """
+    """Extract a subset of continuous clean calibration data using robust diagnostics."""
     win_len = _round_half_up(window_length * sfreq)
     starts = _get_fractional_window_starts(X.shape[1], win_len, window_overlap)
     diagnostics = _compute_window_diagnostics(

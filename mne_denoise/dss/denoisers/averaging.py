@@ -1,17 +1,4 @@
-"""Averaging bias functions for DSS.
-
-Implements trial/epoch and group/dataset averaging to enhance reproducible patterns.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-.. [2] de Cheveigné & Simon (2008). Denoising based on spatial filtering. J. Neurosci. Methods.
-.. [3] de Cheveigné & Parra (2014). Joint decorrelation, a versatile tool for
-       multichannel data analysis. NeuroImage, 98, 487-505.
-"""
+"""Averaging bias functions for DSS."""
 
 from __future__ import annotations
 
@@ -21,51 +8,22 @@ from .base import LinearDenoiser
 
 
 class AverageBias(LinearDenoiser):
-    """Bias function for finding repeatable components via averaging.
-
-    Maximizes the reproducibility of patterns across trials (epochs) or
-    datasets (subjects). This LinearDenoiser covers:
-    - Trial averaging (axis='epochs'): for evoked response enhancement
-    - Dataset averaging (axis='datasets'): for group-level repeatability (JDSS)
+    """Averaging bias for repeatable DSS structure.
 
     Parameters
     ----------
-    axis : str
-        Dimension to average over:
-        - 'epochs' (default): Average across trials. Input shape: (n_channels, n_times, n_epochs)
-        - 'datasets': Average across datasets/subjects. Input shape: (n_datasets, n_channels, n_times)
-    weights : array-like, optional
-        Weights for averaging. For ``axis='epochs'``, either one weight per
-        epoch or a ``(n_times, n_epochs)`` observation-weight matrix. For
-        ``axis='datasets'``, one weight per dataset. If None, use uniform
-        weighting.
-
-    Examples
-    --------
-    >>> from mne_denoise.dss.denoisers import AverageBias
-    >>> # For evoked response enhancement
-    >>> epochs_data = np.random.randn(64, 100, 50)  # channels x times x trials
-    >>> bias = AverageBias(axis="epochs")
-    >>> biased = bias.apply(epochs_data)
-
-    >>> # For group-level repeatability (like old JDSS)
-    >>> group_data = np.random.randn(10, 64, 100)  # subjects x channels x times
-    >>> bias = AverageBias(axis="datasets")
-    >>> biased = bias.apply(group_data)
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.4 "DENOISING OF QUASIPERIODIC SIGNALS"
-    de Cheveigné & Parra (2014). Joint decorrelation, a versatile tool for
-    multichannel data analysis.
+    axis : {"epochs", "datasets"}, default="epochs"
+        For ``"epochs"``, input has shape ``(n_channels, n_times, n_epochs)``.
+        For ``"datasets"``, input has shape ``(n_datasets, n_channels, n_times)``.
+    weights : array-like or None, default=None
+        Epoch weights, optionally a ``(n_times, n_epochs)`` observation-weight
+        matrix, or one weight per dataset depending on ``axis``.
 
     Notes
     -----
-    ``axis='datasets'`` is a low-level bias operation on a dataset-first
-    array. The public :class:`~mne_denoise.dss.linear.DSS` estimator's NumPy
-    fitting contract is channel-first, so this axis should not be passed to
-    that estimator as though it were a second DSS input layout. The bias
-    function itself preserves the dataset-first layout documented above.
+    ``axis="datasets"`` is a low-level dataset-first bias operation; it is not a
+    second NumPy input layout for the channel-first :class:`~mne_denoise.dss.DSS`
+    estimator.
     """
 
     def __init__(self, axis: str = "epochs", weights: np.ndarray | None = None) -> None:
@@ -75,19 +33,17 @@ class AverageBias(LinearDenoiser):
         self.weights = weights
 
     def apply(self, data: np.ndarray) -> np.ndarray:
-        """Apply averaging bias.
+        """Apply the averaging bias.
 
         Parameters
         ----------
-        data : ndarray
-            Input data.
-            - For axis='epochs': shape (n_channels, n_times, n_epochs)
-            - For axis='datasets': shape (n_datasets, n_channels, n_times)
+        data : ndarray, shape (n_channels, n_times, n_epochs) or (n_datasets, n_channels, n_times)
+            Shape is determined by ``axis``.
 
         Returns
         -------
-        biased : ndarray, same shape as input
-            Data where each slice is replaced by the weighted average.
+        ndarray
+            Weighted-average data with the input shape.
         """
         if self.axis == "epochs":
             return self._apply_epochs(data)

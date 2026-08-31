@@ -1,25 +1,4 @@
-"""Adaptive Artifact Subspace Reconstruction (AASR) module.
-
-This module implements the ``AdaptiveASR`` class, an experimental scikit-learn
-and MNE-compatible estimator that extends standard ASR with continuous tracking
-of the clean signal subspace using Hebbian or anti-Hebbian similarity-matching learning.
-
-Unlike standard ASR which relies on a fixed static calibration, Adaptive ASR
-operates in three stages:
-1. **Initial Calibration**: Computes a starting robust covariance matrix and baseline
-   thresholds using an initial clean data window (via ``fit``).
-2. **Adaptive Tracking**: Continuously updates the clean-subspace model across incoming
-   data chunks using moving-window aggregations and similarity-matching rules
-   (via ``partial_fit`` or internally during streaming).
-3. **Reconstruction**: Repairs burst artifacts using standard ASR logic, but applies
-   the dynamically tracked covariance state instead of a fixed baseline (via ``transform``).
-
-This module exposes three distinct adaptive tracking variants:
-- ``variant="psp"`` -- plasticity-stabilized (Hebbian) similarity matching.
-- ``variant="psw"`` -- plasticity-stabilized whitening (anti-Hebbian).
-- ``variant="mw"`` -- moving-window calibration (where ``mw_mode`` selects either
-  ``"final_state"`` or per-segment ``"sliding"`` semantics).
-"""
+"""Adaptive Artifact Subspace Reconstruction."""
 
 from __future__ import annotations
 
@@ -63,95 +42,89 @@ if TYPE_CHECKING:
 
 
 class AdaptiveASR(ASR):
-    """Adaptive Artifact Subspace Reconstruction (AASR) estimator.
+    """Adaptive Artifact Subspace Reconstruction estimator.
 
-    This estimator extends the standard ASR algorithm by dynamically tracking
-    the clean signal subspace over time. Three adaptive variants are exposed:
-
-    - ``variant='psp'``: principal subspace projection updates (Hebbian)
-    - ``variant='psw'``: principal subspace whitening updates (anti-Hebbian)
-    - ``variant='mw'``: moving-window calibration updates
+    AdaptiveASR extends ASR with principal-subspace or moving-window calibration
+    updates. It accepts channel-first NumPy arrays and supported MNE containers.
 
     Parameters
     ----------
-    sfreq : float | None, default=None
-        Sampling frequency in Hz. Required for NumPy arrays. For MNE objects,
-        this may be ``None`` and is inferred from ``info['sfreq']``.
+    sfreq : float or None, default=None
+        Sampling frequency in Hz; inferred from MNE metadata when available.
     cutoff : float, default=20.0
-        ASR threshold multiplier. Values around 20 are conservative; lower
-        values clean more aggressively.
-    variant : {'psw', 'psp', 'mw'}, default='psw'
-        The adaptive update rule to use.
+        ASR threshold multiplier. Lower values generally reconstruct more components.
+    variant : {"psw", "psp", "mw"}, default="psw"
+        Adaptive update rule.
     window_length : float, default=0.5
-        Processing/statistics window length in seconds.
+        Processing window length in seconds.
     update_window_length : float, default=0.1
-        RMS-statistics window length within each adaptive update segment. This is
-        not the duration of the segment passed to ``partial_fit``.
+        RMS-statistics window length within an adaptive update.
     calibration_window_length : float, default=1.0
-        Window length in seconds for automatic clean-window selection.
+        Automatic calibration-window length in seconds.
     calibration_window_overlap : float, default=0.66
-        Overlap fraction for automatic clean-window selection.
+        Automatic calibration-window overlap.
     ref_max_bad_channels : float, default=0.2
-        Maximum fraction of channels exceeding robust tolerances in a clean
-        calibration window.
+        Maximum bad-channel fraction for calibration windows.
     ref_tolerances : tuple of float, default=(-3.5, 5.0)
-        Lower and upper robust z-score bounds for clean-window selection.
+        Robust z-score bounds for calibration-window selection.
     blocksize : int, default=10
-        Number of successive samples averaged into each covariance block for
-        eigendecomposition.
-    max_dims : float | int, default=0.66
-        Maximum fraction or absolute number of spatial dimensions to retain
-        during reconstruction.
+        Samples per calibration covariance block.
+    max_dims : float or int, default=0.66
+        Maximum fraction or number of reconstructed dimensions.
     max_dropout_fraction : float, default=0.1
-        Fraction of lowest RMS values ignored while estimating thresholds.
+        Fraction of low-RMS values excluded from threshold estimation.
     min_clean_fraction : float, default=0.25
-        Minimum central fraction used to estimate clean RMS statistics.
-    picks : str | list of str | list of int | slice | None, default='eeg'
-        Channels to include. Slices and lists of integers will be interpreted
-        as channel indices.
+        Minimum central fraction used for clean RMS statistics.
+    picks : str, list of str, list of int, or None, default="eeg"
+        MNE channels to process; NumPy input uses all rows.
     reject_by_annotation : bool, default=True
-        Whether to reject bad segments based on annotations during calibration.
-    skip_by_annotation : tuple of str, default=('bad', 'bad_acq_skip')
-        If a string in this tuple is a prefix of an annotation description,
-        that segment is ignored during calibration.
+        Exclude bad annotated samples during calibration.
+    skip_by_annotation : tuple of str, default=("bad", "bad_acq_skip")
+        Annotation prefixes treated as bad.
     regularization : float, default=1e-8
-        Ridge regularization added to covariance matrices to prevent singular
-        inversions.
-    window_criterion : float | int | str | None, default=None
-        Pre-rejection criterion for entirely bad windows. If a float, acts
-        as a threshold multiplier.
+        Relative covariance eigenvalue floor.
+    window_criterion : float, int, str, or None, default=None
+        Optional final retained-sample criterion.
     window_criterion_tolerances : tuple of float, default=(-np.inf, 7.0)
-        Tolerances for window_criterion testing.
-    lookahead : float | None, default=None
-        Lookahead time in seconds for the sliding window reconstruction.
-        Defaults to half the window length.
-    stepsize : int | None, default=None
-        Stepsize in samples for the sliding window. Defaults to 32.
-    max_mem_mb : int | None, default=512
-        Maximum memory (in megabytes) allowed for internal chunking operations.
+        Robust z-score bounds for the final criterion.
+    lookahead : float or None, default=None
+        Processing lookahead in seconds.
+    stepsize : int or None, default=None
+        Samples between reconstruction updates.
+    max_mem_mb : int or None, default=512
+        Memory bound for internal chunking.
     copy : bool, default=True
-        Reserved compatibility parameter. Public transformations return a new
-        object or array and do not mutate the input.
+        Reserved compatibility parameter; transformations return new outputs.
     store_reconstruction_matrices : bool, default=False
-        If True, the diagnostic dictionaries will contain the applied
-        reconstruction mixing matrices.
+        Store per-window reconstruction matrices in diagnostics.
     learning_rate : float, default=0.2
-        Step size parameter controlling how fast the subspace projection matrix
-        incorporates new samples.
-    tau : float | None, default=None
-        Time constant for the lateral connections (similarity tracking). If None,
-        it defaults to `10.0 / learning_rate`.
+        Adaptive feed-forward update step.
+    tau : float or None, default=None
+        Lateral-update time constant; derived from learning_rate when omitted.
     mw_window_length : float, default=20.0
-        The length of the moving window (in seconds) over which covariance is
-        aggregated before triggering adaptive updates.
-    mw_mode : {'final_state', 'cumulative'}, default='final_state'
-        Mode for moving-window aggregation.
-    random_state : int | None, default=None
-        Random state for reproducibility in stochastic internal steps.
-    n_jobs : int | None, default=None
-        Number of jobs to run in parallel.
-    verbose : bool | str | int | None, default=None
-        Verbosity level.
+        Moving-window length in seconds for variant="mw".
+    mw_mode : {"final_state", "sliding"}, default="final_state"
+        Moving-window mode. "final_state" fits the stream and uses the final state;
+        "sliding" calibrates and cleans each moving window in fit_transform.
+    random_state : int or None, default=None
+        Reserved for stochastic internal steps.
+    n_jobs : int or None, default=None
+        Reserved for future parallel processing.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
+
+    Notes
+    -----
+    partial_fit updates the adaptive calibration state for variant="psp" or
+    variant="psw"; variant="mw" does not support partial_fit. NumPy input uses
+    (n_channels, n_times) or (n_epochs, n_channels, n_times). Transform preserves
+    the input MNE container and does not mutate it.
+
+    References
+    ----------
+    :footcite:p:`tsai2024_adaptive_asr,chang2020_asr`
+
+    .. footbibliography::
     """
 
     def __init__(
@@ -243,39 +216,27 @@ class AdaptiveASR(ASR):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> AdaptiveASR:
-        """Fit the initial adaptive ASR state from calibration data.
-
-        This method estimates the initial robust spatial covariance matrix and
-        computes the variance thresholds that define the clean signal subspace.
+        """Fit the initial adaptive ASR state.
 
         Parameters
         ----------
-        X : mne.io.Raw | mne.Epochs | np.ndarray
-            The input data to be processed. If ``calibration`` is None, this data
-            is used to compute the initial calibration state. For ``np.ndarray``,
-            the shape should be (n_channels, n_times) for continuous data or
-            (n_epochs, n_channels, n_times) for epoched data.
-        y : None
-            Ignored. Present for scikit-learn compatibility.
-        calibration : mne.io.Raw | mne.Epochs | np.ndarray | None, default=None
-            Optional separate calibration dataset. If provided, the initial baseline
-            is learned from this dataset instead of ``X``.
-        calibration_mask : np.ndarray | None, default=None
-            Optional boolean mask of shape (n_times,) denoting which samples in the
-            calibration data are clean and should be used to estimate the initial state.
-            If None, the mask is estimated automatically.
-        callback : callable | None
-            Called synchronously after each adaptive calibration component for PSP/PSW,
-            or after each MW calibration window. Callback return values are ignored and
-            callback exceptions propagate unchanged.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : Raw, Epochs, or ndarray
+            Data used for initial calibration.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        calibration : Raw, Epochs, or ndarray, default=None
+            Optional separate calibration data.
+        calibration_mask : ndarray of bool, shape (n_times,), or None, default=None
+            Samples to use from calibration data.
+        callback : callable or None, default=None
+            Synchronous adaptive-calibration progress callback.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        self : AdaptiveASR
-            The fitted estimator instance.
+        AdaptiveASR
+            The fitted estimator.
         """
         del y
         callback = _validate_callback(callback)
@@ -390,34 +351,25 @@ class AdaptiveASR(ASR):
         *,
         verbose: bool | str | int | None = None,
     ) -> AdaptiveASR:
-        """Update the adaptive calibration state on a new clean chunk.
+        """Update the adaptive calibration state on a new chunk.
 
-        This method applies the chosen adaptive similarity-matching rule to gently
-        update the underlying clean subspace model using incoming data.
-        It is designed for online, streaming workflows.
+        variant="mw" is not supported by this method.
 
         Parameters
         ----------
-        X : mne.io.Raw | mne.Epochs | np.ndarray
-            The incoming data chunk to update the state with. For ``np.ndarray``,
-            shape must be (n_channels, n_times) or (n_epochs, n_channels, n_times).
-            The chunk must contain more samples than ``calibration_window_length``
-            so clean-window statistics can be estimated. Complete 20-second
-            update segments are a convention of the cited AASR demonstration,
-            not a requirement of this method.
-        y : None
-            Ignored. Present for scikit-learn compatibility.
-        calibration_mask : np.ndarray | None, default=None
-            Optional boolean mask of shape (n_times,) designating which samples in
-            the incoming chunk are clean. If None, it is estimated automatically.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
+        X : Raw, Epochs, or ndarray
+            New calibration chunk.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        calibration_mask : ndarray of bool, shape (n_times,), or None, default=None
+            Samples to use from the chunk.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        self : AdaptiveASR
-            The updated estimator instance.
+        AdaptiveASR
+            The updated estimator.
         """
         del y
         if self.variant == "mw":
@@ -503,39 +455,29 @@ class AdaptiveASR(ASR):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
-        """Clean data using the current adaptive ASR state.
-
-        Detects high-variance artifact bursts and reconstructs them using the
-        dynamically tracked spatial mixing matrices.
+        """Apply the current adaptive ASR state.
 
         Parameters
         ----------
-        X : mne.io.Raw | mne.Epochs | np.ndarray
-            The target data to be cleaned. Must match the channel count and
-            sampling frequency used during ``fit``.
-        y : None
-            Ignored. Present for scikit-learn compatibility.
-        copy : bool | None, default=None
-            Ignored parameter provided for scikit-learn API compatibility.
+        X : Raw, Epochs, Evoked, or ndarray
+            Data to clean.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        copy : bool or None, default=None
+            Reserved compatibility parameter.
         return_diagnostics : bool, default=False
-            If True, returns a tuple ``(cleaned_data, diagnostics)`` where
-            ``diagnostics`` is a dictionary detailing the reconstruction process.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each completed reconstruction window for
-            continuous input, or after each completed epoch for epoched input.
-            Callback return values are ignored and callback exceptions propagate
-            unchanged.
+            If true, return (cleaned, diagnostics).
+        callback : callable or None, default=None
+            Synchronous reconstruction progress callback.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        X_clean : mne.io.Raw | mne.Epochs | np.ndarray
-            The artifact-repaired data. Returns the same type as the input ``X``.
-        diagnostics : dict, optional
-            A dictionary containing processing metadata (e.g., sample masks,
-            eigenvalues). Only returned if ``return_diagnostics=True``.
+        cleaned : Raw, Epochs, Evoked, or ndarray
+            Cleaned data with the input type and layout.
+        diagnostics : dict
+            Returned only when return_diagnostics=True.
         """
         del y, copy
         callback = _validate_callback(callback)
@@ -652,42 +594,32 @@ class AdaptiveASR(ASR):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
-        """Fit adaptive ASR and reconstruct ``X`` with the fitted state.
+        """Fit adaptive ASR and transform the input.
 
-        For ``variant="mw", mw_mode="sliding"`` the work is per-window
-        calibrate-AND-transform: each window is calibrated on itself and
-        cleaned by that local calibration, then the cleaned slices are
-        concatenated. ``fit()`` alone is still legal in sliding mode (it
-        records per-window diagnostics) but ``transform()`` afterwards
-        applies only the final window's state — semantically equivalent to
-        ``mw_mode="final_state"``. The true per-segment behavior requires
-        this ``fit_transform`` entry point.
+        For variant="mw" and mw_mode="sliding", calibration and cleaning are performed
+        per moving window. Other configurations compose fit and transform.
 
         Parameters
         ----------
-        X : mne.io.Raw | mne.Epochs | np.ndarray
-            The input data to be fitted and transformed.
-        y : None
-            Ignored. Present for scikit-learn compatibility.
-        calibration : mne.io.Raw | mne.Epochs | np.ndarray | None, default=None
-            Optional separate calibration dataset.
+        X : Raw, Epochs, or ndarray
+            Data used for calibration and cleaning.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        calibration : Raw, Epochs, or ndarray, default=None
+            Optional separate calibration data.
         return_diagnostics : bool, default=False
-            If True, returns a tuple ``(cleaned_data, diagnostics)``.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each completed adaptive calibration or
-            reconstruction progress unit. Callback return values are ignored
-            and callback exceptions propagate unchanged.
+            If true, return (cleaned, diagnostics).
+        callback : callable or None, default=None
+            Callback passed to calibration and reconstruction.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        X_clean : mne.io.Raw | mne.Epochs | np.ndarray
-            The artifact-repaired data.
-        diagnostics : dict, optional
-            A dictionary containing processing metadata. Only returned if
-            ``return_diagnostics=True``.
+        cleaned : Raw, Epochs, or ndarray
+            Cleaned data with the input type and layout.
+        diagnostics : dict
+            Returned only when return_diagnostics=True.
         """
         callback = _validate_callback(callback)
         if self.variant == "mw" and self.mw_mode == "sliding":
@@ -711,39 +643,7 @@ class AdaptiveASR(ASR):
         return_diagnostics: bool = False,
         callback: _ProgressCallback | None = None,
     ) -> Any:
-        """Per-window calibrate-AND-clean implementation for MW sliding mode.
-
-        For each non-overlapping window of length ``mw_window_length``:
-
-        1. Run the existing AdaptiveASR calibration on that window's data.
-        2. Apply the resulting state to clean the same window's data.
-        3. Concatenate the cleaned slices and return.
-
-        Windows shorter than ``blocksize`` are skipped (data passes through
-        unchanged). Calibration failures are also passed through.
-
-        Parameters
-        ----------
-        X : mne.io.Raw | mne.Epochs | np.ndarray
-            The input data to be processed using the sliding window approach.
-        calibration : mne.io.Raw | mne.Epochs | np.ndarray | None, default=None
-            Optional separate calibration dataset. For sliding MW mode, this is
-            rarely used, as the calibration usually happens dynamically per window.
-        return_diagnostics : bool, default=False
-            If True, returns a tuple ``(cleaned_data, diagnostics)`` where
-            ``diagnostics`` compiles metadata across all processed windows.
-        callback : callable | None
-            Called once after each attempted MW window completes. Callback return
-            values are ignored and callback exceptions propagate unchanged.
-
-        Returns
-        -------
-        X_clean : mne.io.Raw | mne.Epochs | np.ndarray
-            The artifact-repaired data.
-        diagnostics : dict, optional
-            A dictionary containing aggregated processing metadata. Only returned if
-            ``return_diagnostics=True``.
-        """
+        """Calibrate and clean each moving window in sliding MW mode."""
         _validate_backend_params(
             method=self.method,
             experimental=self.experimental,
@@ -997,40 +897,7 @@ class AdaptiveASR(ASR):
         dict[str, Any],
         list[dict[str, Any]],
     ]:
-        """MW-ASR: per-window subspace calibration, final-window state.
-
-        Splits the input into non-overlapping windows of length
-        ``mw_window_length`` seconds, runs the standard subspace calibration
-        on each window, records per-window diagnostics, and returns only the
-        final window's state for the subsequent reconstruction pass.
-
-        Windows shorter than ``blocksize`` samples are skipped because they
-        are too short for robust calibration.
-
-        Parameters
-        ----------
-        X : np.ndarray
-            The input data array of shape (n_channels, n_times).
-        sfreq : float
-            The sampling frequency of the data in Hz.
-        callback : callable | None
-            Called once after each attempted MW calibration window completes.
-
-        Returns
-        -------
-        state : ASRState
-            The standard ASR calibration state from the final valid window.
-        cal_info : dict
-            Calibration diagnostics dictionary from the final valid window,
-            updated with MW-specific metadata (number of windows, length).
-        learner : _AdaptiveSimilarityMatcher
-            The adaptive learner instantiated for the final window.
-        process_state : dict
-            The process state dictionary for streaming reconstruction.
-        diagnostics_list : list of dict
-            A list containing calibration diagnostic dictionaries for every
-            processed window.
-        """
+        """MW-ASR: per-window subspace calibration, final-window state."""
         X = _validate_array_2d(X)
         sfreq = float(sfreq)
         n_times = X.shape[1]
@@ -1214,26 +1081,7 @@ class AdaptiveASR(ASR):
         return state, diagnostics, learner, process_state
 
     def _update_adaptive_state(self, X: np.ndarray, sfreq: float) -> dict[str, Any]:
-        """Update the adaptive tracking state on a new chunk of data.
-
-        Extracts clean calibration samples from the new chunk, runs them through the
-        similarity-matching learner to update the principal components (V), re-estimates
-        the covariance metric (M), and updates the statistical thresholds. The resulting
-        matrices are saved back into the estimator's ``state_``.
-
-        Parameters
-        ----------
-        X : np.ndarray
-            The incoming data chunk of shape (n_channels, n_times).
-        sfreq : float
-            The sampling frequency in Hz.
-
-        Returns
-        -------
-        diagnostics : dict
-            A dictionary containing update diagnostics, threshold fit metrics, and
-            covariance memory usage info.
-        """
+        """Update the adaptive tracking state on a new chunk of data."""
         X = _validate_array_2d(X)
         self._check_adaptive_segment_length(X, sfreq, operation="partial_fit")
         X_clean, clean_sample_mask, clean_diag = _extract_clean_calibration_samples(
@@ -1322,26 +1170,7 @@ class AdaptiveASR(ASR):
         threshold_info: dict[str, np.ndarray],
         event: str,
     ) -> dict[str, Any]:
-        """Compile calibration and thresholding diagnostics into a unified dictionary.
-
-        Parameters
-        ----------
-        clean_diag : dict
-            Diagnostics from the window cleaning step.
-        clean_sample_mask : np.ndarray
-            Boolean array of shape (n_times,) indicating samples kept for calibration.
-        thresholds : np.ndarray
-            The fitted cutoff thresholds for each principal component.
-        threshold_info : dict
-            Metadata from the threshold fitting process (e.g., mu, sigma, beta).
-        event : str
-            The name of the event triggering the calibration (e.g., 'fit', 'update').
-
-        Returns
-        -------
-        info : dict
-            A comprehensive diagnostics dictionary containing all calibration parameters.
-        """
+        """Compile calibration and thresholding diagnostics into a unified dictionary."""
         return {
             "event": event,
             "clean_window_mask": np.asarray(

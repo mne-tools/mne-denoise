@@ -1,10 +1,4 @@
-"""Narrowband DSS variant.
-
-Frequency-targeted DSS for extracting oscillatory components.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Narrowband DSS variants."""
 
 from __future__ import annotations
 
@@ -24,35 +18,25 @@ def narrowband_dss(
     n_components: int | None = None,
     **dss_kws,
 ) -> DSS:
-    """Create a DSS configured for a specific frequency band.
-
-    Returns a pre-configured DSS object that extracts components with
-    maximum power in the specified frequency band.
+    """Create a DSS estimator with a bandpass bias.
 
     Parameters
     ----------
     sfreq : float
         Sampling frequency in Hz.
     freq : float
-        Target center frequency in Hz.
-    bandwidth : float
-        Bandwidth of the bandpass filter in Hz. Default 2.0.
-    n_components : int, optional
-        Number of DSS components to keep. If None, keep all.
+        Center frequency in Hz.
+    bandwidth : float, default=2.0
+        Bandpass width in Hz.
+    n_components : int or None, default=None
+        Number of DSS components.
     **dss_kws
-        Additional keyword arguments passed to `DSS`.
+        Additional keyword arguments for :class:`~mne_denoise.dss.DSS`.
 
     Returns
     -------
-    dss : DSS
-        A DSS object configured with a BandpassBias.
-
-    Examples
-    --------
-    >>> # Extract 10 Hz (alpha) components
-    >>> dss = narrowband_dss(sfreq=250, freq=10)
-    >>> dss.fit(data)
-    >>> alpha_sources = dss.transform(data)
+    DSS
+        Configured estimator.
     """
     low = freq - bandwidth / 2
     high = freq + bandwidth / 2
@@ -73,60 +57,39 @@ def narrowband_scan(
     verbose: bool | str | int | None = None,
     **dss_kws,
 ) -> tuple[DSS, np.ndarray, np.ndarray]:
-    """Scan frequencies to find optimal narrowband DSS components.
-
-    Sweeps through a frequency range, computing DSS at each frequency.
-    Returns the fitted DSS at the best frequency, along with the full
-    eigenvalue spectrum for visualization.
+    """Scan candidate frequencies with narrowband DSS.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-        Input data.
+        Channel-first input data.
     sfreq : float
         Sampling frequency in Hz.
-    freq_range : tuple of float
-        (min_freq, max_freq) range to scan. Default (1, 40).
-    freq_step : float
-        Frequency step size in Hz. Default 1.0.
-    bandwidth : float
-        Bandwidth of bandpass filter at each frequency. Default 2.0.
-    n_components : int
-        Number of DSS components to compute at each frequency. Default 1.
-    callback : callable | None
-        Called synchronously after each attempted candidate frequency with a
-        ProgressEvent. Successful candidates report their leading DSS
-        eigenvalue in ``metric``; failed candidates report ``metric=None``.
-        Callback return values are ignored and callback exceptions propagate
-        unchanged. Events use ``method="narrowband_scan"`` and
-        ``stage="frequency"``.
-    verbose : bool | str | int | None
-        MNE-style logging level. Per-frequency DSS fits are reported through
-        this scan's aggregate result.
+    freq_range : tuple of float, default=(1, 40)
+        Candidate frequency range in Hz; it is clipped to the implementation's
+        valid range.
+    freq_step : float, default=1.0
+        Candidate spacing in Hz.
+    bandwidth : float, default=2.0
+        Bandpass width in Hz.
+    n_components : int, default=1
+        Components fitted at each candidate.
+    callback : callable or None, default=None
+        Synchronous callback after each attempted candidate.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
     **dss_kws
-        Additional keyword arguments passed to `DSS`.
+        Additional keyword arguments for :class:`~mne_denoise.dss.DSS`.
 
     Returns
     -------
     best_dss : DSS
-        Fitted DSS at the frequency with highest eigenvalue.
+        Fitted DSS at the highest-scoring candidate.
     frequencies : ndarray, shape (n_freqs,)
-        Frequencies that were scanned.
-    eigenvalues : ndarray, shape (n_freqs,)
-        First eigenvalue at each frequency.
-
-    Examples
-    --------
-    >>> # Find dominant alpha frequency
-    >>> best_dss, freqs, eigs = narrowband_scan(data, sfreq=250, freq_range=(7, 14))
-    >>> print(f"Peak alpha at {freqs[np.argmax(eigs)]:.1f} Hz")
-    >>> alpha_sources = best_dss.transform(data)
-
-    >>> # Plot eigenvalue spectrum
-    >>> import matplotlib.pyplot as plt
-    >>> plt.plot(freqs, eigs)
-    >>> plt.xlabel("Frequency (Hz)")
-    >>> plt.ylabel("DSS Eigenvalue")
+        Candidate frequencies.
+    scores : ndarray, shape (n_freqs,)
+        Leading DSS eigenvalue for each candidate. Failed candidates have score
+        zero and the scan continues.
     """
     callback = _validate_callback(callback)
     data = np.asarray(data)

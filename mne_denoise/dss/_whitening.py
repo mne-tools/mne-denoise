@@ -1,12 +1,4 @@
-"""Whitening utilities for data covariance and MNE sensor data.
-
-The data-covariance API computes a reduced-rank transform from an empirical
-covariance. The sensor API follows MNE pre-whitening conventions for mixed
-channel types.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""DSS whitening helpers."""
 
 from __future__ import annotations
 
@@ -80,39 +72,25 @@ def compute_data_covariance_whitener(
     rank: int | None = None,
     reg: float = 1e-9,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute whitening and de-whitening matrices from covariance.
+    """Compute whitening and de-whitening matrices from a covariance.
 
     Parameters
     ----------
     cov : ndarray, shape (n_channels, n_channels)
-        Covariance matrix of the data.
-    rank : int, optional
-        Number of principal components to retain. If None, determined
-        automatically based on eigenvalue threshold.
-    reg : float
-        Regularization threshold. Eigenvalues smaller than
-        reg * max(eigenvalue) are discarded. Default 1e-9.
+        Covariance matrix.
+    rank : int or None, default=None
+        Number of retained principal components.
+    reg : float, default=1e-9
+        Relative eigenvalue threshold.
 
     Returns
     -------
     whitener : ndarray, shape (rank, n_channels)
-        Matrix to whiten data: ``X_white = whitener @ X``.
+        Whitening matrix.
     dewhitener : ndarray, shape (n_channels, rank)
-        Matrix to de-whiten: ``X = dewhitener @ X_white``.
+        De-whitening matrix.
     eigenvalues : ndarray, shape (rank,)
-        Retained eigenvalues (descending order).
-
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.dss._whitening import compute_data_covariance_whitener
-    >>> rng = np.random.default_rng(0)
-    >>> data = rng.standard_normal((4, 1000))
-    >>> cov = data @ data.T / data.shape[1]
-    >>> whitener, dewhitener, eigenvalues = compute_data_covariance_whitener(cov)
-    >>> np.allclose(whitener @ cov @ whitener.T, np.eye(4))
-    True
+        Retained eigenvalues in descending order.
     """
     cov = np.asarray(cov, dtype=float)
     if cov.ndim != 2 or cov.shape[0] != cov.shape[1]:
@@ -181,33 +159,25 @@ def whiten_from_data_covariance(
     rank: int | None = None,
     reg: float = 1e-9,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Whiten multichannel data using its empirical covariance.
+    """Whiten channel-first data using its empirical covariance.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-        Input data to whiten.
-    rank : int, optional
-        Number of principal components to retain. If None, auto-determined.
-    reg : float
-        Regularization threshold for eigenvalue cutoff. Default 1e-9.
+        Input data.
+    rank : int or None, default=None
+        Number of retained principal components.
+    reg : float, default=1e-9
+        Relative eigenvalue threshold.
 
     Returns
     -------
-    whitened : ndarray, shape (rank, n_times) or (rank, n_times, n_epochs)
-        Whitened data with unit covariance.
+    whitened : ndarray
+        Whitened data with the input layout and retained rank.
     whitener : ndarray, shape (rank, n_channels)
         Whitening matrix.
     dewhitener : ndarray, shape (n_channels, rank)
-        De-whitening matrix for reconstruction.
-
-    Examples
-    --------
-    >>> data = np.random.randn(64, 1000)  # 64 channels, 1000 samples
-    >>> whitened, W, D = whiten_from_data_covariance(data)
-    >>> # Verify whitened covariance is approximately identity
-    >>> np.allclose(whitened @ whitened.T / 1000, np.eye(whitened.shape[0]), atol=0.1)
-    True
+        De-whitening matrix.
     """
     # Handle 2D and 3D data
     input_shape = data.shape

@@ -1,11 +1,4 @@
-"""Denoising Source Separation (DSS).
-
-This module contains:
-- Core DSS algorithms (linear and nonlinear)
-- Variants and applications (Time-shift DSS, SSVEP, Narrowband)
-
-For ZapLine, see `mne_denoise.zapline`.
-"""
+"""Denoising Source Separation methods."""
 
 # Denoisers & Biases (Flat API)
 from .denoisers import (

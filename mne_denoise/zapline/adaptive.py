@@ -1,41 +1,4 @@
-"""Adaptive ZapLine-plus utilities for automatic noise removal.
-
-This module implements the adaptive components of ZapLine-plus [1]_ for automatic
-and adaptive removal of frequency-specific noise artifacts in M/EEG recordings.
-
-Key components:
-
-1. **Noise frequency detection**: Automatic detection of line noise frequencies
-   using Welch PSD and outlier detection.
-
-2. **Adaptive segmentation**: Data segmentation based on covariance stationarity
-   to handle non-stationary noise characteristics.
-
-3. **Fine-grained peak detection**: Per-segment frequency refinement for
-   accurate noise targeting.
-
-4. **Artifact presence testing**: Statistical detection of whether line noise
-   is present in a given segment.
-
-5. **QA-based parameter adaptation**: Iterative adjustment of cleaning strength
-   based on spectral quality assessment.
-
-6. **Fallback cleaning**: Notch filter fallback for cases where DSS-based
-   cleaning is insufficient.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Klug, M., & Kloosterman, N. A. (2022). Zapline-plus: A Zapline extension for
-       automatic and adaptive removal of frequency-specific noise artifacts in M/EEG.
-       Human Brain Mapping, 43(9), 2743-2758.
-       https://doi.org/10.1002/hbm.25832
-
-.. [2] de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
-       power line artifacts. NeuroImage, 207, 116356.
-"""
+"""Adaptive ZapLine-plus helpers."""
 
 from __future__ import annotations
 
@@ -45,10 +8,6 @@ from scipy.signal import find_peaks, welch
 
 from .._filtering import design_butter_sos
 
-# -----------------------------------------------------------------------------
-# 1. CleanLine Utilities (Fallback cleanup)
-# -----------------------------------------------------------------------------
-
 
 def apply_cleanline_notch(
     data: np.ndarray,
@@ -57,32 +16,25 @@ def apply_cleanline_notch(
     bandwidth: float = 0.5,
     order: int = 4,
 ) -> np.ndarray:
-    """Apply a narrow notch filter to remove residual line noise.
-
-    This is a fallback for cases where ZapLine cannot fully remove noise
-    without over-cleaning. Uses a Butterworth bandstop (notch) filter.
+    """Apply a narrow Butterworth band-stop filter.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input data to filter.
+        Input data.
     sfreq : float
         Sampling frequency in Hz.
     freq : float
-        Center frequency of the notch in Hz.
+        Center frequency in Hz.
     bandwidth : float, default=0.5
-        Width of the notch filter in Hz.
+        Notch width in Hz.
     order : int, default=4
-        Order of the Butterworth filter.
+        Filter order.
 
     Returns
     -------
     filtered : ndarray, shape (n_channels, n_times)
-        Notch-filtered data. Returns input unchanged if filter is invalid.
-
-    Examples
-    --------
-    >>> filtered = apply_cleanline_notch(data, sfreq=1000, freq=50.0)
+        Filtered data, or the input when the filter cannot be designed.
     """
     # Design notch filter
     nyquist = sfreq / 2
@@ -106,31 +58,25 @@ def apply_hybrid_cleanup(
     bandwidth: float = 0.5,
     max_power_reduction_db: float = 3.0,
 ) -> np.ndarray:
-    """Apply hybrid cleanup with spectral impact protection.
-
-    Applies a notch filter only if it doesn't cause excessive power loss
-    in surrounding frequencies. This prevents over-aggressive cleaning
-    that could damage neural signals.
+    """Apply a notch only when surrounding spectral loss is acceptable.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input data to filter.
+        Input data.
     sfreq : float
         Sampling frequency in Hz.
     freq : float
-        Center frequency to filter in Hz.
+        Center frequency in Hz.
     bandwidth : float, default=0.5
-        Width of the notch filter in Hz.
+        Notch width in Hz.
     max_power_reduction_db : float, default=3.0
-        Maximum allowed power reduction (in dB) in surrounding frequencies.
-        If cleaning would cause greater reduction, the original data is returned.
+        Maximum allowed surrounding-band reduction.
 
     Returns
     -------
     cleaned : ndarray, shape (n_channels, n_times)
-        Cleaned data, or original data if cleaning would cause excessive
-        signal loss.
+        Filtered data, or the original data when the reduction exceeds the limit.
     """
     # Apply notch
     filtered = apply_cleanline_notch(data, sfreq, freq, bandwidth)
@@ -164,11 +110,6 @@ def apply_hybrid_cleanup(
     return filtered
 
 
-# -----------------------------------------------------------------------------
-# 2. Detection & Segmentation Components
-# -----------------------------------------------------------------------------
-
-
 def find_noise_freqs(
     data: np.ndarray,
     sfreq: float,
@@ -177,35 +118,25 @@ def find_noise_freqs(
     window_length: float = 6.0,
     threshold_factor: float = 4.0,
 ) -> list[float]:
-    """Detect noise frequencies using Welch PSD and outlier detection.
-
-    Analyzes the power spectral density to find frequencies with abnormally
-    high power, indicative of line noise artifacts.
+    """Detect candidate noise frequencies from a Welch PSD.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input data to analyze.
+        Data to analyze.
     sfreq : float
         Sampling frequency in Hz.
-    fmin : float, default=17.0
-        Minimum frequency to search (Hz).
-    fmax : float, default=99.0
-        Maximum frequency to search (Hz).
+    fmin, fmax : float, default=17.0, 99.0
+        Search range in Hz.
     window_length : float, default=6.0
-        Width of the spectral window for baseline estimation (Hz).
+        Local spectral-baseline width in Hz.
     threshold_factor : float, default=4.0
-        Number of dB above local baseline to consider a peak as noise.
+        Threshold above the local baseline.
 
     Returns
     -------
     detected_freqs : list of float
-        List of detected noise frequencies in Hz.
-
-    Examples
-    --------
-    >>> freqs = find_noise_freqs(data, sfreq=1000)
-    >>> print(f"Detected: {freqs}")  # e.g., [50.0, 60.0]
+        Detected frequencies in Hz.
     """
     n_channels, n_times = data.shape
 
@@ -265,27 +196,23 @@ def find_noise_freqs(
 def find_fine_peak(
     data: np.ndarray, sfreq: float, coarse_freq: float, search_width: float = 0.05
 ) -> float:
-    """Find the exact peak frequency within a narrow band.
-
-    Refines a coarse frequency estimate by finding the spectral peak
-    within a small search window.
+    """Refine a coarse frequency estimate using a local spectral peak.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input data to analyze.
+        Data to analyze.
     sfreq : float
         Sampling frequency in Hz.
     coarse_freq : float
-        Initial frequency estimate (Hz).
+        Initial frequency in Hz.
     search_width : float, default=0.05
-        Half-width of search window around ``coarse_freq`` (Hz).
+        Half-width of the search interval in Hz.
 
     Returns
     -------
     fine_freq : float
-        Refined frequency estimate (Hz). Returns ``coarse_freq`` if
-        no peak is found in the search window.
+        Refined frequency, or coarse_freq when no peak is found.
     """
     f_low = coarse_freq - search_width
     f_high = coarse_freq + search_width
@@ -315,24 +242,21 @@ def check_artifact_presence(
     sfreq: float,
     target_freq: float,
 ) -> bool:
-    """Check if line noise artifact is present.
-
-    Uses spectral thresholding to determine if there is significant
-    power at the target frequency relative to surrounding frequencies.
+    """Check whether a target line-noise peak is present.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input data to analyze.
+        Data to analyze.
     sfreq : float
         Sampling frequency in Hz.
     target_freq : float
-        Frequency to check for artifact presence (Hz).
+        Target frequency in Hz.
 
     Returns
     -------
     present : bool
-        ``True`` if artifact is detected, ``False`` otherwise.
+        Whether the spectral threshold is exceeded.
     """
     n_times = data.shape[1]
     n_fft = min(n_times, int(sfreq * 4))
@@ -380,31 +304,27 @@ def detect_harmonics(
     threshold_factor: float = 4.0,
     window_length: float = 6.0,
 ) -> list[float]:
-    """Detect harmonics of a fundamental frequency.
-
-    Searches for spectral peaks at integer multiples of the fundamental
-    frequency up to the Nyquist limit.
+    """Detect spectral peaks at harmonics of a fundamental frequency.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Input data to analyze.
+        Data to analyze.
     sfreq : float
         Sampling frequency in Hz.
     fundamental : float
         Fundamental frequency in Hz.
-    max_harmonics : int | None, default=None
-        Maximum number of harmonics to search for.
-        If ``None``, searches up to Nyquist frequency.
+    max_harmonics : int or None, default=None
+        Maximum number of harmonics; None searches below Nyquist.
     threshold_factor : float, default=4.0
-        Number of dB above local baseline to consider a peak as harmonic.
+        Threshold above the local baseline.
     window_length : float, default=6.0
-        Width of spectral window for baseline estimation (Hz).
+        Local spectral-baseline width in Hz.
 
     Returns
     -------
     harmonics : list of float
-        List of detected harmonic frequencies in Hz.
+        Detected harmonic frequencies in Hz.
     """
     nyquist = sfreq / 2
 
@@ -460,40 +380,27 @@ def check_spectral_qa(
     max_prop_below: float = 0.005,
     freq_detect_mult: float = 2.0,
 ) -> str:
-    """Assess quality of noise cleaning using spectral analysis.
-
-    Analyzes the power spectrum around the target frequency to determine
-    if cleaning was appropriate, too weak (residual noise), or too strong
-    (over-cleaning causing spectral notch).
-
-    This implementation uses proportion-based thresholds rather than binary
-    checks.
+    """Classify residual spectral impact around a target frequency.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times)
-        Cleaned data to assess.
+        Cleaned data.
     sfreq : float
         Sampling frequency in Hz.
     target_freq : float
-        Target noise frequency (Hz).
+        Target frequency in Hz.
     max_prop_above : float, default=0.005
-        Maximum proportion of frequency samples that may be above the upper
-        threshold before cleaning is considered too weak. Default is 0.5%.
+        Maximum proportion above the upper threshold.
     max_prop_below : float, default=0.005
-        Maximum proportion of frequency samples that may be below the lower
-        threshold before cleaning is considered too strong. Default is 0.5%.
+        Maximum proportion below the lower threshold.
     freq_detect_mult : float, default=2.0
-        Multiplier for the 5% quantile deviation detector. Default is 2.
+        Multiplier for the local detector.
 
     Returns
     -------
-    status : {'ok', 'weak', 'strong'}
-        Quality assessment:
-
-        - ``'ok'``: Cleaning was appropriate
-        - ``'weak'``: Residual noise detected, consider stronger cleaning
-        - ``'strong'``: Over-cleaning detected (spectral notch), reduce strength
+    status : {"ok", "weak", "strong"}
+        Spectral QA classification.
     """
     n_times = data.shape[1]
     n_fft = min(n_times, int(sfreq * 4))

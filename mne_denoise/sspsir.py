@@ -1,33 +1,4 @@
-"""SSP-SIR: suppress TMS-evoked muscle artifacts from EEG.
-
-Implements signal-space projection--source-informed reconstruction (SSP-SIR)
-[1]_. The method projects out the high-variance muscle-artifact subspace and
-reconstructs the brain signal lost to that projection through a forward model.
-Temporal blending can restrict the suppression to the artifact window [2]_.
-Broader reviews discuss SSP-SIR as a source-based method [3]_ and within a
-unified framework for TMS-EEG artifact removal [4]_.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Mutanen, T. P., Kukkonen, M., Nieminen, J. O., Stenroos, M., Sarvas,
-       J., & Ilmoniemi, R. J. (2016). Recovering TMS-evoked EEG responses
-       masked by muscle artifacts. NeuroImage, 139, 157-166.
-.. [2] Mutanen, T. P., Ilmoniemi, I., Atti, I., Metsomaa, J., & Ilmoniemi,
-       R. J. (2024). A simulation study: comparing independent component
-       analysis and signal-space projection - source-informed reconstruction
-       for rejecting muscle artifacts evoked by transcranial magnetic
-       stimulation. Frontiers in Human Neuroscience, 18, 1324958.
-.. [3] Mutanen, T. P., Metsomaa, J., Makkonen, M., Varone, G., Marzetti, L.,
-       & Ilmoniemi, R. J. (2022). Source-based artifact-rejection techniques
-       for TMS-EEG. Journal of Neuroscience Methods, 382, 109693.
-.. [4] Hernandez-Pavon, J. C., Kugiumtzis, D., Zrenner, C., Kimiskidis, V. K.,
-       & Metsomaa, J. (2022). Removing artifacts from TMS-evoked EEG: A methods
-       review and a unifying theoretical framework. Journal of Neuroscience
-       Methods, 376, 109591.
-"""
+"""SSP-SIR source-informed reconstruction."""
 
 from __future__ import annotations
 
@@ -61,7 +32,7 @@ _SMOOTH_LENGTH = 0.010
 def _truncated_svd(
     matrix: np.ndarray, M: int, what: str
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return the leading singular triplets, limited to numerical rank."""
+    """Return leading singular triplets up to the requested numerical rank."""
     if isinstance(M, (bool, np.bool_)) or not isinstance(M, Integral) or M < 1:
         raise ValueError(f"M must be a positive integer, got {M!r}.")
     u, s, vt = np.linalg.svd(matrix, full_matrices=False)
@@ -84,11 +55,7 @@ def _truncated_svd(
 def _artifact_subspace(
     svd_input: np.ndarray, n_components
 ) -> tuple[np.ndarray, int, np.ndarray]:
-    """Left singular vectors of ``svd_input`` and the number of artifact PCs.
-
-    ``n_components`` is either an int (number of PCs) or a float in (0, 1)
-    (cumulative high-frequency variance fraction).
-    """
+    """Estimate the high-frequency artifact subspace and component count."""
     svd_input = np.asarray(svd_input, dtype=float)
     if svd_input.ndim != 2 or 0 in svd_input.shape:
         raise ValueError(
@@ -139,25 +106,27 @@ def _artifact_subspace(
 def compute_sspsir(
     leadfield: np.ndarray, artifact_topographies: np.ndarray, M: int
 ) -> np.ndarray:
-    """Build the artifact-suppressing SSP-SIR operator (``cleaned = C @ data``).
-
-    This is the projected branch of SSP-SIR: project the artifact subspace out,
-    then reconstruct through the forward model. In the full method it is
-    crossfaded against :func:`compute_sir`; see :class:`SSPSIR`.
+    """Build the projected SSP-SIR reconstruction operator.
 
     Parameters
     ----------
     leadfield : ndarray, shape (n_channels, n_sources)
         Average-referenced lead field.
     artifact_topographies : ndarray, shape (n_channels, n_components)
-        Orthonormal artifact subspace (left singular vectors).
+        Orthonormal artifact subspace.
     M : int
-        Truncation dimension of the source-informed reconstruction.
+        Source-informed reconstruction rank.
 
     Returns
     -------
-    operator : ndarray, shape (n_channels, n_channels)
-        The artifact-suppressing SSP-SIR operator.
+    ndarray, shape (n_channels, n_channels)
+        Artifact-suppressing operator.
+
+    References
+    ----------
+    :footcite:p:`mutanen2016_sspsir`
+
+    .. footbibliography::
     """
     leadfield = _validate_leadfield(leadfield)
     artifact_topographies = np.asarray(artifact_topographies, dtype=float)
@@ -190,25 +159,19 @@ def compute_sspsir(
 
 
 def compute_sir(leadfield: np.ndarray, M: int) -> np.ndarray:
-    """Build the source-informed reconstruction operator without projection.
-
-    A rank-``M`` reconstruction of the data through the forward model, with no
-    artifact subspace removed. It is
-    *not* the identity -- it restricts the data to the ``M`` leading
-    lead-field topographies -- so the crossfade in :class:`SSPSIR` applies the
-    same rank truncation inside and outside the artifact window.
+    """Build the unprojected source-informed reconstruction operator.
 
     Parameters
     ----------
     leadfield : ndarray, shape (n_channels, n_sources)
         Average-referenced lead field.
     M : int
-        Truncation dimension of the source-informed reconstruction.
+        Source-informed reconstruction rank.
 
     Returns
     -------
-    operator : ndarray, shape (n_channels, n_channels)
-        The unprojected source-informed reconstruction operator.
+    ndarray, shape (n_channels, n_channels)
+        Rank-truncated source-informed operator.
     """
     leadfield = _validate_leadfield(leadfield)
     u, _, _ = _truncated_svd(leadfield, M, "the lead field")
@@ -216,13 +179,7 @@ def compute_sir(leadfield: np.ndarray, M: int) -> np.ndarray:
 
 
 def _as_mne_projections(topographies: np.ndarray, ch_names: list[str]) -> list:
-    """Wrap artifact topographies as :class:`mne.Projection` objects.
-
-    Exposing them in MNE's own container means the directions SSP-SIR removed
-    can be inspected and plotted with the standard tooling, e.g.
-    ``mne.viz.plot_projs_topomap(ssp.projs_, raw.info)`` -- worth doing for a
-    method whose main failure mode is removing too much.
-    """
+    """Wrap artifact topographies as MNE projection objects."""
     _mne.require_mne("SSP-SIR artifact projections")
 
     return [
@@ -244,130 +201,68 @@ def _as_mne_projections(topographies: np.ndarray, ch_names: list[str]) -> list:
 
 
 class SSPSIR(BaseEstimator, TransformerMixin):
-    """Suppress TMS-evoked muscle artifacts from EEG (SSP-SIR).
+    """Source-informed signal-space projection for TMS-evoked muscle artifact removal.
 
-    SSP-SIR projects out the high-variance muscle-artifact subspace and then
-    reconstructs the brain signal lost to that projection through a forward
-    model. With no individualised forward model, a three-layer spherical lead
-    field is built from the montage. Conceptually this is signal-space
-    projection followed by the source-informed reconstruction that MNE-Python
-    also exposes as ``proj="reconstruct"``.
-
-    As in the published method, the artifact-suppressed reconstruction is
-    crossfaded in time against a reconstruction of the *unprojected* data
-    (:func:`compute_sir`), so that the artifact subspace is removed
-    only where the muscle artifact lives. Without this crossfade the projection
-    also removes brain signal from the baseline and from late TEP components.
-    Restricting suppression to the artifact window is also what the method's
-    authors do in practice (Mutanen et al., 2024) [2]_.
-
-    The numerical core has reference parity and synthetic validation, but the
-    estimator has not yet been independently validated on a public real
-    TMS-EEG dataset. Treat real-data use as experimental.
+    SSP-SIR projects out an artifact subspace, reconstructs through a lead field,
+    and blends the projected and unprojected reconstructions around the artifact
+    window.
 
     Parameters
     ----------
-    n_components : int | float
-        Number of artifact principal components to remove (int), or the
-        cumulative high-frequency variance fraction to cover (float in (0, 1)).
-        See Notes for the exact criterion.
-    forward : mne.Forward | None
-        Optional forward solution; if None a spherical lead field is built.
-    art_window : tuple of float | None
-        ``(tmin, tmax)`` in seconds delimiting the muscle artifact used to
-        estimate the artifact subspace. If None, the subspace is estimated
-        automatically from high-frequency power across the whole epoch.
-    blend : {'auto', 'constant'}
-        How to crossfade the projected and unprojected reconstructions.
-        ``'auto'`` (default) matches the kernel to the subspace mode: the
-        sliding-RMS high-frequency envelope when ``art_window`` is None, or a
-        smooth window around ``art_window`` otherwise. ``'constant'`` applies
-        the projection uniformly over time.
-    high_pass : float
-        High-pass cutoff (Hz) used to isolate the muscle artifact. Default 100.
-    M : int | None
-        Source-informed reconstruction truncation dimension. If None, uses
-        ``rank(data) - n_components``.
-    smooth_length : float
-        10-90% transition width (seconds) of the ``art_window`` crossfade.
-        Default 0.010.
-    sfreq : float | None
-        Sampling frequency, required only for plain-array input.
-    n_dipoles : int
-        Number of dipoles for the spherical lead field.
-    verbose : bool | str | int | None, default=None
-        MNE-style logging level. The fitted SSP-SIR summary is emitted at
-        INFO; numerical reconstruction helpers remain silent.
+    n_components : int or float
+        Number of artifact components, or high-frequency variance fraction in (0, 1).
+    forward : mne.Forward or None, default=None
+        Optional forward solution; None builds a spherical lead field.
+    art_window : tuple of float or None, default=None
+        Artifact interval (tmin, tmax) in seconds; None derives a high-frequency
+        envelope from the epoch.
+    blend : {"auto", "constant"}, default="auto"
+        Crossfade rule.
+    high_pass : float, default=100.0
+        High-pass cutoff in Hz for artifact-subspace estimation.
+    M : int or None, default=None
+        Source-informed reconstruction rank; None uses data rank minus artifact rank.
+    smooth_length : float, default=0.010
+        Crossfade transition width in seconds.
+    sfreq : float or None, default=None
+        Sampling frequency for NumPy input.
+    n_dipoles : int, default=5000
+        Dipoles for a generated spherical lead field.
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Attributes
     ----------
     leadfield_ : ndarray
-        The average-referenced lead field used.
-    artifact_topographies_ : ndarray, shape (n_channels, n_components)
-        The removed artifact subspace.
-    operator_ : ndarray, shape (n_channels, n_channels)
-        The fitted artifact-suppressing operator.
-    operator_orig_ : ndarray, shape (n_channels, n_channels)
-        The unprojected source-informed reconstruction operator.
-    kernel_ : ndarray, shape (n_times,)
-        Crossfade weights in [0, 1]; 1 where the artifact subspace is fully
-        removed. All ones when ``blend='constant'``.
+        Lead field used during fitting.
+    artifact_topographies_ : ndarray
+        Fitted artifact subspace.
+    operator_ : ndarray
+        Projected reconstruction operator.
+    operator_orig_ : ndarray
+        Unprojected reconstruction operator.
+    kernel_ : ndarray
+        Temporal crossfade weights.
     n_components_ : int
-        Number of artifact components removed.
+        Effective artifact-component count.
     M_ : int
-        Effective source-informed reconstruction rank used. This can be lower
-        than the requested ``M`` when the projected lead field has lower
-        numerical rank.
+        Effective reconstruction rank.
     singular_values_ : ndarray
-        Singular values of the high-frequency data the subspace was estimated
-        from. Inspect these to choose ``n_components`` by the spectrum elbow,
-        which is what Mutanen et al. (2016) actually recommend [1]_.
+        Singular values used for artifact-subspace selection.
     projs_ : list of mne.Projection
-        ``artifact_topographies_`` wrapped as MNE projections, so the removed
-        directions can be plotted with ``mne.viz.plot_projs_topomap``. Empty
-        when fitted on a plain array, which carries no channel names.
+        Artifact directions when fitted on named MNE data.
 
     Notes
     -----
-    With a float ``n_components`` this keeps the components covering that
-    fraction of *variance*, ``sum(s[:k]**2) / sum(s**2)`` -- the standard PCA
-    criterion. Choosing by the elbow of ``singular_values_`` is what Mutanen
-    et al. (2016) actually recommend [1]_; pass an explicit int to do so.
-
-    Established implementations expose the same three modes under different
-    names -- automatic and windowed subspace estimation, and applying the
-    projection across the whole epoch rather than only around the artifact --
-    so ``art_window`` and ``blend`` translate directly. One difference is
-    substantive rather than nominal: a float ``n_components`` selects a
-    variance fraction here, whereas the equivalent data-driven option
-    elsewhere thresholds ``sum(s[:k])**2 / sum(s)**2``, a squared
-    nuclear-norm fraction, and so keeps more components for the same nominal
-    percentage -- 7 against 3 at 90% on a typical spectrum. Pass an explicit
-    int when a particular count is required.
-
-    For broader treatments of SSP-SIR as a source-based method and as part of
-    the general TMS-EEG artifact-removal landscape, see Mutanen et al. (2022)
-    [3]_ and Hernandez-Pavon et al. (2022) [4]_, respectively.
+    NumPy input uses (n_channels, n_times) or (n_epochs, n_channels, n_times).
+    MNE Raw, Epochs, and Evoked inputs are supported and returned without mutation.
+    The artifact-window reconstruction is time-locked to the fitted data.
 
     References
     ----------
-    .. [1] Mutanen, T. P., Kukkonen, M., Nieminen, J. O., Stenroos, M.,
-           Sarvas, J., & Ilmoniemi, R. J. (2016). Recovering TMS-evoked EEG
-           responses masked by muscle artifacts. NeuroImage, 139, 157-166.
-    .. [2] Mutanen, T. P., Ilmoniemi, I., Atti, I., Metsomaa, J., & Ilmoniemi,
-           R. J. (2024). A simulation study: comparing independent component
-           analysis and signal-space projection - source-informed
-           reconstruction for rejecting muscle artifacts evoked by
-           transcranial magnetic stimulation. Frontiers in Human Neuroscience,
-           18, 1324958.
-    .. [3] Mutanen, T. P., Metsomaa, J., Makkonen, M., Varone, G., Marzetti,
-           L., & Ilmoniemi, R. J. (2022). Source-based artifact-rejection
-           techniques for TMS-EEG. Journal of Neuroscience Methods, 382,
-           109693.
-    .. [4] Hernandez-Pavon, J. C., Kugiumtzis, D., Zrenner, C., Kimiskidis,
-           V. K., & Metsomaa, J. (2022). Removing artifacts from TMS-evoked
-           EEG: A methods review and a unifying theoretical framework. Journal
-           of Neuroscience Methods, 376, 109591.
+    :footcite:p:`mutanen2016_sspsir,mutanen2022_source_artifact,mutanen2024_sspsir_simulation,hernandez_pavon2022_tms_review`
+
+    .. footbibliography::
     """
 
     def __init__(
@@ -414,23 +309,7 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         return sfreq
 
     def _svd_input(self, evoked, sfreq, times):
-        """High-pass the evoked; return the SVD input and the crossfade kernel.
-
-        Notes
-        -----
-        The high-pass is a second-order Butterworth applied with
-        :func:`scipy.signal.filtfilt` rather than
-        :func:`mne.filter.filter_data`, because the artifact subspace is
-        defined through exactly this filter in the published method. The two
-        differ only in how far they extend the signal past the epoch edges
-        (scipy pads 9 samples by odd reflection, MNE considerably more) --
-        neither extension is more correct, since the true signal outside the
-        epoch is unknown. That moves the filtered trace by ~1e-2 relative at
-        the boundaries and ~3e-12 in the interior. The artifact subspaces
-        that result differ by under 0.15 degrees, so the choice does not
-        matter to the outcome -- but keeping the published filter preserves
-        an exact reference check that would otherwise be lost.
-        """
+        """Filter the evoked data and construct the artifact-subspace input and crossfade."""
         b, a = butter(2, self.high_pass / (sfreq / 2.0), btype="high")
         data_high = filtfilt(b, a, evoked, axis=1)
 
@@ -459,32 +338,21 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Estimate the SSP-SIR cleaning operators from ``X``.
+        """Fit the SSP-SIR artifact subspace and reconstruction operators.
 
         Parameters
         ----------
-        X : ndarray | Raw | Epochs | Evoked
-            EEG data used to estimate the artifact subspace. NumPy input must
-            have shape ``(n_channels, n_times)`` or
-            ``(n_epochs, n_channels, n_times)``. MNE input may be Raw, Epochs,
-            or Evoked; the estimator selects one homogeneous data channel type
-            and records its channel layout.
-        y : None
-            Ignored scikit-learn compatibility argument.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for the fit summary.
+        X : ndarray, Raw, Epochs, or Evoked
+            EEG data used for fitting. NumPy input is channel-first.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        self : SSPSIR
-            Fitted estimator.
-
-        Raises
-        ------
-        ValueError
-            If ``n_components`` or the reconstruction settings are invalid,
-            if a plain array has no sampling frequency, or if the forward
-            model cannot be resolved.
+        SSPSIR
+            The fitted estimator.
         """
         if self.n_components is None:
             raise ValueError(
@@ -590,31 +458,19 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         *,
         verbose: bool | str | int | None = None,
     ):
-        """Apply the fitted SSP-SIR operators to ``X``.
+        """Apply the fitted SSP-SIR operators.
 
         Parameters
         ----------
-        X : ndarray | Raw | Epochs | Evoked
-            Data to transform with shape ``(n_channels, n_times)`` or
-            ``(n_epochs, n_channels, n_times)`` for NumPy input. MNE input
-            must have the fitted channel layout and sampling frequency.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level.
+        X : ndarray, Raw, Epochs, or Evoked
+            Data with the fitted channel layout and, for time-varying blending, time axis.
+        verbose : bool, str, int, or None, default=None
+            Logging level.
 
         Returns
         -------
-        cleaned : ndarray | Raw | Epochs | Evoked
-            Reconstructed data with the same layout and, for MNE input, a copy
-            of the original container. Channels outside the fitted data
-            channel selection are preserved.
-
-        Raises
-        ------
-        sklearn.exceptions.NotFittedError
-            If :meth:`fit` has not been called.
-        ValueError
-            If the channel layout, sampling frequency, or time dimension does
-            not match the fitted estimator.
+        same type as X
+            Reconstructed data; non-fitted MNE channels are preserved.
         """
         check_is_fitted(self, attributes=["operator_", "operator_orig_", "kernel_"])
         data, sfreq, mne_type, orig_inst, picks, ch_names = extract_data_from_mne(

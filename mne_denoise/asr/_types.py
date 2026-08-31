@@ -1,8 +1,4 @@
-"""Shared dataclasses and types for the ASR module.
-
-This module holds the fitted-state container shared by the standard, adaptive,
-Juggler, and Riemannian ASR variants.
-"""
+"""ASR state types."""
 
 from __future__ import annotations
 
@@ -57,18 +53,7 @@ class ASRState:
 
 
 def _copy_asr_state(state: ASRState) -> ASRState:
-    """Create a deep copy of an ASRState object.
-
-    Parameters
-    ----------
-    state : ASRState
-        The state object to copy.
-
-    Returns
-    -------
-    ASRState
-        A new ASRState instance with copied arrays.
-    """
+    """Return a deep copy of an ASRState object."""
     return ASRState(
         M=state.M.copy(),
         T=state.T.copy(),
@@ -85,18 +70,7 @@ def _copy_asr_state(state: ASRState) -> ASRState:
 
 
 def _copy_process_state(state: dict[str, Any]) -> dict[str, Any]:
-    """Create a deep copy of an ASR process state dictionary.
-
-    Parameters
-    ----------
-    state : dict
-        The process state dictionary containing NumPy arrays or scalar values.
-
-    Returns
-    -------
-    dict
-        A new dictionary with copied arrays and values.
-    """
+    """Return a copy of an ASR process-state dictionary."""
     copied: dict[str, Any] = {}
     for key, value in state.items():
         copied[key] = value.copy() if isinstance(value, np.ndarray) else value

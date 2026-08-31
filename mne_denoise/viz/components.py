@@ -1,17 +1,4 @@
-"""Component-level visualization primitives.
-
-This module contains:
-1. Component score/eigenvalue curves.
-2. Spatial component pattern plots with topomap or line fallback.
-3. Source-space summaries in time, epoch-image, and spectrogram form.
-
-These functions are method-agnostic and can be used with any fitted
-estimator exposing component attributes such as ``patterns_``, ``scores_``,
-``eigenvalues_``, or component sources via ``transform``.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Component visualization functions."""
 
 from __future__ import annotations
 
@@ -87,16 +74,6 @@ def plot_component_score_curve(
     ------
     ValueError
         If ``mode`` is invalid, or if scores are missing/invalid.
-
-    Notes
-    -----
-    When available, the function overlays a dashed vertical cutoff using
-    ``n_selected_`` or ``n_removed_`` from the estimator.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_score_curve
-    >>> fig = plot_component_score_curve(estimator, mode="raw", show=False)
     """
     valid_modes = {"raw", "cumulative", "ratio"}
     if mode not in valid_modes:
@@ -250,10 +227,6 @@ def plot_component_patterns(
 ):
     """Plot spatial component patterns.
 
-    When compatible MNE channel information is available, the patterns are
-    rendered as topomaps. Otherwise, the function falls back to plotting the
-    selected component weights across channels on a standard axes.
-
     Parameters
     ----------
     estimator : object
@@ -284,22 +257,6 @@ def plot_component_patterns(
         If patterns are not 2D, if no components are selected, or when
         ``ax`` is passed while requesting multiple topomaps. Also raised when
         ``picks`` is provided without valid ``info``.
-
-    Notes
-    -----
-    Topomap rendering is explicit: pass both ``info`` and ``picks``.
-    This function does not infer channel picks automatically.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_patterns
-    >>> fig = plot_component_patterns(
-    ...     estimator,
-    ...     info=info,
-    ...     picks=[0, 1, 2, 3],
-    ...     n_components=4,
-    ...     show=False,
-    ... )
     """
     patterns = np.asarray(_get_patterns(estimator))
     if patterns.ndim != 2:
@@ -408,11 +365,6 @@ def plot_component_summary(
 ):
     """Plot a compact per-component summary dashboard.
 
-    Each selected component is displayed in one row with:
-    1) spatial pattern,
-    2) time course (mean ± CI for epoched sources),
-    3) power spectral density.
-
     Parameters
     ----------
     estimator : object
@@ -454,26 +406,6 @@ def plot_component_summary(
         ``times`` length mismatches source length, or if ``picks`` is provided
         without valid ``info``. Also raised when neither ``info`` nor ``sfreq``
         is provided.
-
-    Notes
-    -----
-    Topomap rendering and time coordinates are explicit in this function. It
-    does not infer channel picks or time axes.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_summary
-    >>> fig = plot_component_summary(
-    ...     estimator,
-    ...     data=epochs,
-    ...     sfreq=epochs.info["sfreq"],
-    ...     info=info,
-    ...     picks=[0, 1, 2, 3],
-    ...     times=epochs.times,
-    ...     n_components=3,
-    ...     psd_fmax=80,
-    ...     show=False,
-    ... )
     """
     if picks is not None and info is None:
         raise ValueError("info is required when picks is provided.")
@@ -617,20 +549,6 @@ def plot_component_epochs_image(
     ------
     ValueError
         If sources are not 2D/3D, or if no components are selected.
-
-    Notes
-    -----
-    Input source shapes are interpreted as:
-
-    - ``(n_components, n_times)`` for a single average/time series.
-    - ``(n_components, n_times, n_epochs)`` for epoched sources.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_epochs_image
-    >>> fig = plot_component_epochs_image(
-    ...     estimator, data=epochs, n_components=[0, 1], show=False
-    ... )
     """
     sources = _get_components(estimator, data)
     if sources.ndim == 2:
@@ -703,21 +621,6 @@ def plot_component_time_series(
     ValueError
         If no components are selected or if ``times`` length mismatches source
         length.
-
-    Notes
-    -----
-    Each component is z-scored independently before plotting so that traces
-    are comparable in amplitude and can be stacked with a fixed offset.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_time_series
-    >>> fig = plot_component_time_series(
-    ...     estimator,
-    ...     data=raw,
-    ...     times=raw.times,
-    ...     show=False,
-    ... )
     """
     sources = _get_components(estimator, data)
     scores = _get_scores(estimator)
@@ -827,18 +730,6 @@ def plot_component_spectrogram(
     ValueError
         If ``component_data`` is not 1D/2D, or if ``fmax`` is not positive
         when ``freqs`` is None.
-
-    Notes
-    -----
-    A 1D input is treated as one pseudo-epoch. A 2D input is interpreted as
-    ``(n_epochs, n_times)`` and averaged across epochs in power space.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_spectrogram
-    >>> fig = plot_component_spectrogram(
-    ...     component_data, sfreq=250.0, fmax=80, show=False
-    ... )
     """
     _mne.require_mne("component spectrogram visualization")
     component_data = np.asarray(component_data)

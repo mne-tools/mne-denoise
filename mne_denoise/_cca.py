@@ -1,29 +1,4 @@
-"""Internal canonical correlation analysis shared by denoising algorithms.
-
-This module contains:
-
-1. ``canonical_correlation``: the core canonical correlation analysis solver
-   [1]_, shared by iCanClean and BSS-CCA.
-
-.. warning::
-
-   The returned coefficient matrices are built on a **pivoted coordinate
-   basis**. When the input is rank deficient the solver reduces onto ``rank``
-   *columns of the identity* chosen by the QR pivot order, not onto the data's
-   row space, so ``A`` has literal zero rows at the pivoted-out feature
-   indices. Using ``U``/``V`` as a regression basis is safe. Inverting ``A``
-   (or ``B``) to map component space back to feature space is **not**: the
-   result annihilates whole features. Back-project by least squares against
-   the data instead — see :func:`mne_denoise.bss_cca.compute_bss_cca`.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Hotelling, H. (1936). Relations between two sets of variates.
-       Biometrika, 28(3/4), 321-377.
-"""
+"""Internal canonical correlation utilities."""
 
 from __future__ import annotations
 
@@ -42,82 +17,29 @@ def canonical_correlation(
     rtol: float | None = None,
     verbose: bool | str | int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""Compute canonical correlation analysis between two matrices.
-
-    This is the low-level canonical correlation analysis (CCA) solver shared by
-    the package's CCA-based algorithms. It identifies pairs of linear
-    combinations of ``X`` and ``Y`` that are maximally correlated with each
-    other, ordered by decreasing canonical correlation [1]_.
-
-    The computation proceeds as follows:
-
-    1. Mean-center ``X`` and ``Y`` (using ``sample_weight`` when supplied).
-    2. Compute rank-revealing QR decompositions with column pivoting.
-    3. Compute the singular value decomposition of :math:`Q_x^T Q_y`.
-    4. Back-solve through the ``R`` factors to obtain canonical coefficients.
-    5. Normalize the canonical variates to unit variance.
-
-    ``R`` is derived from singular values and is therefore **non-negative**:
-    a pair of variates that is perfectly *anti*-correlated yields ``R = 1``,
-    with the sign absorbed into ``B``. Callers that interpret ``R`` as a
-    correlation must account for this.
+    """Compute canonical correlations between two observation matrices.
 
     Parameters
     ----------
     X : ndarray, shape (n_samples, n_features_x)
-        First data matrix (e.g. EEG scalp channels).
+        First data matrix.
     Y : ndarray, shape (n_samples, n_features_y)
-        Second data matrix (e.g. reference noise channels).
-    sample_weight : ndarray, shape (n_samples,) | None
-        Optional non-negative observation weights. Weighted means, covariance
-        geometry, and canonical-variate normalization are then used.
-    rtol : float | None
-        Optional relative rank threshold applied to the diagonal of each QR
-        factor. ``None`` uses the existing machine-precision threshold.
-    verbose : bool | str | int | None
-        MNE-style logging level. CCA is a shared mathematical primitive and
-        therefore emits only DEBUG diagnostics, never a normal INFO summary.
+        Second data matrix with the same number of observations as X.
+    sample_weight : ndarray, shape (n_samples,) | None, default=None
+        Optional finite, non-negative observation weights.
+    rtol : float | None, default=None
+        Relative QR rank threshold.
+    verbose : bool, str, int, or None, default=None
+        MNE-style logging level.
 
     Returns
     -------
-    A : ndarray, shape (n_features_x, d)
-        Coefficients for X canonical variates. ``d = min(rank(X), rank(Y))``.
-        Built on a pivoted coordinate basis; see the module warning before
-        inverting it.
-    B : ndarray, shape (n_features_y, d)
-        Coefficients for Y canonical variates.
+    A, B : ndarray
+        Canonical coefficient matrices for X and Y.
     R : ndarray, shape (d,)
         Non-negative canonical correlations in descending order.
-    U : ndarray, shape (n_samples, d)
-        Canonical variates for X, unit-variance normalized (ddof=1).
-    V : ndarray, shape (n_samples, d)
-        Canonical variates for Y, unit-variance normalized (ddof=1).
-
-    Raises
-    ------
-    ValueError
-        If ``X`` and ``Y`` do not have the same number of samples.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise._cca import canonical_correlation
-    >>> rng = np.random.default_rng(42)
-    >>> X = rng.standard_normal((200, 8))
-    >>> Y = rng.standard_normal((200, 4))
-    >>> A, B, R, U, V = canonical_correlation(X, Y)
-    >>> R.shape
-    (4,)
-
-    See Also
-    --------
-    mne_denoise.icanclean.compute_icanclean : Core iCanClean cleaning pass.
-    mne_denoise.bss_cca.compute_bss_cca : Reference-free lagged BSS-CCA.
-
-    References
-    ----------
-    .. [1] Hotelling, H. (1936). Relations between two sets of variates.
-           Biometrika, 28(3/4), 321-377.
+    U, V : ndarray, shape (n_samples, d)
+        Unit-variance canonical variates.
     """
     X = np.asarray(X, dtype=np.float64)
     Y = np.asarray(Y, dtype=np.float64)

@@ -1,17 +1,4 @@
-"""Spectrogram-based bias functions for DSS.
-
-Implements denoising based on time-frequency representation masking.
-
-Includes both Linear (SpectrogramBias) and Nonlinear (SpectrogramDenoiser)
-implementations.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-"""
+"""Spectrogram bias functions for DSS."""
 
 from __future__ import annotations
 
@@ -25,7 +12,7 @@ from .base import LinearDenoiser, NonlinearDenoiser
 def _apply_tf_mask(
     data_1d: np.ndarray, mask: np.ndarray, nperseg: int, noverlap: int
 ) -> np.ndarray:
-    """Apply TF mask to 1D signal."""
+    """Apply an STFT mask and return a signal with its original length."""
     f, t, Zxx = signal.stft(data_1d, nperseg=nperseg, noverlap=noverlap)
 
     # Resize mask if needed
@@ -52,36 +39,23 @@ def _apply_tf_mask(
 
 
 class SpectrogramBias(LinearDenoiser):
-    """Linear spectrogram bias (Section 4.1.3).
-
-    Applies a FIXED time-frequency mask to the data. This is a linear operation
-    used to define the signal subspace in the initialization or linear DSS step.
+    """Fixed STFT-mask bias for DSS.
 
     Parameters
     ----------
     mask : ndarray, shape (n_freqs, n_times)
-        The fixed 2D mask to apply. Must be provided for linear biasing.
-    nperseg : int
-        Segment length for STFT. Default 256.
-    noverlap : int, optional
-        Overlap between segments. Default nperseg // 2.
+        Time-frequency mask. It is resized with nearest-neighbour interpolation
+        when its shape differs from the computed STFT.
+    nperseg : int, default=256
+        STFT segment length.
+    noverlap : int or None, default=None
+        Number of overlapping samples. ``None`` uses ``nperseg // 2``.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.dss.denoisers import SpectrogramBias
-    >>> mask = np.ones((128, 1000))
-    >>> bias = SpectrogramBias(mask)
-    >>> data = np.random.randn(128, 1000)
-    >>> biased = bias.apply(data)
-
-    See Also
-    --------
-    SpectrogramDenoiser : Adaptive nonlinear version.
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.3 "SPECTROGRAM DENOISING"
+    Notes
+    -----
+    Two-dimensional channel-first input is processed channel by channel. For
+    three-dimensional input, each ``(n_channels, n_times)`` epoch is processed
+    separately.
     """
 
     def __init__(
@@ -134,39 +108,20 @@ class SpectrogramBias(LinearDenoiser):
 
 
 class SpectrogramDenoiser(NonlinearDenoiser):
-    """Adaptive/Nonlinear spectrogram denoiser (Section 4.1.3).
-
-    Applies masking in the time-frequency domain. This version is ADAPTIVE,
-    calculating the mask from the source estimate itself at each iteration.
-    This makes it distinct from the Linear SpectrogramBias.
+    """STFT-mask denoiser for iterative DSS.
 
     Parameters
     ----------
-    threshold_percentile : float
-        For adaptive masking, threshold below this percentile. Default 90.
-        Higher percentile = sparser signal (more aggressive denoising).
-    nperseg : int
-        Segment length for STFT. Default 256.
-    noverlap : int, optional
-        Overlap between segments. Default nperseg // 2.
-    mask : ndarray, shape (n_freqs, n_times), optional
-        Optional FIXED mask to use instead of adaptive (hybrid mode).
-
-    Examples
-    --------
-    >>> from mne_denoise.dss.denoisers import SpectrogramDenoiser
-    >>> # Retain only the strongest 10% of TF-bins (aggressive denoising)
-    >>> denoiser = SpectrogramDenoiser(threshold_percentile=90)
-    >>> denoised = denoiser.denoise(source)
-
-    See Also
-    --------
-    SpectrogramBias : Fixed linear version.
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.1.3 "SPECTROGRAM DENOISING"
-
+    threshold_percentile : float, default=90.0
+        Percentile of STFT magnitude used as the adaptive threshold; bins above
+        it receive gain one.
+    nperseg : int, default=256
+        STFT segment length.
+    noverlap : int or None, default=None
+        Number of overlapping samples. ``None`` uses ``nperseg // 2``.
+    mask : ndarray or None, default=None
+        Fixed time-frequency mask. When supplied, it replaces adaptive mask
+        calculation.
     """
 
     def __init__(
@@ -182,18 +137,17 @@ class SpectrogramDenoiser(NonlinearDenoiser):
         self.mask = mask
 
     def denoise(self, source: np.ndarray) -> np.ndarray:
-        """Apply adaptive spectrogram masking to a source.
+        """Compute or apply an STFT mask to a source.
 
         Parameters
         ----------
         source : ndarray, shape (n_times,) or (n_times, n_epochs)
-            Source time series. Two-dimensional input is processed one epoch
-            at a time.
+            Source time series; columns of 2D input are processed separately.
 
         Returns
         -------
-        denoised : ndarray, same shape as ``source``
-            Source reconstructed after time-frequency masking.
+        ndarray
+            Reconstructed source with the input shape.
         """
         if source.ndim == 2:
             _, n_epochs = source.shape
@@ -207,7 +161,7 @@ class SpectrogramDenoiser(NonlinearDenoiser):
             raise ValueError(f"Source must be 1D or 2D, got {source.ndim}D")
 
     def _denoise_1d(self, source: np.ndarray) -> np.ndarray:
-        """Process 1D source."""
+        """Compute or use a mask for one source and apply it."""
         # STFT just to calculate mask if adaptive
         if self.mask is None:
             f, t, Zxx = signal.stft(

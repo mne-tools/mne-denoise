@@ -1,9 +1,4 @@
-"""Symmetric positive-definite (SPD) and Riemannian matrix primitives for ASR.
-
-This module provides low-level linear algebra utilities for robust covariance
-aggregation, matrix square roots and logarithms on the SPD manifold, and
-affine-invariant Karcher mean computations.
-"""
+"""ASR symmetric positive-definite matrix helpers."""
 
 from __future__ import annotations
 
@@ -24,23 +19,7 @@ def _geometric_median(
     max_iter: int = 128,
     tol: float = 1e-7,
 ) -> np.ndarray:
-    """Compute the geometric median of a set of covariance matrices.
-
-    Parameters
-    ----------
-    covariances : np.ndarray
-        Array of shape (n_matrices, n_channels, n_channels) containing the
-        covariance matrices to aggregate.
-    max_iter : int, optional
-        Maximum number of iterations for the Weiszfeld algorithm, by default 128.
-    tol : float, optional
-        Tolerance for convergence, by default 1e-7.
-
-    Returns
-    -------
-    median_cov : np.ndarray
-        The geometric median covariance matrix of shape (n_channels, n_channels).
-    """
+    """Compute the geometric median of a set of covariance matrices."""
     current = np.mean(covariances, axis=0)
     for _ in range(max_iter):
         distances = np.linalg.norm(
@@ -69,26 +48,7 @@ def _geometric_median_chunked(
     max_iter: int = 128,
     tol: float = 1e-7,
 ) -> np.ndarray:
-    """Compute a covariance geometric median without storing all blocks in memory.
-
-    Parameters
-    ----------
-    iter_factory : callable
-        A function that returns an iterator over chunks of covariance matrices.
-    chunk_blocks : int
-        The number of blocks per chunk.
-    n_channels : int
-        The number of channels (dimension of the covariance matrices).
-    max_iter : int, optional
-        Maximum number of iterations, by default 128.
-    tol : float, optional
-        Tolerance for convergence, by default 1e-7.
-
-    Returns
-    -------
-    median_cov : np.ndarray
-        The geometric median covariance matrix of shape (n_channels, n_channels).
-    """
+    """Compute a covariance geometric median without storing all blocks in memory."""
     total = np.zeros((n_channels, n_channels), dtype=np.float64)
     count = 0
     for chunk in iter_factory(chunk_blocks):
@@ -122,20 +82,7 @@ def _geometric_median_chunked(
 
 
 def _regularize_spd(C: np.ndarray, regularization: float) -> np.ndarray:
-    """Ensure a matrix is symmetric positive-definite via eigenvalue thresholding.
-
-    Parameters
-    ----------
-    C : np.ndarray
-        The input matrix of shape (n_channels, n_channels).
-    regularization : float
-        The regularization factor relative to the trace or max eigenvalue.
-
-    Returns
-    -------
-    C_reg : np.ndarray
-        The regularized SPD matrix.
-    """
+    """Ensure a matrix is symmetric positive-definite via eigenvalue thresholding."""
     C = (C + C.T) / 2
     w, V = np.linalg.eigh(C)
     scale = max(
@@ -149,40 +96,14 @@ def _regularize_spd(C: np.ndarray, regularization: float) -> np.ndarray:
 
 
 def _sqrtm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
-    """Compute the principal matrix square root of an SPD matrix.
-
-    Parameters
-    ----------
-    C : np.ndarray
-        The input SPD matrix of shape (n_channels, n_channels).
-    regularization : float
-        The regularization factor to ensure positive-definiteness.
-
-    Returns
-    -------
-    sqrt_C : np.ndarray
-        The matrix square root of shape (n_channels, n_channels).
-    """
+    """Compute the principal matrix square root of an SPD matrix."""
     C = _regularize_spd(C, regularization)
     w, V = np.linalg.eigh(C)
     return (V * np.sqrt(np.maximum(w, _TINY))) @ V.T
 
 
 def _invsqrtm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
-    """Compute the inverse matrix square root of an SPD matrix.
-
-    Parameters
-    ----------
-    C : np.ndarray
-        The input SPD matrix of shape (n_channels, n_channels).
-    regularization : float
-        The regularization factor to ensure positive-definiteness.
-
-    Returns
-    -------
-    invsqrt_C : np.ndarray
-        The inverse matrix square root of shape (n_channels, n_channels).
-    """
+    """Compute the inverse matrix square root of an SPD matrix."""
     C = _regularize_spd(C, regularization)
     w, V = np.linalg.eigh(C)
     w = np.maximum(w, _TINY)
@@ -190,20 +111,7 @@ def _invsqrtm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
 
 
 def _logm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
-    """Compute the principal matrix logarithm of an SPD matrix.
-
-    Parameters
-    ----------
-    C : np.ndarray
-        The input SPD matrix of shape (n_channels, n_channels).
-    regularization : float
-        The regularization factor to ensure positive-definiteness.
-
-    Returns
-    -------
-    log_C : np.ndarray
-        The matrix logarithm of shape (n_channels, n_channels).
-    """
+    """Compute the principal matrix logarithm of an SPD matrix."""
     C = _regularize_spd(C, regularization)
     w, V = np.linalg.eigh(C)
     w = np.maximum(w, _TINY)
@@ -211,18 +119,7 @@ def _logm_spd(C: np.ndarray, regularization: float) -> np.ndarray:
 
 
 def _expm_sym(S: np.ndarray) -> np.ndarray:
-    """Compute the matrix exponential of a symmetric matrix.
-
-    Parameters
-    ----------
-    S : np.ndarray
-        The input symmetric matrix (tangent vector) of shape (n_channels, n_channels).
-
-    Returns
-    -------
-    exp_S : np.ndarray
-        The matrix exponential of shape (n_channels, n_channels), guaranteed SPD.
-    """
+    """Compute the matrix exponential of a symmetric matrix."""
     S = (S + S.T) / 2.0
     w, V = np.linalg.eigh(S)
     return (V * np.exp(w)) @ V.T
@@ -236,31 +133,7 @@ def _karcher_mean_spd(
     max_iter: int = 32,
     tol: float = 1e-7,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Compute the affine-invariant Karcher mean of SPD matrices.
-
-    Parameters
-    ----------
-    covariances : np.ndarray
-        Array of shape (n_matrices, n_channels, n_channels) containing the
-        covariance matrices to average on the Riemannian manifold.
-    regularization : float
-        The regularization factor applied at each projection step.
-    init : np.ndarray, optional
-        The initial guess for the mean, by default the arithmetic mean is used.
-    sample_weight : np.ndarray, optional
-        Weights for each covariance matrix, by default uniform weights.
-    max_iter : int, optional
-        Maximum number of manifold optimization steps, by default 32.
-    tol : float, optional
-        Convergence tolerance on the tangent update norm, by default 1e-7.
-
-    Returns
-    -------
-    mean_cov : np.ndarray
-        The Riemannian Karcher mean of the given matrices.
-    info : dict
-        A dictionary containing diagnostics such as iterations and convergence state.
-    """
+    """Compute the affine-invariant Karcher mean of SPD matrices."""
     covariances = np.asarray(covariances, dtype=np.float64)
     if covariances.ndim != 3:
         raise ValueError(
@@ -322,24 +195,7 @@ def _sqrt_and_eig(
     C: np.ndarray,
     regularization: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute the ordered eigendecomposition and regularized square root of an SPD matrix.
-
-    Parameters
-    ----------
-    C : np.ndarray
-        The input matrix of shape (n_channels, n_channels).
-    regularization : float
-        The regularization factor to ensure positive-definiteness.
-
-    Returns
-    -------
-    M : np.ndarray
-        The regularized principal matrix square root of C.
-    w : np.ndarray
-        The 1D array of sorted eigenvalues (ascending).
-    V : np.ndarray
-        The 2D array of corresponding eigenvectors.
-    """
+    """Compute the ordered eigendecomposition and regularized square root of an SPD matrix."""
     w, V = np.linalg.eigh(C)
     order = np.argsort(w)
     w = w[order]
@@ -356,27 +212,7 @@ def _riemannian_nonlinear_eigenspace(
     regularization: float,
     alpha: float = 1.0,
 ) -> tuple[np.ndarray, np.ndarray]:
-    r"""Approximate the Riemannian nonlinear eigenspace for the full-basis case.
-
-    This solves a modified eigenproblem based on ``L + alpha * diag(L \ 1)``
-    to estimate a robust projection subspace.
-
-    Parameters
-    ----------
-    L : np.ndarray
-        The input SPD distance or covariance matrix.
-    regularization : float
-        The regularization factor to ensure positive-definiteness.
-    alpha : float, optional
-        The weighting parameter for the correction term, by default 1.0.
-
-    Returns
-    -------
-    D : np.ndarray
-        The 1D array of sorted modified eigenvalues.
-    V : np.ndarray
-        The 2D array of corresponding modified eigenvectors.
-    """
+    """Approximate the Riemannian nonlinear eigenspace for the full-basis case."""
     L = _regularize_spd(L, regularization)
     ones = np.ones(L.shape[0], dtype=np.float64)
     correction = np.linalg.solve(L, ones)

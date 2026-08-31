@@ -185,7 +185,7 @@ plt.plot(
 )
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude (a.u.)")
-plt.title(f"TrialAverageBias: Blink Peaks Aligned (r={abs(corr):.3f})")
+plt.title(f"AverageBias: Blink Peaks Aligned (r={abs(corr):.3f})")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
@@ -253,7 +253,7 @@ plot_component_patterns(
     n_components=1,
     show=False,
 )
-plt.gcf().suptitle("TrialAverageBias: Blink Component Topography")
+plt.gcf().suptitle("AverageBias: Blink Component Topography")
 plt.show()
 
 # %%

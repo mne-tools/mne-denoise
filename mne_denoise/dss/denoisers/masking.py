@@ -1,15 +1,4 @@
-"""Adaptive masking denoisers for DSS.
-
-This module implements denoisers that estimate a time-varying mask $m(t)$
-based on the local variance of the source signal.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.
-"""
+"""Local-variance masks for iterative DSS."""
 
 from __future__ import annotations
 
@@ -20,40 +9,24 @@ from .base import NonlinearDenoiser
 
 
 class WienerMaskDenoiser(NonlinearDenoiser):
-    """Adaptive Wiener mask denoiser.
+    """Local-variance Wiener mask for iterative DSS.
 
-    The core nonlinear DSS denoiser from Särelä & Valpola (2005). Estimates time-varying
-    signal variance and applies soft Wiener-style masking:
-
-        m(t) = σ²_signal(t) / [σ²_signal(t) + σ²_noise]
-        s⁺(t) = s(t) · m(t)
-
-    This is adaptive/nonlinear because the mask is estimated from the data.
-    Ideal for bursty, non-stationary signals (spindles, beta bursts,
-    intermittent artifacts).
+    The local variance is estimated from moving averages of the source and its
+    square. A percentile of that variance, or ``noise_variance``, sets the noise
+    floor; the soft gain is ``signal_variance / (signal_variance + noise_variance)``
+    and is bounded below by ``min_gain``.
 
     Parameters
     ----------
-    window_samples : int
-        Window size for local variance estimation. Default 50.
-    noise_percentile : float
-        Percentile of local variance used to estimate noise floor.
-        Lower values = more aggressive denoising. Default 25.
-    min_gain : float
-        Minimum mask value (prevents complete zeroing). Default 0.01.
-    noise_variance : float, optional
-        If provided, use this fixed noise variance instead of estimating.
-
-    Examples
-    --------
-    >>> from mne_denoise.dss.denoisers import WienerMaskDenoiser
-    >>> denoiser = WienerMaskDenoiser(window_samples=50)
-    >>> denoised = denoiser.denoise(source)
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.4 "Spectral Shift and Approximation of the Objective
-    Function with Mask-Based Denoisings"
+    window_samples : int, default=50
+        Window length for local statistics; values below 3 are set to 3.
+    noise_percentile : float, default=25.0
+        Percentile used for the estimated noise floor.
+    min_gain : float, default=0.01
+        Lower bound on the mask gain.
+    noise_variance : float or None, default=None
+        Fixed noise variance. If ``None``, estimate it from the local-variance
+        percentile.
     """
 
     def __init__(
@@ -124,32 +97,19 @@ class WienerMaskDenoiser(NonlinearDenoiser):
 
 
 class VarianceMaskDenoiser(NonlinearDenoiser):
-    """Nonlinear denoiser using local variance masking.
+    """Local-variance mask for iterative DSS.
 
-    Identifies high-variance regions in the source time series and
-    weights them higher, effectively emphasizing transient activity.
-    Useful for extracting non-stationary sources.
+    The local variance is computed from moving means of the source and its square.
+    A percentile threshold produces either a sigmoid soft mask or a binary mask.
 
     Parameters
     ----------
-    window_samples : int
-        Window size for local variance computation. Default 100.
-    percentile : float
-        Percentile threshold for high-variance mask. Default 75.
-    soft : bool
-        If True, use soft weighting based on variance magnitude.
-        If False, use binary mask. Default True.
-
-    Examples
-    --------
-    >>> from mne_denoise.dss.denoisers import VarianceMaskDenoiser
-    >>> denoiser = VarianceMaskDenoiser(window_samples=50, percentile=80)
-    >>> denoised_source = denoiser.denoise(source)
-
-    References
-    ----------
-    Särelä & Valpola (2005). Section 4.4 "Spectral Shift and Approximation of the Objective
-    Function with Mask-Based Denoisings"
+    window_samples : int, default=100
+        Window length for local variance; values below 3 are set to 3.
+    percentile : float, default=75.0
+        Local-variance percentile used as the mask threshold.
+    soft : bool, default=True
+        Use a sigmoid gain when true, otherwise use a binary threshold mask.
     """
 
     def __init__(

@@ -1,3 +1,5 @@
+"""Adaptive ASR learning-state helpers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,26 +11,7 @@ from ._spd import _regularize_spd
 
 @dataclass
 class _AdaptiveSimilarityMatcher:
-    """Similarity-matching adaptive subspace learner.
-
-    This class tracks and updates an adaptive spatial subspace by matching the
-    similarity (cross-covariance) structure of incoming data chunks.
-
-    Attributes
-    ----------
-    variant : str
-        The variant of the algorithm (e.g., 'psw' for Principal Subspace Weighting).
-    tau : float
-        The time constant for lateral updates.
-    learning_rate : float
-        The step size for the feed-forward weight matrix update.
-    M : ndarray
-        The lateral (similarity) tracking matrix.
-    W : ndarray
-        The feed-forward subspace projection weights.
-    Minv : ndarray
-        The inverse of the M matrix.
-    """
+    """Similarity-matching adaptive subspace learner."""
 
     variant: str
     tau: float
@@ -101,28 +84,7 @@ def _build_adaptive_learner(
     tau: float,
     regularization: float,
 ) -> _AdaptiveSimilarityMatcher:
-    """Initialize an adaptive similarity matcher on a starting data window.
-
-    Parameters
-    ----------
-    X_filtered : ndarray, shape (n_channels, n_samples)
-        The filtered initial data window used for warm-starting the learner.
-    V : ndarray, shape (n_channels, n_components)
-        The unmixing matrix from the initial static calibration.
-    variant : str
-        The type of learning rule (e.g., 'psw').
-    learning_rate : float
-        The step size for the feed-forward weight matrix update.
-    tau : float
-        The time constant for the lateral updates.
-    regularization : float
-        The regularization parameter added to the initial covariance matrix.
-
-    Returns
-    -------
-    _AdaptiveSimilarityMatcher
-        The initialized similarity matcher object.
-    """
+    """Initialize an adaptive similarity matcher on a starting data window."""
     Y0 = V.T @ X_filtered
     n_samples = X_filtered.shape[1]
     M0 = (Y0 @ Y0.T) / n_samples

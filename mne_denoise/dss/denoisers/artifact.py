@@ -1,8 +1,4 @@
-"""Event-locked fixed-window bias functions for DSS.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Event-locked bias functions for DSS."""
 
 from __future__ import annotations
 
@@ -153,77 +149,30 @@ def _event_segments(
 class CycleAverageBias(LinearDenoiser):
     """Fixed-window event-locked averaging bias.
 
-    The operation estimates one average window from the supplied events and
-    places that average at every event. Samples outside event windows are zero.
-    When windows overlap, their contributions are averaged, so the result is
-    independent of event order. Duplicate coordinates are removed before the
-    average is estimated.
-
-    This is a useful fixed-window extension for stereotyped events such as ECG
-    QRS complexes or blinks. It is not the complete quasiperiodic method of
-    Särelä and Valpola (2005): that method estimates variable peak-to-peak
-    periods, warps them to a common duration, and iteratively updates QRS events
-    in its cardiac application.
-
     Parameters
     ----------
     event_samples : array-like of int, shape (n_events,) or (n_events, 2)
-        Event coordinates. One-dimensional coordinates apply only to 2-D data
-        and use ``event_origin``. For 3-D channel-first data, coordinates must
-        be ``(epoch_index, sample_index)`` pairs; both values are zero-based and
-        relative to the supplied epoched array. Flat global sample indices are
-        rejected for 3-D data.
-    window : tuple of int or float
-        Half-open interval ``[event + start, event + stop)``. The resolved
-        interval must be complete for every event; boundary-crossing and
-        out-of-range coordinates raise an error rather than being discarded.
+        One-dimensional sample coordinates for 2D input, or
+        ``(epoch_index, sample_index)`` pairs for 3D channel-first input.
+    window : tuple of int or float, default=(-100, 200)
+        Half-open interval ``[event + start, event + stop)``.
     window_unit : {"samples", "seconds"}, default="samples"
-        Unit of ``window``. Sample boundaries must be integers. Second-valued
-        boundaries are converted using nearest-sample rounding (ties to even).
-    sfreq : float | None, default=None
-        Sampling frequency in Hz. Required for ``window_unit="seconds"``.
+        Unit for ``window``; seconds require ``sfreq``.
+    sfreq : float or None, default=None
+        Sampling frequency in Hz for second-valued windows.
     event_origin : {"data", "raw"}, default="data"
-        Origin of one-dimensional event coordinates. ``"data"`` means sample
-        zero is the first sample passed to :meth:`apply`. ``"raw"`` means MNE
-        acquisition sample numbering and requires ``first_samp``. Per-epoch
-        coordinates always use the data-relative origin.
-    first_samp : int | None, default=None
-        First acquisition sample of the corresponding MNE Raw object. It is
-        subtracted exactly once when ``event_origin="raw"`` and is otherwise
-        forbidden.
+        Origin for one-dimensional coordinates. ``"raw"`` requires ``first_samp``.
+    first_samp : int or None, default=None
+        Acquisition sample offset used with ``event_origin="raw"``.
     min_events : int, default=2
-        Minimum number of unique, complete events. Values below two are not
-        allowed because one window has no across-event repeatability contrast.
-        Two is a mathematical minimum, not a practical recommendation; stable
-        cardiac estimates will generally require many representative beats.
+        Minimum number of unique complete events.
 
     Notes
     -----
-    Public input is converted to ``float32`` or ``float64`` before averaging.
-    Integer and other real numerical dtypes produce ``float64`` output. Input
-    arrays are never modified.
-
-    Examples
-    --------
-    MNE event arrays use acquisition sample numbering:
-
-    >>> from mne.preprocessing import find_ecg_events
-    >>> from mne_denoise.dss.denoisers import CycleAverageBias
-    >>> ecg_events, _, _ = find_ecg_events(raw)
-    >>> bias = CycleAverageBias(
-    ...     event_samples=ecg_events[:, 0],
-    ...     window=(-0.2, 0.4),
-    ...     window_unit="seconds",
-    ...     sfreq=raw.info["sfreq"],
-    ...     event_origin="raw",
-    ...     first_samp=raw.first_samp,
-    ... )
-    >>> biased_data = bias.apply(raw.get_data())
-
-    References
-    ----------
-    Särelä, J., & Valpola, H. (2005). Denoising source separation.
-    Journal of Machine Learning Research, 6, 233-272.
+    Windows are half-open. Boundary-crossing or incomplete events raise an error;
+    overlapping contributions are averaged and duplicate coordinates are removed.
+    This fixed-window bias is not the complete variable-period quasiperiodic
+    procedure described in the original DSS work.
     """
 
     def __init__(
@@ -260,13 +209,12 @@ class CycleAverageBias(LinearDenoiser):
         Parameters
         ----------
         data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-            Continuous or channel-first epoched input.
+            Continuous or channel-first epoched data.
 
         Returns
         -------
-        biased : ndarray, same shape as data
-            Floating-point event-locked estimate. Overlapping contributions are
-            averaged sample by sample.
+        ndarray
+            Floating-point event-locked estimate with the input shape.
         """
         data = _as_float_data(data)
         segments = _event_segments(

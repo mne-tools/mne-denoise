@@ -1,13 +1,4 @@
-"""Filter design and streaming-edge helpers for ASR and Adaptive ASR.
-
-This module provides internal signal processing utilities for ASR variants:
-1. The inverse-EEG spectral shaping filter from the original ASR algorithm,
-   plus an optional lightweight high-pass statistics filter.
-2. Boundary padding helpers (lookahead tail and carry reflection) used by
-   streaming/chunked ASR processors to mitigate edge artifacts.
-3. An 8th-order Yule-Walker IIR pre-emphasis filter used strictly by the
-   Adaptive ASR (AASR) variants for similarity-matching updates.
-"""
+"""ASR filter and streaming-edge helpers."""
 
 from __future__ import annotations
 
@@ -20,22 +11,7 @@ def _design_statistics_filter(
     sfreq: float,
     filter_kind: str,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Design the requested ASR statistics filter.
-
-    Parameters
-    ----------
-    sfreq : float
-        The sampling frequency of the data.
-    filter_kind : str
-        The type of filter to design. Can be "asr", "highpass", or "none".
-
-    Returns
-    -------
-    b : np.ndarray
-        Numerator coefficients of the filter.
-    a : np.ndarray
-        Denominator coefficients of the filter.
-    """
+    """Design the requested ASR statistics filter."""
     if filter_kind == "none":
         return np.array([1.0]), np.array([1.0])
     if filter_kind not in ("asr", "highpass"):
@@ -53,22 +29,7 @@ def _apply_statistics_filter(
     b: np.ndarray,
     a: np.ndarray,
 ) -> np.ndarray:
-    """Apply the statistics filter using zero-phase (filtfilt) offline filtering.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input signal array of shape (n_channels, n_samples).
-    b : np.ndarray
-        Numerator coefficients of the filter.
-    a : np.ndarray
-        Denominator coefficients of the filter.
-
-    Returns
-    -------
-    X_filtered : np.ndarray
-        The filtered signal array.
-    """
+    """Apply the statistics filter using zero-phase (filtfilt) offline filtering."""
     if b.size == 1 and a.size == 1:
         return X.copy()
     padlen = 3 * max(len(a), len(b))
@@ -78,20 +39,7 @@ def _apply_statistics_filter(
 
 
 def _append_streaming_tail(X: np.ndarray, n_tail: int) -> np.ndarray:
-    """Append the reflected lookahead tail used by the standard streaming ASR algorithm.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input signal array.
-    n_tail : int
-        The number of samples to append.
-
-    Returns
-    -------
-    X_padded : np.ndarray
-        The signal array with the reflected tail appended.
-    """
+    """Append the reflected lookahead tail used by the standard streaming ASR algorithm."""
     if n_tail == 0:
         return X.copy()
     if X.shape[1] <= n_tail:
@@ -101,20 +49,7 @@ def _append_streaming_tail(X: np.ndarray, n_tail: int) -> np.ndarray:
 
 
 def _prepend_streaming_carry(X: np.ndarray, n_carry: int) -> np.ndarray:
-    """Prepend the reflected initial carry used by the standard streaming ASR algorithm.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input signal array.
-    n_carry : int
-        The number of samples to prepend.
-
-    Returns
-    -------
-    X_padded : np.ndarray
-        The signal array with the reflected carry prepended.
-    """
+    """Prepend the reflected initial carry used by the standard streaming ASR algorithm."""
     if n_carry == 0:
         return X.copy()
     if X.shape[1] <= n_carry:
@@ -128,40 +63,14 @@ def _apply_statistics_filter_streaming(
     b: np.ndarray,
     a: np.ndarray,
 ) -> np.ndarray:
-    """Apply the statistics filter in the causal direction used by ASR.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input signal array.
-    b : np.ndarray
-        Numerator coefficients.
-    a : np.ndarray
-        Denominator coefficients.
-
-    Returns
-    -------
-    X_filtered : np.ndarray
-        The causally filtered signal.
-    """
+    """Apply the statistics filter in the causal direction used by ASR."""
     if b.size == 1 and a.size == 1:
         return X.copy()
     return signal.lfilter(b, a, X, axis=1)
 
 
 def _polystab(a: np.ndarray) -> np.ndarray:
-    """Stabilize a polynomial by reflecting roots inside the unit circle.
-
-    Parameters
-    ----------
-    a : np.ndarray
-        Polynomial coefficients.
-
-    Returns
-    -------
-    b : np.ndarray
-        Stabilized polynomial coefficients.
-    """
+    """Stabilize a polynomial by reflecting roots inside the unit circle."""
     roots = np.roots(a)
     keep = roots != 0
     reflect = 0.5 * (np.sign(np.abs(roots[keep]) - 1.0) + 1.0)
@@ -174,22 +83,7 @@ def _polystab(a: np.ndarray) -> np.ndarray:
 
 
 def _numf(h: np.ndarray, a: np.ndarray, nb: int) -> np.ndarray:
-    """Least-squares FIR numerator matching impulse response ``h`` given ``a``.
-
-    Parameters
-    ----------
-    h : np.ndarray
-        Desired impulse response.
-    a : np.ndarray
-        Denominator coefficients.
-    nb : int
-        Numerator order.
-
-    Returns
-    -------
-    b : np.ndarray
-        Estimated numerator coefficients.
-    """
+    """Least-squares FIR numerator matching impulse response ``h`` given ``a``."""
     nh = int(np.max(h.size))
     impulse = np.zeros(nh, dtype=np.float64)
     impulse[0] = 1.0
@@ -199,20 +93,7 @@ def _numf(h: np.ndarray, a: np.ndarray, nb: int) -> np.ndarray:
 
 
 def _denf(R: np.ndarray, na: int) -> np.ndarray:
-    """Least-squares AR denominator from autocorrelation ``R``.
-
-    Parameters
-    ----------
-    R : np.ndarray
-        Autocorrelation sequence.
-    na : int
-        Denominator order.
-
-    Returns
-    -------
-    a : np.ndarray
-        Estimated denominator coefficients.
-    """
+    """Least-squares AR denominator from autocorrelation ``R``."""
     nr = int(np.max(np.size(R)))
     Rm = toeplitz(R[na : nr - 1], R[na:0:-1])
     rhs = -R[na + 1 : nr]
@@ -222,24 +103,7 @@ def _denf(R: np.ndarray, na: int) -> np.ndarray:
 def _yulewalk(
     order: int, F: np.ndarray, M: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Yule-Walker IIR design from a piecewise-linear magnitude template.
-
-    Parameters
-    ----------
-    order : int
-        Filter order.
-    F : np.ndarray
-        Frequency points (0 to 1).
-    M : np.ndarray
-        Magnitude response at the frequency points.
-
-    Returns
-    -------
-    B : np.ndarray
-        Numerator coefficients.
-    A : np.ndarray
-        Denominator coefficients.
-    """
+    """Yule-Walker IIR design from a piecewise-linear magnitude template."""
     F = np.asarray(F, dtype=np.float64)
     M = np.asarray(M, dtype=np.float64)
     npt = 513
@@ -287,20 +151,7 @@ def _yulewalk(
 
 
 def _design_asr_filter(sfreq: float) -> tuple[np.ndarray, np.ndarray]:
-    """Design the original ASR inverse-EEG pre-emphasis filter.
-
-    Parameters
-    ----------
-    sfreq : float
-        Sampling frequency in Hz.
-
-    Returns
-    -------
-    b : np.ndarray
-        Numerator coefficients.
-    a : np.ndarray
-        Denominator coefficients.
-    """
+    """Design the original ASR inverse-EEG pre-emphasis filter."""
     if sfreq <= 0:
         raise ValueError("sfreq must be positive for the ASR statistics filter")
     freq_hz = np.array(
@@ -332,27 +183,7 @@ def _lfilter_channels(
     a: np.ndarray,
     zi: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Apply a causal IIR filter channel-wise and return final conditions.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times)
-        The input data array.
-    b : ndarray
-        Numerator filter coefficients.
-    a : ndarray
-        Denominator filter coefficients.
-    zi : ndarray | None
-        Initial conditions for the filter delay line, shape (n_channels, order).
-        If None, initial conditions are assumed to be zero.
-
-    Returns
-    -------
-    out : ndarray, shape (n_channels, n_times)
-        The filtered output data.
-    zf : ndarray, shape (n_channels, order)
-        The final conditions of the filter delay line.
-    """
+    """Apply a causal IIR filter channel-wise and return final conditions."""
     X = np.asarray(X, dtype=np.float64)
     order = max(len(a), len(b)) - 1
     if order <= 0:

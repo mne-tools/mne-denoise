@@ -1,11 +1,4 @@
-"""Centralized MNE-style logging for :mod:`mne_denoise`.
-
-``verbose`` is deliberately a logging control, rather than an algorithm
-parameter.  ``None`` leaves the configured logger alone, booleans map to the
-usual MNE levels, and strings/integers are standard :mod:`logging` levels.
-Public operations use :func:`verbose` or :func:`use_log_level` so a per-call
-override is always restored, including when the operation raises.
-"""
+"""MNE-style logging helpers."""
 
 from __future__ import annotations
 

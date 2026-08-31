@@ -1,10 +1,4 @@
-"""Covariance estimation, aggregation, and memory budgeting for ASR.
-
-This module contains utilities for block and rolling covariance builders
-(padded vs standard conventions), robust aggregation (mean, geometric median,
-including a memory-bounded chunked path), and helpers that size the covariance
-buffers against ``max_mem_mb``.
-"""
+"""ASR covariance helpers."""
 
 from __future__ import annotations
 
@@ -29,30 +23,7 @@ def _process_memory_info(
     chunk_samples: int,
     used_memory_bound: bool,
 ) -> dict[str, Any]:
-    """Create process-time covariance memory diagnostics.
-
-    Parameters
-    ----------
-    n_channels : int
-        The number of channels in the data.
-    n_stream_input : int
-        The number of samples in the stream input.
-    max_mem_mb : int, float, or None
-        The maximum memory budget in megabytes.
-    memory_mode : str
-        The active memory strategy (e.g., 'full' or 'chunked').
-    peak_cov_buffer_bytes : int
-        The peak bytes allocated for the covariance buffer.
-    chunk_samples : int
-        The size of each processing chunk in samples.
-    used_memory_bound : bool
-        Whether the memory bound was triggered and utilized.
-
-    Returns
-    -------
-    diagnostics : dict
-        A dictionary containing diagnostic memory usage information.
-    """
+    """Create process-time covariance memory diagnostics."""
     return {
         "memory_mode": memory_mode,
         "max_mem_mb": max_mem_mb,
@@ -71,24 +42,7 @@ def _iter_moving_covariances_at(
     update_at: np.ndarray,
     window_length: int,
 ):
-    """Yield trailing moving covariances at specified sample counts.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The continuous input data of shape (n_channels, n_times).
-    update_at : np.ndarray
-        A 1D array of strictly increasing sample indices at which to yield
-        the current trailing moving average covariance.
-    window_length : int
-        The length of the moving window in samples.
-
-    Yields
-    ------
-    cov_sum : np.ndarray
-        The instantaneous trailing covariance matrix of shape (n_channels, n_channels)
-        normalized by the window length.
-    """
+    """Yield trailing moving covariances at specified sample counts."""
     n_channels, _ = X.shape
     cov_sum = np.zeros((n_channels, n_channels), dtype=np.float64)
     current_n = 0
@@ -110,26 +64,7 @@ def _moving_average_padded(
     X: np.ndarray,
     zi: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Apply a fast, exact moving-average filter to flattened covariance traces.
-
-    Parameters
-    ----------
-    window_length : int
-        The length of the moving window in samples.
-    X : np.ndarray
-        The input flattened matrix traces of shape (n_features, n_times).
-    zi : np.ndarray, optional
-        The initial conditions (prior padded samples) of shape
-        (n_features, window_length). If None, initializes with zeros.
-
-    Returns
-    -------
-    out : np.ndarray
-        The smoothed trace matrix of shape (n_features, n_times).
-    zf : np.ndarray
-        The final conditions of shape (n_features, window_length) carrying
-        the tail needed to seamlessly filter the next contiguous block.
-    """
+    """Apply a fast, exact moving-average filter to flattened covariance traces."""
     if zi is None:
         zi = np.zeros((X.shape[0], window_length), dtype=np.float64)
     Y = np.concatenate([zi, X], axis=1)
@@ -148,23 +83,7 @@ def _window_covariances(
     starts: np.ndarray,
     win_len: int,
 ) -> np.ndarray:
-    """Compute mean-centered covariances for a set of specific windows.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data array of shape (n_channels, n_times).
-    starts : np.ndarray
-        A 1D array of window start indices.
-    win_len : int
-        The length of each window in samples.
-
-    Returns
-    -------
-    covariances : np.ndarray
-        A 3D array of shape (n_windows, n_channels, n_channels) containing the
-        sample covariance of each specified window.
-    """
+    """Compute mean-centered covariances for a set of specific windows."""
     covariances = np.empty((len(starts), X.shape[0], X.shape[0]), dtype=np.float64)
     for idx, start in enumerate(starts):
         window = X[:, start : start + win_len]
@@ -174,18 +93,7 @@ def _window_covariances(
 
 
 def _max_mem_bytes(max_mem_mb: int | float | None) -> int | None:
-    """Convert an optional megabyte memory cap to bytes.
-
-    Parameters
-    ----------
-    max_mem_mb : int, float, or None
-        The maximum memory budget in megabytes.
-
-    Returns
-    -------
-    max_mem_bytes : int or None
-        The maximum memory budget in bytes, or None if uncapped.
-    """
+    """Convert an optional megabyte memory cap to bytes."""
     if max_mem_mb is None:
         return None
     max_mem_mb = float(max_mem_mb)
@@ -195,39 +103,12 @@ def _max_mem_bytes(max_mem_mb: int | float | None) -> int | None:
 
 
 def _covariance_stack_bytes(n_items: int, n_channels: int) -> int:
-    """Return the memory allocation size needed for a 3D covariance stack.
-
-    Parameters
-    ----------
-    n_items : int
-        The number of covariance matrices in the stack.
-    n_channels : int
-        The number of channels (dimension of the square matrices).
-
-    Returns
-    -------
-    bytes : int
-        The estimated memory footprint in bytes.
-    """
+    """Return the memory allocation size needed for a 3D covariance stack."""
     return int(n_items * n_channels * n_channels * np.dtype(np.float64).itemsize)
 
 
 def _covariance_chunk_blocks(n_channels: int, max_mem_bytes: int | None) -> int:
-    """Resolve a conservative covariance chunk size under a memory cap.
-
-    Parameters
-    ----------
-    n_channels : int
-        The number of channels.
-    max_mem_bytes : int or None
-        The maximum memory budget in bytes.
-
-    Returns
-    -------
-    chunk_blocks : int
-        The maximum number of blocks that can be processed simultaneously
-        without exceeding the memory budget.
-    """
+    """Resolve a conservative covariance chunk size under a memory cap."""
     per_block = _covariance_stack_bytes(1, n_channels)
     if max_mem_bytes is None:
         return np.iinfo(np.int32).max
@@ -240,22 +121,7 @@ def _iter_block_covariances_padded(
     blocksize: int,
     chunk_blocks: int,
 ):
-    """Yield padded-style trailing-block covariances in memory-safe chunks.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data of shape (n_channels, n_times).
-    blocksize : int
-        The size of each individual block in samples.
-    chunk_blocks : int
-        The number of blocks to compute and yield per chunk.
-
-    Yields
-    ------
-    covariances : np.ndarray
-        A 3D array of block covariances for the current chunk.
-    """
+    """Yield padded-style trailing-block covariances in memory-safe chunks."""
     n_channels, n_times = X.shape
     n_blocks = max(1, int(np.ceil(n_times / blocksize)))
     X_t = X.T
@@ -277,22 +143,7 @@ def _iter_block_covariances_standard(
     blocksize: int,
     chunk_blocks: int,
 ):
-    """Yield standard-style contiguous block covariances in memory-safe chunks.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data of shape (n_channels, n_times).
-    blocksize : int
-        The size of each individual block in samples.
-    chunk_blocks : int
-        The number of blocks to compute and yield per chunk.
-
-    Yields
-    ------
-    covariances : np.ndarray
-        A 3D array of block covariances for the current chunk.
-    """
+    """Yield standard-style contiguous block covariances in memory-safe chunks."""
     n_channels, n_times = X.shape
     starts = np.arange(0, n_times, blocksize, dtype=int)
     for start_block in range(0, len(starts), chunk_blocks):
@@ -309,20 +160,7 @@ def _iter_block_covariances_standard(
 
 
 def _block_covariances_padded(X: np.ndarray, blocksize: int) -> np.ndarray:
-    """Match the padded trailing-block covariance accumulation.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data of shape (n_channels, n_times).
-    blocksize : int
-        The size of each individual block in samples.
-
-    Returns
-    -------
-    covariances : np.ndarray
-        A 3D array of shape (n_blocks, n_channels, n_channels).
-    """
+    """Match the padded trailing-block covariance accumulation."""
     n_channels, n_times = X.shape
     n_blocks = max(1, int(np.ceil(n_times / blocksize)))
     covariances = np.zeros((n_blocks, n_channels, n_channels), dtype=np.float64)
@@ -338,20 +176,7 @@ def _block_covariances_padded(X: np.ndarray, blocksize: int) -> np.ndarray:
 
 
 def _block_covariances_standard(X: np.ndarray, blocksize: int) -> np.ndarray:
-    """Match the standard contiguous blocks with a full blocksize divisor.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data of shape (n_channels, n_times).
-    blocksize : int
-        The size of each individual block in samples.
-
-    Returns
-    -------
-    covariances : np.ndarray
-        A 3D array of shape (n_blocks, n_channels, n_channels).
-    """
+    """Match the standard contiguous blocks with a full blocksize divisor."""
     n_channels, n_times = X.shape
     starts = np.arange(0, n_times, blocksize, dtype=int)
     covariances = np.empty((len(starts), n_channels, n_channels), dtype=np.float64)
@@ -363,20 +188,7 @@ def _block_covariances_standard(X: np.ndarray, blocksize: int) -> np.ndarray:
 
 
 def _aggregate_covariances(covariances: np.ndarray, method: str) -> np.ndarray:
-    """Aggregate a stack of covariance matrices into a single baseline estimate.
-
-    Parameters
-    ----------
-    covariances : np.ndarray
-        A 3D array of covariance matrices.
-    method : str
-        The aggregation method, either 'mean', 'median', or 'geometric_median'.
-
-    Returns
-    -------
-    C : np.ndarray
-        The aggregated baseline covariance matrix.
-    """
+    """Aggregate a stack of covariance matrices into a single baseline estimate."""
     if method == "mean":
         return np.mean(covariances, axis=0)
     if method == "median":
@@ -391,28 +203,7 @@ def _aggregate_block_covariances(
     covariance_kind: str,
     max_mem_mb: int | float | None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Aggregate ASR calibration covariances with optional memory bounding.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The input data array.
-    blocksize : int
-        The size of the covariance blocks.
-    method : str
-        The aggregation method (mean, median, or geometric_median).
-    covariance_kind : str
-        The block generation strategy ('padded' or 'standard').
-    max_mem_mb : int, float, or None
-        The maximum memory budget for covariance buffers.
-
-    Returns
-    -------
-    C : np.ndarray
-        The aggregated covariance baseline.
-    info : dict
-        Memory and performance diagnostics.
-    """
+    """Aggregate ASR calibration covariances with optional memory bounding."""
     n_channels, n_times = X.shape
     if covariance_kind == "standard":
         n_blocks = len(np.arange(0, n_times, blocksize, dtype=int))
@@ -484,32 +275,7 @@ def _adaptive_covariance_sqrt(
     regularization: float,
     max_mem_mb: int | float | None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
-    """Compute the regularized square root of the block-aggregated covariance.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times)
-        The input data array.
-    blocksize : int
-        The number of samples per block for covariance estimation.
-    regularization : float
-        The regularization parameter added to the diagonal of the covariance.
-    max_mem_mb : int | float | None
-        The maximum memory in MB to allocate for block covariance storage.
-
-    Returns
-    -------
-    M : ndarray, shape (n_channels, n_channels)
-        The regularized principal square root of the covariance.
-    C : ndarray, shape (n_channels, n_channels)
-        The regularized covariance matrix.
-    eigvals : ndarray, shape (n_channels,)
-        The eigenvalues of the square root matrix M.
-    V : ndarray, shape (n_channels, n_channels)
-        The eigenvectors of M.
-    memory_info : dict
-        Diagnostic information from the aggregation process.
-    """
+    """Compute the regularized square root of the block-aggregated covariance."""
     C, memory_info = _aggregate_block_covariances(
         X,
         blocksize,
@@ -524,21 +290,7 @@ def _adaptive_covariance_sqrt(
 
 
 class _ChunkedMovingCovariances:
-    """Yield moving covariances at update positions without a full time stack.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times)
-        The input data array.
-    update_at : ndarray of int
-        The sample indices at which the moving covariance should be yielded.
-    window_length : int
-        The length of the moving average window in samples.
-    chunk_samples : int
-        The number of samples to process at a time (block size).
-    zi : ndarray | None
-        The initial state for the moving average filter.
-    """
+    """Yield moving covariances at update positions without a full time stack."""
 
     def __init__(
         self,

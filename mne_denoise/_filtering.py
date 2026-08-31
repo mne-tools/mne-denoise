@@ -1,9 +1,4 @@
-"""Shared Butterworth SOS filter design for internal package use.
-
-This module centralizes the zero-phase Butterworth filter step used by
-several denoisers so callers pass Hz-domain edges directly via
-``fs=sfreq`` instead of each independently pre-dividing by Nyquist.
-"""
+"""Butterworth filter-design helpers."""
 
 from __future__ import annotations
 

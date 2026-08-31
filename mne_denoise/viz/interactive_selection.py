@@ -1,8 +1,4 @@
-"""Interactive component selection for DSS and standard ZapLine estimators.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Interactive component selection."""
 
 from __future__ import annotations
 
@@ -377,10 +373,6 @@ def _resolve_sfreq(estimator: Any, info: mne.Info | None, sfreq: float | None) -
 class ComponentSelector:
     """Selection controller returned by :func:`plot_component_selector`.
 
-    The controller stores the current component selection and the cached data
-    needed by the live preview. Use :attr:`excluded` to inspect the selection
-    and :meth:`apply` to reconstruct the selected signal.
-
     Parameters
     ----------
     estimator : DSS | IterativeDSS | ZapLine
@@ -397,11 +389,6 @@ class ComponentSelector:
         :func:`plot_component_selector`.
     excluded : sequence of int
         Component indices initially excluded from the reconstruction.
-
-    Notes
-    -----
-    This class is a public return type, but direct construction is not part of
-    the public API. Create instances with :func:`plot_component_selector`.
     """
 
     def __init__(
@@ -777,21 +764,6 @@ def plot_component_selector(
 ) -> ComponentSelector:
     """Plot an interactive component selector for DSS or standard ZapLine.
 
-    Each component row contains its spatial pattern, time course, and power
-    spectrum. Left-clicking a row toggles whether the component is excluded and
-    updates the optional reconstruction preview. Rows excluded from the clean
-    output are tinted red.
-
-    Anywhere in a component's row responds to the click, including the margins
-    around the topomap and the label above it.
-
-    Matplotlib canvases cannot scroll, so decompositions with more components
-    than ``rows_per_page`` are paged rather than stretched off-screen. Click a
-    page button above the rows to jump to that page; the scroll wheel and
-    ``PageUp``/``PageDown`` (also ``Home``/``End``) work too. Past eight pages
-    the buttons compact to prev/next arrows with a counter. The selection is
-    global: paging never discards toggles made on another page.
-
     Parameters
     ----------
     estimator : DSS | IterativeDSS | ZapLine
@@ -844,42 +816,6 @@ def plot_component_selector(
         If adaptive ZapLine is supplied.
     ValueError
         If the data, plotting coordinates, or frequency parameters are invalid.
-
-    Notes
-    -----
-    For DSS and IterativeDSS, red components are omitted from the reconstruction.
-    With no exclusions, the output is the fitted DSS-subspace reconstruction
-    with the input channel means restored; it equals the input only for a
-    complete reconstruction. For standard ZapLine, red components are noise
-    components subtracted from the input, and all fitted noise components start
-    excluded.
-
-    The preview therefore compares the current selection against the
-    *no-exclusion reconstruction*, not against the raw input. For a rank-reduced
-    DSS fit those two differ by the discarded subspace, which would otherwise
-    swamp the effect of the toggles being previewed; the panel titles report
-    that rank. For ZapLine the no-exclusion reconstruction is the input itself,
-    so the comparison is the familiar before/after.
-
-    ``n_components`` controls only which already-fitted components are displayed;
-    it does not refit an estimator. In particular, the selector can restore
-    fitted ZapLine components but cannot expose components discarded during fit.
-
-    NumPy layout follows the estimator APIs: Linear DSS accepts channel-first
-    epoched arrays ``(n_channels, n_times, n_epochs)``; IterativeDSS and ZapLine
-    accept MNE-style arrays ``(n_epochs, n_channels, n_times)``.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_component_selector
-    >>> selector = plot_component_selector(
-    ...     dss,
-    ...     epochs,
-    ...     info=epochs.info,
-    ...     picks=[0, 1, 2, 3],
-    ...     times=epochs.times,
-    ... )
-    >>> cleaned = selector.apply()
     """
     _mne.require_mne("interactive component selection")
     if picks is not None and info is None:

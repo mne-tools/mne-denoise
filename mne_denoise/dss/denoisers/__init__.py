@@ -1,4 +1,4 @@
-"""Pluggable denoiser functions for DSS."""
+"""DSS bias and denoiser classes."""
 
 from __future__ import annotations
 

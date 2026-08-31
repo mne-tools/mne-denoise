@@ -1,23 +1,4 @@
-"""Data segmentation utilities for DSS.
-
-Provides strategies for splitting continuous data into segments based on
-statistical properties.  Used by :class:`~mne_denoise.dss.linear.DSS` in
-segmented mode to handle non-stationary artifacts.
-
-Available segmenters
---------------------
-- :class:`CovarianceSegmenter` – splits at covariance-stationarity boundaries.
-- :class:`FixedWindowSegmenter` – splits into fixed-length windows.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Klug, M., & Kloosterman, N. A. (2022). Zapline-plus: A Zapline
-       extension for automatic and adaptive removal of frequency-specific
-       noise artifacts in M/EEG. Human Brain Mapping, 43(9), 2743-2758.
-"""
+"""DSS segmentation helpers."""
 
 from __future__ import annotations
 
@@ -36,13 +17,7 @@ __all__ = ["CovarianceSegmenter", "FixedWindowSegmenter"]
 
 
 class CovarianceSegmenter:
-    """Segment data based on covariance stationarity.
-
-    Identifies boundaries where the spatial covariance matrix changes
-    significantly, indicating non-stationary noise characteristics.
-    Adapted from the covariance-stationarity strategy described for
-    ZapLine-plus [1]_; the complete segmentation behavior and parameterization
-    here are mne-denoise implementation choices.
+    """Segment data where windowed covariance changes.
 
     Parameters
     ----------
@@ -51,26 +26,20 @@ class CovarianceSegmenter:
     min_chunk_len : float, default=30.0
         Minimum segment length in seconds.
     cov_win_len : float, default=1.0
-        Window length for covariance computation in seconds.
-    bandpass : tuple of (float, float) | None, default=None
-        Bandpass filter range ``(f_low, f_high)`` in Hz to focus the
-        stationarity analysis on a specific frequency band.  Useful for
-        frequency-specific artifacts.  If ``None``, uses unfiltered data.
+        Covariance-window length in seconds.
+    bandpass : tuple of float or None, default=None
+        Optional analysis band ``(low, high)`` in Hz.
     prominence : float, default=0.5
-        Sensitivity of boundary detection, expressed as a multiple of the
-        standard deviation of the successive covariance distances: a
-        distance peak must stand out by ``prominence * std(distances)`` to
-        be accepted as a boundary.  Lower values split more eagerly; higher
-        values require a more decisive change in covariance structure.
-        Because the threshold is relative to the spread of the distances,
-        stationary data still produces peaks, so raise this (or use
-        :class:`FixedWindowSegmenter`) if you are getting spurious splits.
-        Default 0.5 reproduces ZapLine-plus.
+        Covariance-distance peak prominence multiplier.
 
     Notes
     -----
-    This is a package extension inspired by ZapLine-plus rather than a claim
-    that every detail of this segmenter is prescribed by that publication.
+    The segmentation strategy is based on the covariance-stationarity approach
+    used by ZapLine-plus :footcite:p:`klug_kloosterman2022_zapline_plus`.
+
+    References
+    ----------
+    .. footbibliography::
     """
 
     def __init__(
@@ -88,7 +57,7 @@ class CovarianceSegmenter:
         self.prominence = float(prominence)
 
     def segment(self, data: np.ndarray) -> list[tuple[int, int]]:
-        """Segment data into stationary chunks.
+        """Return ``(start_sample, end_sample)`` segments from channel-first data.
 
         Parameters
         ----------
@@ -97,8 +66,8 @@ class CovarianceSegmenter:
 
         Returns
         -------
-        segments : list of (int, int)
-            List of ``(start_sample, end_sample)`` tuples.
+        list of tuple of int
+            Half-open sample intervals.
         """
         n_channels, n_times = data.shape
 
@@ -177,9 +146,6 @@ class CovarianceSegmenter:
 class FixedWindowSegmenter:
     """Segment data into fixed-length windows.
 
-    Simple segmentation strategy that divides data into equal-length chunks.
-    The last chunk may be merged with the previous one if it is too short.
-
     Parameters
     ----------
     sfreq : float
@@ -193,17 +159,22 @@ class FixedWindowSegmenter:
         self.window_len = window_len
 
     def segment(self, data: np.ndarray) -> list[tuple[int, int]]:
-        """Segment data into fixed-length windows.
+        """Return fixed ``(start_sample, end_sample)`` windows.
 
         Parameters
         ----------
         data : ndarray, shape (n_channels, n_times)
-            Input data.
+            Channel-first data.
 
         Returns
         -------
-        segments : list of (int, int)
-            List of ``(start_sample, end_sample)`` tuples.
+        list of tuple of int
+            Half-open sample intervals.
+
+        Notes
+        -----
+        The final window is merged into the previous window when it is shorter than
+        half the requested length.
         """
         n_times = data.shape[1]
         win_samples = int(self.window_len * self.sfreq)

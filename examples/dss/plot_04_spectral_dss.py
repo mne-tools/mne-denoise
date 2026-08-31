@@ -198,7 +198,7 @@ plt.show()
 # LineNoiseBias isolates narrow frequency bands for removal (e.g., 60 Hz line noise).
 # It supports both 'iir' (notch) and 'fft' (harmonic) methods.
 
-print("\n--- Part 2: Line Noise (NotchBias) ---")
+print("\n--- Part 2: Line Noise (LineNoiseBias) ---")
 
 # Simulate data with 60 Hz line noise + harmonics
 line_freq = 60.0  # Hz

@@ -1,45 +1,4 @@
-"""Shared plotting theme for mne-denoise visualizations.
-
-This module centralizes the plotting defaults used across
-``mne_denoise.viz`` so figures share a consistent visual language.
-
-This module contains:
-1. Named color palettes for generic semantic plot elements.
-2. Convenience helpers for creating themed figures and legends.
-3. rcParams helpers for temporary or global application of the package theme.
-
-Typical usage inside a plotting function::
-
-    from mne_denoise.viz import (
-        COLORS,
-        FONTS,
-        style_axes,
-        themed_figure,
-        themed_legend,
-    )
-
-Typical usage in a notebook::
-
-    from mne_denoise.viz import use_theme
-
-    with use_theme():
-        fig, ax = plt.subplots()
-        ax.plot([0, 1], [0, 1])
-
-Or to set the theme globally for an interactive session::
-
-    from mne_denoise.viz import set_theme
-
-    set_theme()
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-
-References
-----------
-.. [1] Wong, B. (2011). Points of view: Color blindness.
-       Nature Methods, 8(6), 441.
-"""
+"""Visualization theme helpers."""
 
 from __future__ import annotations
 
@@ -137,10 +96,6 @@ SAVEFIG_PAD_INCHES = 0.05
 def get_color(key, fallback=None):
     """Return a color from the shared viz palettes by key.
 
-    This helper resolves both semantic color names such as ``"before"``
-    or ``"highlight"`` and concept-level method keys such as ``"dss"``
-    or ``"zapline"``.
-
     Parameters
     ----------
     key : str
@@ -153,14 +108,6 @@ def get_color(key, fallback=None):
     -------
     str
         Hex color string.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import get_color
-    >>> get_color("before")
-    '#333333'
-    >>> get_color("dss")
-    '#0072B2'
     """
     if key in COLORS:
         return COLORS[key]
@@ -217,24 +164,12 @@ DEFAULT_FIGSIZE = (11, 8.5)  # landscape letter
 def style_axes(ax, grid=False):
     """Apply per-axes theme overrides.
 
-    The shared theme already comes from rcParams via :func:`use_theme`
-    and :func:`themed_figure`. This helper is intentionally limited to
-    per-axes cleanup that is still useful after axis creation, such as
-    spine cleanup, grid activation, or normalizing axes created by
-    third-party plotting helpers.
-
     Parameters
     ----------
     ax : matplotlib.axes.Axes
         The axes to style.
     grid : bool, default=False
         If True, add a subtle background grid.
-
-    Notes
-    -----
-    This function is mainly useful after axes have already been created
-    by third-party plotting helpers such as seaborn or MNE-Python, where
-    rcParams alone may not fully control the final axes appearance.
     """
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
@@ -260,11 +195,6 @@ def themed_figure(
 ):
     """Create a figure + axes with the package plotting defaults.
 
-    Thin wrapper around ``plt.subplots`` that applies the theme's
-    rcParams through :func:`use_theme` during figure creation. Axes are
-    therefore created with the package defaults already active,
-    without an extra post-processing loop.
-
     Parameters
     ----------
     nrows : int, default=1
@@ -289,17 +219,6 @@ def themed_figure(
         Matplotlib figure created by ``plt.subplots``.
     axes : Axes or ndarray of Axes
         Axes object returned by ``plt.subplots``.
-
-    Notes
-    -----
-    The return contract intentionally matches :func:`matplotlib.pyplot.subplots`
-    so plotting code can switch to :func:`themed_figure` with minimal changes.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import themed_figure
-    >>> fig, ax = themed_figure(figsize=(5, 3))
-    >>> ax.plot([0, 1], [0, 1])
     """
     if figsize is None:
         figsize = DEFAULT_FIGSIZE
@@ -325,10 +244,6 @@ def themed_figure(
 def themed_legend(ax, **kwargs):
     """Add a clean, minimal legend.
 
-    This helper wraps ``ax.legend()`` and applies the package defaults
-    for font size and frame styling while still allowing callers to
-    override any legend keyword arguments.
-
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -351,33 +266,7 @@ def themed_legend(ax, **kwargs):
 
 
 def _finalize_fig(fig, show=True, fname=None, tight=True):
-    """Finalize a figure by applying layout, saving, and/or showing it.
-
-    This internal helper centralizes the common end-of-function logic
-    used by plotting functions in :mod:`mne_denoise.viz`.
-
-    Parameters
-    ----------
-    fig : Figure
-        Matplotlib figure.
-    show : bool, default=True
-        If True, call ``plt.show()``.
-    fname : str | Path | None
-        If given, save the figure to this path.
-    tight : bool, default=True
-        If True (default), call ``fig.tight_layout()``.
-
-    Returns
-    -------
-    fig : Figure
-        The same figure object, for convenient return from plot functions.
-
-    Notes
-    -----
-    If ``show=False`` and ``fname is None``, ownership of the figure is
-    left to the caller. If ``show=False`` and ``fname`` is given, the
-    figure is closed after saving to reduce memory usage.
-    """
+    """Finalize a figure by applying layout, saving, and/or showing it."""
     if tight:
         with contextlib.suppress(Exception):
             fig.tight_layout()
@@ -452,10 +341,6 @@ _THEME_RC = {
 def get_theme_rc(rc: Mapping[str, object] | None = None) -> dict[str, object]:
     """Return the theme rcParams, optionally merged with overrides.
 
-    This is the low-level accessor used by :func:`use_theme` and
-    :func:`set_theme`. It is useful when callers want to inspect or
-    compose the package defaults before applying them elsewhere.
-
     Parameters
     ----------
     rc : mapping | None
@@ -466,13 +351,6 @@ def get_theme_rc(rc: Mapping[str, object] | None = None) -> dict[str, object]:
     -------
     rc_out : dict
         Copy of the theme rcParams with overrides applied.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import get_theme_rc
-    >>> rc = get_theme_rc({"axes.edgecolor": "#444444"})
-    >>> rc["axes.edgecolor"]
-    '#444444'
     """
     rc_out = dict(_THEME_RC)
     if rc is not None:
@@ -487,10 +365,6 @@ def get_theme_rc(rc: Mapping[str, object] | None = None) -> dict[str, object]:
 def use_theme(name="default", rc: Mapping[str, object] | None = None):
     """Context manager that temporarily applies the mne-denoise theme.
 
-    On exit, matplotlib rcParams are restored to their previous values.
-    This is safe for library code and tests because it never mutates
-    global state permanently.
-
     Parameters
     ----------
     name : str, default='default'
@@ -498,21 +372,6 @@ def use_theme(name="default", rc: Mapping[str, object] | None = None):
     rc : mapping | None
         Optional matplotlib rcParams overrides merged into the shared
         theme defaults for the duration of the context.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import use_theme
-    >>> with use_theme():
-    ...     fig, ax = plt.subplots()
-    ...     ax.plot([0, 1], [0, 1])
-    >>> with use_theme(rc={"axes.edgecolor": "#444444"}):
-    ...     fig, ax = plt.subplots()
-    ...     ax.plot([0, 1], [1, 0])
-
-    Notes
-    -----
-    This is the preferred interface for library code and tests because
-    it restores the previous matplotlib state automatically on exit.
     """
     if name != "default":
         raise ValueError(f"Unknown theme {name!r}; only 'default' is supported.")
@@ -526,26 +385,11 @@ def use_theme(name="default", rc: Mapping[str, object] | None = None):
 def set_theme(rc: Mapping[str, object] | None = None):
     """Apply the mne-denoise plotting theme to matplotlib rcParams.
 
-    Call this once at the top of a notebook to ensure *all* subsequent
-    figures — including those from MNE-Python's own plotting functions —
-    share the same clean look.
-
-    .. warning::
-
-        This mutates **global** matplotlib state.  Prefer
-        :func:`use_theme` in library code or tests.  ``set_theme``
-        is intended for interactive notebook sessions only.
-
     Parameters
     ----------
     rc : mapping | None
         Optional matplotlib rcParams overrides merged into the shared
         theme defaults before applying them globally.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import set_theme
-    >>> set_theme()
     """
     plt.rcParams.update(get_theme_rc(rc))
 

@@ -1,4 +1,4 @@
-"""Guidance-model helpers for the experimental GuidedASR estimator."""
+"""GuidedASR guidance helpers."""
 
 from __future__ import annotations
 

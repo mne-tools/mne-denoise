@@ -1,18 +1,4 @@
-"""Signal-domain visualization primitives.
-
-This module contains reusable, method-agnostic plots for time-domain
-comparisons between original and denoised signals.
-
-This module contains:
-1. Global field power (GFP) comparisons for 2D/3D arrays or MNE objects.
-2. Channel-level time-course overlays with explicit channel selection.
-3. Topographic power-ratio maps from per-channel variances.
-4. Single-trace overlays for reconstruction checks.
-5. Grouped grand-average evoked comparisons.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Signal-domain visualization functions."""
 
 from __future__ import annotations
 
@@ -193,18 +179,6 @@ def plot_evoked_gfp_comparison(
     ValueError
         If input shapes are invalid, if time lengths differ between inputs,
         or if ``times`` length does not match ``n_times``.
-
-    Notes
-    -----
-    GFP is computed as RMS across channels. For 3D epoched inputs,
-    epochs are averaged first.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_evoked_gfp_comparison
-    >>> fig = plot_evoked_gfp_comparison(
-    ...     before_array, after_array, times=np.arange(500) / 250.0, show=False
-    ... )
     """
     data_before = _as_signal_array(inst_before)
     data_after = _as_signal_array(inst_after)
@@ -311,17 +285,6 @@ def plot_channel_time_course_comparison(
     ValueError
         If shapes are invalid or inconsistent, picks are invalid, or
         ``times`` length does not match ``n_times``.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_channel_time_course_comparison
-    >>> fig = plot_channel_time_course_comparison(
-    ...     before_array,
-    ...     after_array,
-    ...     picks=[0, 2],
-    ...     times=np.arange(1000) / 250.0,
-    ...     show=False,
-    ... )
     """
     data_before = _as_signal_array(inst_before)
     data_after = _as_signal_array(inst_after)
@@ -455,20 +418,6 @@ def plot_power_ratio_map(
     ------
     ValueError
         If ``info`` is missing or if channel counts do not match ``info``.
-
-    Notes
-    -----
-    Ratio values are computed as ``var_after / var_before`` channel-wise.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_power_ratio_map
-    >>> fig = plot_power_ratio_map(
-    ...     before_array,
-    ...     after_array,
-    ...     info=info,
-    ...     show=False,
-    ... )
     """
     if info is None:
         raise ValueError("info must be provided explicitly.")
@@ -590,22 +539,6 @@ def plot_signal_overlay(
     ValueError
         If input shapes are invalid, multi-channel data is used without
         ``pick``, or ``times`` length is inconsistent.
-
-    Notes
-    -----
-    If traces have different lengths, both are trimmed to the common prefix
-    before any time-window filtering.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_signal_overlay
-    >>> fig = plot_signal_overlay(
-    ...     before_array,
-    ...     after_array,
-    ...     pick=0,
-    ...     times=np.arange(1000) / 250.0,
-    ...     show=False,
-    ... )
     """
     data_before = _extract_overlay_trace(inst_before, pick=pick)
     data_after = _extract_overlay_trace(inst_after, pick=pick)
@@ -755,21 +688,6 @@ def plot_grand_average_evokeds(
     ------
     ValueError
         If required groups/channels are missing or lists are empty.
-
-    Notes
-    -----
-    This function is MNE-evoked oriented and expects ``mne.Evoked`` inputs.
-
-    Examples
-    --------
-    >>> from mne_denoise.viz import plot_grand_average_evokeds
-    >>> fig = plot_grand_average_evokeds(
-    ...     all_evokeds,
-    ...     channels=("Cz", "Pz"),
-    ...     amplitude_scale=1.0,
-    ...     y_label="Amplitude",
-    ...     show=False,
-    ... )
     """
     if group_order is None:
         group_order = list(all_evokeds.keys())

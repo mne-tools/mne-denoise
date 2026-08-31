@@ -1,9 +1,4 @@
-"""EEG amplitude-distribution fitting for ASR calibration thresholds.
-
-Robust fit of a generalised-Gaussian model to per-window RMS values
-(``fit_rms_distribution``, the ASR calibration convention) plus the histogram and
-robust location/scale helpers it relies on.
-"""
+"""ASR RMS-distribution helpers."""
 
 from __future__ import annotations
 
@@ -51,54 +46,29 @@ def fit_rms_distribution(
     beta_grid: np.ndarray | None = None,
     return_info: bool = False,
 ) -> tuple[float, float] | tuple[float, float, dict[str, Any]]:
-    """Fit robust clean EEG RMS statistics.
-
-    This implements the truncated generalized-Gaussian grid search used by
-    the ASR calibration. The fitter sorts finite RMS values,
-    searches over plausible low-tail dropout offsets and clean interval
-    widths, and selects the generalized-Gaussian shape with minimum
-    histogram KL divergence.
+    """Fit robust location and scale to RMS statistics.
 
     Parameters
     ----------
     values : ndarray, shape (n_windows,)
-        RMS or amplitude statistics for one component/channel.
-    min_clean_fraction : float
-        Minimum fraction of values assumed to be clean.
-    max_dropout_fraction : float
-        Maximum low-tail fraction that may be ignored as dropouts.
-    fit_quantiles : tuple of float
-        Lower and upper quantile span used for the clean interval search.
-        The upper value also controls the preferred interval width.
-    beta_grid : ndarray | None
-        Generalized-Gaussian shape grid. If ``None``, use values from 1.7 to
-        3.5, matching the range commonly cited for ASR ports.
-    return_info : bool
-        If True, return an additional diagnostics dictionary.
+        RMS or amplitude values for one component or channel.
+    min_clean_fraction : float, default=0.25
+        Minimum fraction treated as clean.
+    max_dropout_fraction : float, default=0.1
+        Maximum low-tail fraction ignored as dropouts.
+    fit_quantiles : tuple of float, default=(0.022, 0.6)
+        Quantile interval searched for the clean distribution.
+    beta_grid : ndarray or None, default=None
+        Generalized-Gaussian shape grid.
+    return_info : bool, default=False
+        If True, return fitting diagnostics.
 
     Returns
     -------
-    mu : float
-        Robust location estimate of the clean RMS distribution.
-    sigma : float
-        Robust standard-deviation estimate of the clean RMS distribution.
+    mu, sigma : float
+        Fitted location and scale.
     info : dict
-        Returned only when ``return_info=True``. Contains ``beta``,
-        ``fit_error``, ``fit_interval``, and ``n_fit_samples``.
-
-    Examples
-    --------
-    Calculate robust statistics for a noisy array, ignoring massive outliers:
-
-    >>> import numpy as np
-    >>> from mne_denoise.asr import fit_rms_distribution
-    >>> rng = np.random.default_rng(42)
-    >>> clean = np.abs(rng.normal(10.0, 2.0, 5000))
-    >>> artifacts = np.abs(rng.normal(30.0, 10.0, 500))
-    >>> noisy_data = np.concatenate([clean, artifacts])
-    >>> mu, sigma = fit_rms_distribution(noisy_data)
-    >>> print(f"Robust mean: {mu:.1f}")
-    Robust mean: 10.0
+        Diagnostics, returned only when return_info=True.
     """
     if not (0 <= max_dropout_fraction < 1):
         raise ValueError("max_dropout_fraction must be in [0, 1)")
@@ -156,31 +126,7 @@ def _fit_rms_distribution_grid_search(
     fit_quantiles: tuple[float, float],
     beta_grid: np.ndarray,
 ) -> dict[str, Any]:
-    """Perform a truncated generalized-Gaussian grid search for RMS distributions.
-
-    Searches for the optimal location (mu) and scale (sigma) by sliding a
-    theoretical generalized Gaussian distribution across a histogram of the
-    provided data, ignoring extreme artifact tails.
-
-    Parameters
-    ----------
-    values : ndarray, shape (n_windows,)
-        Sorted array of valid (finite) window RMS values.
-    min_clean_fraction : float
-        Minimum fraction of the data assumed to be clean (non-artifact).
-    max_dropout_fraction : float
-        Maximum low-tail fraction that may be ignored as sensor dropouts.
-    fit_quantiles : tuple of float
-        Lower and upper quantiles defining the core search interval.
-    beta_grid : ndarray
-        Grid of generalized Gaussian shape parameters to evaluate.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the best fit parameters: 'mu', 'sigma', 'beta',
-        'fit_error', 'fit_interval', 'n_fit_samples', and 'score'.
-    """
+    """Perform a truncated generalized-Gaussian grid search for RMS distributions."""
     q_low, q_high = fit_quantiles
     step_sizes = (0.01, 0.01)
     n_values = values.size
@@ -285,23 +231,7 @@ def _fit_rms_distribution_grid_search(
 
 
 def _histc_scaled_bins(values: np.ndarray, nbins: int) -> np.ndarray:
-    """Histogram columns into discrete scale bins.
-
-    This function mimics the strict non-standard behavior of MATLAB's ``histc``
-    for precise compatibility with the legacy ASR calibration grid search.
-
-    Parameters
-    ----------
-    values : ndarray, shape (n_samples, n_columns)
-        The scaled standard normal values to be binned.
-    nbins : int
-        The total number of bins to calculate.
-
-    Returns
-    -------
-    counts : ndarray, shape (nbins, n_columns)
-        The resulting histogram counts per column.
-    """
+    """Histogram columns into discrete scale bins."""
     counts = np.zeros((nbins, values.shape[1]), dtype=np.float64)
     for col in range(values.shape[1]):
         finite = values[:, col]
@@ -315,21 +245,7 @@ def _histc_scaled_bins(values: np.ndarray, nbins: int) -> np.ndarray:
 
 
 def _robust_location_scale(values: np.ndarray) -> tuple[float, float]:
-    """Estimate robust location and scale using median absolute deviation (MAD).
-
-    Parameters
-    ----------
-    values : ndarray
-        The input data array.
-
-    Returns
-    -------
-    mu : float
-        The median of the data.
-    sigma : float
-        The scaled MAD of the data (1.4826 * MAD), falling back to standard
-        deviation if MAD is strictly zero.
-    """
+    """Estimate robust location and scale using median absolute deviation (MAD)."""
     values = np.asarray(values, dtype=np.float64)
     mu = float(np.median(values))
     mad = float(np.median(np.abs(values - mu)))
@@ -352,38 +268,7 @@ def _fit_adaptive_thresholds(
     max_dropout_fraction: float,
     callback: _ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    """Fit adaptive ASR thresholds for each component via its RMS distribution.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_channels, n_times)
-        The filtered continuous data.
-    V : ndarray, shape (n_channels, n_components)
-        The unmixing matrix (eigenvectors of the calibration covariance).
-    sfreq : float
-        The sampling frequency of the data.
-    window_length : float
-        The length of the moving window in seconds.
-    window_overlap : float
-        The overlap fraction between adjacent windows.
-    cutoff : float
-        The cutoff multiplier for the standard deviation (Z-score).
-    min_clean_fraction : float
-        The minimum fraction of clean data expected.
-    max_dropout_fraction : float
-        The maximum fraction of dropout data expected.
-    callback : callable | None
-        Called synchronously after each component threshold is fitted. Callback
-        return values are ignored and callback exceptions propagate unchanged.
-
-    Returns
-    -------
-    thresholds : ndarray, shape (n_components,)
-        The computed adaptive threshold for each component.
-    info_out : dict
-        A dictionary containing diagnostic arrays for mu, sigma, beta,
-        fit error, fit intervals, window starts, and window length in samples.
-    """
+    """Fit adaptive ASR thresholds for each component via its RMS distribution."""
     from ._windowing import _get_fractional_window_starts
 
     n_times = X.shape[1]

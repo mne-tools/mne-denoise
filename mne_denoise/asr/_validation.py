@@ -1,9 +1,4 @@
-"""Parameter validation and dimension-resolution helpers for ASR.
-
-Low-level, dependency-free checks and resolvers shared across the ASR
-calibration, processing, and estimator layers, kept here so higher-level
-modules can import them without pulling in the full pipeline.
-"""
+"""ASR validation helpers."""
 
 from __future__ import annotations
 
@@ -20,28 +15,7 @@ def _validate_common_params(
     min_clean_fraction: float,
     regularization: float,
 ) -> None:
-    """Validate core ASR parameters.
-
-    Ensures that standard numerical parameters (sampling frequency, cutoff,
-    window sizes, and thresholds) are within valid mathematical bounds.
-
-    Parameters
-    ----------
-    sfreq : float
-        Sampling frequency in Hz. Must be positive.
-    cutoff : float
-        Filter cutoff frequency in Hz. Must be positive.
-    window_length : float
-        Length of the moving window in seconds. Must be positive.
-    window_overlap : float
-        Fraction of overlap between consecutive windows. Must be in [0, 1).
-    max_dropout_fraction : float
-        Maximum allowed dropout fraction for EEG statistics. Must be in [0, 1).
-    min_clean_fraction : float
-        Minimum required clean data fraction. Must be in (0, 1].
-    regularization : float
-        Regularization parameter for covariance matrices. Must be positive.
-    """
+    """Validate core ASR parameters."""
     if sfreq <= 0:
         raise ValueError("sfreq must be positive")
     if cutoff <= 0:
@@ -63,23 +37,7 @@ def _validate_common_params(
 
 
 def _validate_array_2d(X: np.ndarray) -> np.ndarray:
-    """Validate and sanitize 2D EEG arrays.
-
-    Ensures the array has exactly two dimensions and at least two channels.
-    Checks for excessive non-finite values and rejects channels with zero
-    or near-zero variance relative to the global maximum variance. Finally,
-    converts any remaining NaNs/Infs to zeros.
-
-    Parameters
-    ----------
-    X : ndarray
-        The input data array.
-
-    Returns
-    -------
-    X_safe : ndarray, shape (n_channels, n_times)
-        A validated, 2D float64 array with non-finite values replaced.
-    """
+    """Validate and sanitize 2D EEG arrays."""
     X = np.asarray(X, dtype=np.float64)
     if X.ndim != 2:
         raise ValueError(f"ASR expects a 2D array (n_channels, n_times), got {X.shape}")
@@ -129,17 +87,7 @@ def _validate_covariance_matrix(
 
 
 def _check_enough_samples(n_times: int, sfreq: float, window_length: float) -> None:
-    """Ensure data is long enough to compute at least one window.
-
-    Parameters
-    ----------
-    n_times : int
-        Number of samples in the data.
-    sfreq : float
-        Sampling frequency in Hz.
-    window_length : float
-        Length of the window in seconds.
-    """
+    """Ensure data is long enough to compute at least one window."""
     n_win = int(round(window_length * sfreq))
     if n_win < 2:
         raise ValueError("window_length is too short for the sampling frequency")
@@ -150,42 +98,12 @@ def _check_enough_samples(n_times: int, sfreq: float, window_length: float) -> N
 
 
 def _round_half_up(value: float) -> int:
-    """Round non-negative values to the nearest integer, ties away from zero.
-
-    This avoids NumPy's round-to-even behavior which shifts ASR windows.
-
-    Parameters
-    ----------
-    value : float
-        The non-negative value to round.
-
-    Returns
-    -------
-    rounded : int
-        The nearest integer.
-    """
+    """Round non-negative values to the nearest integer, ties away from zero."""
     return int(np.floor(float(value) + 0.5))
 
 
 def _resolve_max_dims_padded(max_dims: float | int, n_channels: int) -> int:
-    """Resolve ASR principal component retention limit (padded variant).
-
-    Calculates the maximum number of dimensions to retain during subspace
-    rejection using the padded convention, which allows float values
-    greater than 1 and rounds ties away from zero.
-
-    Parameters
-    ----------
-    max_dims : float | int
-        Fraction (if < 1) or absolute number of dimensions to retain.
-    n_channels : int
-        Total number of channels in the data.
-
-    Returns
-    -------
-    n_dims : int
-        The absolute number of dimensions to retain.
-    """
+    """Resolve ASR principal component retention limit (padded variant)."""
     if isinstance(max_dims, float) and max_dims < 1:
         if max_dims < 0:
             raise ValueError("max_dims must be non-negative")
@@ -197,24 +115,7 @@ def _resolve_max_dims_padded(max_dims: float | int, n_channels: int) -> int:
 
 
 def _resolve_max_dims(max_dims: float | int, n_channels: int) -> int:
-    """Resolve ASR principal component retention limit (standard variant).
-
-    Calculates the maximum number of dimensions to retain using the standard
-    scikit-learn convention, which strictly requires fractions to be in [0, 1]
-    and uses standard floor division.
-
-    Parameters
-    ----------
-    max_dims : float | int
-        Fraction (if <= 1) or absolute number of dimensions to retain.
-    n_channels : int
-        Total number of channels in the data.
-
-    Returns
-    -------
-    n_dims : int
-        The absolute number of dimensions to retain.
-    """
+    """Resolve ASR principal component retention limit (standard variant)."""
     if isinstance(max_dims, float):
         if not (0 <= max_dims <= 1):
             raise ValueError("float max_dims must be in [0, 1]")
@@ -233,25 +134,7 @@ def _validate_backend_params(
     stepsize: int | None,
     window_criterion: float | int | None,
 ) -> None:
-    """Validate ASR backend and processing parameters.
-
-    Ensures that the selected backend is supported and that its configuration
-    (lookahead, stepsize, and window criteria) falls within mathematically
-    and logically sound bounds.
-
-    Parameters
-    ----------
-    method : {'standard', 'riemannian_windowed', 'riemannian'} | None
-        The selected reconstruction backend.
-    experimental : bool
-        Must be True to explicitly enable the legacy 'riemannian' backend.
-    lookahead : float | None
-        Processing lookahead in seconds. Must be non-negative.
-    stepsize : int | None
-        Processing step size in samples. Must be >= 1.
-    window_criterion : float | int | None
-        Clean window rejection criterion.
-    """
+    """Validate ASR backend and processing parameters."""
     if method not in ("standard", "riemannian", "riemannian_windowed"):
         raise NotImplementedError(
             "Supported methods are 'standard', 'riemannian_windowed', and "
@@ -289,36 +172,7 @@ def _validate_adaptive_params(
     mw_window_length: float,
     mw_mode: str,
 ) -> None:
-    """Validate parameters specific to the adaptive ASR implementation.
-
-    Parameters
-    ----------
-    variant : str
-        The adaptive variant. Must be 'psp', 'psw', or 'mw'.
-    update_window_length : float
-        Length of the update window in seconds. Must be > 0.
-    calibration_window_length : float
-        Length of the clean calibration window in seconds. Must be > 0.
-    calibration_window_overlap : float
-        Overlap fraction for the calibration window. Must be in [0, 1).
-    ref_max_bad_channels : float
-        Maximum allowed fraction of bad channels in a window to be considered
-        clean. Must be >= 0.
-    learning_rate : float
-        Learning rate for the adaptive update. Must be > 0.
-    tau : float | None
-        Time constant for the exponential decay. If not None, must be > 0.
-    mw_window_length : float
-        Length of the moving window in seconds. Must be > 0 if variant='mw'.
-    mw_mode : str
-        The moving window mode. Must be 'final_state' or 'sliding' if variant='mw'.
-
-    Raises
-    ------
-    ValueError
-        If any of the parameters are out of their expected ranges or take
-        invalid values.
-    """
+    """Validate parameters specific to the adaptive ASR implementation."""
     if variant not in ("psp", "psw", "mw"):
         raise ValueError("variant must be 'psp', 'psw', or 'mw'")
     if update_window_length <= 0:
@@ -345,22 +199,7 @@ def _validate_juggler_params(
     gev_grid_size: int,
     min_reference_fraction: float,
 ) -> None:
-    """Validate Juggler-specific reference selection parameters.
-
-    Ensures that the DBSCAN and GEV parameters fall within mathematically valid
-    ranges for instantaneous amplitude processing.
-
-    Parameters
-    ----------
-    strategy : str
-        The Juggler selection strategy. Must be 'dbscan' or 'gev'.
-    dbscan_top_k : int
-        Number of largest per-sample channel amplitudes. Must be >= 1.
-    gev_grid_size : int
-        Number of grid points for GEV fitting. Must be >= 32.
-    min_reference_fraction : float
-        Minimum accepted retained fraction. Must be in (0, 1).
-    """
+    """Validate Juggler-specific reference selection parameters."""
     if strategy not in ("dbscan", "gev"):
         raise ValueError("strategy must be 'dbscan' or 'gev'")
     if dbscan_top_k < 1:

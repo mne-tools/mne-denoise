@@ -1,8 +1,4 @@
-"""Internal utility functions for visualization.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Internal visualization utilities."""
 
 import numpy as np
 
@@ -11,26 +7,7 @@ from .._data import extract_data_from_mne
 
 
 def _compute_gfp(inst_or_data):
-    """Compute GFP (RMS across channels) from 2D/3D signal data.
-
-    Parameters
-    ----------
-    inst_or_data : MNE object | ndarray
-        Signal data as:
-        - 2D ``(n_channels, n_times)``, or
-        - 3D ``(n_epochs, n_channels, n_times)``.
-        MNE inputs are converted via ``get_data()``.
-
-    Returns
-    -------
-    gfp : ndarray of shape (n_times,)
-        Global field power time series.
-
-    Raises
-    ------
-    ValueError
-        If input is not 2D or 3D.
-    """
+    """Compute GFP (RMS across channels) from 2D/3D signal data."""
     if hasattr(inst_or_data, "get_data"):
         data = np.asarray(inst_or_data.get_data(), dtype=float)
     else:

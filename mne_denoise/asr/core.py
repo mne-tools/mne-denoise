@@ -1,20 +1,4 @@
-"""Artifact Subspace Reconstruction (ASR) core module.
-
-This module implements the primary ``ASR`` class, which serves as a scikit-learn
-and MNE-compatible estimator for removing high-variance artifacts from continuous
-and epoched neurophysiological data (EEG/MEG).
-
-ASR operates in two stages:
-1. **Calibration**: Identifies segments of clean data and computes a robust
-   covariance matrix. This establishes a baseline for clean signal characteristics.
-2. **Reconstruction**: Uses a sliding window over the target data to detect
-   segments whose variance exceeds the clean baseline (defined by a cutoff threshold).
-   These segments are linearly reconstructed using a mixing matrix derived from
-   the clean covariance.
-
-This class acts as the central interface, delegating the mathematical operations
-like calibration, spatial filtering, and reconstruction to focused internal submodules.
-"""
+"""Artifact Subspace Reconstruction."""
 
 from __future__ import annotations
 
@@ -49,190 +33,91 @@ if TYPE_CHECKING:
 
 
 class ASR(BaseEstimator, TransformerMixin):
-    """Artifact Subspace Reconstruction (ASR) scikit-learn transformer.
+    """Artifact Subspace Reconstruction estimator.
 
-    ASR is an automated, statistical method for removing high-amplitude, transient
-    artifacts (such as eye blinks, muscle bursts, and sensor motion) from continuous
-    electroencephalography (EEG) or magnetoencephalography (MEG) data.
-
-    It operates by learning a clean signal subspace from a calibration dataset (or
-    clean segments of the target dataset) and using this baseline to identify and
-    reconstruct corrupted segments. This class provides a fully scikit-learn and
-    MNE-compatible interface.
+    ASR calibrates a clean signal subspace and reconstructs high-amplitude windows in
+    continuous EEG or MEG data. It accepts channel-first NumPy arrays and supported
+    MNE containers.
 
     Parameters
     ----------
-    sfreq : float | None, default=None
-        Sampling frequency in Hz. Required for NumPy arrays. For MNE objects,
-        this may be ``None`` and is inferred from ``info['sfreq']``.
+    sfreq : float or None, default=None
+        Sampling frequency in Hz. Required for NumPy input; inferred from MNE
+        metadata when available.
     cutoff : float, default=20.0
-        ASR threshold multiplier. Values around 20 are conservative; lower
-        values clean more aggressively.
+        Threshold multiplier. Lower values generally reconstruct more components;
+        the numerical interpretation depends on calibration and processing settings.
     window_length : float, default=0.5
-        Processing/statistics window length in seconds.
+        Processing window length in seconds.
     window_overlap : float, default=0.66
-        Overlap fraction for processing and threshold-fitting windows.
+        Processing-window overlap fraction.
     max_dropout_fraction : float, default=0.1
-        Fraction of lowest RMS values ignored while estimating thresholds.
+        Fraction of low-RMS values excluded from threshold estimation.
     min_clean_fraction : float, default=0.25
-        Minimum central fraction used to estimate clean RMS statistics.
-    picks : str | list[str] | list[int] | None, default='eeg'
-        Channels to process for MNE inputs. ``None`` processes every channel;
-        integer indices and names select the fitted channel subset. NumPy
-        arrays are processed across all channels.
-    method : {'standard', 'riemannian', 'riemannian_windowed'}, default='standard'
-        ASR backend.
-
-        - ``'standard'`` — standard Euclidean ASR.
-        - ``'riemannian'`` — experimental SPD-manifold covariance backend.
-          This backend computes one covariance and one reconstruction matrix
-          for the entire stream, so the output of the current implementation
-          is not meaningfully controlled by ``cutoff``.
-        - ``'riemannian_windowed'`` — per-window Riemannian backend that keeps
-          the Riemannian-aggregated (geometric-median) calibration but applies
-          a standard per-window eigendecomposition at processing time. Its
-          processing path follows the standard per-window reconstruction while
-          retaining the Riemannian calibration aggregate; this package
-          behavior should still be evaluated on the intended data regime.
+        Minimum central fraction used for clean RMS statistics.
+    method : {"standard", "riemannian_windowed", "riemannian"}, default="standard"
+        Covariance/reconstruction backend. "riemannian" requires experimental=True.
     experimental : bool, default=False
-        Explicit opt-in for the unstable ``method='riemannian'`` research
-        backend (cutoff-invariant on real EEG). Not required for
-        ``'riemannian_windowed'``.
-    calibration : {'auto', 'manual'}, default='auto'
-        Calibration mode. ``'auto'`` selects clean windows before fitting;
-        ``'manual'`` uses all supplied calibration samples.
-    calibration_window_length : float, default=0.5
-        Window length in seconds for automatic clean-window selection.
+        Required for the "riemannian" backend.
+    calibration : {"auto", "manual"}, default="auto"
+        Whether to select clean calibration windows or use all supplied samples.
+    picks : str, list of str, list of int, or None, default="eeg"
+        MNE channels to process. NumPy input uses all rows.
+    calibration_window_length : float, default=1.0
+        Window length in seconds for automatic calibration selection.
     calibration_window_overlap : float, default=0.66
-        Overlap fraction for automatic clean-window selection.
-    ref_max_bad_channels : float, default=0.2
-        Maximum fraction of channels exceeding robust tolerances in a clean
-        calibration window.
-    ref_tolerances : tuple of float, default=(-3.5, 5.0)
-        Lower and upper robust z-score bounds for clean-window selection.
+        Overlap fraction for automatic calibration selection.
+    ref_max_bad_channels : float, default=0.075
+        Maximum bad-channel fraction in a calibration window.
+    ref_tolerances : tuple of float, default=(-np.inf, 5.5)
+        Robust z-score bounds for calibration-window selection.
     blocksize : int, default=10
-        Number of successive samples averaged into each covariance block for
-        robust calibration covariance estimation.
-    max_dims : float | int, default=0.66
-        Maximum number of dimensions reconstructed per processing window.
+        Samples aggregated per calibration covariance block.
+    max_dims : float or int, default=0.66
+        Maximum fraction or number of dimensions reconstructed per window.
     reject_by_annotation : bool, default=True
-        If True, samples under bad annotations are excluded during Raw
-        calibration and preserved during Raw transform.
-    skip_by_annotation : tuple of str, default=('bad', 'bad_acq_skip')
-        Annotation description prefixes treated as bad when
-        ``reject_by_annotation=True``.
-    cov_estimator : {'geometric_median', 'mean', 'median'}, default='geometric_median'
-        Aggregation rule for calibration-window covariance matrices.
+        Exclude bad annotated samples during Raw calibration and preserve them during
+        Raw transformation.
+    skip_by_annotation : tuple of str, default=("bad", "bad_acq_skip")
+        Annotation prefixes treated as bad.
+    cov_estimator : {"geometric_median", "mean", "median"}, default="geometric_median"
+        Calibration-covariance aggregation rule.
     regularization : float, default=1e-8
-        Relative eigenvalue floor for covariance regularization.
-    filter_kind : {'none', 'asr', 'highpass'}, default='asr'
-        Statistics-only filter. The cleaned output is reconstructed from the
-        original unfiltered data. Set ``'none'`` to disable spectral shaping.
-    window_criterion : float | int | None, default=None
-        Optional clean_windows-style final rejection criterion. If numeric,
-        this is the maximum tolerated number or fraction of bad channels per
-        retained window after ASR correction. ``None`` disables
-        final rejection-mask computation.
-    window_criterion_tolerances : tuple of float, default=(-3.5, 5.0)
-        Lower and upper robust z-score thresholds for final clean_windows-style
-        retained-sample masking.
-    lookahead : float | None, default=None
-        Processing lookahead in seconds. Defaults to ``window_length / 2``.
-    stepsize : int | None, default=None
-        Number of samples between reconstruction-matrix updates. If ``None``,
-        use the default ``floor(sfreq * window_length / 2)``.
-    max_mem_mb : int | None, default=200
-        Reserved memory limit for future chunking.
+        Relative covariance eigenvalue floor.
+    filter_kind : {"none", "asr", "highpass"}, default="asr"
+        Filter used for statistics; reconstructed output uses the original data.
+    window_criterion : float, int, or None, default=None
+        Optional final retained-sample criterion.
+    window_criterion_tolerances : tuple of float, default=(-np.inf, 7.0)
+        Robust z-score bounds for the final criterion.
+    lookahead : float or None, default=None
+        Processing lookahead in seconds; None uses half a window.
+    stepsize : int or None, default=None
+        Samples between reconstruction updates; None uses half a window.
+    max_mem_mb : int or None, default=512
+        Memory cap for covariance processing.
     copy : bool, default=True
-        Reserved API flag. Transform returns a new object/array.
+        Reserved compatibility parameter; transformations return new outputs.
     store_reconstruction_matrices : bool, default=False
         Store per-window reconstruction matrices in diagnostics.
-    random_state : int | None, default=None
-        Reserved for future stochastic calibration strategies.
-    n_jobs : int | None, default=None
+    random_state : int or None, default=None
+        Reserved for future stochastic calibration.
+    n_jobs : int or None, default=None
         Reserved for future parallel processing.
-    verbose : bool | str | int | None, default=None
-        Controls progress logging on the ``mne_denoise.asr`` logger. ``True``
-        enables INFO messages (e.g. the calibration summary), ``False``
-        restricts to warnings, a level name/int sets that level, and ``None``
-        leaves the current logging configuration unchanged.
-
+    verbose : bool, str, int, or None, default=None
+        Logging level.
 
     Notes
     -----
-    **Key Tuning Parameters**
+    NumPy input uses (n_channels, n_times). MNE Raw and Epochs are supported;
+    fit does not accept Evoked, while transform preserves the input container and
+    metadata. Transformations do not mutate their input.
 
-    * **cutoff**: The primary dial for ASR aggressiveness. Its numerical scale
-      depends on the calibration rule, statistics filter, reconstruction
-      implementation, and data regime. The default of 20 supports legacy and
-      reference-implementation comparisons; it is not a universally validated
-      conservative operating point. Freeze and validate the value for each
-      intended regime.
-    * **method**: Use ``'standard'`` for standard ASR workflows, or
-      ``'riemannian_windowed'`` for a more mathematically robust manifold-based
-      calibration covariance estimation that still responds monotonically to ``cutoff``.
-    * **window_criterion**: Provide a numeric value (e.g., ``0.25``) to enable an
-      statistical final rejection pass after ASR reconstruction, which
-      drops any remaining windows that still contain too many artifactual channels.
-
-    **Calibration vs. Reconstruction Windows**
-
-    ASR uses two different sliding windows. ``calibration_window_length`` (default 1.0s) is
-    used exclusively during ``fit()`` to find clean baseline segments. ``window_length``
-    (default 0.5s) is used during ``transform()`` to detect and reconstruct artifacts.
-
-    Attributes
+    References
     ----------
-    sfreq_ : float
-        Sampling frequency used during fitting.
-    ch_names_ : list of str | None
-        Fitted channel names for MNE inputs.
-    picks_ : ndarray
-        Row/channel indices cleaned in the fitted data.
-    M_ : ndarray
-        Calibration covariance square root.
-    T_ : ndarray
-        Direction-dependent threshold matrix.
-    thresholds_ : ndarray
-        Per-component RMS thresholds.
-    clean_window_mask_ : ndarray
-        Calibration windows retained as clean.
-    sample_mask_ : ndarray
-        Samples reconstructed during the last transform.
-    rejection_sample_mask_ : ndarray
-        Boolean retained-sample mask from optional clean_windows-style final
-        rejection. Present after transforms when ``window_criterion`` is
-        enabled.
-    n_components_reconstructed_ : ndarray
-        Number of reconstructed components per processing window.
-    diagnostics_ : dict
-        Last-transform diagnostics.
-    calibration_info_ : dict
-        Calibration diagnostics.
+    :footcite:p:`kothe_jung2016_asr,chang2018_asr,chang2020_asr`
 
-    Examples
-    --------
-    Clean an MNE Raw object using standard ASR:
-
-    >>> import mne
-    >>> from mne_denoise.asr import ASR
-    >>> raw = mne.io.read_raw_fif("sample_audvis_raw.fif", preload=True)
-    >>> asr = ASR(cutoff=20.0)
-    >>> # Calibration and reconstruction happen in one pass with fit_transform
-    >>> clean_raw = asr.fit_transform(raw)
-
-    Clean a NumPy array, passing the sampling frequency explicitly:
-
-    >>> import numpy as np
-    >>> data = np.random.randn(32, 5000)
-    >>> asr = ASR(sfreq=250.0, cutoff=15.0)
-    >>> clean_data = asr.fit_transform(data)
-
-    Perform independent calibration on a known clean baseline:
-
-    >>> asr = ASR(cutoff=20.0)
-    >>> asr.fit(clean_baseline_raw)
-    >>> clean_target_raw = asr.transform(target_raw)
+    .. footbibliography::
     """
 
     _progress_method = "asr"
@@ -314,48 +199,28 @@ class ASR(BaseEstimator, TransformerMixin):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> ASR:
-        """Fit ASR calibration state.
+        """Fit the ASR calibration state.
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
-            Data used for calibration when ``calibration`` is ``None``.
-            NumPy arrays must have shape ``(n_channels, n_times)``.
-        y : None
-            Ignored.
-        calibration : Raw | Epochs | ndarray | None, default=None
+        X : Raw, Epochs, or ndarray
+            Data used for calibration when calibration is None. NumPy input is
+            (n_channels, n_times).
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        calibration : Raw, Epochs, or ndarray, default=None
             Optional separate calibration data with matching channels.
-        calibration_mask : ndarray | None, default=None
-            Optional boolean sample mask for 2D calibration arrays or Raw
-            inputs after annotation exclusion.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each fitted principal-component threshold
-            with an ASR calibration progress event. Callback return values are
-            ignored and callback exceptions propagate unchanged.
+        calibration_mask : ndarray of bool, shape (n_times,), or None, default=None
+            Samples to use from a 2D calibration input.
+        callback : callable or None, default=None
+            Synchronous calibration progress callback.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        self : ASR
-            Fitted estimator.
-
-        Examples
-        --------
-        Fit ASR directly on the data you intend to clean:
-
-        >>> import mne
-        >>> from mne_denoise.asr import ASR
-        >>> raw = mne.io.read_raw_fif("sample_audvis_raw.fif", preload=True)
-        >>> asr = ASR(cutoff=20.0).fit(raw)
-
-        Fit ASR on a dedicated clean resting-state recording, but pass the
-        target data as ``X`` for scikit-learn pipeline compatibility:
-
-        >>> asr = ASR(cutoff=20.0)
-        >>> asr.fit(X=target_raw, calibration=resting_state_raw)
-        >>> clean_target = asr.transform(target_raw)
+        ASR
+            The fitted estimator.
         """
         del y
         callback = _validate_callback(callback)
@@ -470,9 +335,7 @@ class ASR(BaseEstimator, TransformerMixin):
     ) -> tuple[np.ndarray, dict[str, Any]]:
         """Process one continuous channel-by-time array.
 
-        Subclasses can override this internal hook while retaining the current
-        Raw, Epochs, Evoked, annotation, rejection-mask, and diagnostics
-        workflows implemented by :meth:`transform`.
+        Subclasses may override this hook while retaining the public container workflow.
         """
         return process_asr(
             data,
@@ -505,40 +368,25 @@ class ASR(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : Raw | Epochs | Evoked | ndarray
+        X : Raw, Epochs, Evoked, or ndarray
             Data to clean.
-        y : None
-            Ignored.
-        copy : bool | None, default=None
-            Reserved API flag. Transform returns a new object/array.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        copy : bool or None, default=None
+            Reserved compatibility parameter.
         return_diagnostics : bool, default=False
-            If True, return ``(cleaned, diagnostics)``.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Called synchronously after each completed reconstruction window for
-            continuous input, or after each completed epoch for epoched input.
-            Callback return values are ignored and callback exceptions propagate
-            unchanged.
+            If true, return (cleaned, diagnostics).
+        callback : callable or None, default=None
+            Synchronous reconstruction progress callback.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        cleaned : Raw | Epochs | Evoked | ndarray
-            Cleaned data with the same type/shape as ``X``.
+        cleaned : Raw, Epochs, Evoked, or ndarray
+            Cleaned data with the input type and layout.
         diagnostics : dict
-            Returned only when ``return_diagnostics=True``.
-
-        Examples
-        --------
-        Transform raw data using a previously fitted ASR model:
-
-        >>> asr = ASR(cutoff=20.0).fit(resting_state_raw)
-        >>> clean_target = asr.transform(target_raw)
-
-        Retrieve detailed diagnostics alongside the cleaned data:
-
-        >>> clean_data, diagnostics = asr.transform(data, return_diagnostics=True)
+            Returned only when return_diagnostics=True.
         """
         del y, copy
         callback = _validate_callback(callback)
@@ -644,45 +492,29 @@ class ASR(BaseEstimator, TransformerMixin):
         callback=None,
         verbose: bool | str | int | None = None,
     ) -> Any:
-        """Fit ASR and apply it to ``X``.
+        """Fit ASR and transform the input.
 
         Parameters
         ----------
-        X : Raw | Epochs | ndarray
-            Data to clean. Also used for calibration when ``calibration`` is ``None``.
-        y : None
-            Ignored.
-        calibration : Raw | Epochs | ndarray | None, default=None
-            Optional separate calibration data with matching channels.
+        X : Raw, Epochs, or ndarray
+            Data to clean and, when calibration is None, to calibrate on.
+        y : None, default=None
+            Ignored for scikit-learn compatibility.
+        calibration : Raw, Epochs, or ndarray, default=None
+            Optional separate calibration data.
         return_diagnostics : bool, default=False
-            If True, return ``(cleaned, diagnostics)``.
-        verbose : bool | str | int | None, default=None
-            MNE-style logging level for this call. ``None`` leaves the current
-            package logging configuration unchanged.
-        callback : callable | None
-            Passed to fitting and reconstruction progress callbacks. Callback
-            return values are ignored and callback exceptions propagate unchanged.
+            If true, return (cleaned, diagnostics).
+        callback : callable or None, default=None
+            Callback passed to calibration and reconstruction.
+        verbose : bool, str, int, or None, default=None
+            Logging level for this call.
 
         Returns
         -------
-        cleaned : Raw | Epochs | ndarray
-            Cleaned data with the same type/shape as ``X``.
+        cleaned : Raw, Epochs, or ndarray
+            Cleaned data with the input type and layout.
         diagnostics : dict
-            Returned only when ``return_diagnostics=True``.
-
-        Examples
-        --------
-        Fit and transform in a single pass (standard workflow):
-
-        >>> import mne
-        >>> from mne_denoise.asr import ASR
-        >>> raw = mne.io.read_raw_fif("sample_audvis_raw.fif", preload=True)
-        >>> asr = ASR(cutoff=20.0)
-        >>> clean_raw = asr.fit_transform(raw)
-
-        Fit and transform, extracting the diagnostic dictionary:
-
-        >>> clean_data, diagnostics = asr.fit_transform(data, return_diagnostics=True)
+            Returned only when return_diagnostics=True.
         """
         callback = _validate_callback(callback)
         self.fit(X, y=y, calibration=calibration, callback=callback)
@@ -693,20 +525,12 @@ class ASR(BaseEstimator, TransformerMixin):
         )
 
     def get_diagnostics(self) -> dict[str, Any]:
-        """Return diagnostics from the last transform.
+        """Return diagnostics from the most recent transformation.
 
         Returns
         -------
-        diagnostics : dict
-            A dictionary containing detailed statistics and metrics from the
-            most recent `transform` call. If no transform has occurred, returns
-            an empty dictionary.
-
-        Examples
-        --------
-        >>> asr = ASR(cutoff=20.0).fit_transform(raw)
-        >>> diag = asr.get_diagnostics()
-        >>> print(diag.keys())
+        dict
+            A copy of the latest diagnostics, or an empty dictionary before transform.
         """
         self._check_is_fitted()
         if not hasattr(self, "diagnostics_"):
@@ -714,51 +538,23 @@ class ASR(BaseEstimator, TransformerMixin):
         return dict(self.diagnostics_)
 
     def get_calibration_mask(self) -> np.ndarray:
-        """Return the boolean mask of data used for calibration.
-
-        The mask is **window-based** for the standard / Riemannian / adaptive
-        backends (one bool per calibration window; see
-        :attr:`calibration_mask_kind_` ``== "window"``) and **sample-based**
-        for :class:`JugglerASR` (one bool per time sample;
-        :attr:`calibration_mask_kind_` ``== "sample"``).
+        """Return the boolean mask used for calibration.
 
         Returns
         -------
-        mask : ndarray of bool
-            The calibration clean-window or reference-sample mask.
-
-        See Also
-        --------
-        get_rejection_mask : retained-sample mask after optional window rejection.
-
-        Examples
-        --------
-        Retrieve and inspect the shape of the calibration mask:
-
-        >>> asr = ASR().fit(raw)
-        >>> mask = asr.get_calibration_mask()
-        >>> print(mask.sum())  # Number of clean windows/samples kept
+        ndarray of bool
+            A copy of the clean-window or reference-sample mask.
         """
         self._check_is_fitted()
         return np.asarray(self.clean_window_mask_, dtype=bool).copy()
 
     def get_rejection_mask(self) -> np.ndarray:
-        """Return the retained-sample mask from final clean_windows-style rejection.
+        """Return the retained-sample mask from final window rejection.
 
         Returns
         -------
-        mask : ndarray of bool, shape (n_times,)
-            ``True`` where samples were kept. Requires ``window_criterion`` to
-            have been enabled and ``transform`` to have been run.
-
-        Examples
-        --------
-        Drop badly repaired samples from the output using the mask:
-
-        >>> asr = ASR(window_criterion=0.25).fit(raw)
-        >>> clean_data = asr.transform(raw)
-        >>> mask = asr.get_rejection_mask()
-        >>> fully_clean_data = clean_data[:, mask]
+        ndarray of bool, shape (n_times,)
+            True for samples retained by the optional window_criterion pass.
         """
         self._check_is_fitted()
         if not hasattr(self, "rejection_sample_mask_"):
@@ -774,44 +570,22 @@ class ASR(BaseEstimator, TransformerMixin):
         min_components: int = 1,
         description: str | None = None,
     ) -> Any:
-        """Convert ASR decisions into MNE annotations.
-
-        One unified entry point for the three annotation kinds. ``"repair"`` and
-        ``"rejection"`` are available on every backend that has run
-        ``transform``; ``"calibration"`` is available only for sample-based
-        reference selection (:class:`JugglerASR`).
+        """Convert ASR decisions to MNE annotations.
 
         Parameters
         ----------
-        kind : {'repair', 'rejection', 'calibration'}, default='repair'
-            Which decision to annotate:
-
-            - ``'repair'`` — windows where at least ``min_components`` principal
-              components were reconstructed (default).
-            - ``'rejection'`` — samples removed by the final
-              ``window_criterion`` clean-windows pass.
-            - ``'calibration'`` — samples selected as the calibration reference
-              (JugglerASR only).
+        kind : {"repair", "rejection", "calibration"}, default="repair"
+            Decision to annotate. "calibration" is available for JugglerASR
+            reference-sample selection.
         min_components : int, default=1
-            Minimum reconstructed component count for ``kind='repair'``.
-        description : str | None, default=None
-            Annotation label. Defaults per kind: ``ASR_REPAIR`` / ``ASR_REJECT``
-            / ``ASR_REFERENCE``.
+            Minimum reconstructed-component count for kind="repair".
+        description : str or None, default=None
+            Annotation label; a kind-specific label is used when omitted.
 
         Returns
         -------
-        annotations : mne.Annotations
+        mne.Annotations
             Annotation spans for the requested decision.
-
-        Examples
-        --------
-        Extract repair annotations and attach them to the Raw object for visual
-        inspection of exactly where ASR modified the data:
-
-        >>> asr = ASR().fit(raw)
-        >>> clean_raw = asr.transform(raw)
-        >>> repair_annots = asr.to_annotations(kind="repair", min_components=1)
-        >>> clean_raw.set_annotations(clean_raw.annotations + repair_annots)
         """
         self._check_is_fitted()
         _mne.require_mne("ASR annotations")
@@ -855,28 +629,7 @@ class ASR(BaseEstimator, TransformerMixin):
         *,
         callback: _ProgressCallback | None = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        """Apply ASR reconstruction to epoched data.
-
-        Processes each epoch independently, accumulating diagnostics across all
-        epochs, and aggregating window metrics.
-
-        Parameters
-        ----------
-        data : ndarray, shape (n_epochs, n_channels, n_times)
-            The epoched data array to reconstruct.
-        sfreq : float
-            The sampling frequency of the data in Hz.
-        callback : callable | None
-            Called once after each epoch has completed reconstruction and any
-            optional rejection-mask work.
-
-        Returns
-        -------
-        cleaned : ndarray, shape (n_epochs, n_channels, n_times)
-            The reconstructed epoched data.
-        diagnostics : dict
-            Aggregated reconstruction statistics across all epochs.
-        """
+        """Reconstruct each epoch independently and aggregate diagnostics."""
         cleaned = np.asarray(data, dtype=np.float64).copy()
         epoch_diags = []
         starts_all: list[np.ndarray] = []
@@ -1010,17 +763,7 @@ class ASR(BaseEstimator, TransformerMixin):
         return cleaned, diagnostics
 
     def _store_transform_diagnostics(self, diagnostics: dict[str, Any]) -> None:
-        """Store diagnostics from the most recent transform operation.
-
-        Updates the corresponding instance attributes with the diagnostic
-        values from the last reconstruction pass. If window rejection was
-        not performed, any existing rejection attributes are deleted.
-
-        Parameters
-        ----------
-        diagnostics : dict
-            The diagnostic dictionary returned by the reconstruction function.
-        """
+        """Store diagnostics from the latest transform."""
         self.diagnostics_ = diagnostics
         self.sample_mask_ = diagnostics["sample_mask"]
         self.window_starts_ = diagnostics["window_starts"]
@@ -1058,19 +801,7 @@ class ASR(BaseEstimator, TransformerMixin):
             del self.fraction_rejected_after_window_rejection_
 
     def _warn_preprocessing_state(self, inst: Any, mne_type: str) -> None:
-        """Warn if the input data violates ASR preprocessing assumptions.
-
-        Checks the MNE info dictionary for insufficient high-pass filtering
-        (< 0.25 Hz) and active/unapplied projectors, both of which can
-        negatively impact ASR covariance estimation and reconstruction.
-
-        Parameters
-        ----------
-        inst : mne.io.BaseRaw | mne.Epochs | mne.Evoked | None
-            The MNE object containing the data and info dictionary.
-        mne_type : str
-            The type of the input data (e.g., 'raw', 'epochs', 'array').
-        """
+        """Warn when MNE preprocessing metadata may affect ASR."""
         if mne_type == "array" or inst is None:
             return
         highpass = inst.info.get("highpass", None)

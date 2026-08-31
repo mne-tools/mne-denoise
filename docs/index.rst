@@ -18,7 +18,6 @@ attenuation and preservation of the desired signal.
    getting-started
    evaluation
    dss
-   time_shift_dss
    asr
    bss_cca
    icanclean

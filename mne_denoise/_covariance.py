@@ -1,11 +1,4 @@
-"""Internal covariance estimation shared by array-based algorithms.
-
-Provides methods for computing covariance matrices robust to outliers
-or low sample counts (shrinkage).
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Covariance estimation utilities."""
 
 from __future__ import annotations
 
@@ -17,7 +10,7 @@ from ._validation import check_chunk_size
 def _flatten_observations(
     data: np.ndarray, weights: np.ndarray | None
 ) -> tuple[np.ndarray, np.ndarray, bool]:
-    """Return channel-by-observation data and its validated weight measure."""
+    """Normalize channel-by-observation data and optional weights."""
     data = np.asarray(data, dtype=float)
     user_weights = weights is not None
     if data.ndim == 3:
@@ -76,62 +69,33 @@ def compute_covariance(
     assume_centered: bool = False,
     chunk_size: int | None = None,
 ) -> np.ndarray:
-    """Estimate a channel-by-channel covariance matrix.
-
-    The observations are time samples. For epoched input, time samples from
-    all epochs are flattened in the same C-order convention used by
-    ``data.reshape(n_channels, -1)``.
+    """Estimate a channel covariance matrix from NumPy data.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, n_times) or (n_channels, n_times, n_epochs)
-        Input channel data. The second layout is interpreted as epochs, not as
-        ``(n_epochs, n_channels, n_times)``.
-    method : {'empirical', 'shrinkage', 'oas', 'mcd'}, default='empirical'
-        Method for covariance estimation:
-        ``'empirical'`` computes a population-normalized empirical covariance;
-        ``'shrinkage'`` applies the package's Ledoit--Wolf-style shrinkage;
-        ``'oas'`` uses scikit-learn's Oracle Approximating Shrinkage estimator;
-        and ``'mcd'`` uses scikit-learn's Minimum Covariance Determinant
-        estimator.
-    shrinkage : float | None, default=None
-        Shrinkage intensity for ``method='shrinkage'``. ``None`` estimates the
-        intensity. The value is ignored by the other methods.
-    weights : ndarray | None, default=None
-        Non-negative observation weights for empirical covariance. For 2D data
-        this has shape ``(n_times,)``. For 3D data it can have shape
-        ``(n_times,)`` (broadcast across epochs), ``(n_times, n_epochs)``, or
-        ``(n_times * n_epochs,)`` in the flattened C-order layout. Zero
-        weights exclude observations. Weighted covariance is not supported
-        for the shrinkage, OAS, or MCD methods.
+        Channel-first data. The 3-D layout is flattened over time and epochs.
+    method : {"empirical", "shrinkage", "oas", "mcd"}, default="empirical"
+        Covariance estimator.
+    shrinkage : float or None, default=None
+        Shrinkage intensity for method="shrinkage"; None estimates it.
+    weights : ndarray or None, default=None
+        Non-negative observation weights. 2-D data uses (n_times,); 3-D data accepts
+        (n_times,), (n_times, n_epochs), or the flattened length.
     assume_centered : bool, default=False
-        If True, treat the observations as already centered and skip mean
-        subtraction. For empirical covariance, the denominator remains the
-        number or total weight of observations.
-    chunk_size : int | None, default=None
-        Number of observations accumulated at a time for empirical covariance.
-        ``None`` uses one matrix multiplication over all observations. This
-        option is not supported by the shrinkage, OAS, or MCD estimators.
+        Skip mean subtraction when true.
+    chunk_size : int or None, default=None
+        Empirical-covariance chunk size.
 
     Returns
     -------
-    cov : ndarray, shape (n_channels, n_channels)
-        The estimated covariance matrix. This is a NumPy array, not an MNE
-        :class:`mne.Covariance` object.
-
-    Raises
-    ------
-    ValueError
-        If ``data`` or ``weights`` has an unsupported shape, weights are
-        invalid, a non-empirical method is combined with weights or
-        ``chunk_size``, or ``method`` is unknown.
+    ndarray, shape (n_channels, n_channels)
+        NumPy covariance array, not an MNE Covariance object.
 
     Notes
     -----
-    The empirical estimate is divided by ``n_times`` (or by the sum of the
-    weights), rather than by ``n_times - 1``. The shrinkage, OAS, and MCD
-    methods follow their respective implementations and do not support the
-    weighted or chunked empirical options.
+    The empirical covariance uses a population denominator: n_times or the total
+    weight. Weighted and chunked estimates are supported only for method="empirical".
     """
     data, weights, user_weights = _flatten_observations(data, weights)
     n_channels, n_times = data.shape

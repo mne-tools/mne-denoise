@@ -1,20 +1,4 @@
-"""Shared summary panel painters.
-
-Internal panel-level building blocks used by
-the public ``mne_denoise.viz`` summary composers.
-
-Design principles
------------------
-1. Plotting-only helpers: no estimator fitting and no side effects.
-2. Study-agnostic panel defaults.
-3. Theme-first styling through :mod:`mne_denoise.viz.theme`.
-4. Explicit inputs, with limited fallback placeholders for missing panels.
-
-This module is private and not part of the public API surface.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Shared visualization summary panels."""
 
 from __future__ import annotations
 
@@ -34,22 +18,7 @@ from .theme import (
 
 
 def _new_summary_figure(figsize=None, dpi=None, constrained_layout=False):
-    """Create a themed figure for summary composers.
-
-    Parameters
-    ----------
-    figsize : tuple[float, float] | None
-        Figure size. Falls back to theme default when ``None``.
-    dpi : int | None
-        Figure resolution. Falls back to theme default when ``None``.
-    constrained_layout : bool
-        Forwarded to ``matplotlib.figure.Figure``.
-
-    Returns
-    -------
-    fig : matplotlib.figure.Figure
-        Initialized themed figure.
-    """
+    """Create a themed figure for summary composers."""
     if figsize is None:
         figsize = DEFAULT_FIGSIZE
     if dpi is None:
@@ -64,26 +33,7 @@ def _new_summary_figure(figsize=None, dpi=None, constrained_layout=False):
 
 
 def _new_summary_grid(figsize=None, dpi=None, hspace=0.42, wspace=0.30):
-    """Create a canonical 3x2 summary layout.
-
-    Parameters
-    ----------
-    figsize : tuple[float, float] | None
-        Figure size. Falls back to theme default when ``None``.
-    dpi : int | None
-        Figure resolution. Falls back to theme default when ``None``.
-    hspace : float
-        Vertical spacing between rows.
-    wspace : float
-        Horizontal spacing between columns.
-
-    Returns
-    -------
-    fig : matplotlib.figure.Figure
-        Figure handle.
-    gs : matplotlib.gridspec.GridSpec
-        Grid spec with fixed outer margins used by summary dashboards.
-    """
+    """Create a canonical 3x2 summary layout."""
     from matplotlib.gridspec import GridSpec
 
     fig = _new_summary_figure(figsize=figsize, dpi=dpi)
@@ -102,17 +52,7 @@ def _new_summary_grid(figsize=None, dpi=None, hspace=0.42, wspace=0.30):
 
 
 def _draw_summary_table(ax, rows, title="(f)  Summary"):
-    """Render a compact key/value summary table panel.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    rows : sequence[tuple[object, object]]
-        Table rows as ``(label, value)`` pairs in display order.
-    title : str
-        Panel title.
-    """
+    """Render a compact key/value summary table panel."""
     ax.axis("off")
 
     n_rows = len(rows)
@@ -168,21 +108,7 @@ def _plot_selection_scores_panel(
     selected_label="Selected",
     title="(a)  Component scores",
 ):
-    """Plot component scores with selected/retained coloring.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    scores : array-like | None
-        Score vector. If empty or ``None``, a placeholder message is shown.
-    selected_count : int
-        Number of leading components marked as selected.
-    selected_label : str
-        Legend label for selected components.
-    title : str
-        Panel title.
-    """
+    """Plot component scores with selected/retained coloring."""
     style_axes(ax, grid=True)
     scores = None if scores is None else np.asarray(scores, dtype=float).ravel()
     if scores is None or scores.size == 0:
@@ -226,30 +152,7 @@ def _plot_patterns_panel(
     max_components=4,
     title="(b)  Spatial patterns",
 ):
-    """Plot component patterns with topomap or line fallback.
-
-    Parameters
-    ----------
-    fig : matplotlib.figure.Figure
-        Parent figure.
-    subplot_spec : matplotlib.gridspec.SubplotSpec
-        Grid location where the panel should be drawn.
-    patterns : array-like | None
-        Pattern matrix with shape ``(n_channels, n_components)``.
-    info : mne.Info | None
-        Optional MNE info. When provided, topomaps are drawn.
-    channel_names : sequence[str] | None
-        Optional x-axis labels for non-topomap fallback.
-    max_components : int
-        Maximum number of components to display.
-    title : str
-        Panel title.
-
-    Raises
-    ------
-    ValueError
-        If ``patterns`` is provided with invalid dimensionality.
-    """
+    """Plot component patterns with topomap or line fallback."""
     from matplotlib.gridspec import GridSpecFromSubplotSpec
 
     has_patterns = patterns is not None and np.size(patterns) > 0
@@ -339,31 +242,7 @@ def _plot_removed_power_panel(
     title="(c)  Removed signal power",
     no_data_text="No removal data",
 ):
-    """Plot per-channel RMS power of removed signal.
-
-    Parameters
-    ----------
-    fig : matplotlib.figure.Figure
-        Parent figure used for optional colorbar creation.
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    removed : array-like | None
-        Removed data as ``(n_channels, n_times)`` or
-        ``(n_epochs, n_channels, n_times)``.
-    info : mne.Info | None
-        Optional MNE info for topomap rendering.
-    channel_names : sequence[str] | None
-        Optional x-axis labels for bar fallback.
-    title : str
-        Panel title.
-    no_data_text : str
-        Placeholder message when no removed data is available.
-
-    Raises
-    ------
-    ValueError
-        If ``removed`` has unsupported dimensionality.
-    """
+    """Plot per-channel RMS power of removed signal."""
     removed = None if removed is None else np.asarray(removed, dtype=float)
     has_removed = removed is not None and removed.size > 0
     if not has_removed:
@@ -421,32 +300,7 @@ def _plot_source_trace_panel(
     title="(d)  Component traces",
     empty_text="No source data",
 ):
-    """Plot a short component-trace window with stacked offsets.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    sources : array-like | None
-        Source data as ``(n_components, n_times)`` or
-        ``(n_epochs, n_components, n_times)``.
-    sfreq : float | None
-        Sampling frequency used to build the time axis.
-    title : str
-        Panel title.
-    empty_text : str
-        Placeholder message when no source data is provided.
-
-    Notes
-    -----
-    The panel displays up to four components over a deterministic
-    two-second (or shorter) window starting at sample zero.
-
-    Raises
-    ------
-    ValueError
-        If ``sources`` has unsupported dimensionality.
-    """
+    """Plot a short component-trace window with stacked offsets."""
     style_axes(ax)
     if sources is None:
         ax.text(
@@ -519,25 +373,7 @@ def _plot_before_after_psd_panel(
     before_label="Before",
     after_label="After",
 ):
-    """Plot a before/after PSD comparison panel.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    freqs : array-like | None
-        Frequency axis.
-    psd_before, psd_after : array-like | None
-        PSD values with frequency on the last axis.
-    line_freq : float | None
-        Optional vertical marker (for example line frequency).
-    fmax : float
-        Upper x-axis bound.
-    title : str
-        Panel title.
-    before_label, after_label : str
-        Legend labels for the two curves.
-    """
+    """Plot a before/after PSD comparison panel."""
     style_axes(ax, grid=True)
     if freqs is None or psd_before is None or psd_after is None:
         ax.text(
@@ -572,18 +408,7 @@ def _plot_before_after_psd_panel(
 
 
 def _plot_segment_counts_panel(ax, segment_info, title="(a)  Segment counts"):
-    """Plot per-segment count bars.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    segment_info : sequence[dict]
-        Segment metadata. The panel reads ``count`` and falls back to
-        ``n_selected`` then ``n_removed``.
-    title : str
-        Panel title.
-    """
+    """Plot per-segment count bars."""
     style_axes(ax, grid=True)
     counts = []
     for segment in segment_info:
@@ -605,18 +430,7 @@ def _plot_segment_metric_panel(
     segment_info,
     title="(b)  Segment metric",
 ):
-    """Plot optional per-segment scalar metric.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    segment_info : sequence[dict]
-        Segment metadata. The panel reads ``metric`` and falls back to
-        ``fine_freq`` then ``frequency``.
-    title : str
-        Panel title.
-    """
+    """Plot an optional per-segment scalar metric."""
     style_axes(ax, grid=True)
     values = []
     for segment in segment_info:
@@ -652,19 +466,7 @@ def _plot_segment_boundaries_panel(
     sfreq=None,
     title="(c)  Segment boundaries",
 ):
-    """Plot segment boundaries as a horizontal timeline.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Axis used for rendering.
-    segment_info : sequence[dict]
-        Segment metadata with sample-based ``start``/``end`` fields.
-    sfreq : float | None
-        Sampling frequency used to convert boundaries into seconds.
-    title : str
-        Panel title.
-    """
+    """Plot segment boundaries as a horizontal timeline."""
     style_axes(ax)
     if sfreq is None or sfreq <= 0:
         ax.text(

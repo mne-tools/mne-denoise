@@ -1,17 +1,4 @@
-"""Spectral and time-frequency visualization primitives.
-
-This module contains reusable, method-agnostic plots focused on
-frequency-domain and time-frequency diagnostics.
-
-This module contains:
-1. PSD comparisons for before/after denoising outputs.
-2. Component-spectrum comparisons for extracted sources.
-3. Spectrogram and time-frequency mask visualizations.
-4. Narrowband scan summaries for spectral sweeps.
-
-Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)
-         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)
-"""
+"""Spectral visualization functions."""
 
 from __future__ import annotations
 
@@ -204,22 +191,6 @@ def plot_narrowband_score_scan(
     ValueError
         If ``frequencies`` is not 1D, if ``eigenvalues`` is not 1D/2D,
         or if their first dimensions do not match.
-
-    Notes
-    -----
-    This function is plotting-only and does not run frequency estimation.
-    ``peak_freq`` and ``true_freqs`` are optional annotations supplied
-    directly by the caller.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_narrowband_score_scan
-    >>> freqs = np.linspace(6, 40, 50)
-    >>> scores = np.exp(-0.5 * ((freqs - 12.0) / 1.5) ** 2)
-    >>> fig = plot_narrowband_score_scan(
-    ...     freqs, scores, peak_freq=12.0, true_freqs=[12.0, 24.0], show=False
-    ... )
     """
     frequencies = np.asarray(frequencies, dtype=float)
     eigenvalues = np.asarray(eigenvalues, dtype=float)
@@ -353,20 +324,6 @@ def plot_psd_comparison(
     ------
     ValueError
         If array inputs are used without ``sfreq``.
-
-    Notes
-    -----
-    PSD backend is selected by input type:
-    - MNE inputs use ``compute_psd``.
-    - Array inputs use SciPy Welch PSD.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_psd_comparison
-    >>> before = np.random.randn(8, 2000)
-    >>> after = before * 0.8
-    >>> fig = plot_psd_comparison(before, after, sfreq=250.0, show=False)
     """
     if ax is None:
         fig, ax = themed_figure(figsize=(8, 4))
@@ -460,17 +417,6 @@ def plot_psd_zoom_comparison(
     ------
     ValueError
         If ``zoom_freqs`` is empty/non-1D or if ``zoom_half_width_hz <= 0``.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_psd_zoom_comparison
-    >>> freqs = np.linspace(0, 120, 512)
-    >>> before = np.exp(-freqs / 40)
-    >>> after = before * 0.7
-    >>> fig = plot_psd_zoom_comparison(
-    ...     freqs, before, freqs, after, zoom_freqs=[50.0], show=False
-    ... )
     """
     freqs_before = np.asarray(freqs_before, dtype=float)
     psd_before = np.asarray(psd_before, dtype=float)
@@ -612,15 +558,6 @@ def plot_psd_gallery(
     ------
     ValueError
         If ``zoom_freqs`` is empty/non-1D or if ``zoom_half_width_hz <= 0``.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_psd_gallery
-    >>> freqs = np.linspace(0, 120, 512)
-    >>> before = np.exp(-freqs / 40)
-    >>> series = {"A": (freqs, before * 0.8), "B": (freqs, before * 0.6)}
-    >>> fig = plot_psd_gallery(freqs, before, series, zoom_freqs=[50.0], show=False)
     """
     freqs_reference = np.asarray(freqs_reference, dtype=float)
     psd_reference = np.asarray(psd_reference, dtype=float)
@@ -787,20 +724,6 @@ def plot_psd_overlay(
     ------
     ValueError
         If ``focus_half_width_hz <= 0``.
-
-    Notes
-    -----
-    When ``series_order`` is not provided, overlay order follows the
-    insertion order of ``series_psds``.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_psd_overlay
-    >>> freqs = np.linspace(0, 120, 512)
-    >>> before = np.exp(-freqs / 40)
-    >>> series = {"A": (freqs, before * 0.8), "B": (freqs, before * 0.6)}
-    >>> fig = plot_psd_overlay(freqs, before, series, focus_freq=50.0, show=False)
     """
     freqs_reference = np.asarray(freqs_reference, dtype=float)
     psd_reference = np.asarray(psd_reference, dtype=float)
@@ -943,20 +866,6 @@ def plot_component_psd_comparison(
     ValueError
         If ``component_indices`` is empty/out of range or if array inputs
         are provided without ``sfreq``.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_component_psd_comparison
-    >>> signal = np.random.randn(8, 2000)
-    >>> sources = np.random.randn(4, 2000)
-    >>> fig = plot_component_psd_comparison(
-    ...     signal,
-    ...     sources,
-    ...     component_indices=[0, 1],
-    ...     sfreq=250.0,
-    ...     show=False,
-    ... )
     """
     fig, axes = themed_figure(
         1, 2, figsize=(12, 4), sharey=True, constrained_layout=True
@@ -1077,22 +986,6 @@ def plot_spectrogram_comparison(
     ValueError
         If ``picks``/``times`` are invalid, if input types are mixed,
         if array inputs are missing ``sfreq``, or if shape constraints fail.
-
-    Notes
-    -----
-    This function enforces an explicit ``times`` input for both MNE and
-    NumPy inputs to avoid hidden axis inference.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_spectrogram_comparison
-    >>> before = np.random.randn(8, 2000)
-    >>> after = before * 0.8
-    >>> t = np.arange(before.shape[-1]) / 250.0
-    >>> fig = plot_spectrogram_comparison(
-    ...     before, after, picks=[0, 1], times=t, sfreq=250.0, show=False
-    ... )
     """
     if n_freqs < 2:
         raise ValueError("n_freqs must be at least 2.")
@@ -1275,15 +1168,6 @@ def plot_time_frequency_mask(
     ------
     ValueError
         If dimensions of ``mask``, ``times``, and ``freqs`` are inconsistent.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.viz import plot_time_frequency_mask
-    >>> mask = np.random.rand(20, 100)
-    >>> times = np.linspace(0, 2.0, 100)
-    >>> freqs = np.linspace(1.0, 40.0, 20)
-    >>> fig = plot_time_frequency_mask(mask, times, freqs, show=False)
     """
     mask = np.asarray(mask)
     times = np.asarray(times)

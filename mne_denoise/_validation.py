@@ -1,9 +1,4 @@
-"""Package-wide shared validation primitives.
-
-These helpers centralize generic data, scalar parameter, fitted-estimator, and
-metadata contracts used across ``mne_denoise``. Algorithm-specific scientific
-validation remains in the module that owns the corresponding method.
-"""
+"""Shared validation helpers."""
 
 from __future__ import annotations
 
@@ -48,31 +43,24 @@ def check_channel_first_data(
     min_channels: int = 2,
     min_times: int = 2,
 ) -> np.ndarray:
-    """Validate and convert channel-first continuous or epoched data.
+    """Validate a finite 2-D or optional 3-D channel-first array.
 
     Parameters
     ----------
     X : array-like
-        Data shaped ``(n_channels, n_times)`` or, when ``allow_epochs`` is
-        True, ``(n_epochs, n_channels, n_times)``.
+        Shape (n_channels, n_times), or (n_epochs, n_channels, n_times) when
+        allow_epochs=True.
     name : str
-        Algorithm name used in error messages, e.g. ``"SNS"``.
+        Name used in validation errors.
     allow_epochs : bool, default=True
-        Whether three-dimensional epoched input is accepted.
-    min_channels : int, default=2
-        Minimum number of channels required.
-    min_times : int, default=2
-        Minimum number of time samples required.
+        Whether 3-D input is accepted.
+    min_channels, min_times : int, default=2
+        Minimum channel and time dimensions.
 
     Returns
     -------
     X : ndarray
-        ``X`` as a float64 array.
-
-    Raises
-    ------
-    ValueError
-        If the shape, size, or finiteness preconditions are not met.
+        Float64 view or copy of the input.
     """
     X = np.asarray(X, dtype=np.float64)
     expected = (2, 3) if allow_epochs else (2,)
@@ -121,26 +109,23 @@ def resolve_sample_window(
     sfreq: float | None = None,
     name: str = "window",
 ) -> tuple[int, int]:
-    """Validate a half-open time window and resolve it to sample offsets.
+    """Validate a half-open window and resolve it to sample offsets.
 
     Parameters
     ----------
     window : sequence of int or float
-        Ordered ``(start, stop)`` boundaries.
+        Start and stop boundaries.
     unit : {"samples", "seconds"}
-        Unit of the supplied boundaries. Sample-valued boundaries must be
-        integers. Second-valued boundaries use nearest-sample rounding with
-        ties to even.
-    sfreq : float | None, default=None
-        Sampling frequency. Required for second-valued windows and validated
-        when supplied for sample-valued windows.
+        Units of the boundaries.
+    sfreq : float or None, default=None
+        Sampling frequency for second-valued windows.
     name : str, default="window"
-        Parameter name used in error messages.
+        Name used in validation errors.
 
     Returns
     -------
     sample_window : tuple of int
-        Nonempty half-open ``(start, stop)`` sample offsets.
+        Non-empty half-open sample interval.
     """
     if unit not in {"samples", "seconds"}:
         raise ValueError(f"{name}_unit must be 'samples' or 'seconds', got {unit!r}.")
@@ -192,25 +177,7 @@ def resolve_sample_window(
 
 
 def check_chunk_size(chunk_size: int | None) -> int | None:
-    """Validate an optional chunk size for blockwise processing.
-
-    Parameters
-    ----------
-    chunk_size : int | None
-        Number of samples per block, or None to process everything at once.
-
-    Returns
-    -------
-    chunk_size : int | None
-        The validated value.
-
-    Raises
-    ------
-    TypeError
-        If ``chunk_size`` is a bool or not an integer.
-    ValueError
-        If ``chunk_size`` is not positive.
-    """
+    """Validate an optional positive block size and return it unchanged as an int."""
     if chunk_size is None:
         return None
     if isinstance(chunk_size, bool) or not isinstance(chunk_size, Integral):
@@ -227,32 +194,9 @@ def resolve_sfreq(
     context: str | None = None,
     required: bool = True,
 ) -> float | None:
-    """Reconcile a user-declared sampling frequency with container metadata.
+    """Resolve a declared sampling frequency against MNE metadata.
 
-    An MNE container carries its own sampling frequency. When the caller also
-    declares one, the two must agree: silently preferring either would discard
-    a stated intention.
-
-    Parameters
-    ----------
-    declared : float | None
-        Sampling frequency supplied by the caller, e.g. an estimator parameter.
-    data_sfreq : float | None
-        Sampling frequency read from an MNE container, or None for arrays.
-    context : str | None, default=None
-        What requires the value, used when neither source provides one.
-    required : bool, default=True
-        If False, return None instead of raising when neither is available.
-
-    Returns
-    -------
-    sfreq : float | None
-        The effective sampling frequency.
-
-    Raises
-    ------
-    ValueError
-        If the two sources disagree, or if none is available and ``required``.
+    A mismatch raises; when required=False, missing values return None.
     """
     if declared is not None:
         declared = check_positive_real(declared, name="sfreq")
@@ -281,23 +225,7 @@ def check_channel_layout(
     ch_names: tuple[str, ...] | list[str] | None = None,
     fitted_ch_names: tuple[str, ...] | list[str] | None = None,
 ) -> None:
-    """Verify that transform input matches the layout seen during fit.
-
-    Parameters
-    ----------
-    name : str
-        Algorithm name used in error messages, e.g. ``"SNS"``.
-    n_channels, fitted_n_channels : int
-        Channel counts of the current input and of the fitted data.
-    ch_names, fitted_ch_names : sequence of str | None, default=None
-        Channel names of the current input and of the fitted data. The check is
-        skipped when either is None, as it is for array input.
-
-    Raises
-    ------
-    ValueError
-        If the names, their order, or the channel counts differ.
-    """
+    """Verify channel count and, when available, name/order equality with the fitted layout."""
     if (
         ch_names is not None
         and fitted_ch_names is not None

@@ -1,4 +1,4 @@
-"""Internal spatial operations shared by denoising algorithms."""
+"""Spatial transform helpers."""
 
 from __future__ import annotations
 
@@ -13,22 +13,21 @@ def apply_spatial_transform(
     *,
     chunk_size: int | None = None,
 ) -> np.ndarray:
-    """Apply a spatial matrix along the first axis of 2D or 3D data.
+    """Apply a spatial matrix along the first axis of 2-D or 3-D data.
 
     Parameters
     ----------
     matrix : ndarray, shape (n_output_channels, n_input_channels)
         Spatial transformation matrix.
     data : ndarray, shape (n_input_channels, ...)
-        Channel-first continuous or multidimensional data.
-    chunk_size : int | None, default=None
-        Number of flattened samples transformed at a time. None applies the
-        matrix in one operation.
+        Channel-first data.
+    chunk_size : int or None, default=None
+        Optional flattened-observation block size.
 
     Returns
     -------
     transformed : ndarray
-        Transformed data with the trailing dimensions of ``data`` preserved.
+        Data with trailing dimensions preserved.
     """
     matrix = np.asarray(matrix)
     data = np.asarray(data)
@@ -60,22 +59,21 @@ def fit_mixing_matrix(
     *,
     sample_weight: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Fit a least-squares projection from components to channel data.
+    """Fit a least-squares sensor projection from component time courses.
 
     Parameters
     ----------
     data : ndarray, shape (n_channels, ...)
         Channel-first target data.
     sources : ndarray, shape (n_components, ...)
-        Component time courses with the same trailing observation dimensions.
-    sample_weight : ndarray | None
-        Optional weights shaped like the trailing observation dimensions, or
-        flattened in their C-order layout.
+        Component data with matching observation dimensions.
+    sample_weight : ndarray or None, default=None
+        Optional non-negative observation weights.
 
     Returns
     -------
     mixing : ndarray, shape (n_channels, n_components)
-        Least-squares sensor projection.
+        Least-squares mixing matrix.
     """
     data = np.asarray(data, dtype=np.float64)
     sources = np.asarray(sources, dtype=np.float64)
