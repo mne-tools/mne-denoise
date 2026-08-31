@@ -20,6 +20,7 @@ import mne_denoise
 project = "mne-denoise"
 author = "mne-denoise developers"
 copyright = f"{datetime.now():%Y}, {author}"
+docs_version = os.environ.get("MNE_DENOISE_DOCS_VERSION", "dev")
 version = mne_denoise.__version__
 release = version
 
@@ -112,12 +113,18 @@ html_theme_options = {
         "image_dark": "mne-denoise-mark.svg",
         "alt_text": "mne-denoise",
     },
-    "use_edit_page_button": True,
+    "use_edit_page_button": docs_version == "dev",
+    "switcher": {
+        "json_url": "https://mne.tools/mne-denoise/versions.json",
+        "version_match": docs_version,
+    },
+    "check_switcher": False,
+    "show_version_warning_banner": docs_version == "dev",
     "footer_start": ["mdn-footer"],
     "footer_center": [],
     "footer_end": [],
     "navbar_center": ["navbar-nav"],
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navbar_persistent": ["search-button-field"],
     "header_links_before_dropdown": 6,
     "navigation_depth": 2,
