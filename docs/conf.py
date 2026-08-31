@@ -57,6 +57,7 @@ bibtex_reference_style = "author_year"
 
 # MyST configuration
 myst_heading_anchors = 3
+myst_enable_extensions = ["colon_fence"]
 
 sphinx_gallery_conf = {
     "examples_dirs": "../examples",
@@ -101,9 +102,20 @@ intersphinx_mapping = {
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+html_css_files = ["style.css"]
+html_favicon = "_static/mne-denoise-mark.svg"
 html_theme_options = {
     "github_url": "https://github.com/mne-tools/mne-denoise",
+    "logo": {
+        "text": "mne-denoise",
+        "image_light": "mne-denoise-mark.svg",
+        "image_dark": "mne-denoise-mark.svg",
+        "alt_text": "mne-denoise",
+    },
     "use_edit_page_button": True,
+    "footer_start": ["mdn-footer"],
+    "footer_center": [],
+    "footer_end": [],
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
 }
 html_context = {
