@@ -14,35 +14,17 @@ The public API is the set of names documented here or exposed by the package
 facades. Names beginning with an underscore are private. APIs marked
 experimental have weaker stability guarantees.
 
-Package utilities
------------------
+Core interfaces
+---------------
 
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
+Denoising estimators
+~~~~~~~~~~~~~~~~~~~~
 
-   mne_denoise.compute_covariance
+These classes provide the main fit/transform interfaces for denoising arrays
+and, where supported, MNE-Python objects.
 
-Progress callbacks
-------------------
-
-Callbacks receive immutable ProgressEvent objects after completed work units.
-The callback is supplied at runtime and is independent of verbose logging.
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.progress.ProgressEvent
-   mne_denoise.progress.TqdmProgress
-
-.. code-block:: python
-
-   events = []
-   model.fit(data, callback=events.append)
-
-ASR
----
+Artifact and adaptive methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -52,6 +34,66 @@ ASR
    mne_denoise.asr.AdaptiveASR
    mne_denoise.asr.JugglerASR
    mne_denoise.asr.GuidedASR
+
+DSS methods
+^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.dss.DSS
+   mne_denoise.dss.TimeShiftDSS
+   mne_denoise.dss.IterativeDSS
+
+Spatial and reference-informed methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.bss_cca.BSSCCA
+   mne_denoise.icanclean.ICanClean
+   mne_denoise.sns.SNS
+   mne_denoise.sound.SOUND
+   mne_denoise.sspsir.SSPSIR
+
+Spectral and structured methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.zapline.ZapLine
+   mne_denoise.spectrum_interpolation.SpectrumInterpolation
+   mne_denoise.ssa.SingularSpectrumAnalysis
+   mne_denoise.ssa.LocalSingularSpectrumAnalysis
+
+Package utilities and progress
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.compute_covariance
+   mne_denoise.progress.ProgressEvent
+   mne_denoise.progress.TqdmProgress
+
+Method functions and building blocks
+------------------------------------
+
+Artifact Subspace Reconstruction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Calibration and processing helpers for ASR and its adaptive variants.
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    mne_denoise.asr.calibrate_asr
    mne_denoise.asr.compute_clean_window_mask
    mne_denoise.asr.fit_rms_distribution
@@ -59,22 +101,21 @@ ASR
    mne_denoise.asr.process_guided_asr
    mne_denoise.asr.select_juggler_reference_samples
 
-DSS
----
+Denoising Source Separation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Core operations and reusable components for DSS workflows.
 
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
    mne_denoise.dss.compute_dss
-   mne_denoise.dss.DSS
-   mne_denoise.dss.TimeShiftDSS
    mne_denoise.dss.iterative_dss
    mne_denoise.dss.iterative_dss_one
-   mne_denoise.dss.IterativeDSS
 
-DSS segmentation
-~~~~~~~~~~~~~~~~
+Segmentation
+^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -83,8 +124,8 @@ DSS segmentation
    mne_denoise.dss.segmentation.CovarianceSegmenter
    mne_denoise.dss.segmentation.FixedWindowSegmenter
 
-DSS component selection
-~~~~~~~~~~~~~~~~~~~~~~~
+Component selection
+^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -96,7 +137,7 @@ DSS component selection
    mne_denoise.dss.selection.iterative_outlier_removal
 
 Denoisers
-~~~~~~~~~
+^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -129,7 +170,10 @@ Denoisers
    mne_denoise.dss.denoisers.beta_gauss
 
 Variants
-~~~~~~~~
+^^^^^^^^
+
+TimeShiftDSS is documented as part of the DSS family rather than as a separate
+method family.
 
 .. autosummary::
    :toctree: generated/
@@ -140,97 +184,31 @@ Variants
    mne_denoise.dss.variants.narrowband_scan
    mne_denoise.dss.variants.ssvep_dss
 
-ZapLine
--------
+Spatial and reference-informed operations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
-   mne_denoise.zapline.ZapLine
-
-Spectrum interpolation
-----------------------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.spectrum_interpolation.SpectrumInterpolation
-   mne_denoise.spectrum_interpolation.interpolate_spectrum
-
-iCanClean
----------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.icanclean.ICanClean
+   mne_denoise.bss_cca.compute_bss_cca
    mne_denoise.icanclean.compute_icanclean
    mne_denoise.icanclean.null_r2_threshold
-
-SOUND
------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.sound.SOUND
+   mne_denoise.sns.compute_sns
+   mne_denoise.sns.compute_sns_weights
    mne_denoise.sound.compute_sound
    mne_denoise.sound.compute_sound_ref_best
-
-SSP-SIR
--------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.sspsir.SSPSIR
    mne_denoise.sspsir.compute_sspsir
    mne_denoise.sspsir.compute_sir
 
-Overcorrection metrics
-----------------------
+Spectral and structured operations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
-   mne_denoise.quantify_overcorrection
-
-BSS-CCA
--------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.bss_cca.BSSCCA
-   mne_denoise.bss_cca.compute_bss_cca
-
-SNS
----
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.sns.SNS
-   mne_denoise.sns.compute_sns
-   mne_denoise.sns.compute_sns_weights
-
-SSA
----
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   mne_denoise.ssa.SingularSpectrumAnalysis
-   mne_denoise.ssa.LocalSingularSpectrumAnalysis
+   mne_denoise.spectrum_interpolation.interpolate_spectrum
    mne_denoise.ssa.ssa_decompose
    mne_denoise.ssa.ssa_w_correlation
    mne_denoise.ssa.compute_basic_ssa
@@ -238,8 +216,20 @@ SSA
    mne_denoise.ssa.compute_local_ssa
    mne_denoise.ssa.local_ssa_clean_channel
 
-Quality assurance
------------------
+Evaluation and diagnostics
+--------------------------
+
+Overcorrection
+~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.quantify_overcorrection
+
+Quality assurance metrics
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -261,6 +251,9 @@ Quality assurance
 
 Visualization
 -------------
+
+Plotting
+~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -308,6 +301,15 @@ Visualization
    mne_denoise.viz.plot_group_condition_interaction_summary
    mne_denoise.viz.plot_endpoint_metrics_summary
 
+Interactive component selection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   mne_denoise.viz.ComponentSelector
+
 Visualization theme
 ~~~~~~~~~~~~~~~~~~~
 
@@ -323,7 +325,3 @@ Visualization theme
    mne_denoise.viz.style_axes
    mne_denoise.viz.themed_figure
    mne_denoise.viz.themed_legend
-
-.. autoclass:: mne_denoise.viz.ComponentSelector
-   :members: apply, excluded
-   :exclude-members: __init__

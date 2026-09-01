@@ -59,7 +59,7 @@ cardiac procedure.
 `IterativeDSS` and `iterative_dss` use fixed-point updates with a nonlinear
 denoiser such as `KurtosisDenoiser`, `RobustTanhDenoiser`, or a local-variance
 mask. Stopping rules, denoiser choice, and component count are explicit user
-choices {footcite:p}`sarela2005_dss`.
+choices.
 
 ## DSS variants
 

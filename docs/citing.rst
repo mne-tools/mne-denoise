@@ -6,3 +6,5 @@ Citing mne-denoise
 3. Use the central bibliography in docs/references.bib for method metadata.
 
 The repository's software citation metadata is in CITATION.cff.
+
+For contribution guidance, see the :doc:`Contribute <development>` page.

@@ -106,16 +106,6 @@ Suppress a fitted artifact subspace and reconstruct the signal with source-infor
 
 ::::
 
-## Start here
-
-Use the documentation in this order when you are new to the package:
-
-* {doc}`Getting started <getting-started>` for installation and first NumPy/MNE
-  workflows.
-* {doc}`Choose a method <methods>` for assumptions, inputs, and method guides.
-* {doc}`Evaluation <evaluation>` for assessing cleaning and signal
-  preservation.
-
 ## Citation
 
 Using mne-denoise in research? Please cite the software version you used and the primary scientific paper for each method.
