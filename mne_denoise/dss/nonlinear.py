@@ -79,11 +79,10 @@ def iterative_dss_one(
     -----
     Convergence compares the absolute dot product of successive unit filters, so a
     sign flip is treated as no change.
+    This follows the iterative DSS formulation :footcite:p:`sarela2005_dss`.
 
     References
     ----------
-    :footcite:p:`sarela2005_dss`
-
     .. footbibliography::
     """
     callback = _validate_callback(callback)
@@ -305,10 +304,12 @@ def iterative_dss(
     convergence_info : ndarray, shape (n_components, 2)
         Iteration count and convergence flag for each component.
 
+    Notes
+    -----
+    This follows the iterative DSS formulation :footcite:p:`sarela2005_dss`.
+
     References
     ----------
-    :footcite:p:`sarela2005_dss`
-
     .. footbibliography::
     """
     callback = _validate_callback(callback)
@@ -664,12 +665,11 @@ class IterativeDSS:
     -----
     ``transform`` returns source arrays. ``inverse_transform`` reconstructs arrays
     using the fitted patterns; MNE metadata is used for channel extraction during
-    fitting and transformation.
+    fitting and transformation. This follows the iterative DSS formulation
+    :footcite:p:`sarela2005_dss`.
 
     References
     ----------
-    :footcite:p:`sarela2005_dss`
-
     .. footbibliography::
 
     Examples

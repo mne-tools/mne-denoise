@@ -343,7 +343,8 @@ def compute_bss_cca(
     -----
     CCA is computed between the signal and a lagged copy. With reject="low",
     components with the lowest lagged correlation are removed; reject="high" removes
-    the highest. Segmented mode is continuous-only and cannot span epoch boundaries.
+    the highest. Segmented mode is continuous-only and cannot span epoch boundaries
+    :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca,hotelling1936_cca`.
 
     See Also
     --------
@@ -352,8 +353,6 @@ def compute_bss_cca(
 
     References
     ----------
-    :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca,hotelling1936_cca`
-
     .. footbibliography::
     """
     callback = _validate_callback(callback)
@@ -615,12 +614,10 @@ class BSSCCA(BaseEstimator, TransformerMixin):
     -----
     With segment_len set, transform requires the same number of samples used during
     fit. MNE Raw, Epochs, and Evoked inputs preserve their container type and
-    channel metadata.
+    channel metadata :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca`.
 
     References
     ----------
-    :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca`
-
     .. footbibliography::
 
     Examples

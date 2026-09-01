@@ -1,2 +1,2 @@
-Refined the documentation homepage, navigation, API reference organization,
-and presentation.
+Refined documentation API presentation, installation guidance, references,
+and contributor guidance.

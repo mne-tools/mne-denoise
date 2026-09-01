@@ -191,12 +191,10 @@ class TimeShiftDSS(BaseEstimator, TransformerMixin):
     ``(n_channels, n_times, n_epochs)`` and MNE ``Epochs`` use their native
     layout. Lags define the common valid support; samples outside it are unchanged
     by sensor-space operations. A sampling frequency is required when lags are
-    specified in seconds.
+    specified in seconds :footcite:p:`decheveigne2010_time_shift`.
 
     References
     ----------
-    :footcite:p:`decheveigne2010_time_shift`
-
     .. footbibliography::
 
     Examples

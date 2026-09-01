@@ -10,39 +10,147 @@ API reference
 Names documented in this reference are public unless explicitly marked
 experimental. Underscore-prefixed implementation details are private.
 
-:doc:`Denoising methods <api/methods>`
---------------------------------------
+Primary denoising API
+---------------------
 
-Estimator and functional APIs for ASR, BSS-CCA, iCanClean, SNS, SOUND,
-spectrum interpolation, SSA, SSP-SIR, and ZapLine.
+The main interfaces follow the artifact and method flow in the
+:doc:`Methods guide <methods>` and are listed here first.
 
-:doc:`DSS <api/dss>`
---------------------
+Artifact Subspace Reconstruction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Core DSS estimators, biases, denoisers, segmentation, component selection,
-and variants.
+.. currentmodule:: mne_denoise.asr
 
-:doc:`Evaluation and QA <api/evaluation>`
------------------------------------------
+.. autosummary::
+   :nosignatures:
 
-Metrics for artifact attenuation, signal change, and overcorrection.
+   ASR
+   AdaptiveASR
+   JugglerASR
+   GuidedASR
+   calibrate_asr
+   process_asr
 
-:doc:`Visualization <api/visualization>`
-----------------------------------------
+Sensor Noise Suppression
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Optional plotting, diagnostic, summary, and component-selection helpers.
+.. currentmodule:: mne_denoise.sns
 
-:doc:`Utilities <api/utilities>`
--------------------------------------
+.. autosummary::
+   :nosignatures:
 
-Shared covariance and progress-callback utilities.
+   SNS
+   compute_sns
+
+SOUND
+~~~~~
+
+.. currentmodule:: mne_denoise.sound
+
+.. autosummary::
+   :nosignatures:
+
+   SOUND
+   compute_sound
+
+Spectrum interpolation
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: mne_denoise.spectrum_interpolation
+
+.. autosummary::
+   :nosignatures:
+
+   SpectrumInterpolation
+   interpolate_spectrum
+
+ZapLine
+~~~~~~~
+
+.. currentmodule:: mne_denoise.zapline
+
+.. autosummary::
+   :nosignatures:
+
+   ZapLine
+
+DSS
+~~~
+
+.. currentmodule:: mne_denoise.dss
+
+.. autosummary::
+   :nosignatures:
+
+   DSS
+   compute_dss
+   IterativeDSS
+   iterative_dss
+   TimeShiftDSS
+
+Singular Spectrum Analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: mne_denoise.ssa
+
+.. autosummary::
+   :nosignatures:
+
+   SingularSpectrumAnalysis
+   LocalSingularSpectrumAnalysis
+   compute_basic_ssa
+   compute_local_ssa
+
+BSS-CCA
+~~~~~~~
+
+.. currentmodule:: mne_denoise.bss_cca
+
+.. autosummary::
+   :nosignatures:
+
+   BSSCCA
+   compute_bss_cca
+
+iCanClean
+~~~~~~~~~
+
+.. currentmodule:: mne_denoise.icanclean
+
+.. autosummary::
+   :nosignatures:
+
+   ICanClean
+   compute_icanclean
+
+SSP-SIR
+~~~~~~~
+
+.. currentmodule:: mne_denoise.sspsir
+
+.. autosummary::
+   :nosignatures:
+
+   SSPSIR
+   compute_sspsir
+   compute_sir
+
+Additional API
+--------------
 
 .. toctree::
    :hidden:
    :maxdepth: 1
 
-   Denoising methods <api/methods>
-   DSS <api/dss>
+   Advanced method helpers <api/helpers>
    Evaluation and QA <api/evaluation>
    Visualization <api/visualization>
    Utilities <api/utilities>
+
+The secondary reference pages collect reusable building blocks and supporting
+interfaces:
+
+* :doc:`Advanced method helpers <api/helpers>`
+* :doc:`Evaluation and QA <api/evaluation>`
+* :doc:`Visualization <api/visualization>`
+* :doc:`Utilities <api/utilities>`

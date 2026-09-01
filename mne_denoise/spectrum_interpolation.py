@@ -58,12 +58,10 @@ def interpolate_spectrum(
     Notes
     -----
     Amplitudes in target bins are replaced using neighboring amplitudes while the
-    original FFT phase is retained.
+    original FFT phase is retained :footcite:p:`leske_dalal2019_spectrum`.
 
     References
     ----------
-    :footcite:p:`leske_dalal2019_spectrum`
-
     .. footbibliography::
 
     Examples
@@ -169,12 +167,10 @@ class SpectrumInterpolation(BaseEstimator, TransformerMixin):
     NumPy input uses 2-D or 3-D channel-first layouts; 3-D records are processed
     independently. MNE data channels are processed while non-data channels and
     container metadata are preserved. Short segments may have limited spectral
-    resolution.
+    resolution :footcite:p:`leske_dalal2019_spectrum`.
 
     References
     ----------
-    :footcite:p:`leske_dalal2019_spectrum`
-
     .. footbibliography::
 
     Examples

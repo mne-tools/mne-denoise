@@ -72,12 +72,11 @@ def select_juggler_reference_samples(
     sample_mask : ndarray of bool, shape (n_times,)
         Retained reference-sample mask.
     diagnostics : dict
-        Selection parameters, labels or GEV diagnostics, and retained counts.
+        Selection parameters, labels or GEV diagnostics, and retained counts
+        :footcite:p:`kim2025_juggler_asr`.
 
     References
     ----------
-    :footcite:p:`kim2025_juggler_asr`
-
     .. footbibliography::
     """
     X = _validate_array_2d(X)
@@ -240,12 +239,11 @@ class JugglerASR(ASR):
 
     Notes
     -----
-    The fitted calibration mask is sample-based rather than window-based.
+    The fitted calibration mask is sample-based rather than window-based
+    :footcite:p:`kim2025_juggler_asr`.
 
     References
     ----------
-    :footcite:p:`kim2025_juggler_asr`
-
     .. footbibliography::
     """
 

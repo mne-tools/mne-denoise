@@ -66,7 +66,7 @@ Reconstruct high-variance periods using a relatively clean calibration reference
 **Methods:** {doc}`ASR <asr>`
 :::
 :::{grid-item-card} Sensor-specific noise
-:class-card: mdn-method-card mdn-method-card-sage
+:class-card: mdn-method-card
 :shadow: none
 
 Suppress sensor-specific noise using spatial redundancy or forward-model information.
@@ -74,7 +74,7 @@ Suppress sensor-specific noise using spatial redundancy or forward-model informa
 **Methods:** {doc}`SNS <sns>` · {doc}`SOUND <sound>`
 :::
 :::{grid-item-card} Power-line contamination
-:class-card: mdn-method-card mdn-method-card-sage
+:class-card: mdn-method-card mdn-method-card-terracotta
 :shadow: none
 
 Address narrowband line contamination with spectral interpolation or DSS-based spatial separation.
@@ -82,7 +82,7 @@ Address narrowband line contamination with spectral interpolation or DSS-based s
 **Methods:** {doc}`Spectrum interpolation <spectrum_interpolation>` · {doc}`ZapLine <zapline>`
 :::
 :::{grid-item-card} Reproducible or structured components
-:class-card: mdn-method-card mdn-method-card-primary
+:class-card: mdn-method-card
 :shadow: none
 
 Extract or suppress components defined by reproducibility, temporal or spectral structure, or repeated trials.
@@ -90,7 +90,7 @@ Extract or suppress components defined by reproducibility, temporal or spectral 
 **Methods:** {doc}`DSS <dss>` · {doc}`SSA <ssa>`
 :::
 :::{grid-item-card} CCA and reference-informed cleaning
-:class-card: mdn-method-card mdn-method-card-primary
+:class-card: mdn-method-card
 :shadow: none
 
 Use shared structure between signals, lagged copies, or reference channels to identify components for cleaning.
@@ -127,6 +127,4 @@ Methods <methods>
 Examples <auto_examples/index>
 API reference <api>
 Development <development>
-Citation <citing>
-Documentation versions <versions>
 ```

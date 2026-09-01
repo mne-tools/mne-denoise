@@ -103,11 +103,11 @@ class ZapLine(DSS):
     -----
     Standard fit followed by transform uses a fitted operator. Adaptive mode requires
     fit_transform because fitting and cleaning are performed per segment.
+    The adaptive workflow follows the ZapLine and ZapLine-plus methods
+    :footcite:p:`decheveigne2020_zapline,klug_kloosterman2022_zapline_plus`.
 
     References
     ----------
-    :footcite:p:`decheveigne2020_zapline,klug_kloosterman2022_zapline_plus`
-
     .. footbibliography::
 
     Examples

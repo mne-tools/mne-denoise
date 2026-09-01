@@ -103,9 +103,15 @@ Interactive component selection
 
 .. autosummary::
    :toctree: ../generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    ComponentSelector
+
+.. autosummary::
+   :toctree: ../generated/
+   :nosignatures:
+
    plot_component_selector
 
 Theme helpers

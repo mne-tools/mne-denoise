@@ -335,12 +335,11 @@ class DSS(BaseEstimator, TransformerMixin):
     NumPy input uses ``(n_channels, n_times)`` or
     ``(n_channels, n_times, n_epochs)``. MNE ``Epochs`` uses its native
     ``(n_epochs, n_channels, n_times)`` layout. ``extract`` returns source data;
-    ``retain`` and ``subtract`` return the input layout or a copied MNE container.
+    ``retain`` and ``subtract`` return the input layout or a copied MNE container
+    :footcite:p:`sarela2005_dss`.
 
     References
     ----------
-    :footcite:p:`sarela2005_dss`
-
     .. footbibliography::
 
     Examples

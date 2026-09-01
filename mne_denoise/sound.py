@@ -220,12 +220,11 @@ def compute_sound(
 
     Notes
     -----
-    The input data and lead field must use a common reference.
+    The input data and lead field must use a common reference
+    :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`.
 
     References
     ----------
-    :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`
-
     .. footbibliography::
     """
     callback = _validate_callback(callback)
@@ -432,12 +431,10 @@ class SOUND(BaseEstimator, TransformerMixin):
     -----
     NumPy input is (n_channels, n_times) or (n_epochs, n_channels, n_times).
     MNE Raw, Epochs, and Evoked inputs are supported and returned without
-    mutation.
+    mutation :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`.
 
     References
     ----------
-    :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`
-
     .. footbibliography::
 
     Examples

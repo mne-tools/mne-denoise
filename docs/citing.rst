@@ -1,3 +1,5 @@
+:orphan:
+
 Citing mne-denoise
 ==================
 

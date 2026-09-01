@@ -125,12 +125,11 @@ class AdaptiveASR(ASR):
     partial_fit updates the adaptive calibration state for variant="psp" or
     variant="psw"; variant="mw" does not support partial_fit. NumPy input uses
     (n_channels, n_times) or (n_epochs, n_channels, n_times). Transform preserves
-    the input MNE container and does not mutate it.
+    the input MNE container and does not mutate it
+    :footcite:p:`tsai2024_adaptive_asr,chang2020_asr`.
 
     References
     ----------
-    :footcite:p:`tsai2024_adaptive_asr,chang2020_asr`
-
     .. footbibliography::
 
     Examples

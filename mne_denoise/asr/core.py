@@ -122,12 +122,10 @@ class ASR(BaseEstimator, TransformerMixin):
     fit does not accept Evoked, while transform preserves the input container and
     metadata. Transformations do not mutate their input. Real applications should
     calibrate on representative clean data; the synthetic example only illustrates
-    the estimator lifecycle.
+    the estimator lifecycle :footcite:p:`kothe_jung2016_asr,chang2018_asr,chang2020_asr`.
 
     References
     ----------
-    :footcite:p:`kothe_jung2016_asr,chang2018_asr,chang2020_asr`
-
     .. footbibliography::
 
     Examples

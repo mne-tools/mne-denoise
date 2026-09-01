@@ -248,12 +248,11 @@ def compute_sns(
     SNS reconstructs each channel from spatially redundant signals in other
     channels using the channel covariance. It targets noise specific to individual
     sensors rather than a source or artifact shared across the array. With centered
-    data, the learned operator is applied in channel space.
+    data, the learned operator is applied in channel space
+    :footcite:p:`decheveigne_simon2008_sensor`.
 
     References
     ----------
-    :footcite:p:`decheveigne_simon2008_sensor`
-
     .. footbibliography::
     """
     callback = _validate_callback(callback)
@@ -426,12 +425,10 @@ class SNS(BaseEstimator, TransformerMixin):
     transform returns the corresponding type without mutating the input. SNS
     reconstructs each channel from spatially redundant signals in other channels;
     it is intended for noise specific to individual sensors, not for a source or
-    artifact shared across the array.
+    artifact shared across the array :footcite:p:`decheveigne_simon2008_sensor`.
 
     References
     ----------
-    :footcite:p:`decheveigne_simon2008_sensor`
-
     .. footbibliography::
 
     Examples

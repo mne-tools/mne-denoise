@@ -129,10 +129,13 @@ def compute_sspsir(
     compute_sir
         Unprojected source-informed reconstruction operator.
 
+    Notes
+    -----
+    This operator implements the projected SSP-SIR reconstruction
+    :footcite:p:`mutanen2016_sspsir`.
+
     References
     ----------
-    :footcite:p:`mutanen2016_sspsir`
-
     .. footbibliography::
 
     Examples
@@ -303,12 +306,11 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     -----
     NumPy input uses (n_channels, n_times) or (n_epochs, n_channels, n_times).
     MNE Raw, Epochs, and Evoked inputs are supported and returned without mutation.
-    The artifact-window reconstruction is time-locked to the fitted data.
+    The artifact-window reconstruction is time-locked to the fitted data
+    :footcite:p:`mutanen2016_sspsir,mutanen2022_source_artifact,mutanen2024_sspsir_simulation,hernandez_pavon2022_tms_review`.
 
     References
     ----------
-    :footcite:p:`mutanen2016_sspsir,mutanen2022_source_artifact,mutanen2024_sspsir_simulation,hernandez_pavon2022_tms_review`
-
     .. footbibliography::
 
     Examples

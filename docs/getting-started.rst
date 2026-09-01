@@ -4,13 +4,30 @@ Getting started
 Install
 -------
 
-Install the base package and optional integrations as needed:
+Install the base package:
 
 .. code-block:: console
 
    pip install mne-denoise
+
+Optional integrations can be installed separately.
+
+MNE-Python integration:
+
+.. code-block:: console
+
    pip install "mne-denoise[mne]"
+
+Visualization:
+
+.. code-block:: console
+
    pip install "mne-denoise[viz]"
+
+Progress bars:
+
+.. code-block:: console
+
    pip install "mne-denoise[progress]"
 
 First NumPy workflow

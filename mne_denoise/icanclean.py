@@ -532,12 +532,11 @@ def compute_icanclean(
     The function is array-only and transductive: the operator is estimated from the
     same recording it cleans. Use ICanClean for MNE containers and estimator
     lifecycle semantics. A high canonical correlation indicates shared variance,
-    not artifact identity.
+    not artifact identity
+    :footcite:p:`downey_ferris2022_icanclean,downey_ferris2023_icanclean_phantom,gonsisko2023_icanclean_ica`.
 
     References
     ----------
-    :footcite:p:`downey_ferris2022_icanclean,downey_ferris2023_icanclean_phantom,gonsisko2023_icanclean_ica`
-
     .. footbibliography::
     """
     callback = _validate_callback(callback)
@@ -643,12 +642,11 @@ class ICanClean(BaseEstimator, TransformerMixin):
     -----
     NumPy input is channel-first; MNE Raw, Epochs, and Evoked inputs are supported
     and returned as the same container type. A high shared correlation is not, by
-    itself, evidence that a component is artifact.
+    itself, evidence that a component is artifact
+    :footcite:p:`downey_ferris2022_icanclean,downey_ferris2023_icanclean_phantom,gonsisko2023_icanclean_ica`.
 
     References
     ----------
-    :footcite:p:`downey_ferris2022_icanclean,downey_ferris2023_icanclean_phantom,gonsisko2023_icanclean_ica`
-
     .. footbibliography::
 
     Examples

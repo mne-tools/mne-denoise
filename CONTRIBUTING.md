@@ -23,14 +23,16 @@ with the Code of Conduct.
 
 ## AI-assisted contributions
 
-Fully automated issue or pull-request generation without human review is not
-acceptable. The contributor is responsible for every submitted line and must
-understand, review, and test AI-assisted work. Scientific algorithm changes
-deserve particular scrutiny for correctness, provenance, and licensing.
+AI-assisted development has been used substantially in mne-denoise and is
+welcome when it remains under active human supervision. The contributor is
+responsible for every submitted line and must understand, review, and test
+AI-assisted work. Scientific algorithm changes deserve particular scrutiny
+for correctness, provenance, and licensing.
 
-If AI tools were used, disclose the tool, manner, and scope of assistance in
-the pull-request description. Do not use AI-generated text as a substitute for
-understanding reviewer discussion.
+Material AI assistance must be disclosed in the pull-request description,
+including the tool and scope of assistance. Fully automated submissions
+without human review are not acceptable, and AI-generated text is not a
+substitute for understanding reviewer discussion.
 
 ## Development setup
 
