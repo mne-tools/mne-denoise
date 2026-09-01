@@ -17,31 +17,49 @@ Choose a method based on the artifact and the information available in your reco
 ::::{div} mdn-hero-actions
 :::{button-ref} getting-started
 :ref-type: doc
-:class: sd-btn-primary
+:class: sd-btn mdn-btn-primary
 Get started
 :::
 :::{button-ref} methods
 :ref-type: doc
-:class: sd-btn-secondary
+:class: sd-btn mdn-btn-secondary
 Choose a method
 :::
 :::{button-ref} auto_examples/index
 :ref-type: doc
-:class: sd-btn-secondary
+:class: sd-btn mdn-btn-secondary
 Browse examples
 :::
 ::::
 
 ::::{div} mdn-install
+::::{tab-set}
+:class: mdn-install-tabs
+
+:::{tab-item} pip
 ```{code-block} bash
 pip install mne-denoise
 ```
+:::
+
+:::{tab-item} uv
+```{code-block} bash
+uv pip install mne-denoise
+```
+:::
+
+:::{tab-item} conda
+```{code-block} bash
+conda install -c conda-forge mne-denoise
+```
+:::
+::::
 ::::
 :::::
 ::::::
 
 ```{admonition} Development status
-:class: mdn-status-note
+:class: note
 
 **mne-denoise is under active development.** Until version 1.0, the public API
 may evolve between releases. For reproducible analyses, record the mne-denoise

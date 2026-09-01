@@ -1,2 +1,0 @@
-Refined documentation API presentation, installation guidance, references,
-and contributor guidance.

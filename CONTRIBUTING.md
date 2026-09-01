@@ -86,11 +86,10 @@ should support scientific claims. `spin docs` is the canonical full check.
 
 ## Changelog
 
-For changes that need a release note, add a fragment under
-`docs/changes/devel/` using the `<PR>.<type>.rst` naming scheme. The available
-types are `feature`, `bugfix`, `doc`, `removal`, and `misc`. Do not edit
-`CHANGELOG.md` in a pull request. See [docs/changes/README.md](https://github.com/mne-tools/mne-denoise/blob/main/docs/changes/README.md)
-for details and local draft instructions.
+Add a 1–2 line Towncrier fragment under `docs/changes/devel/` for changes that
+belong in the release notes. If no changelog entry is warranted, apply the
+`no-changelog-entry-needed` label; see [docs/changes/README.md](https://github.com/mne-tools/mne-denoise/blob/main/docs/changes/README.md)
+for fragment naming.
 
 ## Pull requests
 

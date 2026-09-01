@@ -88,12 +88,11 @@ def compute_dss(
     -----
     The baseline covariance is whitened, the biased covariance is diagonalized in
     that space, and the resulting filters are normalized in the baseline metric.
-
-    References
-    ----------
     This implementation follows the linear DSS formulation
     :footcite:p:`sarela2005_dss`.
 
+    References
+    ----------
     .. footbibliography::
 
     Examples

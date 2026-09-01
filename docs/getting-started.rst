@@ -4,31 +4,92 @@ Getting started
 Install
 -------
 
-Install the base package:
+Install the base package and optional integrations with the package manager
+you use:
 
-.. code-block:: console
+.. tab-set::
+   :class: mdn-install-tabs
 
-   pip install mne-denoise
+   .. tab-item:: pip
 
-Optional integrations can be installed separately.
+      Base package:
 
-MNE-Python integration:
+      .. code-block:: console
 
-.. code-block:: console
+         pip install mne-denoise
 
-   pip install "mne-denoise[mne]"
+      MNE-Python integration:
 
-Visualization:
+      .. code-block:: console
 
-.. code-block:: console
+         pip install "mne-denoise[mne]"
 
-   pip install "mne-denoise[viz]"
+      Visualization:
 
-Progress bars:
+      .. code-block:: console
 
-.. code-block:: console
+         pip install "mne-denoise[viz]"
 
-   pip install "mne-denoise[progress]"
+      Progress bars:
+
+      .. code-block:: console
+
+         pip install "mne-denoise[progress]"
+
+   .. tab-item:: uv
+
+      Base package:
+
+      .. code-block:: console
+
+         uv pip install mne-denoise
+
+      MNE-Python integration:
+
+      .. code-block:: console
+
+         uv pip install "mne-denoise[mne]"
+
+      Visualization:
+
+      .. code-block:: console
+
+         uv pip install "mne-denoise[viz]"
+
+      Progress bars:
+
+      .. code-block:: console
+
+         uv pip install "mne-denoise[progress]"
+
+   .. tab-item:: conda
+
+      Install the base package from conda-forge:
+
+      .. code-block:: console
+
+         conda install -c conda-forge mne-denoise
+
+      Optional integrations can be installed as conda packages alongside
+      mne-denoise:
+
+      MNE-Python integration:
+
+      .. code-block:: console
+
+         conda install -c conda-forge mne-denoise mne
+
+      Visualization:
+
+      .. code-block:: console
+
+         conda install -c conda-forge mne-denoise matplotlib
+
+      Progress bars:
+
+      .. code-block:: console
+
+         conda install -c conda-forge mne-denoise tqdm
 
 First NumPy workflow
 --------------------

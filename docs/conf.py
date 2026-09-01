@@ -5,6 +5,7 @@ import sys
 import tempfile
 from datetime import datetime
 
+from sphinx.ext.autosummary import autosummary_toc
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -105,7 +106,11 @@ html_copy_source = False
 html_show_sphinx = False
 switcher_version_match = "dev" if ".dev" in release else version
 html_theme_options = {
-    "logo": {"text": "mne-denoise"},
+    "logo": {
+        "text": "mne-denoise",
+        "image_light": "_static/mne.svg",
+        "image_dark": "_static/mne.svg",
+    },
     "use_edit_page_button": switcher_version_match == "dev",
     "switcher": {
         "json_url": "https://mne.tools/mne-denoise/dev/_static/versions.json",
@@ -142,3 +147,21 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs",
 }
+
+
+def _remove_autosummary_navigation(app, doctree):
+    """Keep generated object pages out of the documentation sidebars."""
+    for autosummary in doctree.findall(autosummary_toc):
+        autosummary.parent.remove(autosummary)
+
+
+def _mark_generated_pages_orphan(app, docname, source):
+    """Allow directly linked generated pages without adding them to navigation."""
+    if docname.startswith("generated/"):
+        source[0] = ":orphan:\n\n" + source[0]
+
+
+def setup(app):
+    """Register documentation navigation cleanup hooks."""
+    app.connect("doctree-read", _remove_autosummary_navigation, priority=100)
+    app.connect("source-read", _mark_generated_pages_orphan)

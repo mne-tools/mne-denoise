@@ -33,56 +33,6 @@ Additional iterative helper
 
    iterative_dss_one
 
-Biases
-~~~~~~
-
-.. currentmodule:: mne_denoise.dss.denoisers
-
-.. autosummary::
-   :toctree: ../generated/
-   :template: autosummary/class_no_members.rst
-   :nosignatures:
-
-   LinearDenoiser
-   AverageBias
-   CycleAverageBias
-   BandpassBias
-   LineNoiseBias
-   PeakFilterBias
-   CombFilterBias
-   LagAverageBias
-   SmoothingBias
-   SpectrogramBias
-
-Nonlinear denoisers
-~~~~~~~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: ../generated/
-   :template: autosummary/class_no_members.rst
-   :nosignatures:
-
-   NonlinearDenoiser
-   TanhMaskDenoiser
-   RobustTanhDenoiser
-   KurtosisDenoiser
-   SkewDenoiser
-   GaussDenoiser
-   WienerMaskDenoiser
-   VarianceMaskDenoiser
-   SpectrogramDenoiser
-   DCTDenoiser
-   QuasiPeriodicDenoiser
-   SmoothTanhDenoiser
-
-.. autosummary::
-   :toctree: ../generated/
-   :nosignatures:
-
-   beta_tanh
-   beta_pow3
-   beta_gauss
-
 Segmentation
 ~~~~~~~~~~~~
 
@@ -123,6 +73,19 @@ DSS convenience variants
    narrowband_dss
    narrowband_scan
    ssvep_dss
+
+Nonlinear helper functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autosummary::
+   :toctree: ../generated/
+   :nosignatures:
+
+   beta_tanh
+   beta_pow3
+   beta_gauss
 
 iCanClean helper
 ----------------

@@ -22,12 +22,19 @@ Artifact Subspace Reconstruction
 .. currentmodule:: mne_denoise.asr
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    ASR
    AdaptiveASR
    JugglerASR
    GuidedASR
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    calibrate_asr
    process_asr
 
@@ -37,9 +44,16 @@ Sensor Noise Suppression
 .. currentmodule:: mne_denoise.sns
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    SNS
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    compute_sns
 
 SOUND
@@ -48,9 +62,16 @@ SOUND
 .. currentmodule:: mne_denoise.sound
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    SOUND
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    compute_sound
 
 Spectrum interpolation
@@ -59,9 +80,16 @@ Spectrum interpolation
 .. currentmodule:: mne_denoise.spectrum_interpolation
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    SpectrumInterpolation
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    interpolate_spectrum
 
 ZapLine
@@ -70,6 +98,8 @@ ZapLine
 .. currentmodule:: mne_denoise.zapline
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    ZapLine
@@ -77,16 +107,68 @@ ZapLine
 DSS
 ~~~
 
+Core
+^^^^
+
 .. currentmodule:: mne_denoise.dss
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    DSS
-   compute_dss
    IterativeDSS
-   iterative_dss
    TimeShiftDSS
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   compute_dss
+   iterative_dss
+
+Biases and linear denoisers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
+   :nosignatures:
+
+   LinearDenoiser
+   AverageBias
+   CycleAverageBias
+   BandpassBias
+   LineNoiseBias
+   PeakFilterBias
+   CombFilterBias
+   LagAverageBias
+   SmoothingBias
+   SpectrogramBias
+
+Nonlinear denoisers
+^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
+   :nosignatures:
+
+   NonlinearDenoiser
+   TanhMaskDenoiser
+   RobustTanhDenoiser
+   KurtosisDenoiser
+   SkewDenoiser
+   GaussDenoiser
+   WienerMaskDenoiser
+   VarianceMaskDenoiser
+   SpectrogramDenoiser
+   DCTDenoiser
+   QuasiPeriodicDenoiser
+   SmoothTanhDenoiser
 
 Singular Spectrum Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,10 +176,17 @@ Singular Spectrum Analysis
 .. currentmodule:: mne_denoise.ssa
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    SingularSpectrumAnalysis
    LocalSingularSpectrumAnalysis
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    compute_basic_ssa
    compute_local_ssa
 
@@ -107,9 +196,16 @@ BSS-CCA
 .. currentmodule:: mne_denoise.bss_cca
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    BSSCCA
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    compute_bss_cca
 
 iCanClean
@@ -118,9 +214,16 @@ iCanClean
 .. currentmodule:: mne_denoise.icanclean
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    ICanClean
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    compute_icanclean
 
 SSP-SIR
@@ -129,9 +232,16 @@ SSP-SIR
 .. currentmodule:: mne_denoise.sspsir
 
 .. autosummary::
+   :toctree: generated/
+   :template: autosummary/class_no_members.rst
    :nosignatures:
 
    SSPSIR
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    compute_sspsir
    compute_sir
 
