@@ -17,9 +17,7 @@ def _make_build(
     static = path / "_static"
     static.mkdir()
     if versions is not None:
-        (static / "versions.json").write_text(
-            json.dumps(versions), encoding="utf-8"
-        )
+        (static / "versions.json").write_text(json.dumps(versions), encoding="utf-8")
     return path
 
 
@@ -46,9 +44,7 @@ def test_development_publish_before_stable_preserves_root(tmp_path: Path) -> Non
 
     publish_development(pages, build)
 
-    assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == (
-        "development"
-    )
+    assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == ("development")
     assert old_index.read_text(encoding="utf-8") == "old root site"
     assert not (pages / "stable").exists()
 
@@ -68,9 +64,7 @@ def test_development_publish_after_stable_updates_root_only(tmp_path: Path) -> N
     assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == (
         "new development"
     )
-    assert (pages / "stable" / "index.html").read_text(encoding="utf-8") == (
-        "stable"
-    )
+    assert (pages / "stable" / "index.html").read_text(encoding="utf-8") == ("stable")
     assert "stable/" in (pages / "index.html").read_text(encoding="utf-8")
 
 
@@ -87,15 +81,9 @@ def test_release_publish_preserves_development(tmp_path: Path) -> None:
 
     publish_release(pages, build, version)
 
-    assert (pages / version / "index.html").read_text(encoding="utf-8") == (
-        "release"
-    )
-    assert (pages / "stable" / "index.html").read_text(encoding="utf-8") == (
-        "release"
-    )
-    assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == (
-        "development"
-    )
+    assert (pages / version / "index.html").read_text(encoding="utf-8") == ("release")
+    assert (pages / "stable" / "index.html").read_text(encoding="utf-8") == ("release")
+    assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == ("development")
     assert "stable/" in (pages / "index.html").read_text(encoding="utf-8")
 
 
@@ -157,12 +145,8 @@ def test_initial_migration_removes_legacy_root_only(tmp_path: Path) -> None:
     migrate_legacy_root(pages)
 
     assert "stable/" in (pages / "index.html").read_text(encoding="utf-8")
-    assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == (
-        "development"
-    )
-    assert (pages / "9.9.9" / "index.html").read_text(encoding="utf-8") == (
-        "archived"
-    )
+    assert (pages / "dev" / "index.html").read_text(encoding="utf-8") == ("development")
+    assert (pages / "9.9.9" / "index.html").read_text(encoding="utf-8") == ("archived")
     assert (pages / ".nojekyll").is_file()
     assert (pages / "CNAME").read_text(encoding="utf-8") == "mne.tools"
     assert (pages / "site-metadata.json").read_text(encoding="utf-8") == "{}"
