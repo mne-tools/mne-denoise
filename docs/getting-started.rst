@@ -41,33 +41,15 @@ return copies. For example, with a preloaded Raw object named raw:
 
    clean_raw = SpectrumInterpolation(line_freq=60.0).fit_transform(raw)
 
-Working with mne-denoise
-------------------------
-
-Methods work with channel-first NumPy arrays and, where supported, MNE Raw,
-Epochs, and Evoked objects. Main estimators use ``fit``, ``transform``, and
-``fit_transform`` when those operations match the scientific workflow.
-
-After fitting, inspect the returned data together with fitted operators,
-component information, or method-specific diagnostics. The
-:doc:`evaluation` guide covers ways to assess cleaning and signal preservation.
+Main estimators use ``fit``, ``transform``, and ``fit_transform`` when those
+operations match the method. Supported MNE objects are copied rather than
+modified in place; exact container and array contracts are documented in the
+:doc:`API reference <api>`.
 
 Where to go next
 ----------------
 
-The method pages summarize assumptions and minimal workflows for:
-
-* ASR for transient, high-variance subspace changes;
-* the DSS family for reproducible, spectral, temporal, and lagged-trial
-  structure;
-* BSS-CCA and iCanClean for lagged or reference-shared components;
-* SNS and SOUND for spatially or forward-model-predicted sensor noise;
-* spectrum interpolation and ZapLine for line noise;
-* SSA for channel-wise delay-coordinate decompositions; and
-* SSP-SIR for source-informed TMS-evoked artifact reconstruction.
-
-* :doc:`Choose a method <methods>` from the artifact and assumptions.
-* Browse the :doc:`auto_examples/index` gallery for complete workflows.
-* See the :doc:`api` reference for exact contracts and public names.
-* Assess cleaning and signal preservation with :doc:`evaluation`.
-* Read :doc:`citing` for citation guidance.
+* :doc:`Choose a method <methods>`
+* :doc:`Browse examples <auto_examples/index>`
+* :doc:`API reference <api>`
+* :doc:`Evaluating denoising <evaluation>`

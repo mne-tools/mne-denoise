@@ -7,7 +7,7 @@ html_theme.sidebar_secondary.remove: true
 
 ::::::{div} mdn-hero
 
-## Denoising methods for EEG and MEG
+<h2>Denoising methods for EEG and MEG</h2>
 
 `mne-denoise` brings together complementary spatial, spectral, adaptive, and source-informed denoising methods, with NumPy support and integration with MNE-Python objects.
 
@@ -40,7 +40,9 @@ pip install mne-denoise
 :::::
 ::::::
 
-```{note}
+```{admonition} Development status
+:class: mdn-status-note
+
 **mne-denoise is under active development.** Until version 1.0, the public API
 may evolve between releases. For reproducible analyses, record the mne-denoise
 version used in your work.
@@ -56,7 +58,7 @@ address.
 :class-container: mdn-method-grid
 
 :::{grid-item-card} Transient high-amplitude artifacts
-:class-card: mdn-method-card
+:class-card: mdn-method-card mdn-method-card-terracotta
 :shadow: none
 
 Reconstruct high-variance periods using a relatively clean calibration reference.
@@ -64,7 +66,7 @@ Reconstruct high-variance periods using a relatively clean calibration reference
 **Methods:** {doc}`ASR <asr>`
 :::
 :::{grid-item-card} Sensor-specific noise
-:class-card: mdn-method-card
+:class-card: mdn-method-card mdn-method-card-sage
 :shadow: none
 
 Suppress sensor-specific noise using spatial redundancy or forward-model information.
@@ -72,7 +74,7 @@ Suppress sensor-specific noise using spatial redundancy or forward-model informa
 **Methods:** {doc}`SNS <sns>` · {doc}`SOUND <sound>`
 :::
 :::{grid-item-card} Power-line contamination
-:class-card: mdn-method-card
+:class-card: mdn-method-card mdn-method-card-sage
 :shadow: none
 
 Address narrowband line contamination with spectral interpolation or DSS-based spatial separation.
@@ -80,7 +82,7 @@ Address narrowband line contamination with spectral interpolation or DSS-based s
 **Methods:** {doc}`Spectrum interpolation <spectrum_interpolation>` · {doc}`ZapLine <zapline>`
 :::
 :::{grid-item-card} Reproducible or structured components
-:class-card: mdn-method-card
+:class-card: mdn-method-card mdn-method-card-primary
 :shadow: none
 
 Extract or suppress components defined by reproducibility, temporal or spectral structure, or repeated trials.
@@ -88,7 +90,7 @@ Extract or suppress components defined by reproducibility, temporal or spectral 
 **Methods:** {doc}`DSS <dss>` · {doc}`SSA <ssa>`
 :::
 :::{grid-item-card} CCA and reference-informed cleaning
-:class-card: mdn-method-card
+:class-card: mdn-method-card mdn-method-card-primary
 :shadow: none
 
 Use shared structure between signals, lagged copies, or reference channels to identify components for cleaning.
@@ -96,7 +98,7 @@ Use shared structure between signals, lagged copies, or reference channels to id
 **Methods:** {doc}`BSS-CCA <bss_cca>` · {doc}`iCanClean <icanclean>`
 :::
 :::{grid-item-card} TMS-evoked muscle artifact
-:class-card: mdn-method-card
+:class-card: mdn-method-card mdn-method-card-terracotta
 :shadow: none
 
 Suppress a fitted artifact subspace and reconstruct the signal with source-informed geometry.
@@ -106,11 +108,15 @@ Suppress a fitted artifact subspace and reconstruct the signal with source-infor
 
 ::::
 
-## Citation
+::::{div} mdn-citation-note
 
-Using mne-denoise in research? Please cite the software version you used and the primary scientific paper for each method.
+<h3>Using mne-denoise in research?</h3>
+
+Please cite the software version you used and the primary scientific paper for each method.
 
 {doc}`Citation <citing>` · [GitHub](https://github.com/mne-tools/mne-denoise)
+
+::::
 
 ```{toctree}
 :hidden:
@@ -119,6 +125,8 @@ Using mne-denoise in research? Please cite the software version you used and the
 Get started <getting-started>
 Methods <methods>
 Examples <auto_examples/index>
-API <api>
-Contribute <development>
+API reference <api>
+Development <development>
+Citation <citing>
+Documentation versions <versions>
 ```

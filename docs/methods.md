@@ -93,15 +93,15 @@ window and a forward model or compatible EEG montage. See the
 | Method | Main target | Main structure used | Additional requirement |
 | ------ | ----------- | ------------------- | ---------------------- |
 | {doc}`ASR <asr>` | Transient high-variance artifacts | Clean calibration covariance | Calibration period/data |
-| {doc}`DSS <dss>` | Reproducible or structured components | Bias covariance relative to baseline | Bias or segment definition |
-| {doc}`BSS-CCA <bss_cca>` | Components separated by lagged CCA | Lagged temporal correlation | Lag and component rule |
-| {doc}`iCanClean <icanclean>` | Shared reference variance | CCA with reference channels | Reference block or pseudo-reference |
 | {doc}`SNS <sns>` | Sensor-specific noise | Spatial sensor redundancy | None beyond channel data |
 | {doc}`SOUND <sound>` | Sensor-specific noise | Forward-model geometry | Montage or forward model |
 | {doc}`Spectrum interpolation <spectrum_interpolation>` | Power-line contamination | Neighboring spectral amplitudes | Line frequency and sampling rate |
-| {doc}`SSA <ssa>` | Structured channel-wise components | Delay-coordinate decomposition | Embedding and selection settings |
-| {doc}`SSP-SIR <sspsir>` | TMS-evoked muscle artifact | Artifact subspace and lead field | Forward model or EEG montage |
 | {doc}`ZapLine <zapline>` | Power-line noise and harmonics | Line-locked DSS components | Line frequency and DSS settings |
+| {doc}`DSS <dss>` | Reproducible or structured components | Bias covariance relative to baseline | Bias or segment definition |
+| {doc}`SSA <ssa>` | Structured channel-wise components | Delay-coordinate decomposition | Embedding and selection settings |
+| {doc}`BSS-CCA <bss_cca>` | Components separated by lagged CCA | Lagged temporal correlation | Lag and component rule |
+| {doc}`iCanClean <icanclean>` | Shared reference variance | CCA with reference channels | Reference block or pseudo-reference |
+| {doc}`SSP-SIR <sspsir>` | TMS-evoked muscle artifact | Artifact subspace and lead field | Forward model or EEG montage |
 
 ```{admonition} Evaluate the result
 :class: mdn-evaluation-note
@@ -115,20 +115,15 @@ preservation of the signal of interest. See the {doc}`evaluation` guide.
 :maxdepth: 1
 :caption: Methods
 
-asr
-dss
-bss_cca
-icanclean
-sns
-sound
-spectrum_interpolation
-ssa
-sspsir
-zapline
-```
-
-```{toctree}
-:hidden:
-
-evaluation
+ASR <asr>
+SNS <sns>
+SOUND <sound>
+Spectrum interpolation <spectrum_interpolation>
+ZapLine <zapline>
+DSS <dss>
+SSA <ssa>
+BSS-CCA <bss_cca>
+iCanClean <icanclean>
+SSP-SIR <sspsir>
+Evaluating denoising <evaluation>
 ```

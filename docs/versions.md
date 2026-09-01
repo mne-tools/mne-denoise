@@ -18,5 +18,3 @@ include changes that have not been released yet.
 
 Previous releases are available from the version selector in the navigation
 bar.
-
-For contribution guidance, see the {doc}`Contribute <development>` page.

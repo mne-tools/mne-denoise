@@ -1,2 +1,2 @@
-Refreshed the documentation homepage, navigation, presentation, and versioned
-documentation publishing workflow.
+Refined the documentation homepage, navigation, API reference organization,
+and presentation.

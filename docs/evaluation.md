@@ -10,11 +10,11 @@ mixtures, unaffected events or channels, surrogate data, or a forward model
 when appropriate. Compare both artifact attenuation and changes to the signal
 of interest.
 
-The public mne_denoise.qa module provides spectral and data-change metrics.
-mne_denoise.quantify_overcorrection compares a fitted sensor operator with a
-lead field using amplitude, correlation, relative-error, and goodness-of-fit
-definitions owned by this package. The individual APIs document formulas,
-units, and sentinel values.
+The public {doc}`mne_denoise.qa <api/evaluation>` module provides spectral and
+data-change metrics. {func}`mne_denoise.quantify_overcorrection` compares a
+fitted sensor operator with a lead field using amplitude, correlation,
+relative-error, and goodness-of-fit definitions owned by this package. The
+individual APIs document formulas, units, and sentinel values.
 
 Useful evaluation categories include:
 
@@ -24,3 +24,6 @@ Useful evaluation categories include:
 
 Choose and report the frequency bands, windows, references, and preprocessing
 used for each comparison.
+
+See the {doc}`Evaluation and QA API <api/evaluation>` for the complete metric
+reference.

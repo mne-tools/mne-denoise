@@ -19,9 +19,7 @@ import mne_denoise
 
 project = "mne-denoise"
 author = "mne-denoise developers"
-copyright = (
-    f"{datetime.now():%Y}, mne-denoise · Part of the MNE ecosystem · BSD-3-Clause"
-)
+copyright = f"{datetime.now():%Y}, mne-denoise developers"
 version = mne_denoise.__version__
 release = version
 
@@ -29,7 +27,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "numpydoc",
@@ -47,8 +44,6 @@ suppress_warnings = [
 ]  # silence sphinx-gallery "unpickleable configuration" warning
 
 autosummary_generate = True
-napoleon_google_docstring = False
-napoleon_numpy_docstring = True
 numpydoc_show_class_members = False
 
 # Scientific references are kept in one BibTeX database so that method pages
@@ -105,9 +100,11 @@ intersphinx_mapping = {
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_css_files = ["style.css"]
+html_show_sourcelink = False
+html_copy_source = False
+html_show_sphinx = False
 switcher_version_match = "dev" if ".dev" in release else version
 html_theme_options = {
-    "github_url": "https://github.com/mne-tools/mne-denoise",
     "logo": {"text": "mne-denoise"},
     "use_edit_page_button": switcher_version_match == "dev",
     "switcher": {
@@ -119,6 +116,8 @@ html_theme_options = {
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navbar_persistent": ["search-button"],
     "header_links_before_dropdown": 5,
+    "article_header_start": [],
+    "back_to_top_button": False,
     "navigation_depth": 2,
     "show_nav_level": 1,
     "icon_links": [
@@ -126,6 +125,12 @@ html_theme_options = {
             "name": "MNE Forum",
             "url": "https://mne.discourse.group/",
             "icon": "fa-solid fa-comments",
+            "type": "fontawesome",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/mne-tools/mne-denoise",
+            "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         },
     ],
