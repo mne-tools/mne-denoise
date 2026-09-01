@@ -42,10 +42,6 @@ When a GitHub Release is published, it builds from that exact release tag once
 and updates both `/stable/` and `/X.Y.Z/`. Existing development and archived
 release directories are preserved.
 
-For the initial migration, run the workflow manually with
-`release_tag=v0.0.1` so the existing release is built into both `/stable/` and
-`/0.0.1/`. Later published releases use the release event automatically.
-
 `docs/_static/versions.json` is the readable source of truth for the version
 selector. Before publishing a new release, update it with the next development
 label, the new preferred stable entry, and all previous release directories.

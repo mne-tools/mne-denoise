@@ -91,6 +91,9 @@ you use:
 
          conda install -c conda-forge mne-denoise tqdm
 
+These commands install the latest released version. To work from the current
+``main`` branch, see the :doc:`Development setup <development>`.
+
 First NumPy workflow
 --------------------
 

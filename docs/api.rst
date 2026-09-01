@@ -131,7 +131,7 @@ Core
 Biases and linear denoisers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: mne_denoise.dss.denoisers
+.. currentmodule:: mne_denoise.dss
 
 .. autosummary::
    :toctree: generated/

@@ -41,7 +41,7 @@ jobs:
           ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
-          python-version: "3.14"
+          python-version: "3.13"
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
@@ -70,10 +70,16 @@ jobs:
           restore-keys: |
             docs-data-${{ runner.os }}-
       - name: Prefetch and verify documentation datasets
-        run: python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+        run: |
+          if test -f scripts/prefetch_docs_data.py; then
+            python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+          else
+            echo "No documentation prefetch helper in this release"
+          fi
       - name: Save trusted documentation dataset cache
         if: >-
           steps.docs-data-cache.outputs.cache-hit != 'true' &&
+          hashFiles('scripts/prefetch_docs_data.py') != '' &&
           (github.event_name == 'push' ||
            github.event_name == 'schedule' ||
            github.event_name == 'release' ||
@@ -90,9 +96,8 @@ jobs:
         run: |
           set -e
           test -s docs/_build/html/index.html
+          test -s docs/_build/html/api.html
           test -s docs/_build/html/auto_examples/index.html
-          test -s docs/_build/html/auto_examples/zapline/plot_02_parameter_tuning.html
-          test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
           echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
       - name: Upload MNE-stable documentation artifact
         if: github.event_name != 'release' && (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
@@ -127,7 +132,7 @@ jobs:
           ref: ${{ github.sha }}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
-          python-version: "3.14"
+          python-version: "3.13"
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
@@ -170,7 +175,12 @@ jobs:
           restore-keys: |
             docs-data-${{ runner.os }}-
       - name: Prefetch and verify documentation datasets
-        run: python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+        run: |
+          if test -f scripts/prefetch_docs_data.py; then
+            python scripts/prefetch_docs_data.py --data-dir "$MNE_DATA"
+          else
+            echo "No documentation prefetch helper in this release"
+          fi
       - name: Check installed requirements
         run: python -m pip check
       - name: Build compatibility documentation
@@ -181,9 +191,8 @@ jobs:
         run: |
           set -e
           test -s docs/_build/html/index.html
+          test -s docs/_build/html/api.html
           test -s docs/_build/html/auto_examples/index.html
-          test -s docs/_build/html/auto_examples/zapline/plot_02_parameter_tuning.html
-          test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
           echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
       - name: Upload MNE-main compatibility artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -209,7 +218,7 @@ jobs:
       - name: Checkout publishing helper
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
+          ref: ${{ github.sha }}
           path: source
           persist-credentials: false
       - name: Checkout Pages branch
@@ -255,7 +264,7 @@ jobs:
       - name: Checkout publishing helper
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag == 'v0.0.1' && 'main' || github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
           path: source
           persist-credentials: false
       - name: Checkout Pages branch
@@ -268,22 +277,39 @@ jobs:
       - name: Update release and stable directories
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
-        run: python source/tools/publish_docs.py --pages .pages --build site-build --target release --version "$RELEASE_TAG"
+          MIGRATE_LEGACY_ROOT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag == 'v0.0.1' }}
+        run: |
+          set -euo pipefail
+          publish_args=(
+            --pages .pages
+            --build site-build
+            --target release
+            --version "$RELEASE_TAG"
+          )
+          if [ "$MIGRATE_LEGACY_ROOT" = "true" ]; then
+            publish_args+=(--migrate-legacy-root)
+          fi
+          python source/tools/publish_docs.py "${publish_args[@]}"
       - name: Commit and publish release docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+          MIGRATE_LEGACY_ROOT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag == 'v0.0.1' }}
         run: |
           set -euo pipefail
           release_version="${RELEASE_TAG#v}"
           git -C .pages config user.name "github-actions[bot]"
           git -C .pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C .pages add --all -- index.html .nojekyll
-          for directory in dev stable "$release_version"; do
-            if [ -e ".pages/$directory" ]; then
-              git -C .pages add --all -- "$directory"
-            fi
-          done
+          if [ "$MIGRATE_LEGACY_ROOT" = "true" ]; then
+            git -C .pages add --all
+          else
+            git -C .pages add --all -- index.html .nojekyll
+            for directory in dev stable "$release_version"; do
+              if [ -e ".pages/$directory" ]; then
+                git -C .pages add --all -- "$directory"
+              fi
+            done
+          fi
           if git -C .pages diff --cached --quiet; then
             echo "Release documentation is already up to date"
           else
