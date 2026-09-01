@@ -1,0 +1,1178 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; mne-denoise 0.0.2.dev223+gb92629895 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css?v=e305a2df" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="_static/documentation_options.js?v=74791eb1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mne.tools/mne-denoise/dev/_static/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev223+gb92629895" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/mne.svg" class="logo__image only-light" alt=""/>
+    <img src="_static/mne.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">mne-denoise</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
+ 
+</div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR">AdaptiveASR (class in mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.AverageBias.html#mne_denoise.dss.AverageBias.apply">apply() (mne_denoise.dss.AverageBias method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.dss.BandpassBias.html#mne_denoise.dss.BandpassBias.apply">(mne_denoise.dss.BandpassBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.CombFilterBias.html#mne_denoise.dss.CombFilterBias.apply">(mne_denoise.dss.CombFilterBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.CycleAverageBias.html#mne_denoise.dss.CycleAverageBias.apply">(mne_denoise.dss.CycleAverageBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.LagAverageBias.html#mne_denoise.dss.LagAverageBias.apply">(mne_denoise.dss.LagAverageBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.LinearDenoiser.html#mne_denoise.dss.LinearDenoiser.apply">(mne_denoise.dss.LinearDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.LineNoiseBias.html#mne_denoise.dss.LineNoiseBias.apply">(mne_denoise.dss.LineNoiseBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.PeakFilterBias.html#mne_denoise.dss.PeakFilterBias.apply">(mne_denoise.dss.PeakFilterBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.SmoothingBias.html#mne_denoise.dss.SmoothingBias.apply">(mne_denoise.dss.SmoothingBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.SpectrogramBias.html#mne_denoise.dss.SpectrogramBias.apply">(mne_denoise.dss.SpectrogramBias method)</a>
+</li>
+        <li><a href="generated/mne_denoise.viz.ComponentSelector.html#mne_denoise.viz.ComponentSelector.apply">(mne_denoise.viz.ComponentSelector method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR">ASR (class in mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.auto_select">auto_select() (mne_denoise.dss.DSS method)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.selection.auto_select_components.html#mne_denoise.dss.selection.auto_select_components">auto_select_components() (in module mne_denoise.dss.selection)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.selection.auto_select_components_robust.html#mne_denoise.dss.selection.auto_select_components_robust">auto_select_components_robust() (in module mne_denoise.dss.selection)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.AverageBias.html#mne_denoise.dss.AverageBias">AverageBias (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.BandpassBias.html#mne_denoise.dss.BandpassBias">BandpassBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.below_noise_distortion_db.html#mne_denoise.qa.below_noise_distortion_db">below_noise_distortion_db() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.denoisers.beta_gauss.html#mne_denoise.dss.denoisers.beta_gauss">beta_gauss() (in module mne_denoise.dss.denoisers)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.denoisers.beta_pow3.html#mne_denoise.dss.denoisers.beta_pow3">beta_pow3() (in module mne_denoise.dss.denoisers)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.denoisers.beta_tanh.html#mne_denoise.dss.denoisers.beta_tanh">beta_tanh() (in module mne_denoise.dss.denoisers)</a>
+</li>
+      <li><a href="generated/mne_denoise.bss_cca.BSSCCA.html#mne_denoise.bss_cca.BSSCCA">BSSCCA (class in mne_denoise.bss_cca)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.calibrate_asr.html#mne_denoise.asr.calibrate_asr">calibrate_asr() (in module mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.channel_variance_ratio.html#mne_denoise.qa.channel_variance_ratio">channel_variance_ratio() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.progress.TqdmProgress.html#mne_denoise.progress.TqdmProgress.close">close() (mne_denoise.progress.TqdmProgress method)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.CombFilterBias.html#mne_denoise.dss.CombFilterBias">CombFilterBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.ComponentSelector.html#mne_denoise.viz.ComponentSelector">ComponentSelector (class in mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.compute_all_qa_metrics.html#mne_denoise.qa.compute_all_qa_metrics">compute_all_qa_metrics() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.compute_basic_ssa.html#mne_denoise.ssa.compute_basic_ssa">compute_basic_ssa() (in module mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.bss_cca.compute_bss_cca.html#mne_denoise.bss_cca.compute_bss_cca">compute_bss_cca() (in module mne_denoise.bss_cca)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.compute_clean_window_mask.html#mne_denoise.asr.compute_clean_window_mask">compute_clean_window_mask() (in module mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.compute_covariance.html#mne_denoise.compute_covariance">compute_covariance() (in module mne_denoise)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.compute_dss.html#mne_denoise.dss.compute_dss">compute_dss() (in module mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.icanclean.compute_icanclean.html#mne_denoise.icanclean.compute_icanclean">compute_icanclean() (in module mne_denoise.icanclean)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.compute_local_ssa.html#mne_denoise.ssa.compute_local_ssa">compute_local_ssa() (in module mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.sspsir.compute_sir.html#mne_denoise.sspsir.compute_sir">compute_sir() (in module mne_denoise.sspsir)</a>
+</li>
+      <li><a href="generated/mne_denoise.sns.compute_sns.html#mne_denoise.sns.compute_sns">compute_sns() (in module mne_denoise.sns)</a>
+</li>
+      <li><a href="generated/mne_denoise.sns.compute_sns_weights.html#mne_denoise.sns.compute_sns_weights">compute_sns_weights() (in module mne_denoise.sns)</a>
+</li>
+      <li><a href="generated/mne_denoise.sound.compute_sound.html#mne_denoise.sound.compute_sound">compute_sound() (in module mne_denoise.sound)</a>
+</li>
+      <li><a href="generated/mne_denoise.sound.compute_sound_ref_best.html#mne_denoise.sound.compute_sound_ref_best">compute_sound_ref_best() (in module mne_denoise.sound)</a>
+</li>
+      <li><a href="generated/mne_denoise.sspsir.compute_sspsir.html#mne_denoise.sspsir.compute_sspsir">compute_sspsir() (in module mne_denoise.sspsir)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.segmentation.CovarianceSegmenter.html#mne_denoise.dss.segmentation.CovarianceSegmenter">CovarianceSegmenter (class in mne_denoise.dss.segmentation)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.CycleAverageBias.html#mne_denoise.dss.CycleAverageBias">CycleAverageBias (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.DCTDenoiser.html#mne_denoise.dss.DCTDenoiser">DCTDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.DCTDenoiser.html#mne_denoise.dss.DCTDenoiser.denoise">denoise() (mne_denoise.dss.DCTDenoiser method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.dss.GaussDenoiser.html#mne_denoise.dss.GaussDenoiser.denoise">(mne_denoise.dss.GaussDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.KurtosisDenoiser.html#mne_denoise.dss.KurtosisDenoiser.denoise">(mne_denoise.dss.KurtosisDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.NonlinearDenoiser.html#mne_denoise.dss.NonlinearDenoiser.denoise">(mne_denoise.dss.NonlinearDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.QuasiPeriodicDenoiser.html#mne_denoise.dss.QuasiPeriodicDenoiser.denoise">(mne_denoise.dss.QuasiPeriodicDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.RobustTanhDenoiser.html#mne_denoise.dss.RobustTanhDenoiser.denoise">(mne_denoise.dss.RobustTanhDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.SkewDenoiser.html#mne_denoise.dss.SkewDenoiser.denoise">(mne_denoise.dss.SkewDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.SmoothTanhDenoiser.html#mne_denoise.dss.SmoothTanhDenoiser.denoise">(mne_denoise.dss.SmoothTanhDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.SpectrogramDenoiser.html#mne_denoise.dss.SpectrogramDenoiser.denoise">(mne_denoise.dss.SpectrogramDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.TanhMaskDenoiser.html#mne_denoise.dss.TanhMaskDenoiser.denoise">(mne_denoise.dss.TanhMaskDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.VarianceMaskDenoiser.html#mne_denoise.dss.VarianceMaskDenoiser.denoise">(mne_denoise.dss.VarianceMaskDenoiser method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.WienerMaskDenoiser.html#mne_denoise.dss.WienerMaskDenoiser.denoise">(mne_denoise.dss.WienerMaskDenoiser method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.selection.detect_eigenvalue_knee.html#mne_denoise.dss.selection.detect_eigenvalue_knee">detect_eigenvalue_knee() (in module mne_denoise.dss.selection)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS">DSS (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.viz.ComponentSelector.html#mne_denoise.viz.ComponentSelector.excluded">excluded (mne_denoise.viz.ComponentSelector property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR.fit">fit() (mne_denoise.asr.AdaptiveASR method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.fit">(mne_denoise.asr.ASR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.asr.GuidedASR.html#mne_denoise.asr.GuidedASR.fit">(mne_denoise.asr.GuidedASR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.asr.JugglerASR.html#mne_denoise.asr.JugglerASR.fit">(mne_denoise.asr.JugglerASR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.bss_cca.BSSCCA.html#mne_denoise.bss_cca.BSSCCA.fit">(mne_denoise.bss_cca.BSSCCA method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.fit">(mne_denoise.dss.DSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS.fit">(mne_denoise.dss.IterativeDSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.TimeShiftDSS.html#mne_denoise.dss.TimeShiftDSS.fit">(mne_denoise.dss.TimeShiftDSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.icanclean.ICanClean.html#mne_denoise.icanclean.ICanClean.fit">(mne_denoise.icanclean.ICanClean method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS.fit">(mne_denoise.sns.SNS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND.fit">(mne_denoise.sound.SOUND method)</a>
+</li>
+        <li><a href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html#mne_denoise.spectrum_interpolation.SpectrumInterpolation.fit">(mne_denoise.spectrum_interpolation.SpectrumInterpolation method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sspsir.SSPSIR.html#mne_denoise.sspsir.SSPSIR.fit">(mne_denoise.sspsir.SSPSIR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine.fit">(mne_denoise.zapline.ZapLine method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.fit_rms_distribution.html#mne_denoise.asr.fit_rms_distribution">fit_rms_distribution() (in module mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR.fit_transform">fit_transform() (mne_denoise.asr.AdaptiveASR method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.fit_transform">(mne_denoise.asr.ASR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.bss_cca.BSSCCA.html#mne_denoise.bss_cca.BSSCCA.fit_transform">(mne_denoise.bss_cca.BSSCCA method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.fit_transform">(mne_denoise.dss.DSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS.fit_transform">(mne_denoise.dss.IterativeDSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.icanclean.ICanClean.html#mne_denoise.icanclean.ICanClean.fit_transform">(mne_denoise.icanclean.ICanClean method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS.fit_transform">(mne_denoise.sns.SNS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND.fit_transform">(mne_denoise.sound.SOUND method)</a>
+</li>
+        <li><a href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html#mne_denoise.spectrum_interpolation.SpectrumInterpolation.fit_transform">(mne_denoise.spectrum_interpolation.SpectrumInterpolation method)</a>
+</li>
+        <li><a href="generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine.fit_transform">(mne_denoise.zapline.ZapLine method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/mne_denoise.dss.segmentation.FixedWindowSegmenter.html#mne_denoise.dss.segmentation.FixedWindowSegmenter">FixedWindowSegmenter (class in mne_denoise.dss.segmentation)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.GaussDenoiser.html#mne_denoise.dss.GaussDenoiser">GaussDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.geometric_mean_psd_ratio.html#mne_denoise.qa.geometric_mean_psd_ratio">geometric_mean_psd_ratio() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.get_calibration_mask">get_calibration_mask() (mne_denoise.asr.ASR method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.asr.JugglerASR.html#mne_denoise.asr.JugglerASR.get_calibration_mask">(mne_denoise.asr.JugglerASR method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/mne_denoise.viz.get_color.html#mne_denoise.viz.get_color">get_color() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.get_diagnostics">get_diagnostics() (mne_denoise.asr.ASR method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.get_normalized_patterns">get_normalized_patterns() (mne_denoise.dss.DSS method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS.get_normalized_patterns">(mne_denoise.dss.IterativeDSS method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.get_rejection_mask">get_rejection_mask() (mne_denoise.asr.ASR method)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.get_series_color.html#mne_denoise.viz.get_series_color">get_series_color() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.get_theme_rc.html#mne_denoise.viz.get_theme_rc">get_theme_rc() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.GuidedASR.html#mne_denoise.asr.GuidedASR">GuidedASR (class in mne_denoise.asr)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.CombFilterBias.html#mne_denoise.dss.CombFilterBias.harmonic_frequencies">harmonic_frequencies (mne_denoise.dss.CombFilterBias property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.icanclean.ICanClean.html#mne_denoise.icanclean.ICanClean">ICanClean (class in mne_denoise.icanclean)</a>
+</li>
+      <li><a href="generated/mne_denoise.spectrum_interpolation.interpolate_spectrum.html#mne_denoise.spectrum_interpolation.interpolate_spectrum">interpolate_spectrum() (in module mne_denoise.spectrum_interpolation)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.inverse_transform">inverse_transform() (mne_denoise.dss.DSS method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS.inverse_transform">(mne_denoise.dss.IterativeDSS method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.iterative_dss.html#mne_denoise.dss.iterative_dss">iterative_dss() (in module mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.iterative_dss_one.html#mne_denoise.dss.iterative_dss_one">iterative_dss_one() (in module mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.selection.iterative_outlier_removal.html#mne_denoise.dss.selection.iterative_outlier_removal">iterative_outlier_removal() (in module mne_denoise.dss.selection)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS">IterativeDSS (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.JugglerASR.html#mne_denoise.asr.JugglerASR">JugglerASR (class in mne_denoise.asr)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.KurtosisDenoiser.html#mne_denoise.dss.KurtosisDenoiser">KurtosisDenoiser (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.LagAverageBias.html#mne_denoise.dss.LagAverageBias">LagAverageBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.LinearDenoiser.html#mne_denoise.dss.LinearDenoiser">LinearDenoiser (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.LineNoiseBias.html#mne_denoise.dss.LineNoiseBias">LineNoiseBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.local_ssa_clean_channel.html#mne_denoise.ssa.local_ssa_clean_channel">local_ssa_clean_channel() (in module mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.LocalSingularSpectrumAnalysis.html#mne_denoise.ssa.LocalSingularSpectrumAnalysis">LocalSingularSpectrumAnalysis (class in mne_denoise.ssa)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.qa.max_abs_change.html#mne_denoise.qa.max_abs_change">max_abs_change() (in module mne_denoise.qa)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.viz.ComponentSelector.html#mne_denoise.viz.ComponentSelector.n_pages">n_pages (mne_denoise.viz.ComponentSelector property)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.variants.narrowband_dss.html#mne_denoise.dss.variants.narrowband_dss">narrowband_dss() (in module mne_denoise.dss.variants)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.variants.narrowband_scan.html#mne_denoise.dss.variants.narrowband_scan">narrowband_scan() (in module mne_denoise.dss.variants)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.qa.noise_surround_ratio.html#mne_denoise.qa.noise_surround_ratio">noise_surround_ratio() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.NonlinearDenoiser.html#mne_denoise.dss.NonlinearDenoiser">NonlinearDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.icanclean.null_r2_threshold.html#mne_denoise.icanclean.null_r2_threshold">null_r2_threshold() (in module mne_denoise.icanclean)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.qa.overclean_proportion.html#mne_denoise.qa.overclean_proportion">overclean_proportion() (in module mne_denoise.qa)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.viz.ComponentSelector.html#mne_denoise.viz.ComponentSelector.page">page (mne_denoise.viz.ComponentSelector property)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR.partial_fit">partial_fit() (mne_denoise.asr.AdaptiveASR method)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.peak_attenuation_db.html#mne_denoise.qa.peak_attenuation_db">peak_attenuation_db() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.PeakFilterBias.html#mne_denoise.dss.PeakFilterBias">PeakFilterBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_asr_calibration_fraction.html#mne_denoise.viz.plot_asr_calibration_fraction">plot_asr_calibration_fraction() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_asr_component_reconstruction.html#mne_denoise.viz.plot_asr_component_reconstruction">plot_asr_component_reconstruction() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_asr_repair_timeline.html#mne_denoise.viz.plot_asr_repair_timeline">plot_asr_repair_timeline() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_channel_time_course_comparison.html#mne_denoise.viz.plot_channel_time_course_comparison">plot_channel_time_course_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_cleaning_summary.html#mne_denoise.viz.plot_component_cleaning_summary">plot_component_cleaning_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_epochs_image.html#mne_denoise.viz.plot_component_epochs_image">plot_component_epochs_image() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_patterns.html#mne_denoise.viz.plot_component_patterns">plot_component_patterns() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_psd_comparison.html#mne_denoise.viz.plot_component_psd_comparison">plot_component_psd_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_score_curve.html#mne_denoise.viz.plot_component_score_curve">plot_component_score_curve() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_selector.html#mne_denoise.viz.plot_component_selector">plot_component_selector() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_spectrogram.html#mne_denoise.viz.plot_component_spectrogram">plot_component_spectrogram() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_summary.html#mne_denoise.viz.plot_component_summary">plot_component_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_component_time_series.html#mne_denoise.viz.plot_component_time_series">plot_component_time_series() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_condition_interaction_summary.html#mne_denoise.viz.plot_condition_interaction_summary">plot_condition_interaction_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_denoising_summary.html#mne_denoise.viz.plot_denoising_summary">plot_denoising_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_endpoint_metrics_summary.html#mne_denoise.viz.plot_endpoint_metrics_summary">plot_endpoint_metrics_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_evoked_gfp_comparison.html#mne_denoise.viz.plot_evoked_gfp_comparison">plot_evoked_gfp_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_forest.html#mne_denoise.viz.plot_forest">plot_forest() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_grand_average_evokeds.html#mne_denoise.viz.plot_grand_average_evokeds">plot_grand_average_evokeds() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_group_condition_interaction_summary.html#mne_denoise.viz.plot_group_condition_interaction_summary">plot_group_condition_interaction_summary() (in module mne_denoise.viz)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.viz.plot_guided_asr_weights.html#mne_denoise.viz.plot_guided_asr_weights">plot_guided_asr_weights() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_harmonic_attenuation.html#mne_denoise.viz.plot_harmonic_attenuation">plot_harmonic_attenuation() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_metric_bars.html#mne_denoise.viz.plot_metric_bars">plot_metric_bars() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_metric_comparison.html#mne_denoise.viz.plot_metric_comparison">plot_metric_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_metric_slopes.html#mne_denoise.viz.plot_metric_slopes">plot_metric_slopes() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_metric_tradeoff_summary.html#mne_denoise.viz.plot_metric_tradeoff_summary">plot_metric_tradeoff_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_metric_violins.html#mne_denoise.viz.plot_metric_violins">plot_metric_violins() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_narrowband_score_scan.html#mne_denoise.viz.plot_narrowband_score_scan">plot_narrowband_score_scan() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_null_distribution.html#mne_denoise.viz.plot_null_distribution">plot_null_distribution() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_power_ratio_map.html#mne_denoise.viz.plot_power_ratio_map">plot_power_ratio_map() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_psd_comparison.html#mne_denoise.viz.plot_psd_comparison">plot_psd_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_psd_gallery.html#mne_denoise.viz.plot_psd_gallery">plot_psd_gallery() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_psd_overlay.html#mne_denoise.viz.plot_psd_overlay">plot_psd_overlay() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_psd_zoom_comparison.html#mne_denoise.viz.plot_psd_zoom_comparison">plot_psd_zoom_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_signal_diagnostics_summary.html#mne_denoise.viz.plot_signal_diagnostics_summary">plot_signal_diagnostics_summary() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_signal_overlay.html#mne_denoise.viz.plot_signal_overlay">plot_signal_overlay() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_spectrogram_comparison.html#mne_denoise.viz.plot_spectrogram_comparison">plot_spectrogram_comparison() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_time_frequency_mask.html#mne_denoise.viz.plot_time_frequency_mask">plot_time_frequency_mask() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_tradeoff_scatter.html#mne_denoise.viz.plot_tradeoff_scatter">plot_tradeoff_scatter() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_window_count_series.html#mne_denoise.viz.plot_window_count_series">plot_window_count_series() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.plot_window_score_traces.html#mne_denoise.viz.plot_window_score_traces">plot_window_score_traces() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.process_asr.html#mne_denoise.asr.process_asr">process_asr() (in module mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.process_guided_asr.html#mne_denoise.asr.process_guided_asr">process_guided_asr() (in module mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.progress.ProgressEvent.html#mne_denoise.progress.ProgressEvent">ProgressEvent (class in mne_denoise.progress)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.quantify_overcorrection.html#mne_denoise.quantify_overcorrection">quantify_overcorrection() (in module mne_denoise)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.QuasiPeriodicDenoiser.html#mne_denoise.dss.QuasiPeriodicDenoiser">QuasiPeriodicDenoiser (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR.reset_process_state">reset_process_state() (mne_denoise.asr.AdaptiveASR method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.qa.rms_change.html#mne_denoise.qa.rms_change">rms_change() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.RobustTanhDenoiser.html#mne_denoise.dss.RobustTanhDenoiser">RobustTanhDenoiser (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.TimeShiftDSS.html#mne_denoise.dss.TimeShiftDSS.score">score() (mne_denoise.dss.TimeShiftDSS method)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.segmentation.CovarianceSegmenter.html#mne_denoise.dss.segmentation.CovarianceSegmenter.segment">segment() (mne_denoise.dss.segmentation.CovarianceSegmenter method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.dss.segmentation.FixedWindowSegmenter.html#mne_denoise.dss.segmentation.FixedWindowSegmenter.segment">(mne_denoise.dss.segmentation.FixedWindowSegmenter method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/mne_denoise.asr.select_juggler_reference_samples.html#mne_denoise.asr.select_juggler_reference_samples">select_juggler_reference_samples() (in module mne_denoise.asr)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.ComponentSelector.html#mne_denoise.viz.ComponentSelector.set_page">set_page() (mne_denoise.viz.ComponentSelector method)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.set_theme.html#mne_denoise.viz.set_theme">set_theme() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.SingularSpectrumAnalysis.html#mne_denoise.ssa.SingularSpectrumAnalysis">SingularSpectrumAnalysis (class in mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.SkewDenoiser.html#mne_denoise.dss.SkewDenoiser">SkewDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.variants.smooth_dss.html#mne_denoise.dss.variants.smooth_dss">smooth_dss() (in module mne_denoise.dss.variants)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.SmoothingBias.html#mne_denoise.dss.SmoothingBias">SmoothingBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.SmoothTanhDenoiser.html#mne_denoise.dss.SmoothTanhDenoiser">SmoothTanhDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS">SNS (class in mne_denoise.sns)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND">SOUND (class in mne_denoise.sound)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.spectral_distortion.html#mne_denoise.qa.spectral_distortion">spectral_distortion() (in module mne_denoise.qa)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.SpectrogramBias.html#mne_denoise.dss.SpectrogramBias">SpectrogramBias (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.SpectrogramDenoiser.html#mne_denoise.dss.SpectrogramDenoiser">SpectrogramDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html#mne_denoise.spectrum_interpolation.SpectrumInterpolation">SpectrumInterpolation (class in mne_denoise.spectrum_interpolation)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.ssa_clean_channel.html#mne_denoise.ssa.ssa_clean_channel">ssa_clean_channel() (in module mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.ssa_decompose.html#mne_denoise.ssa.ssa_decompose">ssa_decompose() (in module mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.ssa.ssa_w_correlation.html#mne_denoise.ssa.ssa_w_correlation">ssa_w_correlation() (in module mne_denoise.ssa)</a>
+</li>
+      <li><a href="generated/mne_denoise.sspsir.SSPSIR.html#mne_denoise.sspsir.SSPSIR">SSPSIR (class in mne_denoise.sspsir)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.variants.ssvep_dss.html#mne_denoise.dss.variants.ssvep_dss">ssvep_dss() (in module mne_denoise.dss.variants)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.style_axes.html#mne_denoise.viz.style_axes">style_axes() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.qa.suppression_ratio.html#mne_denoise.qa.suppression_ratio">suppression_ratio() (in module mne_denoise.qa)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.TanhMaskDenoiser.html#mne_denoise.dss.TanhMaskDenoiser">TanhMaskDenoiser (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.themed_figure.html#mne_denoise.viz.themed_figure">themed_figure() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.viz.themed_legend.html#mne_denoise.viz.themed_legend">themed_legend() (in module mne_denoise.viz)</a>
+</li>
+      <li><a href="generated/mne_denoise.dss.TimeShiftDSS.html#mne_denoise.dss.TimeShiftDSS">TimeShiftDSS (class in mne_denoise.dss)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.to_annotations">to_annotations() (mne_denoise.asr.ASR method)</a>
+</li>
+      <li><a href="generated/mne_denoise.progress.TqdmProgress.html#mne_denoise.progress.TqdmProgress">TqdmProgress (class in mne_denoise.progress)</a>
+</li>
+      <li><a href="generated/mne_denoise.asr.AdaptiveASR.html#mne_denoise.asr.AdaptiveASR.transform">transform() (mne_denoise.asr.AdaptiveASR method)</a>
+
+      <ul>
+        <li><a href="generated/mne_denoise.asr.ASR.html#mne_denoise.asr.ASR.transform">(mne_denoise.asr.ASR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.bss_cca.BSSCCA.html#mne_denoise.bss_cca.BSSCCA.transform">(mne_denoise.bss_cca.BSSCCA method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.transform">(mne_denoise.dss.DSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS.transform">(mne_denoise.dss.IterativeDSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.dss.TimeShiftDSS.html#mne_denoise.dss.TimeShiftDSS.transform">(mne_denoise.dss.TimeShiftDSS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.icanclean.ICanClean.html#mne_denoise.icanclean.ICanClean.transform">(mne_denoise.icanclean.ICanClean method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sns.SNS.html#mne_denoise.sns.SNS.transform">(mne_denoise.sns.SNS method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND.transform">(mne_denoise.sound.SOUND method)</a>
+</li>
+        <li><a href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html#mne_denoise.spectrum_interpolation.SpectrumInterpolation.transform">(mne_denoise.spectrum_interpolation.SpectrumInterpolation method)</a>
+</li>
+        <li><a href="generated/mne_denoise.sspsir.SSPSIR.html#mne_denoise.sspsir.SSPSIR.transform">(mne_denoise.sspsir.SSPSIR method)</a>
+</li>
+        <li><a href="generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine.transform">(mne_denoise.zapline.ZapLine method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.qa.underclean_proportion.html#mne_denoise.qa.underclean_proportion">underclean_proportion() (in module mne_denoise.qa)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.viz.use_theme.html#mne_denoise.viz.use_theme">use_theme() (in module mne_denoise.viz)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.qa.variance_removed.html#mne_denoise.qa.variance_removed">variance_removed() (in module mne_denoise.qa)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.VarianceMaskDenoiser.html#mne_denoise.dss.VarianceMaskDenoiser">VarianceMaskDenoiser (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.dss.WienerMaskDenoiser.html#mne_denoise.dss.WienerMaskDenoiser">WienerMaskDenoiser (class in mne_denoise.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/mne_denoise.zapline.ZapLine.html#mne_denoise.zapline.ZapLine">ZapLine (class in mne_denoise.zapline)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

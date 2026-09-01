@@ -1,0 +1,1068 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.ssa.basic &#8212; mne-denoise 0.0.2.dev223+gb92629895 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e305a2df" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=74791eb1"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/ssa/basic';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mne.tools/mne-denoise/dev/_static/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev223+gb92629895" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/mne.svg" class="logo__image only-light" alt=""/>
+    <img src="../../../_static/mne.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">mne-denoise</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.ssa.basic</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Basic Singular Spectrum Analysis."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">check_channel_first_data</span><span class="p">,</span>
+    <span class="n">check_positive_integer</span><span class="p">,</span>
+    <span class="n">check_positive_real</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_emit_progress</span><span class="p">,</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_BaseSSATransformer</span><span class="p">,</span>
+    <span class="n">_diagonal_average</span><span class="p">,</span>
+    <span class="n">_resolve_window_length</span><span class="p">,</span>
+    <span class="n">_trajectory_matrix</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="ssa_decompose">
+<a class="viewcode-back" href="../../../generated/mne_denoise.ssa.ssa_decompose.html#mne_denoise.ssa.ssa_decompose">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ssa_decompose</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Decompose a one-dimensional series into Basic SSA components.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like, shape (n_times,)</span>
+<span class="sd">        Finite scalar time series.</span>
+<span class="sd">    window_length : int | None, default=None</span>
+<span class="sd">        Embedding dimension in samples. If None, choose it automatically.</span>
+<span class="sd">    window_seconds : float | None, default=None</span>
+<span class="sd">        Embedding duration in seconds; mutually exclusive with window_length and</span>
+<span class="sd">        requiring sfreq.</span>
+<span class="sd">    sfreq : float | None, default=None</span>
+<span class="sd">        Sampling frequency in Hz, used with window_seconds and automatic selection.</span>
+<span class="sd">    max_window : int, default=100</span>
+<span class="sd">        Maximum automatic embedding dimension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    components : ndarray, shape (n_components, n_times)</span>
+<span class="sd">        Reconstructed elementary components in decreasing singular-value order.</span>
+<span class="sd">    info : dict</span>
+<span class="sd">        Resolved window, trajectory shape, singular values, and numerical rank.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The trajectory matrix is decomposed by SVD and reconstructed by anti-diagonal</span>
+<span class="sd">    averaging. :footcite:p:`golyandina_zhigljavsky2013_ssa`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. footbibliography::</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If a scalar parameter has an invalid type.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If x or the requested embedding is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"x must be one-dimensional"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"x must contain only finite values"</span><span class="p">)</span>
+    <span class="n">resolved</span> <span class="o">=</span> <span class="n">_resolve_window_length</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_seconds</span><span class="o">=</span><span class="n">window_seconds</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">max_window</span><span class="o">=</span><span class="n">max_window</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">trajectory</span> <span class="o">=</span> <span class="n">_trajectory_matrix</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resolved</span><span class="p">)</span>
+    <span class="n">left</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">right_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">_diagonal_average</span><span class="p">(</span>
+                <span class="n">singular_values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">left</span><span class="p">[:,</span> <span class="n">index</span><span class="p">],</span> <span class="n">right_t</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">singular_values</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+        <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">components</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s2">"singular_values"</span><span class="p">:</span> <span class="n">singular_values</span><span class="p">,</span>
+        <span class="s2">"window_length"</span><span class="p">:</span> <span class="n">resolved</span><span class="p">,</span>
+        <span class="s2">"trajectory_shape"</span><span class="p">:</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+        <span class="s2">"rank"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="ssa_w_correlation">
+<a class="viewcode-back" href="../../../generated/mne_denoise.ssa.ssa_w_correlation.html#mne_denoise.ssa.ssa_w_correlation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ssa_w_correlation</span><span class="p">(</span><span class="n">components</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute weighted correlations between SSA reconstructions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    components : array-like, shape (n_components, n_times)</span>
+<span class="sd">        Reconstructed components.</span>
+<span class="sd">    window_length : int</span>
+<span class="sd">        Embedding dimension used to obtain components.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    correlation : ndarray, shape (n_components, n_components)</span>
+<span class="sd">        Symmetric weighted-correlation matrix; zero-energy components have zero</span>
+<span class="sd">        rows and columns.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The weights are the anti-diagonal multiplicities of the trajectory matrix.</span>
+<span class="sd">    This is a separability diagnostic, not an artifact-selection rule.</span>
+<span class="sd">    :footcite:p:`golyandina_zhigljavsky2013_ssa`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. footbibliography::</span>
+<span class="sd">    """</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">components</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">components</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"components must have shape (n_components, n_times)"</span><span class="p">)</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="n">check_positive_integer</span><span class="p">(</span><span class="n">window_length</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"window_length"</span><span class="p">)</span>
+    <span class="n">n_times</span> <span class="o">=</span> <span class="n">components</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n_columns</span> <span class="o">=</span> <span class="n">n_times</span> <span class="o">-</span> <span class="n">window_length</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">window_length</span> <span class="o">&gt;</span> <span class="n">n_columns</span> <span class="ow">or</span> <span class="n">window_length</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"window_length must satisfy 2 &lt;= L &lt;= K"</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_times</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">indices</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">window_length</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">n_columns</span><span class="p">),</span>
+            <span class="n">n_times</span> <span class="o">-</span> <span class="n">indices</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">weighted</span> <span class="o">=</span> <span class="n">components</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">weighted</span> <span class="o">@</span> <span class="n">weighted</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">gram</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">norms</span><span class="p">,</span> <span class="n">norms</span><span class="p">)</span>
+    <span class="n">correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">gram</span><span class="p">,</span>
+        <span class="n">denominator</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">gram</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="n">denominator</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">correlation</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_frequency_parameters</span><span class="p">(</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">drop_freq_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">drop_band</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_check</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate the package-specific Basic SSA grouping rule."""</span>
+    <span class="n">sfreq</span> <span class="o">=</span> <span class="n">check_positive_real</span><span class="p">(</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"sfreq"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">drop_freq_max</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">drop_freq_max</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"drop_freq_max must be a finite number"</span><span class="p">)</span>
+    <span class="n">drop_freq_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">drop_freq_max</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">drop_freq_max</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"drop_freq_max must be finite"</span><span class="p">)</span>
+    <span class="n">nyquist</span> <span class="o">=</span> <span class="n">sfreq</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">drop_freq_max</span> <span class="o">&lt;=</span> <span class="n">nyquist</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"drop_freq_max must be between 0 and Nyquist"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">drop_band</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">drop_band</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">drop_band</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"drop_band must be a (low, high) tuple or None"</span><span class="p">)</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">drop_band</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"drop_band bounds must be finite numbers"</span><span class="p">)</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">low</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">high</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"drop_band bounds must be finite numbers"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">high</span> <span class="o">&lt;=</span> <span class="n">nyquist</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"drop_band must satisfy 0 &lt;= low &lt; high &lt;= Nyquist"</span><span class="p">)</span>
+        <span class="n">drop_band</span> <span class="o">=</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_check</span> <span class="o">=</span> <span class="n">check_positive_integer</span><span class="p">(</span><span class="n">n_check</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"n_check"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sfreq</span><span class="p">,</span> <span class="n">drop_freq_max</span><span class="p">,</span> <span class="n">drop_band</span><span class="p">,</span> <span class="n">n_check</span>
+
+
+<div class="viewcode-block" id="ssa_clean_channel">
+<a class="viewcode-back" href="../../../generated/mne_denoise.ssa.ssa_clean_channel.html#mne_denoise.ssa.ssa_clean_channel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ssa_clean_channel</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">drop_freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">drop_band</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_check</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_info</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Clean one channel by frequency-grouping Basic SSA components.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like, shape (n_times,)</span>
+<span class="sd">        Finite scalar time series.</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    window_length : int | None, default=None</span>
+<span class="sd">        Embedding dimension in samples; None selects it automatically.</span>
+<span class="sd">    drop_freq_max : float, default=3.0</span>
+<span class="sd">        Upper bound, in Hz, for the dominant-frequency rejection rule when</span>
+<span class="sd">        drop_band is None.</span>
+<span class="sd">    drop_band : tuple of float | None, default=None</span>
+<span class="sd">        Inclusive dominant-frequency interval to reject, in Hz.</span>
+<span class="sd">    n_check : int | None, default=None</span>
+<span class="sd">        Number of leading numerical-rank components to inspect; None inspects all.</span>
+<span class="sd">    max_window : int, default=100</span>
+<span class="sd">        Maximum automatic embedding dimension.</span>
+<span class="sd">    window_seconds : float | None, default=None</span>
+<span class="sd">        Embedding duration in seconds, mutually exclusive with window_length.</span>
+<span class="sd">    return_info : bool, default=False</span>
+<span class="sd">        If True, also return decomposition and grouping diagnostics.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x_clean : ndarray, shape (n_times,)</span>
+<span class="sd">        Cleaned time series.</span>
+<span class="sd">    info : dict</span>
+<span class="sd">        Diagnostics returned only when return_info=True.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Dominant frequency is the largest real-FFT magnitude bin; DC is included.</span>
+<span class="sd">    The frequency grouping and thresholds are package heuristics.</span>
+<span class="sd">    """</span>
+    <span class="n">sfreq</span><span class="p">,</span> <span class="n">drop_freq_max</span><span class="p">,</span> <span class="n">drop_band</span><span class="p">,</span> <span class="n">n_check</span> <span class="o">=</span> <span class="n">_check_frequency_parameters</span><span class="p">(</span>
+        <span class="n">sfreq</span><span class="p">,</span> <span class="n">drop_freq_max</span><span class="p">,</span> <span class="n">drop_band</span><span class="p">,</span> <span class="n">n_check</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_info</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"return_info must be a bool"</span><span class="p">)</span>
+    <span class="n">components</span><span class="p">,</span> <span class="n">decomposition</span> <span class="o">=</span> <span class="n">ssa_decompose</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_seconds</span><span class="o">=</span><span class="n">window_seconds</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">max_window</span><span class="o">=</span><span class="n">max_window</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfftfreq</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">sfreq</span><span class="p">)</span>
+    <span class="n">dominant_frequencies</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">decomposition</span><span class="p">[</span><span class="s2">"rank"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n_check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span><span class="n">n_check</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">drop_band</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[</span><span class="n">dominant_frequencies</span><span class="p">[</span><span class="n">candidates</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">drop_freq_max</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[</span>
+            <span class="p">(</span><span class="n">dominant_frequencies</span><span class="p">[</span><span class="n">candidates</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">drop_band</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="o">&amp;</span> <span class="p">(</span><span class="n">dominant_frequencies</span><span class="p">[</span><span class="n">candidates</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">drop_band</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">]</span>
+    <span class="n">artifact</span> <span class="o">=</span> <span class="n">components</span><span class="p">[</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">selected</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">artifact</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">decomposition</span><span class="p">,</span>
+        <span class="s2">"components"</span><span class="p">:</span> <span class="n">components</span><span class="p">,</span>
+        <span class="s2">"dominant_frequencies"</span><span class="p">:</span> <span class="n">dominant_frequencies</span><span class="p">,</span>
+        <span class="s2">"dropped_indices"</span><span class="p">:</span> <span class="n">selected</span><span class="p">,</span>
+        <span class="s2">"dropped_frequencies"</span><span class="p">:</span> <span class="n">dominant_frequencies</span><span class="p">[</span><span class="n">selected</span><span class="p">],</span>
+        <span class="s2">"artifact"</span><span class="p">:</span> <span class="n">artifact</span><span class="p">,</span>
+        <span class="s2">"frequency_resolution"</span><span class="p">:</span> <span class="n">sfreq</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">return_info</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cleaned</span><span class="p">,</span> <span class="n">info</span>
+    <span class="k">return</span> <span class="n">cleaned</span></div>
+
+
+
+<div class="viewcode-block" id="compute_basic_ssa">
+<a class="viewcode-back" href="../../../generated/mne_denoise.ssa.compute_basic_ssa.html#mne_denoise.ssa.compute_basic_ssa">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_basic_ssa</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">drop_freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">drop_band</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_check</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Apply frequency-guided Basic SSA independently to each channel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : array-like, shape (n_channels, n_times)</span>
+<span class="sd">        Finite channel-first data. Channels are not mixed.</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    window_length : int | None, default=None</span>
+<span class="sd">        Embedding dimension in samples; None selects it automatically.</span>
+<span class="sd">    drop_freq_max : float, default=3.0</span>
+<span class="sd">        Dominant-frequency upper bound in Hz.</span>
+<span class="sd">    drop_band : tuple of float | None, default=None</span>
+<span class="sd">        Inclusive dominant-frequency rejection interval in Hz.</span>
+<span class="sd">    n_check : int | None, default=None</span>
+<span class="sd">        Number of leading numerical-rank components to inspect.</span>
+<span class="sd">    max_window : int, default=100</span>
+<span class="sd">        Maximum automatic embedding dimension.</span>
+<span class="sd">    window_seconds : float | None, default=None</span>
+<span class="sd">        Embedding duration in seconds, mutually exclusive with window_length.</span>
+<span class="sd">    callback : callable | None, default=None</span>
+<span class="sd">        Synchronous callback after each channel; return values are ignored and</span>
+<span class="sd">        callback exceptions propagate.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X_clean : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Independently cleaned channels.</span>
+<span class="sd">    info : dict</span>
+<span class="sd">        Per-channel selection diagnostics and the resolved operating point.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is repeated univariate SSA, not a multivariate decomposition.</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">check_channel_first_data</span><span class="p">(</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"SSA"</span><span class="p">,</span> <span class="n">allow_epochs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_channels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">min_times</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"SSA requires at least 3 time samples"</span><span class="p">)</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">channel_idx</span><span class="p">,</span> <span class="n">channel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">result</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssa_clean_channel</span><span class="p">(</span>
+            <span class="n">channel</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">window_length</span><span class="p">,</span>
+            <span class="n">drop_freq_max</span><span class="p">,</span>
+            <span class="n">drop_band</span><span class="p">,</span>
+            <span class="n">n_check</span><span class="p">,</span>
+            <span class="n">max_window</span><span class="p">,</span>
+            <span class="n">window_seconds</span><span class="o">=</span><span class="n">window_seconds</span><span class="p">,</span>
+            <span class="n">return_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">cleaned</span><span class="p">[</span><span class="n">channel_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"basic_ssa"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"channel"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">channel_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"dropped_indices"</span><span class="p">])),</span>
+        <span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"basic-frequency"</span><span class="p">,</span>
+        <span class="s2">"dropped_counts"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s2">"dropped_indices"</span><span class="p">])</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span>
+        <span class="p">),</span>
+        <span class="s2">"dropped_freqs"</span><span class="p">:</span> <span class="p">[</span><span class="n">record</span><span class="p">[</span><span class="s2">"dropped_frequencies"</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">],</span>
+        <span class="s2">"dropped_frequencies"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"dropped_frequencies"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span>
+        <span class="p">],</span>
+        <span class="s2">"dropped_indices"</span><span class="p">:</span> <span class="p">[</span><span class="n">record</span><span class="p">[</span><span class="s2">"dropped_indices"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">],</span>
+        <span class="s2">"dominant_frequencies"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"dominant_frequencies"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span>
+        <span class="p">],</span>
+        <span class="s2">"singular_values"</span><span class="p">:</span> <span class="p">[</span><span class="n">record</span><span class="p">[</span><span class="s2">"singular_values"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">],</span>
+        <span class="s2">"window_length"</span><span class="p">:</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"window_length"</span><span class="p">],</span>
+        <span class="s2">"frequency_resolution"</span><span class="p">:</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"frequency_resolution"</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"Basic SSA: window=</span><span class="si">%d</span><span class="s2"> samples, channels=</span><span class="si">%d</span><span class="s2">, dropped=</span><span class="si">%d</span><span class="s2"> component(s) "</span>
+        <span class="s2">"(mean </span><span class="si">%.1f</span><span class="s2">/channel)."</span><span class="p">,</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"window_length"</span><span class="p">],</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"dropped_counts"</span><span class="p">])),</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"dropped_counts"</span><span class="p">])),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">cleaned</span><span class="p">,</span> <span class="n">info</span></div>
+
+
+
+<div class="viewcode-block" id="SingularSpectrumAnalysis">
+<a class="viewcode-back" href="../../../generated/mne_denoise.ssa.SingularSpectrumAnalysis.html#mne_denoise.ssa.SingularSpectrumAnalysis">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SingularSpectrumAnalysis</span><span class="p">(</span><span class="n">_BaseSSATransformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Frequency-guided, channel-wise Basic SSA transformer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sfreq : float | None, default=None</span>
+<span class="sd">        Sampling frequency in Hz. NumPy input requires it; MNE input supplies it</span>
+<span class="sd">        from metadata.</span>
+<span class="sd">    window_length : int | None, default=None</span>
+<span class="sd">        Embedding dimension in samples.</span>
+<span class="sd">    drop_freq_max : float, default=3.0</span>
+<span class="sd">        Dominant-frequency upper bound in Hz.</span>
+<span class="sd">    drop_band : tuple of float | None, default=None</span>
+<span class="sd">        Inclusive dominant-frequency rejection interval in Hz.</span>
+<span class="sd">    n_check : int | None, default=None</span>
+<span class="sd">        Number of leading numerical-rank components to inspect.</span>
+<span class="sd">    max_window : int, default=100</span>
+<span class="sd">        Maximum automatic embedding dimension.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+<span class="sd">    window_seconds : float | None, default=None</span>
+<span class="sd">        Embedding duration in seconds, mutually exclusive with window_length.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sfreq_ : float</span>
+<span class="sd">        Sampling frequency used for fitting.</span>
+<span class="sd">    n_channels_in_ : int</span>
+<span class="sd">        Number of fitted data channels.</span>
+<span class="sd">    ch_names_in_ : tuple of str | None</span>
+<span class="sd">        Fitted MNE channel names and order, or None for arrays.</span>
+<span class="sd">    diagnostics_ : dict | list of dict</span>
+<span class="sd">        Diagnostics from the most recent transform.</span>
+<span class="sd">    dropped_counts_ : ndarray</span>
+<span class="sd">        Number of rejected components per channel or epoch and channel.</span>
+<span class="sd">    dropped_frequencies_ : list</span>
+<span class="sd">        Dominant frequencies of rejected components.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    LocalSingularSpectrumAnalysis</span>
+<span class="sd">        Local delay-vector clustering and reconstruction.</span>
+<span class="sd">    compute_basic_ssa</span>
+<span class="sd">        One-shot Basic SSA interface.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The estimator is transductive: fit records the operating point and channel</span>
+<span class="sd">    layout, while each transform decomposes its input records independently.</span>
+<span class="sd">    :footcite:p:`golyandina_zhigljavsky2013_ssa`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. footbibliography::</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.ssa import SingularSpectrumAnalysis</span>
+<span class="sd">    &gt;&gt;&gt; rng = np.random.default_rng(0)</span>
+<span class="sd">    &gt;&gt;&gt; data = rng.standard_normal((8, 2000))</span>
+<span class="sd">    &gt;&gt;&gt; model = SingularSpectrumAnalysis(sfreq=250.0, drop_freq_max=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; clean = model.fit_transform(data)</span>
+<span class="sd">    """</span>
+
+    <span class="n">_requires_sfreq</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">_progress_method</span> <span class="o">=</span> <span class="s2">"basic_ssa"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">drop_freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">drop_band</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_check</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">window_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span> <span class="o">=</span> <span class="n">sfreq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">=</span> <span class="n">window_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_freq_max</span> <span class="o">=</span> <span class="n">drop_freq_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_band</span> <span class="o">=</span> <span class="n">drop_band</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_check</span> <span class="o">=</span> <span class="n">n_check</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_window</span> <span class="o">=</span> <span class="n">max_window</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_seconds</span> <span class="o">=</span> <span class="n">window_seconds</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_check_frequency_parameters</span><span class="p">(</span>
+            <span class="n">sfreq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_freq_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_band</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_check</span>
+        <span class="p">)</span>
+        <span class="n">_resolve_window_length</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="n">window_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_seconds</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">max_window</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_window</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="c1"># The estimator owns one aggregate SSA report; suppress the core's</span>
+        <span class="c1"># standalone summary for each record while retaining its computation.</span>
+        <span class="k">return</span> <span class="n">compute_basic_ssa</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drop_freq_max</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drop_band</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_check</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_window</span><span class="p">,</span>
+            <span class="n">window_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_seconds</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_diagnostic_attributes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">epoched</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">epoched</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dropped_counts_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">record</span><span class="p">[</span><span class="s2">"dropped_counts"</span><span class="p">]</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dropped_frequencies_</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">record</span><span class="p">[</span><span class="s2">"dropped_frequencies"</span><span class="p">]</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span>
+            <span class="p">]</span>
+            <span class="n">mean_count</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropped_counts_</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dropped_counts_</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"dropped_counts"</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dropped_frequencies_</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"dropped_frequencies"</span><span class="p">]</span>
+            <span class="n">mean_count</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropped_counts_</span><span class="p">))</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"window_length"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="ow">or</span> <span class="s2">"auto"</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Basic SSA: window=</span><span class="si">%s</span><span class="s2"> samples, channels=</span><span class="si">%d</span><span class="s2">, dropped=</span><span class="si">%d</span><span class="s2"> component(s) "</span>
+            <span class="s2">"(mean </span><span class="si">%.1f</span><span class="s2">/channel)."</span><span class="p">,</span>
+            <span class="n">window</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_channels_in_</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropped_counts_</span><span class="p">)),</span>
+            <span class="n">mean_count</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

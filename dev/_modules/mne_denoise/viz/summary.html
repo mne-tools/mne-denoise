@@ -1,0 +1,1648 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.viz.summary &#8212; mne-denoise 0.0.2.dev223+gb92629895 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e305a2df" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=74791eb1"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/viz/summary';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mne.tools/mne-denoise/dev/_static/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev223+gb92629895" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/mne.svg" class="logo__image only-light" alt=""/>
+    <img src="../../../_static/mne.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">mne-denoise</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.viz.summary</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Denoising summary plots."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">_mne</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._data</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_data_from_mne</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._summary_panels</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_draw_summary_table</span><span class="p">,</span>
+    <span class="n">_new_summary_figure</span><span class="p">,</span>
+    <span class="n">_new_summary_grid</span><span class="p">,</span>
+    <span class="n">_plot_before_after_psd_panel</span><span class="p">,</span>
+    <span class="n">_plot_patterns_panel</span><span class="p">,</span>
+    <span class="n">_plot_removed_power_panel</span><span class="p">,</span>
+    <span class="n">_plot_segment_boundaries_panel</span><span class="p">,</span>
+    <span class="n">_plot_segment_counts_panel</span><span class="p">,</span>
+    <span class="n">_plot_segment_metric_panel</span><span class="p">,</span>
+    <span class="n">_plot_selection_scores_panel</span><span class="p">,</span>
+    <span class="n">_plot_source_trace_panel</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_compute_gfp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.signals</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_power_ratio_map</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.spectra</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_psd_comparison</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_metric_comparison</span><span class="p">,</span> <span class="n">plot_tradeoff_scatter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.theme</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">COLORS</span><span class="p">,</span>
+    <span class="n">FONTS</span><span class="p">,</span>
+    <span class="n">_finalize_fig</span><span class="p">,</span>
+    <span class="n">get_series_color</span><span class="p">,</span>
+    <span class="n">style_axes</span><span class="p">,</span>
+    <span class="n">themed_figure</span><span class="p">,</span>
+    <span class="n">themed_legend</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_summary_signal</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Extract an MNE signal through the shared data boundary when needed."""</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"get_data"</span><span class="p">):</span>
+        <span class="n">_mne</span><span class="o">.</span><span class="n">require_mne</span><span class="p">(</span><span class="s2">"MNE signal diagnostics summary"</span><span class="p">)</span>
+        <span class="n">extracted</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">auto_pick</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">extracted</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_denoising_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_denoising_summary.html#mne_denoise.viz.plot_denoising_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_denoising_summary</span><span class="p">(</span>
+    <span class="n">inst_before</span><span class="p">,</span>
+    <span class="n">inst_after</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">info</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Denoising Summary"</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot a generic denoising diagnostics dashboard.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inst_before : MNE object | ndarray</span>
+<span class="sd">        Signal before denoising. Supported array shapes are</span>
+<span class="sd">        ``(n_channels, n_times)`` and ``(n_epochs, n_channels, n_times)``.</span>
+<span class="sd">        MNE Raw/Epochs/Evoked inputs are also accepted.</span>
+<span class="sd">    inst_after : MNE object | ndarray</span>
+<span class="sd">        Signal after denoising with matching channel and time dimensions.</span>
+<span class="sd">    info : mne.Info</span>
+<span class="sd">        Channel info used for the power-ratio map panel.</span>
+<span class="sd">    times : array-like of shape (n_times,)</span>
+<span class="sd">        Explicit time axis for GFP traces.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to display the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``times`` is not 1D or does not match the GFP length.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.gridspec</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSpec</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">_new_summary_figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">ax_map</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">plot_power_ratio_map</span><span class="p">(</span><span class="n">inst_before</span><span class="p">,</span> <span class="n">inst_after</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_map</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">ax_psd</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">plot_psd_comparison</span><span class="p">(</span><span class="n">inst_before</span><span class="p">,</span> <span class="n">inst_after</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_psd</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">ax_gfp</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">gfp_before</span> <span class="o">=</span> <span class="n">_compute_gfp</span><span class="p">(</span><span class="n">inst_before</span><span class="p">)</span>
+    <span class="n">gfp_after</span> <span class="o">=</span> <span class="n">_compute_gfp</span><span class="p">(</span><span class="n">inst_after</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">times</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">times</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">gfp_before</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"times must be 1D and match the GFP vector length."</span><span class="p">)</span>
+
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">gfp_before</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Before"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"before"</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">gfp_after</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"After"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"after"</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+        <span class="n">times</span><span class="p">,</span>
+        <span class="n">gfp_before</span><span class="p">,</span>
+        <span class="n">gfp_after</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"muted"</span><span class="p">],</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">"Difference"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_gfp</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">)</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Global Field Power"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Temporal Signal Comparison (GFP)"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_gfp</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_metric_tradeoff_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_metric_tradeoff_summary.html#mne_denoise.viz.plot_metric_tradeoff_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_metric_tradeoff_summary</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">group_col</span><span class="p">,</span>
+    <span class="n">subject_col</span><span class="p">,</span>
+    <span class="n">x_col</span><span class="p">,</span>
+    <span class="n">y_col</span><span class="p">,</span>
+    <span class="n">metric_col</span><span class="p">,</span>
+    <span class="n">x_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">y_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metric_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tradeoff_title</span><span class="o">=</span><span class="s2">"Metric Trade-off"</span><span class="p">,</span>
+    <span class="n">metric_title</span><span class="o">=</span><span class="s2">"Metric Comparison"</span><span class="p">,</span>
+    <span class="n">reference_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_label</span><span class="o">=</span><span class="s2">"Reference"</span><span class="p">,</span>
+    <span class="n">suptitle</span><span class="o">=</span><span class="s2">"Trade-off Analysis"</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot a two-panel metric trade-off summary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : mapping of str to array-like</span>
+<span class="sd">        Columnar data mapping with aligned 1D columns.</span>
+<span class="sd">    group_col : str</span>
+<span class="sd">        Group column name.</span>
+<span class="sd">    subject_col : str</span>
+<span class="sd">        Subject column name used for paired metric comparison.</span>
+<span class="sd">    x_col : str</span>
+<span class="sd">        Metric column used for the trade-off scatter x-axis.</span>
+<span class="sd">    y_col : str</span>
+<span class="sd">        Metric column used for the trade-off scatter y-axis.</span>
+<span class="sd">    metric_col : str</span>
+<span class="sd">        Metric column used for the right-panel comparison.</span>
+<span class="sd">    x_label : str | None, default=None</span>
+<span class="sd">        Optional trade-off x-axis label.</span>
+<span class="sd">    y_label : str | None, default=None</span>
+<span class="sd">        Optional trade-off y-axis label.</span>
+<span class="sd">    metric_label : str | None, default=None</span>
+<span class="sd">        Optional comparison-panel label.</span>
+<span class="sd">    group_order : sequence of str | None, default=None</span>
+<span class="sd">        Optional group display order.</span>
+<span class="sd">    group_colors : mapping | None, default=None</span>
+<span class="sd">        Optional color overrides keyed by group.</span>
+<span class="sd">    group_labels : mapping | None, default=None</span>
+<span class="sd">        Optional display-label overrides keyed by group.</span>
+<span class="sd">    tradeoff_title : str, default="Metric Trade-off"</span>
+<span class="sd">        Trade-off panel title.</span>
+<span class="sd">    metric_title : str, default="Metric Comparison"</span>
+<span class="sd">        Metric comparison panel title.</span>
+<span class="sd">    suptitle : str, default="Trade-off Analysis"</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    reference_x : float | None, default=None</span>
+<span class="sd">        Optional vertical reference line in the trade-off panel.</span>
+<span class="sd">    reference_y : float | None, default=None</span>
+<span class="sd">        Optional horizontal reference line in the trade-off panel.</span>
+<span class="sd">    reference_value : float | None, default=None</span>
+<span class="sd">        Optional reference line in the metric panel.</span>
+<span class="sd">    reference_label : str</span>
+<span class="sd">        Label for the metric reference line.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to display the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+<span class="sd">    """</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">themed_figure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+    <span class="n">plot_tradeoff_scatter</span><span class="p">(</span>
+        <span class="n">columns</span><span class="p">,</span>
+        <span class="n">group_col</span><span class="o">=</span><span class="n">group_col</span><span class="p">,</span>
+        <span class="n">group_order</span><span class="o">=</span><span class="n">group_order</span><span class="p">,</span>
+        <span class="n">group_colors</span><span class="o">=</span><span class="n">group_colors</span><span class="p">,</span>
+        <span class="n">group_labels</span><span class="o">=</span><span class="n">group_labels</span><span class="p">,</span>
+        <span class="n">x_col</span><span class="o">=</span><span class="n">x_col</span><span class="p">,</span>
+        <span class="n">y_col</span><span class="o">=</span><span class="n">y_col</span><span class="p">,</span>
+        <span class="n">x_label</span><span class="o">=</span><span class="n">x_label</span><span class="p">,</span>
+        <span class="n">y_label</span><span class="o">=</span><span class="n">y_label</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">tradeoff_title</span><span class="p">,</span>
+        <span class="n">reference_x</span><span class="o">=</span><span class="n">reference_x</span><span class="p">,</span>
+        <span class="n">reference_y</span><span class="o">=</span><span class="n">reference_y</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">plot_metric_comparison</span><span class="p">(</span>
+        <span class="n">columns</span><span class="p">,</span>
+        <span class="n">metric_col</span><span class="o">=</span><span class="n">metric_col</span><span class="p">,</span>
+        <span class="n">metric_label</span><span class="o">=</span><span class="n">metric_label</span><span class="p">,</span>
+        <span class="n">group_col</span><span class="o">=</span><span class="n">group_col</span><span class="p">,</span>
+        <span class="n">subject_col</span><span class="o">=</span><span class="n">subject_col</span><span class="p">,</span>
+        <span class="n">group_order</span><span class="o">=</span><span class="n">group_order</span><span class="p">,</span>
+        <span class="n">group_colors</span><span class="o">=</span><span class="n">group_colors</span><span class="p">,</span>
+        <span class="n">group_labels</span><span class="o">=</span><span class="n">group_labels</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">metric_title</span><span class="p">,</span>
+        <span class="n">reference_value</span><span class="o">=</span><span class="n">reference_value</span><span class="p">,</span>
+        <span class="n">reference_label</span><span class="o">=</span><span class="n">reference_label</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">suptitle</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_component_cleaning_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_component_cleaning_summary.html#mne_denoise.viz.plot_component_cleaning_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_component_cleaning_summary</span><span class="p">(</span>
+    <span class="n">scores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">selected_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">channel_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">removed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">psd_before</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">psd_after</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">line_freq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">fmax</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+    <span class="n">segment_info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">summary_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Component Cleaning Summary"</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot a generic component-cleaning dashboard.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores : array-like | None</span>
+<span class="sd">        Component score vector.</span>
+<span class="sd">    selected_count : int</span>
+<span class="sd">        Number of selected/removed components.</span>
+<span class="sd">    patterns : array-like | None</span>
+<span class="sd">        Component patterns with shape ``(n_channels, n_components)``.</span>
+<span class="sd">    info : mne.Info | None</span>
+<span class="sd">        Optional MNE info for topomap rendering.</span>
+<span class="sd">    channel_names : sequence of str | None</span>
+<span class="sd">        Channel labels used by non-topomap fallback panels.</span>
+<span class="sd">    removed : array-like | None</span>
+<span class="sd">        Removed signal with shape ``(n_channels, n_times)`` or</span>
+<span class="sd">        ``(n_epochs, n_channels, n_times)``.</span>
+<span class="sd">    sources : array-like | None</span>
+<span class="sd">        Component source traces with shape ``(n_components, n_times)`` or</span>
+<span class="sd">        ``(n_epochs, n_components, n_times)``.</span>
+<span class="sd">    sfreq : float | None</span>
+<span class="sd">        Sampling frequency for source/segment time axes.</span>
+<span class="sd">    freqs : array-like | None</span>
+<span class="sd">        Frequency axis for PSD panel.</span>
+<span class="sd">    psd_before : array-like | None, default=None</span>
+<span class="sd">        PSD values before denoising.</span>
+<span class="sd">    psd_after : array-like | None, default=None</span>
+<span class="sd">        PSD values after denoising.</span>
+<span class="sd">    line_freq : float | None</span>
+<span class="sd">        Optional line frequency marker in PSD panel.</span>
+<span class="sd">    fmax : float</span>
+<span class="sd">        Upper frequency bound for PSD panel.</span>
+<span class="sd">    segment_info : list[dict] | None</span>
+<span class="sd">        Optional segmented metadata. If provided, segmented panels replace</span>
+<span class="sd">        score/removed/source panels.</span>
+<span class="sd">    summary_rows : list[tuple[str, object]] | None</span>
+<span class="sd">        Optional explicit table rows.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    figsize : tuple[float, float] | None</span>
+<span class="sd">        Figure size.</span>
+<span class="sd">    dpi : int</span>
+<span class="sd">        Figure resolution.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to show the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If panel inputs are incompatible with expected dimensions or metadata</span>
+<span class="sd">        requirements (for example invalid source/pattern/segment shapes).</span>
+<span class="sd">    """</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">gs</span> <span class="o">=</span> <span class="n">_new_summary_grid</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.40</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">segment_info</span><span class="p">:</span>
+        <span class="n">ax_a</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">_plot_segment_counts_panel</span><span class="p">(</span>
+            <span class="n">ax_a</span><span class="p">,</span> <span class="n">segment_info</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"(a)  Segment selection counts"</span>
+        <span class="p">)</span>
+
+        <span class="n">ax_b</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">_plot_segment_metric_panel</span><span class="p">(</span><span class="n">ax_b</span><span class="p">,</span> <span class="n">segment_info</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"(b)  Segment metric"</span><span class="p">)</span>
+
+        <span class="n">ax_c</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">_plot_segment_boundaries_panel</span><span class="p">(</span>
+            <span class="n">ax_c</span><span class="p">,</span>
+            <span class="n">segment_info</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"(c)  Segment boundaries"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">_plot_patterns_panel</span><span class="p">(</span>
+            <span class="n">fig</span><span class="p">,</span>
+            <span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">patterns</span><span class="p">,</span>
+            <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span>
+            <span class="n">channel_names</span><span class="o">=</span><span class="n">channel_names</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"(d)  Component patterns"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_a</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">_plot_selection_scores_panel</span><span class="p">(</span>
+            <span class="n">ax_a</span><span class="p">,</span>
+            <span class="n">scores</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">selected_count</span><span class="p">),</span>
+            <span class="n">selected_label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Selected (</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">selected_count</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"(a)  Component scores"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">_plot_patterns_panel</span><span class="p">(</span>
+            <span class="n">fig</span><span class="p">,</span>
+            <span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">patterns</span><span class="p">,</span>
+            <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span>
+            <span class="n">channel_names</span><span class="o">=</span><span class="n">channel_names</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"(b)  Component patterns"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ax_c</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">_plot_removed_power_panel</span><span class="p">(</span>
+            <span class="n">fig</span><span class="p">,</span>
+            <span class="n">ax_c</span><span class="p">,</span>
+            <span class="n">removed</span><span class="p">,</span>
+            <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span>
+            <span class="n">channel_names</span><span class="o">=</span><span class="n">channel_names</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"(c)  Removed signal power"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ax_d</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">_plot_source_trace_panel</span><span class="p">(</span>
+            <span class="n">ax_d</span><span class="p">,</span>
+            <span class="n">sources</span><span class="p">,</span>
+            <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"(d)  Component traces"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">ax_e</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">_plot_before_after_psd_panel</span><span class="p">(</span>
+        <span class="n">ax_e</span><span class="p">,</span>
+        <span class="n">freqs</span><span class="o">=</span><span class="n">freqs</span><span class="p">,</span>
+        <span class="n">psd_before</span><span class="o">=</span><span class="n">psd_before</span><span class="p">,</span>
+        <span class="n">psd_after</span><span class="o">=</span><span class="n">psd_after</span><span class="p">,</span>
+        <span class="n">line_freq</span><span class="o">=</span><span class="n">line_freq</span><span class="p">,</span>
+        <span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"(e)  Power spectral density"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax_f</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">summary_rows</span><span class="p">)</span> <span class="k">if</span> <span class="n">summary_rows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"n_components"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">selected_count</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"selected_count"</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">selected_count</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">segment_info</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"n_segments"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">segment_info</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">line_freq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"line_freq_hz"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">line_freq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sfreq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"sfreq_hz"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">sfreq</span><span class="p">)</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">"status"</span><span class="p">,</span> <span class="s2">"No metadata provided"</span><span class="p">)]</span>
+    <span class="n">_draw_summary_table</span><span class="p">(</span><span class="n">ax_f</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_signal_diagnostics_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_signal_diagnostics_summary.html#mne_denoise.viz.plot_signal_diagnostics_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_signal_diagnostics_summary</span><span class="p">(</span>
+    <span class="n">signals</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">channel</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">,</span>
+    <span class="n">group_order</span><span class="p">,</span>
+    <span class="n">reference_group</span><span class="p">,</span>
+    <span class="n">group_colors</span><span class="p">,</span>
+    <span class="n">group_labels</span><span class="p">,</span>
+    <span class="n">channel_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">channel_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">windows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Signal Diagnostics Summary"</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot grouped time-domain signal diagnostics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    signals : mapping[str, array-like | MNE object]</span>
+<span class="sd">        Mapping from group name to signal data. Each value must be 2D</span>
+<span class="sd">        ``(n_channels, n_times)`` or 3D ``(n_epochs, n_channels, n_times)``.</span>
+<span class="sd">    channel : int | str</span>
+<span class="sd">        Channel selector. String selectors require explicit ``channel_names``.</span>
+<span class="sd">    times : array-like of shape (n_times,)</span>
+<span class="sd">        Explicit time axis.</span>
+<span class="sd">    channel_names : sequence of str | None</span>
+<span class="sd">        Explicit channel names used for string ``channel`` selectors and</span>
+<span class="sd">        channel labeling. The function does not infer names from MNE inputs.</span>
+<span class="sd">    channel_label : str | None</span>
+<span class="sd">        Explicit channel label when ``channel_names`` is not provided.</span>
+<span class="sd">    group_order : sequence of str</span>
+<span class="sd">        Explicit group plotting order.</span>
+<span class="sd">    reference_group : str</span>
+<span class="sd">        Explicit reference group used for the difference panel.</span>
+<span class="sd">    group_colors : mapping</span>
+<span class="sd">        Explicit color mapping keyed by group.</span>
+<span class="sd">    group_labels : mapping</span>
+<span class="sd">        Explicit display-label mapping keyed by group.</span>
+<span class="sd">    windows : sequence of tuple[float, float, str] | None</span>
+<span class="sd">        Optional highlighted windows. Each entry must be</span>
+<span class="sd">        ``(start, stop, label)``.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to show the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``signals`` is empty, ``times`` is shape-incompatible, channel</span>
+<span class="sd">        metadata is insufficient for the requested selector, or group ordering</span>
+<span class="sd">        is invalid.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"signals must be a non-empty mapping."</span><span class="p">)</span>
+
+    <span class="n">group_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"group_order must contain at least one group name."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reference_group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"reference_group must be present in group_order."</span><span class="p">)</span>
+
+    <span class="n">prepared</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">n_times</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">:</span>
+        <span class="n">data_in</span> <span class="o">=</span> <span class="n">signals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_extract_summary_signal</span><span class="p">(</span><span class="n">data_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Each signal must be 2D (n_channels, n_times) or 3D "</span>
+                <span class="s2">"(n_epochs, n_channels, n_times)."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_channels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_channels</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">n_times</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All signals must have matching channel/time dimensions."</span><span class="p">)</span>
+        <span class="n">prepared</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">channel_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_channels</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"channel_names length must match the number of signal channels."</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"String channel selectors require channel names."</span><span class="p">)</span>
+        <span class="n">channel_idx</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">channel_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">channel_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">channel_label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">channel_label</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">channel_label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">channel_idx</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"channel_label must be provided when channel_names is not provided."</span>
+        <span class="p">)</span>
+
+    <span class="n">time_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_axis</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">time_axis</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">n_times</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"times must be 1D and match n_times."</span><span class="p">)</span>
+
+    <span class="n">window_specs</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">windows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">themed_figure</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">ax_trace</span><span class="p">,</span> <span class="n">ax_gfp</span><span class="p">,</span> <span class="n">ax_diff</span><span class="p">,</span> <span class="n">ax_table</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_trace</span> <span class="o">=</span> <span class="n">ax_gfp</span> <span class="o">=</span> <span class="n">ax_diff</span> <span class="o">=</span> <span class="n">ax_table</span> <span class="o">=</span> <span class="n">axes</span>
+
+    <span class="n">ref_name</span> <span class="o">=</span> <span class="n">reference_group</span>
+    <span class="n">ref_data</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="n">ref_name</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">:</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">group_colors</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">group_labels</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+        <span class="n">ax_trace</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">time_axis</span><span class="p">,</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">channel_idx</span><span class="p">],</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax_gfp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">time_axis</span><span class="p">,</span>
+            <span class="n">_compute_gfp</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="o">!=</span> <span class="n">ref_name</span><span class="p">:</span>
+            <span class="n">ax_diff</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">time_axis</span><span class="p">,</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">channel_idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_data</span><span class="p">[</span><span class="n">channel_idx</span><span class="p">],</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">lw</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">ref_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">win_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">window_specs</span><span class="p">):</span>
+        <span class="n">shade</span> <span class="o">=</span> <span class="n">get_series_color</span><span class="p">(</span><span class="n">win_idx</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">panel</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ax_trace</span><span class="p">,</span> <span class="n">ax_gfp</span><span class="p">,</span> <span class="n">ax_diff</span><span class="p">):</span>
+            <span class="n">panel</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">shade</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">ax_trace</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_trace</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_trace</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"(a)  Channel overlay (</span><span class="si">{</span><span class="n">channel_label</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_trace</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_trace</span><span class="p">)</span>
+
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Global Field Power"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_gfp</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"(b)  GFP comparison"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_gfp</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_gfp</span><span class="p">)</span>
+
+    <span class="n">ax_diff</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_reference"</span><span class="p">],</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ax_diff</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_diff</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Difference"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_diff</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(c)  Difference vs </span><span class="si">{</span><span class="n">ref_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_diff</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_diff</span><span class="p">)</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">"reference_group"</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">),</span> <span class="p">(</span><span class="s2">"channel"</span><span class="p">,</span> <span class="n">channel_label</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">:</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prepared</span><span class="p">[</span><span class="n">group</span><span class="p">][</span><span class="n">channel_idx</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2"> RMS"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rms</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">window_specs</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_axis</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">time_axis</span> <span class="o">&lt;=</span> <span class="n">stop</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">ref_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ref_data</span><span class="p">[</span><span class="n">channel_idx</span><span class="p">,</span> <span class="n">mask</span><span class="p">])</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> mean (</span><span class="si">{</span><span class="n">ref_name</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref_mean</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+    <span class="n">_draw_summary_table</span><span class="p">(</span><span class="n">ax_table</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"(d)  Summary"</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_condition_interaction_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_condition_interaction_summary.html#mne_denoise.viz.plot_condition_interaction_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_condition_interaction_summary</span><span class="p">(</span>
+    <span class="n">traces</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">,</span>
+    <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">condition_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">windows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Condition Interaction Summary"</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot condition-by-group interaction traces.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    traces : mapping[str, mapping[str, array-like]]</span>
+<span class="sd">        Nested mapping ``condition -&gt; group -&gt; trace``.</span>
+<span class="sd">    times : array-like of shape (n_times,)</span>
+<span class="sd">        Explicit time axis.</span>
+<span class="sd">    errors : mapping | None</span>
+<span class="sd">        Optional nested mapping ``condition -&gt; group -&gt; standard error``.</span>
+<span class="sd">    condition_order : sequence of str | None</span>
+<span class="sd">        Optional condition order. Defaults to first-seen order.</span>
+<span class="sd">    group_order : sequence of str | None, default=None</span>
+<span class="sd">        Optional group order. Defaults to first-seen order across conditions.</span>
+<span class="sd">    group_colors : mapping | None, default=None</span>
+<span class="sd">        Optional color overrides keyed by group.</span>
+<span class="sd">    group_labels : mapping | None, default=None</span>
+<span class="sd">        Optional display-label overrides keyed by group.</span>
+<span class="sd">    windows : sequence of tuple[float, float, str] | None</span>
+<span class="sd">        Optional highlighted windows as explicit ``(start, stop, label)`` tuples.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to show the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``traces`` is empty, ``times`` is not 1D, or trace/error arrays do</span>
+<span class="sd">        not match the expected time dimension.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traces</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">traces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"traces must be a non-empty mapping of conditions."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">condition_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">condition_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">traces</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">condition_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">condition_order</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">group_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">condition_order</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">[</span><span class="n">condition</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">group_order</span> <span class="o">=</span> <span class="n">seen</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">group_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span>
+
+    <span class="n">time_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_axis</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"times must be 1D."</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">themed_figure</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">condition_order</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">condition_order</span><span class="p">),</span> <span class="mi">5</span><span class="p">),</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">window_specs</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">windows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">cond_idx</span><span class="p">,</span> <span class="n">condition</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">condition_order</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cond_idx</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">win_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">window_specs</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">get_series_color</span><span class="p">(</span><span class="n">win_idx</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">group_idx</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_order</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">[</span><span class="n">condition</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="n">trace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">traces</span><span class="p">[</span><span class="n">condition</span><span class="p">][</span><span class="n">group</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">trace</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">trace</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">time_axis</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All traces must be 1D and match times length."</span><span class="p">)</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">group_colors</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">group_colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_colors</span>
+                <span class="k">else</span> <span class="n">get_series_color</span><span class="p">(</span><span class="n">group_idx</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">group_labels</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">group_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_labels</span>
+                <span class="k">else</span> <span class="n">group</span>
+            <span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span> <span class="n">trace</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">errors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">errors</span>
+                <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="n">condition</span><span class="p">][</span><span class="n">group</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">se</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">trace</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">"errors traces must match corresponding trace shape."</span>
+                    <span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+                    <span class="n">time_axis</span><span class="p">,</span> <span class="n">trace</span> <span class="o">-</span> <span class="n">se</span><span class="p">,</span> <span class="n">trace</span> <span class="o">+</span> <span class="n">se</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_reference"</span><span class="p">],</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">cond_idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">condition</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+        <span class="n">style_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_group_condition_interaction_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_group_condition_interaction_summary.html#mne_denoise.viz.plot_group_condition_interaction_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_group_condition_interaction_summary</span><span class="p">(</span>
+    <span class="n">traces</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">,</span>
+    <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">condition_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">condition_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">windows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Group Condition Interaction Summary"</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot group-wise condition interaction traces.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    traces : mapping[str, mapping[str, array-like]]</span>
+<span class="sd">        Nested mapping ``group -&gt; condition -&gt; trace``.</span>
+<span class="sd">    times : array-like of shape (n_times,)</span>
+<span class="sd">        Explicit time axis.</span>
+<span class="sd">    errors : mapping | None</span>
+<span class="sd">        Optional nested mapping ``group -&gt; condition -&gt; standard error``.</span>
+<span class="sd">    group_order : sequence of str | None</span>
+<span class="sd">        Optional group order. Defaults to first-seen order.</span>
+<span class="sd">    condition_order : sequence of str | None</span>
+<span class="sd">        Optional condition order. Defaults to first-seen across groups.</span>
+<span class="sd">    condition_labels : mapping | None</span>
+<span class="sd">        Optional label overrides keyed by condition.</span>
+<span class="sd">    windows : sequence of tuple[float, float, str] | None</span>
+<span class="sd">        Optional highlighted windows as explicit ``(start, stop, label)`` tuples.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to show the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``traces`` is empty, ``times`` is not 1D, or trace/error arrays do</span>
+<span class="sd">        not match the expected time dimension.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traces</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">traces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"traces must be a non-empty mapping of groups."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">group_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">group_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">traces</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">group_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">condition_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">[</span><span class="n">group</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">condition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+        <span class="n">condition_order</span> <span class="o">=</span> <span class="n">seen</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">condition_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">condition_order</span><span class="p">)</span>
+
+    <span class="n">time_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_axis</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"times must be 1D."</span><span class="p">)</span>
+
+    <span class="n">window_specs</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">windows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">themed_figure</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">),</span> <span class="mi">5</span><span class="p">),</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">group_idx</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_order</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">group_idx</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">win_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">window_specs</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">get_series_color</span><span class="p">(</span><span class="n">win_idx</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">cond_idx</span><span class="p">,</span> <span class="n">condition</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">condition_order</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">condition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">[</span><span class="n">group</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="n">trace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">traces</span><span class="p">[</span><span class="n">group</span><span class="p">][</span><span class="n">condition</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">trace</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">trace</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">time_axis</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All traces must be 1D and match times length."</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">condition_labels</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">condition_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">condition_labels</span>
+                <span class="k">else</span> <span class="n">condition</span>
+            <span class="p">)</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">get_series_color</span><span class="p">(</span><span class="n">cond_idx</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span> <span class="n">trace</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">errors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">errors</span> <span class="ow">and</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">[</span><span class="n">group</span><span class="p">]:</span>
+                <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="n">group</span><span class="p">][</span><span class="n">condition</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">se</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">trace</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">"errors traces must match corresponding trace shape."</span>
+                    <span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+                    <span class="n">time_axis</span><span class="p">,</span> <span class="n">trace</span> <span class="o">-</span> <span class="n">se</span><span class="p">,</span> <span class="n">trace</span> <span class="o">+</span> <span class="n">se</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_reference"</span><span class="p">],</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">group_idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Amplitude"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">group</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+        <span class="n">style_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_endpoint_metrics_summary">
+<a class="viewcode-back" href="../../../generated/mne_denoise.viz.plot_endpoint_metrics_summary.html#mne_denoise.viz.plot_endpoint_metrics_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_endpoint_metrics_summary</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">metric_col</span><span class="p">,</span>
+    <span class="n">group_col</span><span class="o">=</span><span class="s2">"group"</span><span class="p">,</span>
+    <span class="n">subject_col</span><span class="o">=</span><span class="s2">"subject"</span><span class="p">,</span>
+    <span class="n">group_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">group_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_label</span><span class="o">=</span><span class="s2">"Reference"</span><span class="p">,</span>
+    <span class="n">null_distribution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">observed_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Endpoint Metrics Summary"</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot a generic endpoint-metric storyboard.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : mapping[str, array-like]</span>
+<span class="sd">        Columnar mapping with at least ``metric_col``, ``group_col``, and</span>
+<span class="sd">        ``subject_col``.</span>
+<span class="sd">    metric_col : str</span>
+<span class="sd">        Metric column to summarize.</span>
+<span class="sd">    group_col : str</span>
+<span class="sd">        Group identifier column.</span>
+<span class="sd">    subject_col : str</span>
+<span class="sd">        Subject identifier column.</span>
+<span class="sd">    group_order : sequence of str | None, default=None</span>
+<span class="sd">        Optional group order. Defaults to first-seen order.</span>
+<span class="sd">    group_colors : mapping | None, default=None</span>
+<span class="sd">        Optional color overrides keyed by group.</span>
+<span class="sd">    group_labels : mapping | None, default=None</span>
+<span class="sd">        Optional display-label overrides keyed by group.</span>
+<span class="sd">    reference_value : float | None</span>
+<span class="sd">        Optional horizontal reference line for metric panels.</span>
+<span class="sd">    reference_label : str</span>
+<span class="sd">        Label for ``reference_value``.</span>
+<span class="sd">    null_distribution : array-like | None</span>
+<span class="sd">        Optional null distribution for the null panel.</span>
+<span class="sd">    observed_value : float | None</span>
+<span class="sd">        Observed statistic for the null panel.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Figure title.</span>
+<span class="sd">    show : bool</span>
+<span class="sd">        Whether to show the figure.</span>
+<span class="sd">    fname : path-like | None</span>
+<span class="sd">        Optional output path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure handle.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If required columns are missing from ``data``.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If numeric conversion or plotting operations receive incompatible</span>
+<span class="sd">        shapes.</span>
+<span class="sd">    """</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">metric_col</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">group_col</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+    <span class="n">subjects</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">subject_col</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">group_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">group_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">group_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">themed_figure</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">ax_a</span><span class="p">,</span> <span class="n">ax_b</span><span class="p">,</span> <span class="n">ax_c</span><span class="p">,</span> <span class="n">ax_d</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_a</span> <span class="o">=</span> <span class="n">ax_b</span> <span class="o">=</span> <span class="n">ax_c</span> <span class="o">=</span> <span class="n">ax_d</span> <span class="o">=</span> <span class="n">axes</span>
+
+    <span class="n">means</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sems</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">metric</span><span class="p">[</span><span class="n">groups</span> <span class="o">==</span> <span class="n">group</span><span class="p">]</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">vals</span><span class="p">)]</span>
+        <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">if</span> <span class="n">vals</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vals</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">))</span>
+    <span class="n">bar_colors</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">group_colors</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">group_colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_colors</span>
+        <span class="k">else</span> <span class="n">get_series_color</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">ax_a</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">means</span><span class="p">,</span>
+        <span class="n">yerr</span><span class="o">=</span><span class="n">sems</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">bar_colors</span><span class="p">,</span>
+        <span class="n">edgecolor</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"edge"</span><span class="p">],</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">reference_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax_a</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span>
+            <span class="n">reference_value</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_reference"</span><span class="p">],</span>
+            <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">reference_label</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_a</span><span class="p">)</span>
+    <span class="n">ax_a</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">ax_a</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">group_labels</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">group_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_labels</span>
+            <span class="k">else</span> <span class="n">group</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span>
+        <span class="p">],</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"tick"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">ax_a</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">metric_col</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_a</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"(a)  Group mean ± SEM"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_a</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">subj_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">subjects</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+    <span class="n">traces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">subj_order</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">subj_idx</span><span class="p">,</span> <span class="n">subject</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subj_order</span><span class="p">):</span>
+        <span class="n">mask_subject</span> <span class="o">=</span> <span class="n">subjects</span> <span class="o">==</span> <span class="n">subject</span>
+        <span class="k">for</span> <span class="n">grp_idx</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_order</span><span class="p">):</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">metric</span><span class="p">[</span><span class="n">mask_subject</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">group</span><span class="p">)]</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">vals</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">vals</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="n">traces</span><span class="p">[</span><span class="n">subj_idx</span><span class="p">,</span> <span class="n">grp_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax_b</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)),</span>
+            <span class="n">traces</span><span class="p">[</span><span class="n">subj_idx</span><span class="p">],</span>
+            <span class="s2">"o-"</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_subject"</span><span class="p">],</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span>
+            <span class="n">markersize</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">mean_trace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">traces</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ax_b</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)),</span>
+        <span class="n">mean_trace</span><span class="p">,</span>
+        <span class="s2">"s-"</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_mean"</span><span class="p">],</span>
+        <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">"Mean"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">reference_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax_b</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span>
+            <span class="n">reference_value</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_reference"</span><span class="p">],</span>
+            <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">reference_label</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">ax_b</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)))</span>
+    <span class="n">ax_b</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">group_labels</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">group_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_labels</span>
+            <span class="k">else</span> <span class="n">group</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span>
+        <span class="p">],</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"tick"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">ax_b</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">metric_col</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_b</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"(b)  Paired subject trajectories"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_b</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_b</span><span class="p">)</span>
+
+    <span class="n">bp</span> <span class="o">=</span> <span class="n">ax_c</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">metric</span><span class="p">[(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">group</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">metric</span><span class="p">)]</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span><span class="p">],</span>
+        <span class="n">patch_artist</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax_c</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">ax_c</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">group_labels</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">group_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_labels</span>
+            <span class="k">else</span> <span class="n">group</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_order</span>
+        <span class="p">],</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"tick"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">patch</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bp</span><span class="p">[</span><span class="s2">"boxes"</span><span class="p">],</span> <span class="n">bar_colors</span><span class="p">):</span>
+        <span class="n">patch</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+        <span class="n">patch</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mf">0.65</span><span class="p">)</span>
+        <span class="n">patch</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"edge"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">reference_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax_c</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span>
+            <span class="n">reference_value</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"stat_reference"</span><span class="p">],</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span>
+        <span class="p">)</span>
+    <span class="n">ax_c</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">metric_col</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+    <span class="n">ax_c</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"(c)  Distribution by group"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+    <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_c</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">null_distribution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">null_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">null_distribution</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">null_distribution</span> <span class="o">=</span> <span class="n">null_distribution</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">null_distribution</span><span class="p">)]</span>
+        <span class="n">ax_d</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+            <span class="n">null_distribution</span><span class="p">,</span>
+            <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"muted"</span><span class="p">],</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"edge"</span><span class="p">],</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="s2">"Null"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">observed_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax_d</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+                <span class="n">observed_value</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"accent"</span><span class="p">],</span>
+                <span class="n">lw</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
+                <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"Observed"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">null_distribution</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="n">p_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">null_distribution</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">observed_value</span><span class="p">))</span>
+                <span class="n">ax_d</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                    <span class="mf">0.98</span><span class="p">,</span>
+                    <span class="mf">0.95</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"p=</span><span class="si">{</span><span class="n">p_val</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax_d</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                    <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span>
+                    <span class="n">va</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span>
+                    <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"annotation"</span><span class="p">],</span>
+                <span class="p">)</span>
+        <span class="n">ax_d</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">metric_col</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+        <span class="n">ax_d</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"(d)  Null distribution"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"title"</span><span class="p">])</span>
+        <span class="n">themed_legend</span><span class="p">(</span><span class="n">ax_d</span><span class="p">)</span>
+        <span class="n">style_axes</span><span class="p">(</span><span class="n">ax_d</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">"metric"</span><span class="p">,</span> <span class="n">metric_col</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"n_subjects"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subj_order</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">"n_groups"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_order</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">"reference"</span><span class="p">,</span> <span class="n">reference_value</span> <span class="k">if</span> <span class="n">reference_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"None"</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="n">_draw_summary_table</span><span class="p">(</span><span class="n">ax_d</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"(d)  Summary"</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">FONTS</span><span class="p">[</span><span class="s2">"suptitle"</span><span class="p">],</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_finalize_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

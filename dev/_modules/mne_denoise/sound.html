@@ -1,0 +1,1173 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.sound &#8212; mne-denoise 0.0.2.dev223+gb92629895 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e305a2df" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../_static/documentation_options.js?v=74791eb1"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/sound';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mne.tools/mne-denoise/dev/_static/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev223+gb92629895" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/mne.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/mne.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">mne-denoise</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.sound</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""SOUND source-informed denoising."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integral</span><span class="p">,</span> <span class="n">Real</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_is_fitted</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._data</span><span class="w"> </span><span class="kn">import</span> <span class="n">epochs_to_continuous</span><span class="p">,</span> <span class="n">extract_data_from_mne</span><span class="p">,</span> <span class="n">reconstruct_mne_object</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._leadfield</span><span class="w"> </span><span class="kn">import</span> <span class="n">_validate_leadfield</span><span class="p">,</span> <span class="n">resolve_leadfield</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_channel_layout</span><span class="p">,</span> <span class="n">check_option</span><span class="p">,</span> <span class="n">check_positive_real</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_emit_progress</span><span class="p">,</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"SOUND"</span><span class="p">,</span> <span class="s2">"compute_sound"</span><span class="p">,</span> <span class="s2">"compute_sound_ref_best"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_noise_level</span><span class="p">(</span><span class="n">noise_filter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Estimate one channel noise level from covariance."""</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">noise_filter</span> <span class="o">@</span> <span class="n">cov</span> <span class="o">@</span> <span class="n">noise_filter</span> <span class="o">/</span> <span class="n">n_times</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ddwiener</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Estimate channel noise amplitudes with data-driven Wiener prediction."""</span>
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">data</span> <span class="o">@</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">cov</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gamma</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"All channels have a zero noise estimate; SOUND cannot whiten the "</span>
+            <span class="s2">"data. This usually means the input is constant or all-zero."</span>
+        <span class="p">)</span>
+    <span class="n">sigmas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+    <span class="n">eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+        <span class="n">others</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)])</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+            <span class="n">cov</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">others</span><span class="p">,</span> <span class="n">others</span><span class="p">)]</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">eye</span><span class="p">,</span> <span class="n">cov</span><span class="p">[</span><span class="n">others</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">noise_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+        <span class="n">noise_filter</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">noise_filter</span><span class="p">[</span><span class="n">others</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">weights</span>
+        <span class="n">sigmas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_noise_level</span><span class="p">(</span><span class="n">noise_filter</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">n_times</span><span class="p">)</span>
+
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">sigmas</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">positive</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"All channels have a zero noise estimate; SOUND cannot whiten the "</span>
+            <span class="s2">"data. This usually means the input is constant or all-zero."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">positive</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">[</span><span class="n">positive</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_sound_inputs</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">leadfield</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">min_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate SOUND data and lead-field inputs."""</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"data must be 2D, got shape </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"data must contain only finite values."</span><span class="p">)</span>
+    <span class="n">leadfield</span> <span class="o">=</span> <span class="n">_validate_leadfield</span><span class="p">(</span><span class="n">leadfield</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">lambda_</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lambda_</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lambda_</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">lambda_</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"lambda_ must be a finite non-negative number, got </span><span class="si">{</span><span class="n">lambda_</span><span class="si">!r}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_iter</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">1</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"n_iter must be a positive integer, got </span><span class="si">{</span><span class="n">n_iter</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">leadfield</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_channels</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Lead field has </span><span class="si">{</span><span class="n">leadfield</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> channels but data has </span><span class="si">{</span><span class="n">n_channels</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_channels</span> <span class="o">&lt;</span> <span class="n">min_channels</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">" (one is dropped as the reference)"</span> <span class="k">if</span> <span class="n">min_channels</span> <span class="o">==</span> <span class="mi">4</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"SOUND requires at least </span><span class="si">{</span><span class="n">min_channels</span><span class="si">}</span><span class="s2"> channels</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_times</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"data must contain at least one sample."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"All channels have a zero noise estimate because the data are "</span>
+            <span class="s2">"all-zero; SOUND cannot be fitted."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">leadfield</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_estimate_sigmas</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">leadfield</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Run SOUND iterations and return noise levels, convergence, and lead-field covariance."""</span>
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">check_positive_real</span><span class="p">(</span><span class="n">tol</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"tol"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"tol must be positive and finite or None, got </span><span class="si">{</span><span class="n">tol</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="n">llt</span> <span class="o">=</span> <span class="n">leadfield</span> <span class="o">@</span> <span class="n">leadfield</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># (n_channels, n_channels); spans the column space</span>
+    <span class="c1"># Time samples enter only here; the iterations below are covariance-only</span>
+    <span class="c1"># (Mutanen et al. 2022, Eqs. 35-36). DDWiener needs the same covariance,</span>
+    <span class="c1"># so it is formed once and shared.</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">data</span> <span class="o">@</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">sigmas</span> <span class="o">=</span> <span class="n">_ddwiener</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+    <span class="n">eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">convergence</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iter</span><span class="p">):</span>
+        <span class="n">sigmas_old</span> <span class="o">=</span> <span class="n">sigmas</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+            <span class="n">others</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)])</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">sigmas</span><span class="p">[</span><span class="n">others</span><span class="p">]</span>
+            <span class="c1"># WLLW = diag(w) @ LLt[o,o] @ diag(w)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">llt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">others</span><span class="p">,</span> <span class="n">others</span><span class="p">)])</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">reg</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">llt</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">others</span><span class="p">]</span> <span class="o">*</span> <span class="n">w</span>  <span class="c1"># (L @ WL.T)[i]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">g</span> <span class="o">+</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">eye</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"SOUND encountered a singular lead-field system; provide a "</span>
+                    <span class="s2">"positive lambda_ or a better-conditioned forward model."</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+            <span class="n">noise_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+            <span class="n">noise_filter</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">noise_filter</span><span class="p">[</span><span class="n">others</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span>
+            <span class="n">sigmas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_noise_level</span><span class="p">(</span><span class="n">noise_filter</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">n_times</span><span class="p">)</span>
+        <span class="n">relative_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sigmas_old</span> <span class="o">-</span> <span class="n">sigmas</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigmas_old</span><span class="p">)</span>
+        <span class="n">convergence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">relative_change</span><span class="p">)</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"sound"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"iteration"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">convergence</span><span class="p">),</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">relative_change</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"SOUND sigma iteration </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">: max relative change </span><span class="si">%.2e</span><span class="s2">."</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">convergence</span><span class="p">),</span>
+            <span class="n">n_iter</span><span class="p">,</span>
+            <span class="n">relative_change</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">convergence</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">convergence</span><span class="p">),</span> <span class="n">llt</span>
+
+
+<div class="viewcode-block" id="compute_sound">
+<a class="viewcode-back" href="../../generated/mne_denoise.sound.compute_sound.html#mne_denoise.sound.compute_sound">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_sound</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">leadfield</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Compute the SOUND cleaning operator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Sensor data in the same reference as leadfield.</span>
+<span class="sd">    leadfield : ndarray, shape (n_channels, n_sources)</span>
+<span class="sd">        Lead-field matrix in the same reference as data.</span>
+<span class="sd">    lambda_ : float, default=0.1</span>
+<span class="sd">        Non-negative regularization scale.</span>
+<span class="sd">    n_iter : int, default=5</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    tol : float or None, default=None</span>
+<span class="sd">        Stop when the maximum relative noise-level change is below this value.</span>
+<span class="sd">    random_state : int, numpy.random.Generator, or None, default=None</span>
+<span class="sd">        Random state for channel-update order.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous callback after each iteration.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    operator : ndarray, shape (n_channels, n_channels)</span>
+<span class="sd">        Linear operator such that cleaned = operator @ data.</span>
+<span class="sd">    sigmas : ndarray, shape (n_channels,)</span>
+<span class="sd">        Estimated channel noise amplitudes.</span>
+<span class="sd">    convergence : ndarray, shape (n_iter_run,)</span>
+<span class="sd">        Maximum relative noise-level change per iteration.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The input data and lead field must use a common reference</span>
+<span class="sd">    :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. footbibliography::</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">leadfield</span> <span class="o">=</span> <span class="n">_validate_sound_inputs</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">leadfield</span><span class="p">,</span> <span class="n">lambda_</span><span class="o">=</span><span class="n">lambda_</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">min_channels</span><span class="o">=</span><span class="mi">3</span>
+    <span class="p">)</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">sigmas</span><span class="p">,</span> <span class="n">convergence</span><span class="p">,</span> <span class="n">llt</span> <span class="o">=</span> <span class="n">_estimate_sigmas</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="n">leadfield</span><span class="p">,</span>
+        <span class="n">lambda_</span><span class="o">=</span><span class="n">lambda_</span><span class="p">,</span>
+        <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Final cleaning operator from the converged noise estimate.</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">sigmas</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">llt</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">reg</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_channels</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">g</span> <span class="o">+</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"SOUND could not construct the final cleaning operator; provide a "</span>
+            <span class="s2">"positive lambda_ or a better-conditioned forward model."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="p">((</span><span class="n">llt</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span> <span class="o">@</span> <span class="n">inv</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"SOUND: </span><span class="si">%d</span><span class="s2"> iteration(s), channels=</span><span class="si">%d</span><span class="s2">, sources=</span><span class="si">%d</span><span class="s2">, "</span>
+        <span class="s2">"final max relative sigma change </span><span class="si">%.2e</span><span class="s2">, reference=average"</span><span class="p">,</span>
+        <span class="n">convergence</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">n_channels</span><span class="p">,</span>
+        <span class="n">leadfield</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">convergence</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">convergence</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">operator</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">convergence</span></div>
+
+
+
+<div class="viewcode-block" id="compute_sound_ref_best">
+<a class="viewcode-back" href="../../generated/mne_denoise.sound.compute_sound_ref_best.html#mne_denoise.sound.compute_sound_ref_best">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_sound_ref_best</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">leadfield</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Compute SOUND with a selected single-channel reference.</span>
+
+<span class="sd">    The function excludes the least-noisy reference channel during estimation and</span>
+<span class="sd">    returns an average-referenced full-channel operator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Sensor data.</span>
+<span class="sd">    leadfield : ndarray, shape (n_channels, n_sources)</span>
+<span class="sd">        Lead-field matrix in the same channel order and reference as data.</span>
+<span class="sd">    lambda_ : float, default=0.1</span>
+<span class="sd">        Non-negative regularization scale.</span>
+<span class="sd">    n_iter : int, default=5</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    tol : float or None, default=None</span>
+<span class="sd">        Convergence tolerance.</span>
+<span class="sd">    random_state : int, numpy.random.Generator, or None, default=None</span>
+<span class="sd">        Random state for channel-update order.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous callback after each iteration.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    operator : ndarray, shape (n_channels, n_channels)</span>
+<span class="sd">        Average-referenced cleaning operator.</span>
+<span class="sd">    sigmas : ndarray, shape (n_channels - 1,)</span>
+<span class="sd">        Noise amplitudes for channels other than best_channel.</span>
+<span class="sd">    convergence : ndarray, shape (n_iter_run,)</span>
+<span class="sd">        Maximum relative noise-level change per iteration.</span>
+<span class="sd">    best_channel : int</span>
+<span class="sd">        Index of the selected reference channel.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The reference channel is selected from the data-driven Wiener noise estimates;</span>
+<span class="sd">    its index is returned so the reference choice remains explicit.</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">leadfield</span> <span class="o">=</span> <span class="n">_validate_sound_inputs</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">leadfield</span><span class="p">,</span> <span class="n">lambda_</span><span class="o">=</span><span class="n">lambda_</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">min_channels</span><span class="o">=</span><span class="mi">4</span>
+    <span class="p">)</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">best</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">_ddwiener</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">best</span><span class="p">])</span>
+    <span class="n">data_ref</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="n">best</span><span class="p">])[</span><span class="n">keep</span><span class="p">]</span>
+    <span class="n">lf_ref</span> <span class="o">=</span> <span class="p">(</span><span class="n">leadfield</span> <span class="o">-</span> <span class="n">leadfield</span><span class="p">[</span><span class="n">best</span><span class="p">])[</span><span class="n">keep</span><span class="p">]</span>
+    <span class="n">lf_avg</span> <span class="o">=</span> <span class="n">leadfield</span> <span class="o">-</span> <span class="n">leadfield</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">sigmas</span><span class="p">,</span> <span class="n">convergence</span><span class="p">,</span> <span class="n">llt_ref</span> <span class="o">=</span> <span class="n">_estimate_sigmas</span><span class="p">(</span>
+        <span class="n">data_ref</span><span class="p">,</span>
+        <span class="n">lf_ref</span><span class="p">,</span>
+        <span class="n">lambda_</span><span class="o">=</span><span class="n">lambda_</span><span class="p">,</span>
+        <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Fold ref_best + drop + MNE + average-referenced reconstruction into one</span>
+    <span class="c1"># operator. All products stay in channel space: (n, n-1) rather than</span>
+    <span class="c1"># (n, n_sources).</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">sigmas</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">llt_ref</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">reg</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># R applies ref_best and drops the reference channel: (n - 1, n).</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)[</span><span class="n">keep</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)[</span><span class="n">best</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">cross</span> <span class="o">=</span> <span class="n">lf_avg</span> <span class="o">@</span> <span class="n">lf_ref</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># (n, n - 1)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+            <span class="n">g</span> <span class="o">+</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">w</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">r</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"SOUND could not construct the final cleaning operator; provide a "</span>
+            <span class="s2">"positive lambda_ or a better-conditioned forward model."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="n">cross</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">@</span> <span class="n">reconstruction</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"SOUND: </span><span class="si">%d</span><span class="s2"> iteration(s), channels=</span><span class="si">%d</span><span class="s2">, sources=</span><span class="si">%d</span><span class="s2">, "</span>
+        <span class="s2">"final max relative sigma change </span><span class="si">%.2e</span><span class="s2">, reference=best channel </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">convergence</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">n_channels</span><span class="p">,</span>
+        <span class="n">leadfield</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">convergence</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">convergence</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span>
+        <span class="n">best</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">operator</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">convergence</span><span class="p">,</span> <span class="n">best</span></div>
+
+
+
+<div class="viewcode-block" id="SOUND">
+<a class="viewcode-back" href="../../generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SOUND</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""SOUND estimator for source-informed noise suppression.</span>
+
+<span class="sd">    SOUND estimates channel noise levels and fits a forward-model-based linear</span>
+<span class="sd">    operator. For compatible EEG MNE input with a montage, a spherical lead field</span>
+<span class="sd">    is built when no forward solution is supplied. MEG or mixed-channel MNE input</span>
+<span class="sd">    and NumPy input require an explicit forward solution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lambda_ : float, default=0.1</span>
+<span class="sd">        Non-negative regularization scale.</span>
+<span class="sd">    n_iter : int, default=5</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    tol : float or None, default=None</span>
+<span class="sd">        Convergence tolerance; None runs n_iter iterations.</span>
+<span class="sd">    forward : mne.Forward or None, default=None</span>
+<span class="sd">        Optional explicit forward solution. For compatible EEG MNE input with a</span>
+<span class="sd">        montage, None uses a spherical fallback; MEG or mixed-channel MNE input</span>
+<span class="sd">        and NumPy input require an explicit forward.</span>
+<span class="sd">    reference : {"best", "average"}, default="best"</span>
+<span class="sd">        Reference handling. "best" selects a low-noise single-channel reference</span>
+<span class="sd">        and reconstructs an average-referenced output; "average" uses all channels</span>
+<span class="sd">        and assumes average-referenced input.</span>
+<span class="sd">    sigma_source : {"evoked", "trials"}, default="evoked"</span>
+<span class="sd">        For epoched data, estimate noise from the trial average or concatenated</span>
+<span class="sd">        trials.</span>
+<span class="sd">    n_dipoles : int, default=5000</span>
+<span class="sd">        Number of dipoles for the spherical lead field.</span>
+<span class="sd">    random_state : int, numpy.random.Generator, or None, default=None</span>
+<span class="sd">        Random state for channel-update order.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    leadfield_ : ndarray</span>
+<span class="sd">        Lead field used during fitting.</span>
+<span class="sd">    operator_ : ndarray</span>
+<span class="sd">        Fitted channel-space cleaning operator.</span>
+<span class="sd">    sigmas_ : ndarray</span>
+<span class="sd">        Estimated channel noise amplitudes.</span>
+<span class="sd">    best_channel_ : int or None</span>
+<span class="sd">        Selected reference channel, or None for reference="average".</span>
+<span class="sd">    convergence_ : ndarray</span>
+<span class="sd">        Relative noise-level change by iteration.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    mne_denoise.sns.SNS</span>
+<span class="sd">        Spatial-redundancy sensor-noise suppression without a lead field.</span>
+<span class="sd">    compute_sound</span>
+<span class="sd">        All-channel SOUND functional interface.</span>
+<span class="sd">    compute_sound_ref_best</span>
+<span class="sd">        Best-reference SOUND functional interface.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    NumPy input is (n_channels, n_times) or (n_epochs, n_channels, n_times).</span>
+<span class="sd">    MNE Raw, Epochs, and Evoked inputs are supported and returned without</span>
+<span class="sd">    mutation :footcite:p:`mutanen2018_sound,mutanen2022_source_artifact`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. footbibliography::</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    A preloaded MNE ``Raw`` object with a compatible EEG montage can use the</span>
+<span class="sd">    spherical fallback lead field:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">       from mne_denoise.sound import SOUND</span>
+
+<span class="sd">       model = SOUND(reference="best")</span>
+<span class="sd">       clean = model.fit_transform(raw)</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">reference</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"best"</span><span class="p">,</span>
+        <span class="n">sigma_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"evoked"</span><span class="p">,</span>
+        <span class="n">n_dipoles</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span> <span class="o">=</span> <span class="n">lambda_</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="n">n_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward</span> <span class="o">=</span> <span class="n">forward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="n">reference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_source</span> <span class="o">=</span> <span class="n">sigma_source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_dipoles</span> <span class="o">=</span> <span class="n">n_dipoles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Reduce fitting data to channel-by-time form according to sigma_source."""</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_source</span> <span class="o">==</span> <span class="s2">"evoked"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">epochs_to_continuous</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_not_average_referenced</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Warn when reference="average" does not match the input metadata or common mode."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">!=</span> <span class="s2">"average"</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">custom_ref</span> <span class="o">=</span> <span class="n">orig_inst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="n">orig_inst</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"custom_ref_applied"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_ref</span> <span class="ow">or</span> <span class="n">offset</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"reference='average' assumes average-referenced input, but "</span>
+                <span class="s2">"this data does not appear to be average referenced. The lead "</span>
+                <span class="s2">"field is average referenced, so a mismatched data reference "</span>
+                <span class="s2">"will bias the result. Apply an average reference first, or "</span>
+                <span class="s2">"use reference='best'."</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="SOUND.fit">
+<a class="viewcode-back" href="../../generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND.fit">[docs]</a>
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Fit the SOUND cleaning operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ndarray, Raw, Epochs, or Evoked</span>
+<span class="sd">            Data used to estimate channel noise and the operator.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous iteration callback.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SOUND</span>
+<span class="sd">            The fitted estimator.</span>
+<span class="sd">        """</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="n">check_option</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"reference"</span><span class="p">,</span> <span class="n">allowed</span><span class="o">=</span><span class="p">(</span><span class="s2">"best"</span><span class="p">,</span> <span class="s2">"average"</span><span class="p">))</span>
+        <span class="n">check_option</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma_source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"sigma_source"</span><span class="p">,</span> <span class="n">allowed</span><span class="o">=</span><span class="p">(</span><span class="s2">"evoked"</span><span class="p">,</span> <span class="s2">"trials"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">n_channels</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># (..., n_channels, n_times)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leadfield_</span> <span class="o">=</span> <span class="n">resolve_leadfield</span><span class="p">(</span>
+            <span class="n">inst</span><span class="o">=</span><span class="n">orig_inst</span><span class="p">,</span>
+            <span class="n">ch_names</span><span class="o">=</span><span class="n">ch_names</span><span class="p">,</span>
+            <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"SOUND"</span><span class="p">,</span>
+            <span class="n">forward</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>
+            <span class="n">n_dipoles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_dipoles</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mne_ch_names_</span> <span class="o">=</span> <span class="n">ch_names</span>
+
+        <span class="n">fit_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_warn_if_not_average_referenced</span><span class="p">(</span><span class="n">fit_data</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">==</span> <span class="s2">"best"</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">operator_</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigmas_</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">convergence_</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_channel_</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">compute_sound_ref_best</span><span class="p">(</span>
+                <span class="n">fit_data</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">leadfield_</span><span class="p">,</span>
+                <span class="n">lambda_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span><span class="p">,</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">,</span>
+                <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span>
+                <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">operator_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigmas_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence_</span> <span class="o">=</span> <span class="n">compute_sound</span><span class="p">(</span>
+                <span class="n">fit_data</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">leadfield_</span><span class="p">,</span>
+                <span class="n">lambda_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span><span class="p">,</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">,</span>
+                <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span>
+                <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_channel_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="SOUND.fit_transform">
+<a class="viewcode-back" href="../../generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND.fit_transform">[docs]</a>
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Fit SOUND and transform the input.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ndarray, Raw, Epochs, or Evoked</span>
+<span class="sd">            Data to fit and transform.</span>
+<span class="sd">        y : None, default=None</span>
+<span class="sd">            Ignored for scikit-learn compatibility.</span>
+<span class="sd">        callback : callable or None, default=None</span>
+<span class="sd">            Synchronous fitting callback.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        same type as X</span>
+<span class="sd">            Cleaned data.</span>
+<span class="sd">        """</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SOUND.transform">
+<a class="viewcode-back" href="../../generated/mne_denoise.sound.SOUND.html#mne_denoise.sound.SOUND.transform">[docs]</a>
+    <span class="nd">@verbose</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply the fitted SOUND operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ndarray, Raw, Epochs, or Evoked</span>
+<span class="sd">            Data with the fitted channel layout.</span>
+<span class="sd">        verbose : bool, str, int, or None, default=None</span>
+<span class="sd">            Logging level.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        same type as X</span>
+<span class="sd">            Cleaned data; MNE inputs are copied and NumPy inputs are not mutated.</span>
+<span class="sd">        """</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="p">[</span><span class="s2">"operator_"</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">picks</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">ch_names</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_mne_ch_names_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">check_channel_layout</span><span class="p">(</span>
+            <span class="s2">"SOUND"</span><span class="p">,</span>
+            <span class="n">n_channels</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+            <span class="n">fitted_n_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">operator_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">ch_names</span><span class="o">=</span><span class="n">ch_names</span><span class="p">,</span>
+            <span class="n">fitted_ch_names</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_mne_ch_names_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="c1"># matmul broadcasts the (n_channels, n_channels) operator over any</span>
+        <span class="c1"># leading epoch axis, so 2D and 3D share one BLAS-backed path.</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_</span> <span class="o">@</span> <span class="n">data</span>
+        <span class="k">return</span> <span class="n">reconstruct_mne_object</span><span class="p">(</span><span class="n">cleaned</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

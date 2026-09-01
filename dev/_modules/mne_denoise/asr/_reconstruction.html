@@ -1,0 +1,1604 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.asr._reconstruction &#8212; mne-denoise 0.0.2.dev223+gb92629895 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e305a2df" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=74791eb1"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/asr/_reconstruction';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mne.tools/mne-denoise/dev/_static/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2.dev223+gb92629895" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/mne.svg" class="logo__image only-light" alt=""/>
+    <img src="../../../_static/mne.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">mne-denoise</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.asr._reconstruction</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""ASR reconstruction helpers."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._blending</span><span class="w"> </span><span class="kn">import</span> <span class="n">raised_cosine_ramp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">_emit_progress</span><span class="p">,</span> <span class="n">_ProgressCallback</span><span class="p">,</span> <span class="n">_validate_callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._covariance</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_ChunkedMovingCovariances</span><span class="p">,</span>
+    <span class="n">_covariance_chunk_blocks</span><span class="p">,</span>
+    <span class="n">_covariance_stack_bytes</span><span class="p">,</span>
+    <span class="n">_iter_moving_covariances_at</span><span class="p">,</span>
+    <span class="n">_max_mem_bytes</span><span class="p">,</span>
+    <span class="n">_moving_average_padded</span><span class="p">,</span>
+    <span class="n">_process_memory_info</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._filters</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_append_streaming_tail</span><span class="p">,</span>
+    <span class="n">_apply_statistics_filter_streaming</span><span class="p">,</span>
+    <span class="n">_lfilter_channels</span><span class="p">,</span>
+    <span class="n">_prepend_streaming_carry</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._spd</span><span class="w"> </span><span class="kn">import</span> <span class="n">_regularize_spd</span><span class="p">,</span> <span class="n">_riemannian_nonlinear_eigenspace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASRState</span><span class="p">,</span> <span class="n">_copy_process_state</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_resolve_max_dims_padded</span><span class="p">,</span>
+    <span class="n">_round_half_up</span><span class="p">,</span>
+    <span class="n">_validate_array_2d</span><span class="p">,</span>
+    <span class="n">_validate_common_params</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_PreparedASRStream</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validated arrays and indices shared by windowed ASR processors."""</span>
+
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">n_channels</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">win_len</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">lookahead_samples</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">max_bad</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">data_stream</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">n_stream_input</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">statistics</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">update_at</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">use_rolling_covariance</span><span class="p">:</span> <span class="nb">bool</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_asr_stream</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_dims</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lookahead</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_PreparedASRStream</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate input and prepare the common streaming ASR representation."""</span>
+    <span class="n">_validate_common_params</span><span class="p">(</span>
+        <span class="n">sfreq</span><span class="o">=</span><span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+        <span class="n">max_dropout_fraction</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">min_clean_fraction</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">_validate_array_2d</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"ASR state channel count does not match data: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">n_channels</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">win_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">_round_half_up</span><span class="p">(</span><span class="n">window_length</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">),</span> <span class="n">_round_half_up</span><span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_times</span> <span class="o">&lt;</span> <span class="n">win_len</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Window length (</span><span class="si">{</span><span class="n">win_len</span><span class="si">}</span><span class="s2"> samples) exceeds data length (</span><span class="si">{</span><span class="n">n_times</span><span class="si">}</span><span class="s2"> samples)"</span>
+        <span class="p">)</span>
+    <span class="n">lookahead</span> <span class="o">=</span> <span class="p">(</span><span class="n">win_len</span> <span class="o">/</span> <span class="n">sfreq</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">lookahead</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">lookahead</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lookahead</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"lookahead must be non-negative"</span><span class="p">)</span>
+    <span class="n">lookahead_samples</span> <span class="o">=</span> <span class="n">_round_half_up</span><span class="p">(</span><span class="n">lookahead</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lookahead_samples</span> <span class="o">&gt;=</span> <span class="n">n_times</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"lookahead is too long for the data length"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stepsize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stepsize</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">win_len</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stepsize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stepsize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stepsize</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"stepsize must be at least 1 sample"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stepsize</span> <span class="o">&gt;</span> <span class="n">win_len</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"stepsize must not exceed window_length in samples"</span><span class="p">)</span>
+
+    <span class="n">max_bad</span> <span class="o">=</span> <span class="n">_resolve_max_dims_padded</span><span class="p">(</span><span class="n">max_dims</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_bad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_PreparedASRStream</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
+            <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+            <span class="n">n_times</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+            <span class="n">win_len</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+            <span class="n">lookahead_samples</span><span class="o">=</span><span class="n">lookahead_samples</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">max_bad</span><span class="o">=</span><span class="n">max_bad</span><span class="p">,</span>
+            <span class="n">data_stream</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+            <span class="n">statistics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">update_at</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">use_rolling_covariance</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">X_proc</span> <span class="o">=</span> <span class="n">_append_streaming_tail</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span>
+    <span class="n">data_stream</span> <span class="o">=</span> <span class="n">_prepend_streaming_carry</span><span class="p">(</span><span class="n">X_proc</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span>
+    <span class="n">data_stream</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data_stream</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">n_stream_input</span> <span class="o">=</span> <span class="n">X_proc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">statistics_input</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[</span>
+        <span class="p">:,</span> <span class="n">lookahead_samples</span> <span class="p">:</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_stream_input</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">filter_zi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">statistics</span> <span class="o">=</span> <span class="n">_apply_statistics_filter_streaming</span><span class="p">(</span>
+            <span class="n">statistics_input</span><span class="p">,</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">filter_b</span><span class="p">,</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">filter_a</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">statistics</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_lfilter_channels</span><span class="p">(</span>
+            <span class="n">statistics_input</span><span class="p">,</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">filter_b</span><span class="p">,</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">filter_a</span><span class="p">,</span>
+            <span class="n">zi</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">filter_zi</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">stepsize</span><span class="p">,</span> <span class="n">n_stream_input</span> <span class="o">+</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="n">n_stream_input</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">update_at</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">update_at</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_stream_input</span><span class="p">:</span>
+        <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">update_at</span><span class="p">,</span> <span class="n">n_stream_input</span><span class="p">)</span>
+    <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">update_at</span><span class="p">)))</span>
+    <span class="n">max_mem_bytes</span> <span class="o">=</span> <span class="n">_max_mem_bytes</span><span class="p">(</span><span class="n">max_mem_mb</span><span class="p">)</span>
+    <span class="n">use_rolling_covariance</span> <span class="o">=</span> <span class="n">max_mem_bytes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="n">n_stream_input</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_mem_bytes</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_PreparedASRStream</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
+        <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+        <span class="n">n_times</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+        <span class="n">win_len</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+        <span class="n">lookahead_samples</span><span class="o">=</span><span class="n">lookahead_samples</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+        <span class="n">max_bad</span><span class="o">=</span><span class="n">max_bad</span><span class="p">,</span>
+        <span class="n">data_stream</span><span class="o">=</span><span class="n">data_stream</span><span class="p">,</span>
+        <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+        <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+        <span class="n">update_at</span><span class="o">=</span><span class="n">update_at</span><span class="p">,</span>
+        <span class="n">use_rolling_covariance</span><span class="o">=</span><span class="n">use_rolling_covariance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_asr">
+<a class="viewcode-back" href="../../../generated/mne_denoise.asr.process_asr.html#mne_denoise.asr.process_asr">[docs]</a>
+<span class="nd">@verbose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_asr</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">window_overlap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="n">max_dims</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+    <span class="n">lookahead</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Apply a calibrated ASR state to continuous data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Data in the fitted channel order and units.</span>
+<span class="sd">    sfreq : float</span>
+<span class="sd">        Sampling frequency in Hz.</span>
+<span class="sd">    state : ASRState</span>
+<span class="sd">        State returned by calibrate_asr.</span>
+<span class="sd">    window_length : float, default=0.5</span>
+<span class="sd">        Processing window length in seconds.</span>
+<span class="sd">    window_overlap : float, default=0.66</span>
+<span class="sd">        Overlap used for threshold windows.</span>
+<span class="sd">    max_dims : float or int, default=0.66</span>
+<span class="sd">        Maximum reconstructed dimensions; fractions are relative to channel count.</span>
+<span class="sd">    regularization : float, default=1e-8</span>
+<span class="sd">        Relative covariance eigenvalue floor.</span>
+<span class="sd">    store_reconstruction_matrices : bool, default=False</span>
+<span class="sd">        Store window matrices in diagnostics.</span>
+<span class="sd">    max_mem_mb : int or None, default=512</span>
+<span class="sd">        Memory cap for covariance processing.</span>
+<span class="sd">    lookahead : float or None, default=None</span>
+<span class="sd">        Processing lookahead in seconds.</span>
+<span class="sd">    stepsize : int or None, default=None</span>
+<span class="sd">        Samples between reconstruction updates.</span>
+<span class="sd">    method : {"standard", "riemannian", "riemannian_windowed"} or None, default=None</span>
+<span class="sd">        Covariance backend; None uses state.method.</span>
+<span class="sd">    callback : callable or None, default=None</span>
+<span class="sd">        Synchronous callback after each reconstruction update.</span>
+<span class="sd">    verbose : bool, str, int, or None, default=None</span>
+<span class="sd">        Logging level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X_clean : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">        Reconstructed data.</span>
+<span class="sd">    diagnostics : dict</span>
+<span class="sd">        Processing diagnostics.</span>
+<span class="sd">    """</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">method</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"standard"</span><span class="p">,</span> <span class="s2">"riemannian"</span><span class="p">,</span> <span class="s2">"riemannian_windowed"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"method must be 'standard', 'riemannian', or 'riemannian_windowed'"</span>
+        <span class="p">)</span>
+    <span class="n">prepared</span> <span class="o">=</span> <span class="n">_prepare_asr_stream</span><span class="p">(</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">sfreq</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="o">=</span><span class="n">window_length</span><span class="p">,</span>
+        <span class="n">window_overlap</span><span class="o">=</span><span class="n">window_overlap</span><span class="p">,</span>
+        <span class="n">max_dims</span><span class="o">=</span><span class="n">max_dims</span><span class="p">,</span>
+        <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+        <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+        <span class="n">lookahead</span><span class="o">=</span><span class="n">lookahead</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">n_channels</span>
+    <span class="n">n_times</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">n_times</span>
+    <span class="n">win_len</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">win_len</span>
+    <span class="n">lookahead_samples</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">lookahead_samples</span>
+    <span class="n">stepsize</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">stepsize</span>
+    <span class="n">max_bad</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">max_bad</span>
+    <span class="k">if</span> <span class="n">max_bad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">_empty_process_diagnostics</span><span class="p">(</span><span class="n">n_times</span><span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"identity"</span><span class="p">,</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"ASR reconstruction details: method=</span><span class="si">%s</span><span class="s2">, identity path, </span><span class="si">%d</span><span class="s2"> sample(s)."</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">,</span>
+            <span class="n">n_times</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">diagnostics</span>
+
+    <span class="k">assert</span> <span class="n">prepared</span><span class="o">.</span><span class="n">data_stream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">prepared</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">prepared</span><span class="o">.</span><span class="n">update_at</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">data_stream</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">data_stream</span>
+    <span class="n">n_stream_input</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">n_stream_input</span>
+    <span class="n">X_stats</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">statistics</span>
+    <span class="n">update_at</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">update_at</span>
+    <span class="n">use_rolling_covariance</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">use_rolling_covariance</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"riemannian"</span><span class="p">:</span>
+        <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">_process_asr_riemannian</span><span class="p">(</span>
+            <span class="n">data_stream</span><span class="p">,</span>
+            <span class="n">X_stats</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">n_times</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+            <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+            <span class="n">lookahead_samples</span><span class="o">=</span><span class="n">lookahead_samples</span><span class="p">,</span>
+            <span class="n">update_at</span><span class="o">=</span><span class="n">update_at</span><span class="p">,</span>
+            <span class="n">max_bad</span><span class="o">=</span><span class="n">max_bad</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">win_len</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+            <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+            <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"riemannian"</span><span class="p">,</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">),</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"ASR reconstruction details: method=</span><span class="si">%s</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> window(s), "</span>
+            <span class="s2">"</span><span class="si">%d</span><span class="s2"> component(s) maximum, </span><span class="si">%.1f%%</span><span class="s2"> samples reconstructed."</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">,</span>
+            <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_windows"</span><span class="p">],</span>
+            <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"max_components_reconstructed"</span><span class="p">],</span>
+            <span class="mf">100.0</span> <span class="o">*</span> <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"fraction_reconstructed_samples"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"riemannian_windowed"</span><span class="p">:</span>
+        <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">_process_asr_riemannian_windowed</span><span class="p">(</span>
+            <span class="n">data_stream</span><span class="p">,</span>
+            <span class="n">X_stats</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">n_times</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+            <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+            <span class="n">lookahead_samples</span><span class="o">=</span><span class="n">lookahead_samples</span><span class="p">,</span>
+            <span class="n">update_at</span><span class="o">=</span><span class="n">update_at</span><span class="p">,</span>
+            <span class="n">max_bad</span><span class="o">=</span><span class="n">max_bad</span><span class="p">,</span>
+            <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+            <span class="n">win_len</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+            <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+            <span class="n">use_rolling_covariance</span><span class="o">=</span><span class="n">use_rolling_covariance</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"riemannian_windowed_rolling"</span>
+                    <span class="k">if</span> <span class="n">use_rolling_covariance</span>
+                    <span class="k">else</span> <span class="s2">"riemannian_windowed"</span>
+                <span class="p">),</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">),</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="n">win_len</span> <span class="k">if</span> <span class="n">use_rolling_covariance</span> <span class="k">else</span> <span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="n">use_rolling_covariance</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"ASR reconstruction details: method=</span><span class="si">%s</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> window(s), "</span>
+            <span class="s2">"</span><span class="si">%d</span><span class="s2"> component(s) maximum, </span><span class="si">%.1f%%</span><span class="s2"> samples reconstructed."</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">,</span>
+            <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_windows"</span><span class="p">],</span>
+            <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"max_components_reconstructed"</span><span class="p">],</span>
+            <span class="mf">100.0</span> <span class="o">*</span> <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"fraction_reconstructed_samples"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span>
+
+    <span class="k">if</span> <span class="n">use_rolling_covariance</span><span class="p">:</span>
+        <span class="n">covariance_iter</span> <span class="o">=</span> <span class="n">_iter_moving_covariances_at</span><span class="p">(</span><span class="n">X_stats</span><span class="p">,</span> <span class="n">update_at</span><span class="p">,</span> <span class="n">win_len</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"it,jt-&gt;ijt"</span><span class="p">,</span> <span class="n">X_stats</span><span class="p">,</span> <span class="n">X_stats</span><span class="p">,</span> <span class="n">optimize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span> <span class="o">=</span> <span class="n">outer</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_stream_input</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_moving_average_padded</span><span class="p">(</span><span class="n">win_len</span><span class="p">,</span> <span class="n">Xcov_flat</span><span class="p">)</span>
+        <span class="n">covariance_iter</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">sample_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">n_reconstructed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_variances</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_thresholds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">reconstruction_matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_stops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+    <span class="n">last_R</span> <span class="o">=</span> <span class="n">eye</span>
+    <span class="n">last_trivial</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">last_n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">progress_idx</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">update_at</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">covariance_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">Xcov_flat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">Cw</span> <span class="o">=</span> <span class="n">Xcov_flat</span><span class="p">[:,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Cw</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">covariance_iter</span><span class="p">)</span>
+        <span class="n">Cw</span> <span class="o">=</span> <span class="p">(</span><span class="n">Cw</span> <span class="o">+</span> <span class="n">Cw</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">D</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Cw</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span>
+
+        <span class="n">theta2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">V</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">theta2</span> <span class="o">&gt;</span> <span class="n">D</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">max_bad</span><span class="p">))</span>
+        <span class="n">trivial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+
+        <span class="n">n_bad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">trivial</span><span class="p">:</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">eye</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="n">applied</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">trivial</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">last_trivial</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">applied</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">last_n</span><span class="p">:</span>
+            <span class="n">subrange</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">last_n</span>
+            <span class="n">blend</span> <span class="o">=</span> <span class="n">raised_cosine_ramp</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span>
+            <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span> <span class="o">@</span> <span class="n">segment</span><span class="p">)</span> <span class="o">*</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">last_R</span> <span class="o">@</span> <span class="n">segment</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="n">start_out</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="n">stop_out</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="k">if</span> <span class="n">stop_out</span> <span class="o">&gt;</span> <span class="n">start_out</span><span class="p">:</span>
+            <span class="n">window_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start_out</span><span class="p">))</span>
+            <span class="n">window_stops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">stop_out</span><span class="p">))</span>
+            <span class="n">n_reconstructed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_bad</span><span class="p">)</span>
+            <span class="n">component_variances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">component_thresholds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta2</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">applied</span><span class="p">:</span>
+                <span class="n">sample_mask</span><span class="p">[</span><span class="n">start_out</span><span class="p">:</span><span class="n">stop_out</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+                <span class="n">reconstruction_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+        <span class="n">last_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">last_R</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="n">last_trivial</span> <span class="o">=</span> <span class="n">trivial</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"asr"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"window"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">progress_idx</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">update_at</span><span class="p">),</span>
+            <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">n_bad</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">X_clean</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">lookahead_samples</span> <span class="p">:</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">n_reconstructed_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">n_reconstructed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"window_starts"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_starts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"window_stops"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_stops</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"sample_mask"</span><span class="p">:</span> <span class="n">sample_mask</span><span class="p">,</span>
+        <span class="s2">"n_components_reconstructed"</span><span class="p">:</span> <span class="n">n_reconstructed_arr</span><span class="p">,</span>
+        <span class="s2">"component_variances"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_variances</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"component_thresholds"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_thresholds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"n_windows"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">)),</span>
+        <span class="s2">"fraction_reconstructed_windows"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n_reconstructed_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">),</span>
+        <span class="s2">"fraction_reconstructed_samples"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sample_mask</span><span class="p">)),</span>
+        <span class="s2">"max_components_reconstructed"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">"lookahead_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookahead_samples</span><span class="p">),</span>
+        <span class="s2">"stepsize_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">stepsize</span><span class="p">),</span>
+        <span class="s2">"window_length_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">win_len</span><span class="p">),</span>
+        <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">use_rolling_covariance</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"rolling"</span><span class="p">,</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">),</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"full"</span><span class="p">,</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="n">_covariance_stack_bytes</span><span class="p">(</span>
+                    <span class="n">n_stream_input</span><span class="p">,</span> <span class="n">n_channels</span>
+                <span class="p">),</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"reconstruction_matrices"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reconstruction_matrices</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"ASR reconstruction details: method=</span><span class="si">%s</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> window(s), "</span>
+        <span class="s2">"</span><span class="si">%d</span><span class="s2"> component(s) maximum, </span><span class="si">%.1f%%</span><span class="s2"> samples reconstructed."</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">,</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_windows"</span><span class="p">],</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"max_components_reconstructed"</span><span class="p">],</span>
+        <span class="mf">100.0</span> <span class="o">*</span> <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"fraction_reconstructed_samples"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_empty_process_diagnostics</span><span class="p">(</span><span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return diagnostics for an identity reconstruction."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"window_starts"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"window_stops"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">n_times</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"sample_mask"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span>
+        <span class="s2">"n_components_reconstructed"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"component_variances"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"component_thresholds"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"n_windows"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"fraction_reconstructed_windows"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s2">"fraction_reconstructed_samples"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s2">"max_components_reconstructed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"lookahead_samples"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"stepsize_samples"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"window_length_samples"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_asr_riemannian</span><span class="p">(</span>
+    <span class="n">data_stream</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">X_stats</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_stream_input</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">lookahead_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">update_at</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">max_bad</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">win_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">regularization</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Apply the standard Riemannian chunk covariance backend."""</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">data_stream</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+    <span class="n">Cw</span> <span class="o">=</span> <span class="p">(</span><span class="n">X_stats</span> <span class="o">@</span> <span class="n">X_stats</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_stream_input</span>
+    <span class="n">Cw</span> <span class="o">=</span> <span class="n">_regularize_spd</span><span class="p">(</span><span class="n">Cw</span><span class="p">,</span> <span class="n">regularization</span><span class="p">)</span>
+
+    <span class="n">D</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_riemannian_nonlinear_eigenspace</span><span class="p">(</span><span class="n">Cw</span><span class="p">,</span> <span class="n">regularization</span><span class="p">)</span>
+    <span class="n">theta2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">V</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">theta2</span> <span class="o">&gt;</span> <span class="n">D</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">max_bad</span><span class="p">))</span>
+    <span class="n">trivial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+    <span class="n">n_bad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">trivial</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">eye</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="n">sample_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">n_reconstructed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_variances</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_thresholds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">reconstruction_matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_stops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">last_R</span> <span class="o">=</span> <span class="n">eye</span>
+    <span class="n">last_trivial</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">last_n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">progress_idx</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">update_at</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">applied</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">trivial</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">last_trivial</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">applied</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">last_n</span><span class="p">:</span>
+            <span class="n">subrange</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">last_n</span>
+            <span class="n">blend</span> <span class="o">=</span> <span class="n">raised_cosine_ramp</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span>
+            <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span> <span class="o">@</span> <span class="n">segment</span><span class="p">)</span> <span class="o">*</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">last_R</span> <span class="o">@</span> <span class="n">segment</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="n">start_out</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="n">stop_out</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="k">if</span> <span class="n">stop_out</span> <span class="o">&gt;</span> <span class="n">start_out</span><span class="p">:</span>
+            <span class="n">window_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start_out</span><span class="p">))</span>
+            <span class="n">window_stops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">stop_out</span><span class="p">))</span>
+            <span class="n">n_reconstructed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_bad</span><span class="p">)</span>
+            <span class="n">component_variances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">component_thresholds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta2</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">applied</span><span class="p">:</span>
+                <span class="n">sample_mask</span><span class="p">[</span><span class="n">start_out</span><span class="p">:</span><span class="n">stop_out</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+                <span class="n">reconstruction_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">last_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">last_R</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="n">last_trivial</span> <span class="o">=</span> <span class="n">trivial</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"asr"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"window"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">progress_idx</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">update_at</span><span class="p">),</span>
+            <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">n_bad</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">X_clean</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">lookahead_samples</span> <span class="p">:</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">n_reconstructed_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">n_reconstructed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"window_starts"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_starts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"window_stops"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_stops</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"sample_mask"</span><span class="p">:</span> <span class="n">sample_mask</span><span class="p">,</span>
+        <span class="s2">"n_components_reconstructed"</span><span class="p">:</span> <span class="n">n_reconstructed_arr</span><span class="p">,</span>
+        <span class="s2">"component_variances"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_variances</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"component_thresholds"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_thresholds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"n_windows"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">)),</span>
+        <span class="s2">"fraction_reconstructed_windows"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n_reconstructed_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">),</span>
+        <span class="s2">"fraction_reconstructed_samples"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sample_mask</span><span class="p">)),</span>
+        <span class="s2">"max_components_reconstructed"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">"lookahead_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookahead_samples</span><span class="p">),</span>
+        <span class="s2">"stepsize_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">stepsize</span><span class="p">),</span>
+        <span class="s2">"window_length_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">win_len</span><span class="p">),</span>
+        <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="s2">"riemannian"</span><span class="p">,</span>
+        <span class="s2">"riemannian_solver"</span><span class="p">:</span> <span class="s2">"nonlinear_eigenspace"</span><span class="p">,</span>
+        <span class="s2">"riemannian_mean_iterations"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s2">"riemannian_mean_converged"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s2">"riemannian_mean_update_norm"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"reconstruction_matrices"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reconstruction_matrices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_asr_windowed</span><span class="p">(</span>
+    <span class="n">data_stream</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">X_stats</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_stream_input</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">lookahead_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">update_at</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">max_bad</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">win_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">use_rolling_covariance</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">progress_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"asr"</span><span class="p">,</span>
+    <span class="n">component_weight_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">]</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_component_weights</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Process windowed ASR with binary or custom soft component weights."""</span>
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">data_stream</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">use_rolling_covariance</span><span class="p">:</span>
+        <span class="n">covariance_iter</span> <span class="o">=</span> <span class="n">_iter_moving_covariances_at</span><span class="p">(</span><span class="n">X_stats</span><span class="p">,</span> <span class="n">update_at</span><span class="p">,</span> <span class="n">win_len</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"it,jt-&gt;ijt"</span><span class="p">,</span> <span class="n">X_stats</span><span class="p">,</span> <span class="n">X_stats</span><span class="p">,</span> <span class="n">optimize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span> <span class="o">=</span> <span class="n">outer</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_stream_input</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_moving_average_padded</span><span class="p">(</span><span class="n">win_len</span><span class="p">,</span> <span class="n">Xcov_flat</span><span class="p">)</span>
+        <span class="n">covariance_iter</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">sample_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">n_reconstructed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_variances</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_thresholds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_weights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">reconstruction_matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_stops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+    <span class="n">last_R</span> <span class="o">=</span> <span class="n">eye</span>
+    <span class="n">last_trivial</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">last_n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">progress_idx</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">update_at</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">covariance_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">Xcov_flat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">Cw</span> <span class="o">=</span> <span class="n">Xcov_flat</span><span class="p">[:,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Cw</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">covariance_iter</span><span class="p">)</span>
+        <span class="n">Cw</span> <span class="o">=</span> <span class="p">(</span><span class="n">Cw</span> <span class="o">+</span> <span class="n">Cw</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="c1"># Standard SPD eigendecomposition (matches _process_asr_standard).</span>
+        <span class="c1"># See the docstring for why we do NOT use _riemannian_nonlinear_eigenspace</span>
+        <span class="c1"># at processing time.</span>
+        <span class="n">D</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Cw</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span>
+
+        <span class="n">theta2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">V</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">forced_keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">max_bad</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">component_weight_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">theta2</span> <span class="o">&gt;</span> <span class="n">D</span><span class="p">)</span> <span class="o">|</span> <span class="n">forced_keep</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">keep</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">trivial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+            <span class="n">n_bad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">trivial</span><span class="p">:</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="n">eye</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">basis</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">component_weight_function</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">theta2</span><span class="p">,</span> <span class="n">forced_keep</span><span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">n_channels</span><span class="p">,):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"component_weight_function must return shape "</span>
+                    <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">n_channels</span><span class="si">}</span><span class="s2">,), got </span><span class="si">{</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">trivial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">weights</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-12</span><span class="p">))</span>
+            <span class="n">n_bad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">weights</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">))</span>
+            <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">|</span> <span class="n">forced_keep</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">keep</span><span class="p">):</span>
+                <span class="n">hard_reconstruction</span> <span class="o">=</span> <span class="n">eye</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">basis</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+                <span class="n">hard_reconstruction</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="p">(</span><span class="n">V</span> <span class="o">*</span> <span class="n">weights</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">V</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">weights</span><span class="p">))</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">hard_reconstruction</span>
+            <span class="p">)</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="n">applied</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">trivial</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">last_trivial</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">applied</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">last_n</span><span class="p">:</span>
+            <span class="n">subrange</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">last_n</span>
+            <span class="n">blend</span> <span class="o">=</span> <span class="n">raised_cosine_ramp</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span>
+            <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span> <span class="o">@</span> <span class="n">segment</span><span class="p">)</span> <span class="o">*</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">last_R</span> <span class="o">@</span> <span class="n">segment</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="n">start_out</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="n">stop_out</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="k">if</span> <span class="n">stop_out</span> <span class="o">&gt;</span> <span class="n">start_out</span><span class="p">:</span>
+            <span class="n">window_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start_out</span><span class="p">))</span>
+            <span class="n">window_stops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">stop_out</span><span class="p">))</span>
+            <span class="n">n_reconstructed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_bad</span><span class="p">)</span>
+            <span class="n">component_variances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">component_thresholds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta2</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">component_weight_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">return_component_weights</span><span class="p">:</span>
+                <span class="n">component_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">applied</span><span class="p">:</span>
+                <span class="n">sample_mask</span><span class="p">[</span><span class="n">start_out</span><span class="p">:</span><span class="n">stop_out</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+                <span class="n">reconstruction_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+        <span class="n">last_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">last_R</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="n">last_trivial</span> <span class="o">=</span> <span class="n">trivial</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">progress_method</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"window"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">progress_idx</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">update_at</span><span class="p">),</span>
+            <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">n_bad</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">X_clean</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">lookahead_samples</span> <span class="p">:</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">n_reconstructed_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">n_reconstructed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"window_starts"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_starts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"window_stops"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_stops</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"sample_mask"</span><span class="p">:</span> <span class="n">sample_mask</span><span class="p">,</span>
+        <span class="s2">"n_components_reconstructed"</span><span class="p">:</span> <span class="n">n_reconstructed_arr</span><span class="p">,</span>
+        <span class="s2">"component_variances"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_variances</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"component_thresholds"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_thresholds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"n_windows"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">)),</span>
+        <span class="s2">"fraction_reconstructed_windows"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n_reconstructed_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">),</span>
+        <span class="s2">"fraction_reconstructed_samples"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sample_mask</span><span class="p">)),</span>
+        <span class="s2">"max_components_reconstructed"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">"lookahead_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookahead_samples</span><span class="p">),</span>
+        <span class="s2">"stepsize_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">stepsize</span><span class="p">),</span>
+        <span class="s2">"window_length_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">win_len</span><span class="p">),</span>
+        <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="s2">"riemannian_windowed"</span><span class="p">,</span>
+        <span class="s2">"riemannian_solver"</span><span class="p">:</span> <span class="s2">"nonlinear_eigenspace"</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">component_weight_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">return_component_weights</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"component_weights"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">component_weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"reconstruction_matrices"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reconstruction_matrices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_asr_riemannian_windowed</span><span class="p">(</span>
+    <span class="n">data_stream</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">X_stats</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_times</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_stream_input</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">lookahead_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">update_at</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">max_bad</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">win_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">use_rolling_covariance</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Run standard cutoff-sensitive per-window Riemannian ASR."""</span>
+    <span class="k">return</span> <span class="n">_process_asr_windowed</span><span class="p">(</span>
+        <span class="n">data_stream</span><span class="p">,</span>
+        <span class="n">X_stats</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">,</span>
+        <span class="n">n_times</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span>
+        <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+        <span class="n">lookahead_samples</span><span class="o">=</span><span class="n">lookahead_samples</span><span class="p">,</span>
+        <span class="n">update_at</span><span class="o">=</span><span class="n">update_at</span><span class="p">,</span>
+        <span class="n">max_bad</span><span class="o">=</span><span class="n">max_bad</span><span class="p">,</span>
+        <span class="n">stepsize</span><span class="o">=</span><span class="n">stepsize</span><span class="p">,</span>
+        <span class="n">win_len</span><span class="o">=</span><span class="n">win_len</span><span class="p">,</span>
+        <span class="n">store_reconstruction_matrices</span><span class="o">=</span><span class="n">store_reconstruction_matrices</span><span class="p">,</span>
+        <span class="n">use_rolling_covariance</span><span class="o">=</span><span class="n">use_rolling_covariance</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_adaptive_chunk</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sfreq</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ASRState</span><span class="p">,</span>
+    <span class="n">process_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">window_length</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">lookahead</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_dims</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">store_reconstruction_matrices</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">adaptive_variant</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">max_mem_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">_ProgressCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Mirror the AASR ``reconstruct()`` wrapper around ``asr_process``."""</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">_validate_array_2d</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">lookahead_samples</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_round_half_up</span><span class="p">((</span><span class="n">window_length</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lookahead</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">_round_half_up</span><span class="p">(</span><span class="n">lookahead</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">lookahead_samples</span> <span class="o">&gt;=</span> <span class="n">n_times</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"lookahead is too long for the data length"</span><span class="p">)</span>
+    <span class="n">win_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">_round_half_up</span><span class="p">(</span><span class="n">window_length</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">),</span> <span class="n">_round_half_up</span><span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">stepsize</span> <span class="o">=</span> <span class="mi">32</span> <span class="k">if</span> <span class="n">stepsize</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">stepsize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stepsize</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"stepsize must be at least 1 sample"</span><span class="p">)</span>
+
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">_append_streaming_tail</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span>
+    <span class="c1"># Convert parametric max_dims limits into fixed rank tolerances</span>
+    <span class="n">max_bad</span> <span class="o">=</span> <span class="n">_resolve_max_dims_padded</span><span class="p">(</span><span class="n">max_dims</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span>
+    <span class="n">win_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_round_half_up</span><span class="p">(</span><span class="n">window_length</span> <span class="o">*</span> <span class="n">sfreq</span><span class="p">))</span>
+    <span class="n">n_stream_input</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">max_bad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">_empty_process_diagnostics</span><span class="p">(</span><span class="n">n_times</span><span class="p">)</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">_process_memory_info</span><span class="p">(</span>
+                <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+                <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+                <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+                <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"identity"</span><span class="p">,</span>
+                <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">chunk_samples</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">used_memory_bound</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">diagnostics</span><span class="p">,</span> <span class="n">_copy_process_state</span><span class="p">(</span><span class="n">process_state</span><span class="p">)</span>
+
+    <span class="n">carry</span> <span class="o">=</span> <span class="n">process_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"carry"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">carry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_stream</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="mf">2.0</span> <span class="o">*</span> <span class="n">sig</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-</span> <span class="n">sig</span><span class="p">[:,</span> <span class="n">lookahead_samples</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">sig</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data_stream</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">carry</span><span class="p">,</span> <span class="n">sig</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">data_stream</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data_stream</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">data_stream</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data_stream</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">X_stats</span><span class="p">,</span> <span class="n">iir_state</span> <span class="o">=</span> <span class="n">_lfilter_channels</span><span class="p">(</span>
+        <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">lookahead_samples</span> <span class="p">:</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_stream_input</span><span class="p">],</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">filter_b</span><span class="p">,</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">filter_a</span><span class="p">,</span>
+        <span class="n">zi</span><span class="o">=</span><span class="n">process_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"iir"</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">stepsize</span><span class="p">,</span> <span class="n">n_stream_input</span> <span class="o">+</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="n">n_stream_input</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">update_at</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">update_at</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_stream_input</span><span class="p">:</span>
+        <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">update_at</span><span class="p">,</span> <span class="n">n_stream_input</span><span class="p">)</span>
+    <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">update_at</span><span class="p">)</span>
+
+    <span class="n">last_R</span> <span class="o">=</span> <span class="n">process_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_R"</span><span class="p">)</span>
+    <span class="n">last_trivial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">process_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_trivial"</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">last_R</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">last_R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">last_trivial</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">update_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">1</span><span class="p">],</span> <span class="n">update_at</span><span class="p">))</span>
+
+    <span class="n">estimated_cov_bytes</span> <span class="o">=</span> <span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="n">n_stream_input</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span>
+    <span class="n">max_mem_bytes</span> <span class="o">=</span> <span class="n">_max_mem_bytes</span><span class="p">(</span><span class="n">max_mem_mb</span><span class="p">)</span>
+    <span class="n">use_chunked_covariance</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">max_mem_bytes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">estimated_cov_bytes</span> <span class="o">&gt;</span> <span class="n">max_mem_bytes</span>
+    <span class="p">)</span>
+    <span class="n">cov_state_in</span> <span class="o">=</span> <span class="n">process_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cov"</span><span class="p">)</span>
+    <span class="n">cov_source</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">use_chunked_covariance</span><span class="p">:</span>
+        <span class="n">chunk_samples</span> <span class="o">=</span> <span class="n">_covariance_chunk_blocks</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">max_mem_bytes</span><span class="p">)</span>
+        <span class="n">cov_source</span> <span class="o">=</span> <span class="n">_ChunkedMovingCovariances</span><span class="p">(</span>
+            <span class="n">X_stats</span><span class="p">,</span>
+            <span class="n">update_at</span><span class="p">,</span>
+            <span class="n">win_len</span><span class="p">,</span>
+            <span class="n">chunk_samples</span><span class="o">=</span><span class="n">chunk_samples</span><span class="p">,</span>
+            <span class="n">zi</span><span class="o">=</span><span class="n">cov_state_in</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">covariance_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">cov_source</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">cov_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">peak_cov_buffer_bytes</span> <span class="o">=</span> <span class="n">_covariance_stack_bytes</span><span class="p">(</span><span class="n">chunk_samples</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">chunk_samples</span> <span class="o">=</span> <span class="n">n_stream_input</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"it,jt-&gt;ijt"</span><span class="p">,</span> <span class="n">X_stats</span><span class="p">,</span> <span class="n">X_stats</span><span class="p">,</span> <span class="n">optimize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span> <span class="o">=</span> <span class="n">outer</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">*</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_stream_input</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="n">Xcov_flat</span><span class="p">,</span> <span class="n">cov_state</span> <span class="o">=</span> <span class="n">_moving_average_padded</span><span class="p">(</span>
+            <span class="n">win_len</span><span class="p">,</span>
+            <span class="n">Xcov_flat</span><span class="p">,</span>
+            <span class="n">zi</span><span class="o">=</span><span class="n">cov_state_in</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">covariance_iter</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">peak_cov_buffer_bytes</span> <span class="o">=</span> <span class="n">estimated_cov_bytes</span>
+
+    <span class="n">sample_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">n_reconstructed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_variances</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_thresholds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">reconstruction_matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">window_stops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">last_n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">progress_idx</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">update_at</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">covariance_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">Xcov_flat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">Cw</span> <span class="o">=</span> <span class="n">Xcov_flat</span><span class="p">[:,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Cw</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">covariance_iter</span><span class="p">)</span>
+        <span class="n">Cw</span> <span class="o">=</span> <span class="p">(</span><span class="n">Cw</span> <span class="o">+</span> <span class="n">Cw</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">D</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Cw</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span>
+        <span class="n">theta2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">V</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">theta2</span> <span class="o">&gt;</span> <span class="n">D</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">max_bad</span><span class="p">))</span>
+        <span class="n">trivial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+        <span class="n">n_bad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">trivial</span><span class="p">:</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">M</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="n">applied</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">trivial</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">last_trivial</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">applied</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">last_n</span><span class="p">:</span>
+            <span class="n">subrange</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">last_n</span>
+            <span class="n">blend</span> <span class="o">=</span> <span class="n">raised_cosine_ramp</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span>
+            <span class="n">data_stream</span><span class="p">[:,</span> <span class="n">subrange</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span> <span class="o">@</span> <span class="n">segment</span><span class="p">)</span> <span class="o">*</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">last_R</span> <span class="o">@</span> <span class="n">segment</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">blend</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="n">start_out</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">last_n</span><span class="p">,</span> <span class="n">lookahead_samples</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="n">stop_out</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">lookahead_samples</span> <span class="o">+</span> <span class="n">n_times</span><span class="p">)</span> <span class="o">-</span> <span class="n">lookahead_samples</span>
+        <span class="k">if</span> <span class="n">stop_out</span> <span class="o">&gt;</span> <span class="n">start_out</span><span class="p">:</span>
+            <span class="n">window_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start_out</span><span class="p">))</span>
+            <span class="n">window_stops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">stop_out</span><span class="p">))</span>
+            <span class="n">n_reconstructed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_bad</span><span class="p">)</span>
+            <span class="n">component_variances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">component_thresholds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta2</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">applied</span><span class="p">:</span>
+                <span class="n">sample_mask</span><span class="p">[</span><span class="n">start_out</span><span class="p">:</span><span class="n">stop_out</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+                <span class="n">reconstruction_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+        <span class="n">last_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">last_R</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="n">last_trivial</span> <span class="o">=</span> <span class="n">trivial</span>
+        <span class="n">_emit_progress</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"adaptive_asr"</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="s2">"window"</span><span class="p">,</span>
+            <span class="n">current</span><span class="o">=</span><span class="n">progress_idx</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">update_at</span><span class="p">),</span>
+            <span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">n_bad</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">carry_out</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">data_stream</span><span class="p">[:,</span> <span class="o">-</span><span class="n">lookahead_samples</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">lookahead_samples</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">delayed</span> <span class="o">=</span> <span class="n">data_stream</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_stream_input</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">X_clean</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">[:,</span> <span class="n">lookahead_samples</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">cov_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cov_state</span> <span class="o">=</span> <span class="n">cov_source</span><span class="o">.</span><span class="n">cov_state</span>
+
+    <span class="n">n_reconstructed_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">n_reconstructed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"window_starts"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_starts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"window_stops"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window_stops</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"sample_mask"</span><span class="p">:</span> <span class="n">sample_mask</span><span class="p">,</span>
+        <span class="s2">"n_components_reconstructed"</span><span class="p">:</span> <span class="n">n_reconstructed_arr</span><span class="p">,</span>
+        <span class="s2">"component_variances"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_variances</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"component_thresholds"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">component_thresholds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="s2">"n_windows"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="p">)),</span>
+        <span class="s2">"fraction_reconstructed_windows"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n_reconstructed_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">),</span>
+        <span class="s2">"fraction_reconstructed_samples"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sample_mask</span><span class="p">)),</span>
+        <span class="s2">"max_components_reconstructed"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_reconstructed_arr</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">"lookahead_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookahead_samples</span><span class="p">),</span>
+        <span class="s2">"stepsize_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">stepsize</span><span class="p">),</span>
+        <span class="s2">"window_length_samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">win_len</span><span class="p">),</span>
+        <span class="s2">"covariance_geometry"</span><span class="p">:</span> <span class="s2">"standard"</span><span class="p">,</span>
+        <span class="s2">"adaptive_variant"</span><span class="p">:</span> <span class="n">adaptive_variant</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">diagnostics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">_process_memory_info</span><span class="p">(</span>
+            <span class="n">n_channels</span><span class="o">=</span><span class="n">n_channels</span><span class="p">,</span>
+            <span class="n">n_stream_input</span><span class="o">=</span><span class="n">n_stream_input</span><span class="p">,</span>
+            <span class="n">max_mem_mb</span><span class="o">=</span><span class="n">max_mem_mb</span><span class="p">,</span>
+            <span class="n">memory_mode</span><span class="o">=</span><span class="s2">"chunked"</span> <span class="k">if</span> <span class="n">use_chunked_covariance</span> <span class="k">else</span> <span class="s2">"full"</span><span class="p">,</span>
+            <span class="n">peak_cov_buffer_bytes</span><span class="o">=</span><span class="n">peak_cov_buffer_bytes</span><span class="p">,</span>
+            <span class="n">chunk_samples</span><span class="o">=</span><span class="n">chunk_samples</span><span class="p">,</span>
+            <span class="n">used_memory_bound</span><span class="o">=</span><span class="n">use_chunked_covariance</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">store_reconstruction_matrices</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"reconstruction_matrices"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reconstruction_matrices</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"AdaptiveASR reconstruction details: variant=</span><span class="si">%s</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> window(s), "</span>
+        <span class="s2">"</span><span class="si">%d</span><span class="s2"> component(s) maximum, </span><span class="si">%.1f%%</span><span class="s2"> samples reconstructed."</span><span class="p">,</span>
+        <span class="n">adaptive_variant</span><span class="p">,</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"n_windows"</span><span class="p">],</span>
+        <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"max_components_reconstructed"</span><span class="p">],</span>
+        <span class="mf">100.0</span> <span class="o">*</span> <span class="n">diagnostics</span><span class="p">[</span><span class="s2">"fraction_reconstructed_samples"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">next_state</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"cov"</span><span class="p">:</span> <span class="n">cov_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">cov_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"carry"</span><span class="p">:</span> <span class="n">carry_out</span><span class="p">,</span>
+        <span class="s2">"iir"</span><span class="p">:</span> <span class="n">iir_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">iir_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"last_R"</span><span class="p">:</span> <span class="n">last_R</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="s2">"last_trivial"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">last_trivial</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">X_clean</span><span class="p">,</span> <span class="n">diagnostics</span><span class="p">,</span> <span class="n">next_state</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
