@@ -61,28 +61,6 @@ jobs:
           PY
       - name: Check installed requirements
         run: python -m pip check
-      - name: Set documentation version
-        id: docs-version
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
-        run: |
-          set -euo pipefail
-          if [ "$EVENT_NAME" = "release" ] || {
-            [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$RELEASE_TAG" ];
-          }; then
-            case "$RELEASE_TAG" in
-              v*) docs_version="${RELEASE_TAG#v}" ;;
-              *)
-                echo "Release tag must start with v: $RELEASE_TAG" >&2
-                exit 1
-                ;;
-            esac
-          else
-            docs_version=dev
-          fi
-          echo "value=$docs_version" >> "$GITHUB_OUTPUT"
-          echo "Documentation version: $docs_version"
       - name: Restore documentation datasets
         id: docs-data-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
@@ -104,34 +82,11 @@ jobs:
         with:
           path: ${{ env.MNE_DATA }}
           key: docs-data-${{ runner.os }}-${{ hashFiles('scripts/prefetch_docs_data.py', 'pyproject.toml') }}
-      - name: Build development documentation
-        if: github.event_name != 'release' && (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
-        env:
-          MNE_DENOISE_DOCS_VERSION: ${{ steps.docs-version.outputs.value }}
+      - name: Build documentation
         run: make -C docs html
-      - name: Build stable documentation from release tag
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-        env:
-          MNE_DENOISE_DOCS_VERSION: stable
-        run: |
-          make -C docs clean
-          make -C docs html
-          mv docs/_build/html "$RUNNER_TEMP/docs-html-stable"
-      - name: Build archived documentation from release tag
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-        env:
-          MNE_DENOISE_DOCS_VERSION: ${{ steps.docs-version.outputs.value }}
-        run: |
-          make -C docs clean
-          make -C docs html
-      - name: Add .nojekyll to development build
-        if: github.event_name != 'release' && (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
+      - name: Add .nojekyll to the build
         run: touch docs/_build/html/.nojekyll
-      - name: Add .nojekyll to release builds
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-        run: touch "$RUNNER_TEMP/docs-html-stable/.nojekyll" docs/_build/html/.nojekyll
-      - name: Verify development documentation
-        if: github.event_name != 'release' && (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
+      - name: Verify the build produced a complete site
         run: |
           set -e
           test -s docs/_build/html/index.html
@@ -139,17 +94,6 @@ jobs:
           test -s docs/_build/html/auto_examples/zapline/plot_02_parameter_tuning.html
           test -s docs/_build/html/auto_examples/zapline/plot_03_epoched_data.html
           echo "$(find docs/_build/html -name '*.html' | wc -l) HTML pages built"
-      - name: Verify release documentation
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-        run: |
-          set -e
-          for build_dir in "$RUNNER_TEMP/docs-html-stable" docs/_build/html; do
-            test -s "$build_dir/index.html"
-            test -s "$build_dir/auto_examples/index.html"
-            test -s "$build_dir/auto_examples/zapline/plot_02_parameter_tuning.html"
-            test -s "$build_dir/auto_examples/zapline/plot_03_epoched_data.html"
-            echo "$(find "$build_dir" -name '*.html' | wc -l) HTML pages built in $build_dir"
-          done
       - name: Upload MNE-stable documentation artifact
         if: github.event_name != 'release' && (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -157,18 +101,11 @@ jobs:
           name: docs-html-mne-stable
           path: docs/_build/html/
           if-no-files-found: error
-      - name: Upload stable release documentation artifact
+      - name: Upload release documentation artifact
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: docs-html-mne-stable
-          path: ${{ runner.temp }}/docs-html-stable/
-          if-no-files-found: error
-      - name: Upload archived release documentation artifact
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          name: docs-html-mne-release
+          name: docs-html-release
           path: docs/_build/html/
           if-no-files-found: error
 
@@ -237,8 +174,6 @@ jobs:
       - name: Check installed requirements
         run: python -m pip check
       - name: Build compatibility documentation
-        env:
-          MNE_DENOISE_DOCS_VERSION: dev
         run: make -C docs html
       - name: Add .nojekyll to the build
         run: touch docs/_build/html/.nojekyll
@@ -271,6 +206,12 @@ jobs:
         with:
           name: docs-html-mne-stable
           path: site-build
+      - name: Checkout publishing helper
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
+          path: source
+          persist-credentials: false
       - name: Checkout Pages branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -279,47 +220,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Update development directory
-        run: |
-          python - <<'PY'
-          import json
-          import re
-          import shutil
-          from pathlib import Path
-
-          pages = Path(".pages")
-          build = Path("site-build")
-          preserved = {".git", ".nojekyll", "stable", "dev", "versions.json"}
-          preserved.update(
-              path.name
-              for path in pages.iterdir()
-              if re.fullmatch(r"v[0-9].*", path.name)
-          )
-          for path in pages.iterdir():
-              if path.name in preserved:
-                  continue
-              if path.is_dir():
-                  shutil.rmtree(path)
-              else:
-                  path.unlink()
-
-          development = pages / "dev"
-          if development.exists():
-              shutil.rmtree(development)
-          shutil.copytree(build, development)
-
-          versions = pages / "versions.json"
-          source_versions = build / "_static" / "versions.json"
-          if not versions.exists():
-              shutil.copy2(source_versions, versions)
-          shutil.copy2(versions, development / "_static" / "versions.json")
-          shutil.copy2(
-              build / "_static" / "root-redirect.html",
-              pages / "index.html",
-          )
-          (pages / ".nojekyll").touch()
-
-          json.loads(versions.read_text(encoding="utf-8"))
-          PY
+        run: python source/tools/publish_docs.py --pages .pages --build site-build --target dev
       - name: Commit and publish development docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -327,7 +228,7 @@ jobs:
           set -euo pipefail
           git -C .pages config user.name "github-actions[bot]"
           git -C .pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C .pages add --all
+          git -C .pages add --all -- dev index.html .nojekyll
           if git -C .pages diff --cached --quiet; then
             echo "Development documentation is already up to date"
           else
@@ -346,16 +247,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download stable documentation
+      - name: Download release documentation
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
-          name: docs-html-mne-stable
-          path: site-build/stable
-      - name: Download archived release documentation
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+          name: docs-html-release
+          path: site-build
+      - name: Checkout publishing helper
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          name: docs-html-mne-release
-          path: site-build/release
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.sha }}
+          path: source
+          persist-credentials: false
       - name: Checkout Pages branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -363,156 +265,25 @@ jobs:
           path: .pages
           fetch-depth: 0
           persist-credentials: false
-      - name: Update stable and release directories
+      - name: Update release and stable directories
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json
-          import os
-          import re
-          import shutil
-          from pathlib import Path
-
-          pages = Path(".pages")
-          stable_build = Path("site-build/stable")
-          release_build = Path("site-build/release")
-          release_tag = os.environ["RELEASE_TAG"]
-          if not release_tag.startswith("v"):
-              raise SystemExit(f"Release tag must start with v: {release_tag}")
-          release_version = release_tag[1:]
-          release_directory = f"v{release_version}"
-
-          preserved = {
-              ".git",
-              ".nojekyll",
-              "dev",
-              "stable",
-              "versions.json",
-              release_directory,
-          }
-          preserved.update(
-              path.name
-              for path in pages.iterdir()
-              if re.fullmatch(r"v[0-9].*", path.name)
-          )
-          for path in pages.iterdir():
-              if path.name in preserved:
-                  continue
-              if path.is_dir():
-                  shutil.rmtree(path)
-              else:
-                  path.unlink()
-
-          for name, source in (
-              ("stable", stable_build),
-              (release_directory, release_build),
-          ):
-              target = pages / name
-              if target.exists():
-                  shutil.rmtree(target)
-              shutil.copytree(source, target)
-
-          versions_path = pages / "versions.json"
-          source_versions_path = stable_build / "_static" / "versions.json"
-          if versions_path.exists():
-              entries = json.loads(versions_path.read_text(encoding="utf-8"))
-          elif source_versions_path.exists():
-              entries = json.loads(source_versions_path.read_text(encoding="utf-8"))
-          else:
-              entries = [
-                  {
-                      "name": "Development",
-                      "version": "dev",
-                      "url": "https://mne.tools/mne-denoise/dev/",
-                  },
-                  {
-                      "name": f"{release_version} (stable)",
-                      "version": "stable",
-                      "url": "https://mne.tools/mne-denoise/stable/",
-                      "preferred": True,
-                  },
-                  {
-                      "name": release_version,
-                      "version": release_version,
-                      "url": f"https://mne.tools/mne-denoise/{release_directory}/",
-                  },
-              ]
-
-          development = next(
-              (entry for entry in entries if entry.get("version") == "dev"),
-              {
-                  "name": "Development",
-                  "version": "dev",
-                  "url": "https://mne.tools/mne-denoise/dev/",
-              },
-          )
-          development = dict(development)
-          development.pop("preferred", None)
-          archives = []
-          for entry in entries:
-              entry = dict(entry)
-              entry_version = entry.get("version")
-              if entry_version in {"dev", "stable", release_version}:
-                  continue
-              entry.pop("preferred", None)
-              archives.append(entry)
-
-          stable_entry = {
-              "name": f"{release_version} (stable)",
-              "version": "stable",
-              "url": "https://mne.tools/mne-denoise/stable/",
-              "preferred": True,
-          }
-          release_entry = {
-              "name": release_version,
-              "version": release_version,
-              "url": f"https://mne.tools/mne-denoise/{release_directory}/",
-          }
-          updated_entries = [development, stable_entry, release_entry, *archives]
-          versions_path.write_text(
-              json.dumps(updated_entries, indent=2) + "\n",
-              encoding="utf-8",
-          )
-
-          for directory in ("dev", "stable", release_directory):
-              static_versions = pages / directory / "_static" / "versions.json"
-              if static_versions.parent.exists():
-                  shutil.copy2(versions_path, static_versions)
-          redirect_source = stable_build / "_static" / "root-redirect.html"
-          if redirect_source.exists():
-              shutil.copy2(redirect_source, pages / "index.html")
-          else:
-              (pages / "index.html").write_text(
-                  """<!doctype html>
-                  <html lang="en">
-                    <head>
-                      <meta charset="utf-8">
-                      <meta http-equiv="refresh" content="0; url=stable/">
-                      <link rel="canonical" href="https://mne.tools/mne-denoise/stable/">
-                      <title>mne-denoise documentation</title>
-                    </head>
-                    <body>
-                      <p><a href="stable/">Go to the stable documentation</a></p>
-                    </body>
-                  </html>
-                  """,
-                  encoding="utf-8",
-              )
-          (pages / ".nojekyll").touch()
-
-          if sum(entry.get("preferred", False) for entry in updated_entries) != 1:
-              raise SystemExit("versions.json must contain exactly one preferred entry")
-          PY
+        run: python source/tools/publish_docs.py --pages .pages --build site-build --target release --version "$RELEASE_TAG"
       - name: Commit and publish release docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: |
           set -euo pipefail
+          release_version="${RELEASE_TAG#v}"
           git -C .pages config user.name "github-actions[bot]"
           git -C .pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C .pages add --all
+          git -C .pages add --all -- index.html .nojekyll
+          for directory in dev stable "$release_version"; do
+            if [ -e ".pages/$directory" ]; then
+              git -C .pages add --all -- "$directory"
+            fi
+          done
           if git -C .pages diff --cached --quiet; then
             echo "Release documentation is already up to date"
           else

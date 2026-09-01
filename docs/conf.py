@@ -19,8 +19,9 @@ import mne_denoise
 
 project = "mne-denoise"
 author = "mne-denoise developers"
-copyright = f"{datetime.now():%Y}, {author}"
-docs_version = os.environ.get("MNE_DENOISE_DOCS_VERSION", "dev")
+copyright = (
+    f"{datetime.now():%Y}, mne-denoise · Part of the MNE ecosystem · BSD-3-Clause"
+)
 version = mne_denoise.__version__
 release = version
 
@@ -104,29 +105,20 @@ intersphinx_mapping = {
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_css_files = ["style.css"]
-html_favicon = "_static/mne-denoise-mark.svg"
+switcher_version_match = "dev" if ".dev" in release else version
 html_theme_options = {
     "github_url": "https://github.com/mne-tools/mne-denoise",
-    "logo": {
-        "text": "mne-denoise",
-        "image_light": "mne-denoise-mark.svg",
-        "image_dark": "mne-denoise-mark.svg",
-        "alt_text": "mne-denoise",
-    },
-    "use_edit_page_button": docs_version == "dev",
+    "logo": {"text": "mne-denoise"},
+    "use_edit_page_button": switcher_version_match == "dev",
     "switcher": {
-        "json_url": "https://mne.tools/mne-denoise/versions.json",
-        "version_match": docs_version,
+        "json_url": "https://mne.tools/mne-denoise/dev/_static/versions.json",
+        "version_match": switcher_version_match,
     },
-    "check_switcher": False,
-    "show_version_warning_banner": docs_version == "dev",
-    "footer_start": ["mdn-footer"],
-    "footer_center": [],
-    "footer_end": [],
+    "show_version_warning_banner": True,
     "navbar_center": ["navbar-nav"],
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
-    "navbar_persistent": ["search-button-field"],
-    "header_links_before_dropdown": 6,
+    "navbar_persistent": ["search-button"],
+    "header_links_before_dropdown": 5,
     "navigation_depth": 2,
     "show_nav_level": 1,
     "icon_links": [
@@ -138,6 +130,7 @@ html_theme_options = {
         },
     ],
 }
+html_sidebars = {"index": []}
 html_context = {
     "github_user": "mne-tools",
     "github_repo": "mne-denoise",

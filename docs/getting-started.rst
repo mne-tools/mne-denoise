@@ -39,9 +39,18 @@ return copies. For example, with a preloaded Raw object named raw:
 
    from mne_denoise.spectrum_interpolation import SpectrumInterpolation
 
-   clean_raw = SpectrumInterpolation(
-       line_freq=60.0, n_harmonics=3
-   ).fit_transform(raw)
+   clean_raw = SpectrumInterpolation(line_freq=60.0).fit_transform(raw)
+
+Working with mne-denoise
+------------------------
+
+Methods work with channel-first NumPy arrays and, where supported, MNE Raw,
+Epochs, and Evoked objects. Main estimators use ``fit``, ``transform``, and
+``fit_transform`` when those operations match the scientific workflow.
+
+After fitting, inspect the returned data together with fitted operators,
+component information, or method-specific diagnostics. The
+:doc:`evaluation` guide covers ways to assess cleaning and signal preservation.
 
 Where to go next
 ----------------
@@ -60,4 +69,5 @@ The method pages summarize assumptions and minimal workflows for:
 * :doc:`Choose a method <methods>` from the artifact and assumptions.
 * Browse the :doc:`auto_examples/index` gallery for complete workflows.
 * See the :doc:`api` reference for exact contracts and public names.
+* Assess cleaning and signal preservation with :doc:`evaluation`.
 * Read :doc:`citing` for citation guidance.

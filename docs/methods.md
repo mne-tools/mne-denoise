@@ -5,6 +5,9 @@ the recording. Some use clean calibration periods, some spatial or spectral
 structure, some reference channels or repeated trials, and others a forward
 model.
 
+No denoising method is appropriate for every recording. Match the method to
+the artifact, the available structure, and the signal you need to preserve.
+
 The sections below are intended as a starting point. The individual method
 pages describe the assumptions and behavior in more detail.
 
@@ -91,7 +94,7 @@ window and a forward model or compatible EEG montage. See the
 | ------ | ----------- | ------------------- | ---------------------- |
 | {doc}`ASR <asr>` | Transient high-variance artifacts | Clean calibration covariance | Calibration period/data |
 | {doc}`DSS <dss>` | Reproducible or structured components | Bias covariance relative to baseline | Bias or segment definition |
-| {doc}`BSS-CCA <bss_cca>` | Lagged, low-correlation components | Lagged self-correlation | Lag and component rule |
+| {doc}`BSS-CCA <bss_cca>` | Components separated by lagged CCA | Lagged temporal correlation | Lag and component rule |
 | {doc}`iCanClean <icanclean>` | Shared reference variance | CCA with reference channels | Reference block or pseudo-reference |
 | {doc}`SNS <sns>` | Sensor-specific noise | Spatial sensor redundancy | None beyond channel data |
 | {doc}`SOUND <sound>` | Sensor-specific noise | Forward-model geometry | Montage or forward model |
@@ -99,6 +102,13 @@ window and a forward model or compatible EEG montage. See the
 | {doc}`SSA <ssa>` | Structured channel-wise components | Delay-coordinate decomposition | Embedding and selection settings |
 | {doc}`SSP-SIR <sspsir>` | TMS-evoked muscle artifact | Artifact subspace and lead field | Forward model or EEG montage |
 | {doc}`ZapLine <zapline>` | Power-line noise and harmonics | Line-locked DSS components | Line frequency and DSS settings |
+
+```{admonition} Evaluate the result
+:class: mdn-evaluation-note
+
+Whichever method you choose, evaluate both artifact attenuation and
+preservation of the signal of interest. See the {doc}`evaluation` guide.
+```
 
 ```{toctree}
 :hidden:
@@ -115,4 +125,10 @@ spectrum_interpolation
 ssa
 sspsir
 zapline
+```
+
+```{toctree}
+:hidden:
+
+evaluation
 ```

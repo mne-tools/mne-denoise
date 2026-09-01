@@ -38,19 +38,19 @@ to the GitHub Release.
 
 The documentation workflow (`.github/workflows/docs.yml`) publishes the
 current `main` build to `/dev/` and redirects the site root to `/stable/`.
-When a GitHub Release is published, it builds from that exact release tag and
-updates both `/stable/` and `/vX.Y.Z/`. Existing development and archived
+When a GitHub Release is published, it builds from that exact release tag once
+and updates both `/stable/` and `/X.Y.Z/`. Existing development and archived
 release directories are preserved.
 
 For the initial migration, run the workflow manually with
 `release_tag=v0.0.1` so the existing release is built into both `/stable/` and
-`/v0.0.1/`. Later published releases use the release event automatically.
+`/0.0.1/`. Later published releases use the release event automatically.
 
-The workflow maintains the root `versions.json` automatically: the new
-release becomes the preferred stable entry, its version directory is retained
-as an archive, and older releases remain in the list. The checked-in
-`docs/_static/versions.json` is the initial seed for the first deployment; no
-manual update is normally needed after that.
+`docs/_static/versions.json` is the readable source of truth for the version
+selector. Before publishing a new release, update it with the next development
+label, the new preferred stable entry, and all previous release directories.
+The publishing helper carries the same list into the deployed `/dev/` and
+`/stable/` sites without replacing unrelated Pages directories.
 
 ## Before the release
 

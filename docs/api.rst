@@ -1,6 +1,12 @@
 API reference
 =============
 
+.. note::
+
+   **mne-denoise is under active development.** Until version 1.0, the public
+   API may evolve between releases. For reproducible analyses, record the
+   mne-denoise version used in your work.
+
 API stability
 -------------
 
