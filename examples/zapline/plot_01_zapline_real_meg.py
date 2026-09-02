@@ -31,11 +31,10 @@ from mne_denoise.zapline import ZapLine
 sample_path = mne.datasets.sample.data_path()
 raw = mne.io.read_raw_fif(
     sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
+    preload=False,
     verbose="ERROR",
 )
-raw.pick("grad", exclude="bads")
-raw.crop(0.0, 30.0)
+raw.pick("grad", exclude="bads").crop(0.0, 30.0).load_data()
 raw.resample(300.0, verbose="ERROR")
 
 # %%
@@ -88,10 +87,7 @@ off_band_distortion = below_noise_distortion_db(
 )
 
 print(f"MEG gradiometer channels: {len(raw.ch_names)}")
-print(
-    f"Recording: {raw.times[-1]:.1f} s at "
-    f"{raw.info['sfreq']:.1f} Hz"
-)
+print(f"Recording: {raw.times[-1]:.1f} s at {raw.info['sfreq']:.1f} Hz")
 print(f"Components removed: {model.n_removed_}")
 print(f"60-Hz suppression: {line_suppression:.2f} dB")
 print(

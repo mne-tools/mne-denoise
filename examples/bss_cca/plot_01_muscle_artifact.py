@@ -40,10 +40,11 @@ from mne_denoise.viz import plot_psd_comparison, plot_signal_overlay
 sample_path = mne.datasets.sample.data_path()
 raw = mne.io.read_raw_fif(
     sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
+    preload=False,
     verbose="ERROR",
 )
-raw.pick("eeg", exclude="bads").crop(0.0, 20.0).resample(250.0, verbose="ERROR")
+raw.pick("eeg", exclude="bads").crop(0.0, 20.0).load_data()
+raw.resample(250.0, verbose="ERROR")
 raw.filter(1.0, 45.0, verbose="ERROR")
 raw.set_eeg_reference("average", projection=False, verbose="ERROR")
 

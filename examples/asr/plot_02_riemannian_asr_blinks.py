@@ -37,23 +37,19 @@ from mne_denoise.viz import plot_signal_overlay
 sample_path = mne.datasets.sample.data_path()
 raw = mne.io.read_raw_fif(
     sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
+    preload=False,
     verbose="ERROR",
 )
-raw.pick(["eeg", "eog"]).crop(0.0, 60.0).resample(160.0, verbose="ERROR")
+raw.pick(["eeg", "eog"], exclude="bads").crop(0.0, 60.0).load_data()
+raw.resample(160.0, verbose="ERROR")
 raw.set_eeg_reference("average", verbose="ERROR")
 raw.filter(1.0, None, verbose="ERROR")
 
 eeg = raw.get_data(picks="eeg")
-eeg_picks = mne.pick_types(raw.info, eeg=True, exclude=[])
+eeg_picks = mne.pick_types(raw.info, eeg=True)
 eeg_names = [raw.ch_names[index] for index in eeg_picks]
 eog_channel = "EOG 061"
 eog = raw.get_data(picks=eog_channel)[0]
-
-
-def absolute_eog_correlation(data, eog_signal):
-    """Return absolute channel-wise correlations with the EOG signal."""
-    return np.asarray([abs(np.corrcoef(channel, eog_signal)[0, 1]) for channel in data])
 
 
 # Use MNE's EOG detector to define a transparent preservation control. Each
@@ -69,7 +65,7 @@ for event in eog_events:
     blink_mask[start:stop] = True
 quiet_mask = ~blink_mask
 
-eog_coupling_before = absolute_eog_correlation(eeg, eog)
+eog_coupling_before = np.abs(np.corrcoef(np.vstack([eeg, eog]))[:-1, -1])
 top_channels = np.argsort(eog_coupling_before)[-8:]
 blink_channel_index = int(np.argmax(eog_coupling_before))
 blink_channel = eeg_names[blink_channel_index]
@@ -78,6 +74,7 @@ window_start = max(0.0, raw.times[blink_sample] - 1.0)
 window_stop = min(raw.times[-1], raw.times[blink_sample] + 2.0)
 
 print(f"Detected EOG events: {len(eog_events)}")
+print(f"Good EEG channels: {len(eeg_names)}")
 print(f"Quiet preservation control: {quiet_mask.mean():.1%} of samples")
 print(
     f"Blink-dominated channel: {blink_channel} "
@@ -108,12 +105,10 @@ standard_eeg = standard_clean.get_data(picks="eeg")
 riemannian_eeg = riemannian_clean.get_data(picks="eeg")
 
 mean_eog_coupling_before = float(np.mean(eog_coupling_before[top_channels]))
-mean_eog_coupling_standard = float(
-    np.mean(absolute_eog_correlation(standard_eeg[top_channels], eog))
-)
-mean_eog_coupling_riemannian = float(
-    np.mean(absolute_eog_correlation(riemannian_eeg[top_channels], eog))
-)
+standard_eog_coupling = np.abs(np.corrcoef(np.vstack([standard_eeg, eog]))[:-1, -1])
+riemannian_eog_coupling = np.abs(np.corrcoef(np.vstack([riemannian_eeg, eog]))[:-1, -1])
+mean_eog_coupling_standard = float(np.mean(standard_eog_coupling[top_channels]))
+mean_eog_coupling_riemannian = float(np.mean(riemannian_eog_coupling[top_channels]))
 
 quiet_scale = np.sqrt(np.mean(eeg[:, quiet_mask] ** 2))
 quiet_change_standard = (

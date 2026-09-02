@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from mne.datasets import eegbci, sample, somato
+from mne.datasets import sample, somato
 
 
 def _fetch_with_retries(
@@ -44,16 +44,6 @@ def prefetch_docs_data(data_dir: Path) -> None:
     _fetch_with_retries(
         "MNE Somato",
         lambda: somato.data_path(path=data_dir, update_path=False, verbose=True),
-    )
-    _fetch_with_retries(
-        "EEGBCI subject 1 run 1",
-        lambda: eegbci.load_data(
-            subjects=[1],
-            runs=[1],
-            path=data_dir,
-            update_path=False,
-            verbose=True,
-        ),
     )
 
 

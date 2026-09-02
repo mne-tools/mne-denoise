@@ -27,6 +27,7 @@ References
 import mne
 import numpy as np
 
+from mne_denoise.progress import ProgressEvent
 from mne_denoise.qa import rms_change
 from mne_denoise.sns import SNS
 from mne_denoise.viz import plot_signal_overlay
@@ -34,10 +35,11 @@ from mne_denoise.viz import plot_signal_overlay
 sample_path = mne.datasets.sample.data_path()
 raw = mne.io.read_raw_fif(
     sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
+    preload=False,
     verbose="ERROR",
 )
-raw.pick("eeg", exclude="bads").crop(0.0, 20.0).resample(200.0, verbose="ERROR")
+raw.pick("eeg", exclude="bads").crop(0.0, 20.0).load_data()
+raw.resample(200.0, verbose="ERROR")
 raw.filter(1.0, 45.0, verbose="ERROR")
 
 # The untouched recording is the reference substrate for both endpoints below.
@@ -74,8 +76,21 @@ sns = SNS(
     preserve_mean=True,
     verbose=False,
 )
-cleaned = sns.fit_transform(corrupted)
+# In interactive use, this callback slot can receive
+# mne_denoise.progress.TqdmProgress when the optional ``progress`` extra is
+# installed.
+progress_events: list[ProgressEvent] = []
+cleaned = sns.fit_transform(corrupted, callback=progress_events.append)
 cleaned_data = cleaned.get_data()
+
+first_event = progress_events[0]
+last_event = progress_events[-1]
+print(
+    "Progress callback: "
+    f"{len(progress_events)} events, "
+    f"{first_event.method}/{first_event.stage}, "
+    f"final={last_event.current}/{last_event.total}"
+)
 
 corrupted_error = rms_change(
     corrupted_data[corrupted_indices],

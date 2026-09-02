@@ -45,7 +45,7 @@ from mne_denoise.viz import (
 sample_path = mne.datasets.sample.data_path()
 raw = mne.io.read_raw_fif(
     sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
+    preload=False,
     verbose="ERROR",
 )
 forward = mne.read_forward_solution(
@@ -53,7 +53,8 @@ forward = mne.read_forward_solution(
     verbose="ERROR",
 )
 
-raw.pick("eeg", exclude="bads").crop(0.0, 20.0).resample(200.0, verbose="ERROR")
+raw.pick("eeg", exclude="bads").crop(0.0, 20.0).load_data()
+raw.resample(200.0, verbose="ERROR")
 raw.filter(1.0, 45.0, verbose="ERROR")
 
 # Keep the filtered, good-channel recording in its original sensor coordinates
