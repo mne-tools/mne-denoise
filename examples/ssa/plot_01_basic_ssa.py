@@ -64,8 +64,8 @@ print(f"Alpha gain: {alpha_gain:.3f}")
 print(f"Dropped component frequencies (Hz): {dropped_frequencies}")
 
 # %%
-# Visualize the clean-substrate comparison
-# -----------------------------------------
+# Inspect the time-domain reconstruction
+# --------------------------------------
 plot_signal_overlay(
     observed,
     cleaned,
@@ -80,6 +80,10 @@ plot_signal_overlay(
     title="Frequency-guided Basic SSA",
     show=False,
 )
+
+# %%
+# Compare the spectra
+# -------------------
 plot_psd_comparison(
     observed,
     cleaned,

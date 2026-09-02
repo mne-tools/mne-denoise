@@ -176,8 +176,8 @@ print(f"TimeShiftDSS held-out reproducibility score: {held_out_score:.4f}")
 print(f"TimeShiftDSS surrogate reproducibility score: {surrogate_score:.4f}")
 
 # %%
-# Compare the held-out waveforms and reconstruction errors
-# ----------------------------------------------------------
+# Inspect the held-out waveforms
+# ------------------------------
 clean_average = clean_held_out.mean(axis=2)
 noisy_average = held_out.mean(axis=2)
 ordinary_average = ordinary_cleaned.mean(axis=2)
@@ -212,6 +212,9 @@ waveform_axis.plot(
 )
 waveform_axis.legend(loc="upper right")
 
+# %%
+# Compare held-out reconstruction errors
+# ---------------------------------------
 plot_metric_bars(
     {
         "group": np.array(["noisy input", "ordinary DSS", "TimeShiftDSS"]),

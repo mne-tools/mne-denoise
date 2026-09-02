@@ -126,8 +126,8 @@ print(f"Target/distractor projected power ratio after:  {target_power_ratio_afte
 print(f"Distractor projected residual ratio: {distractor_residual_ratio:.4f}")
 
 # %%
-# Inspect the target projection and spectra
-# ------------------------------------------
+# Inspect the target-recovery waveform
+# ------------------------------------
 # The target projection uses the predefined target topography, not a
 # post-hoc channel choice. Amplitude is therefore shown without rescaling the
 # after trace.
@@ -146,6 +146,9 @@ plot_signal_overlay(
     show=False,
 )
 
+# %%
+# Compare the target and distractor spectra
+# -----------------------------------------
 psd_figure = plot_psd_comparison(
     observed,
     cleaned,

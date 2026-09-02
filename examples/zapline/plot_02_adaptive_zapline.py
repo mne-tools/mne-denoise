@@ -175,8 +175,8 @@ print(f"10-Hz target-signal retention - global:   {global_target_gain:.3f}")
 print(f"10-Hz target-signal retention - adaptive: {adaptive_target_gain:.3f}")
 
 # %%
-# Inspect the adaptive spectrum and regime-wise reconstruction endpoint
-# ----------------------------------------------------------------------
+# Inspect the adaptive spectrum
+# -----------------------------
 plot_psd_comparison(
     contaminated,
     adaptive_clean,
@@ -187,6 +187,9 @@ plot_psd_comparison(
     show=False,
 )
 
+# %%
+# Compare regime-wise reconstruction
+# -----------------------------------
 # The public PSD helper cannot express a known-clean, regime-wise residual
 # ratio, so this small custom plot shows that endpoint and the boundaries.
 fig, ax = plt.subplots(figsize=(7.5, 4.0))

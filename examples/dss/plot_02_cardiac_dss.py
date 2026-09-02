@@ -266,8 +266,8 @@ print(f"Clean-input waveform correlation: {clean_input_waveform_correlation:.4f}
 print(f"Clean-input retained-power ratio: {clean_input_retained_power:.4f}")
 
 # %%
-# Inspect the isolated artifact and a cardiac-dominated EEG channel
-# -----------------------------------------------------------------
+# Inspect artifact-related evoked RMS behavior
+# ---------------------------------------------
 plot_evoked_gfp_comparison(
     artifact_before_evoked,
     artifact_after_evoked,
@@ -280,6 +280,9 @@ plot_evoked_gfp_comparison(
     show=False,
 )
 
+# %%
+# Inspect a representative-channel waveform
+# -------------------------------------------
 plot_signal_overlay(
     held_out_contaminated,
     cleaned_held_out,

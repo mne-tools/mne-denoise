@@ -224,8 +224,8 @@ print(
 )
 
 # %%
-# Inspect the signal recovery and removed spatial direction
-# -----------------------------------------------------------
+# Inspect temporal signal recovery
+# --------------------------------
 plot_signal_overlay(
     contaminated,
     cleaned_contaminated,
@@ -246,6 +246,9 @@ plot_signal_overlay(
     show=False,
 )
 
+# %%
+# Inspect the spatial projector
+# -----------------------------
 mne.viz.plot_projs_topomap(
     model.projs_,
     reference.info,

@@ -212,8 +212,8 @@ print(
 )
 
 # %%
-# Compare the spectra and inspect the transition/transient waveform
-# ------------------------------------------------------------------
+# Compare the spectra
+# -------------------
 fig_psd = plot_psd_comparison(
     contaminated,
     cleaned_si,
@@ -238,6 +238,9 @@ psd_axis.legend()
 psd_axis.set_title("Nonstationary 60-Hz line noise: spectral comparison")
 fig_psd.tight_layout()
 
+# %%
+# Inspect the transition and transient waveform
+# ----------------------------------------------
 representative_channel = int(np.argmax(np.abs(line_pattern)))
 fig_signal = plot_signal_overlay(
     contaminated,

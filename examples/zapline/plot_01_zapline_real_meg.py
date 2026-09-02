@@ -1,17 +1,19 @@
 r"""
-Removing 60-Hz line noise from real MEG with ZapLine
-=====================================================
+Removing 60-Hz line noise and its harmonic from real MEG with ZapLine
+=====================================================================
 
-Can standard ZapLine reduce the 60-Hz line-noise peak in a real multichannel
-MEG recording while limiting broadband spectral distortion? The MNE Sample
-gradiometers provide a compact real-data example with no known clean neural
-reference, so attenuation and spectral preservation are reported as separate
-quantities.
+Can standard ZapLine attenuate a 60-Hz line-noise component and its 120-Hz
+harmonic in a real multichannel MEG recording while limiting off-target spectral
+change? The MNE Sample gradiometers provide a compact real-data example with no
+known clean neural reference, so attenuation and spectral preservation are
+reported as separate quantities.
 
 ZapLine combines spectral and spatial filtering for multichannel recordings
 :footcite:p:`decheveigne2020_zapline`. A reduced line peak demonstrates artifact
-attenuation in this recording; an off-line spectral change is only a
-preservation control and does not establish that neural structure was preserved.
+attenuation in this recording; an off-line spectral change is only a preservation
+control and does not establish that neural structure was preserved. A useful
+result should attenuate the narrow line components without producing the deep
+spectral hole expected from suppressing an entire frequency band.
 
 References
 ----------
@@ -25,7 +27,7 @@ import mne
 import numpy as np
 
 from mne_denoise.qa import below_noise_distortion_db, suppression_ratio
-from mne_denoise.viz import plot_psd_comparison
+from mne_denoise.viz import plot_psd_zoom_comparison
 from mne_denoise.zapline import ZapLine
 
 sample_path = mne.datasets.sample.data_path()
@@ -38,12 +40,17 @@ raw.pick("grad", exclude="bads").crop(0.0, 30.0).load_data()
 raw.resample(300.0, verbose="ERROR")
 
 # %%
-# Fit standard ZapLine and evaluate two real-data endpoints
-# ----------------------------------------------------------
+# Fit standard ZapLine and evaluate real-data endpoints
+# ------------------------------------------------------
+# ``n_select=1`` is a conservative operating choice for this recording, not a
+# universal recommendation; the appropriate component count is data-dependent.
+# The explicit count demonstrates standard ZapLine's spatial/spectral cleaning
+# operation without conflating it with automatic component selection.
 model = ZapLine(
     sfreq=raw.info["sfreq"],
     line_freq=60.0,
-    n_select="auto",
+    n_select=1,
+    n_harmonics=2,
     verbose=False,
 )
 cleaned = model.fit_transform(raw)
@@ -68,11 +75,18 @@ freqs = spectrum_before.freqs
 psd_before = spectrum_before.get_data(return_freqs=False)
 psd_after = spectrum_after.get_data(return_freqs=False)
 
-line_suppression = suppression_ratio(
+line_suppression_60 = suppression_ratio(
     freqs,
     psd_before,
     psd_after,
     target_freq=60.0,
+    bandwidth=2.0,
+)
+line_suppression_120 = suppression_ratio(
+    freqs,
+    psd_before,
+    psd_after,
+    target_freq=120.0,
     bandwidth=2.0,
 )
 off_band_distortion = below_noise_distortion_db(
@@ -83,27 +97,56 @@ off_band_distortion = below_noise_distortion_db(
     exclude_bw=5.0,
     fmin=2.0,
     fmax=140.0,
-    n_harmonics=1,
+    n_harmonics=2,
 )
+
+mean_psd_before = psd_before.mean(axis=0)
+mean_psd_after = psd_after.mean(axis=0)
+target_floor_db = {}
+for target in (60.0, 120.0):
+    target_idx = int(np.argmin(np.abs(freqs - target)))
+    flank_mask = ((freqs >= target - 3.0) & (freqs <= target - 1.0)) | (
+        (freqs >= target + 1.0) & (freqs <= target + 3.0)
+    )
+    local_floor = np.median(mean_psd_after[flank_mask])
+    target_floor_db[target] = 10.0 * np.log10(mean_psd_after[target_idx] / local_floor)
 
 print(f"MEG gradiometer channels: {len(raw.ch_names)}")
 print(f"Recording: {raw.times[-1]:.1f} s at {raw.info['sfreq']:.1f} Hz")
 print(f"Components removed: {model.n_removed_}")
-print(f"60-Hz suppression: {line_suppression:.2f} dB")
+print(f"ZapLine harmonics: {model.n_harmonics_}")
+print(f"60-Hz suppression: {line_suppression_60:.2f} dB")
+print(f"120-Hz suppression: {line_suppression_120:.2f} dB")
 print(
     "Median off-line-band spectral distortion "
     f"(preservation control): {np.median(off_band_distortion):.2f} dB"
 )
+print(
+    "Cleaned 60-Hz target relative to local flank floor: "
+    f"{target_floor_db[60.0]:.2f} dB"
+)
+print(
+    "Cleaned 120-Hz target relative to local flank floor: "
+    f"{target_floor_db[120.0]:.2f} dB"
+)
 print("The spectral control is not a clean neural ground truth.")
 
 # %%
-# Inspect the before/after spectrum
-# ---------------------------------
-plot_psd_comparison(
-    raw,
-    cleaned,
-    fmin=1.0,
+# Inspect the full spectrum and harmonic neighborhoods
+# ------------------------------------------------------
+plot_psd_zoom_comparison(
+    freqs,
+    mean_psd_before,
+    freqs,
+    mean_psd_after,
+    series_name="MEG gradiometers",
+    title="Standard ZapLine on real MNE Sample MEG",
+    zoom_freqs=np.array([60.0, 120.0]),
+    zoom_annotations=[
+        "60-Hz fundamental",
+        "120-Hz harmonic",
+    ],
     fmax=140.0,
-    line_freq=60.0,
+    zoom_half_width_hz=4.0,
     show=False,
 )
