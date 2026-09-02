@@ -89,6 +89,8 @@ line_suppression_120 = suppression_ratio(
     target_freq=120.0,
     bandwidth=2.0,
 )
+# The QA helper counts *additional* harmonics, so 1 excludes both the 60-Hz
+# fundamental and its 120-Hz harmonic.
 off_band_distortion = below_noise_distortion_db(
     freqs,
     psd_before,
@@ -97,7 +99,7 @@ off_band_distortion = below_noise_distortion_db(
     exclude_bw=5.0,
     fmin=2.0,
     fmax=140.0,
-    n_harmonics=2,
+    n_harmonics=1,
 )
 
 mean_psd_before = psd_before.mean(axis=0)
@@ -139,7 +141,7 @@ plot_psd_zoom_comparison(
     mean_psd_before,
     freqs,
     mean_psd_after,
-    series_name="MEG gradiometers",
+    series_name="After ZapLine",
     title="Standard ZapLine on real MNE Sample MEG",
     zoom_freqs=np.array([60.0, 120.0]),
     zoom_annotations=[
