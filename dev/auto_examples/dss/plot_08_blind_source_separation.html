@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Blind Source Separation and ICA Equivalence. &#8212; mne-denoise 0.0.2.dev223+gb92629895 documentation</title>
+    <title>Blind Source Separation and ICA Equivalence. &#8212; mne-denoise 0.0.2.dev224+g33850b3bf documentation</title>
   
   
   
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=74791eb1"></script>
+    <script src="../../_static/documentation_options.js?v=54fa77fa"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -67,7 +67,7 @@
     <link rel="prev" title="Time-Frequency DSS: Spectrogram Masking." href="plot_07_spectrogram_dss.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.2.dev223+gb92629895" />
+  <meta name="docsearch:version" content="0.0.2.dev224+g33850b3bf" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -672,8 +672,8 @@ makes FastICA efficient in practice.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Running DSS with Tanh Nonlinearity (Robust)...
   Fitting with Gradient Ascent (beta=None)...
   Fitting with Newton Method (beta=beta_tanh)...
-  Gradient Iterations: 78
-  Newton Iterations:   21 (Speedup: 3.7x)
+  Gradient Iterations: 42
+  Newton Iterations:   21 (Speedup: 2.0x)
 </pre></div>
 </div>
 </section>
@@ -769,7 +769,7 @@ A perfect recovery would have one 1.0 per row/column (permutation matrix).</p>
 <span class="c1"># We treat the sources as "components" of the estimator</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_plot_08_blind_source_separation_002.png" srcset="../../_images/sphx_glr_plot_08_blind_source_separation_002.png" alt="Source Recovery Quality (Abs Correlation), DSS (Tanh) Match Mean Max Corr: 0.987, DSS (Kurtosis) Match Mean Max Corr: 0.960, sklearn FastICA Match Mean Max Corr: 0.999" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Evaluation ---
+<img src="../../_images/sphx_glr_plot_08_blind_source_separation_002.png" srcset="../../_images/sphx_glr_plot_08_blind_source_separation_002.png" alt="Source Recovery Quality (Abs Correlation), DSS (Tanh) Match Mean Max Corr: 0.983, DSS (Kurtosis) Match Mean Max Corr: 0.952, sklearn FastICA Match Mean Max Corr: 0.999" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--- Evaluation ---
 Visualizing Recovered Sources (Stacked)...
 </pre></div>
 </div>
@@ -855,7 +855,7 @@ NOTE: pick_types() is a legacy function. New code should use inst.pick(...).
 Data shape (MEG only): (203, 36038)
 Fitting Blind DSS (this may take a moment)...
 
-Most likely EOG component: #1 (Corr: 0.596)
+Most likely EOG component: #1 (Corr: 0.473)
 Visualizing Blink Component...
 Visualizing Candidate Brain Component #2...
 </pre></div>
@@ -912,7 +912,7 @@ Ready.
 <img src="../../_images/sphx_glr_plot_08_blind_source_separation_006.png" srcset="../../_images/sphx_glr_plot_08_blind_source_separation_006.png" alt="EOG Channel vs Extracted Component (Time Domain)" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Blind Source Separation complete!
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.773 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.795 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-dss-plot-08-blind-source-separation-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/d879977c38fa05c9d9c3334aaa9a66e9/plot_08_blind_source_separation.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_08_blind_source_separation.ipynb</span></code></a></p>
