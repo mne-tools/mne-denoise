@@ -10,8 +10,7 @@ is deliberately published.
 ## Release architecture
 
 The release workflow (`.github/workflows/release.yml`) runs its read-only
-`Package` job on pull requests to `main`, pushes to `main`, and published
-GitHub Releases. On a published GitHub Release it performs this flow:
+`Package` job on pushes to `main` and published GitHub Releases. On a published GitHub Release it performs this flow:
 
 ```text
 published GitHub Release
