@@ -37,7 +37,7 @@ raw = mne.io.read_raw_fif(
     preload=False,
     verbose="ERROR",
 )
-raw.crop(0.0, 60.0).load_data()
+raw.crop(0.0, 60.0, verbose="ERROR").load_data(verbose="ERROR")
 
 # Detect the cardiac timing while MEG and the recording's ECG channel, when
 # available, are still present. No artificial ECG channel is constructed.
@@ -46,9 +46,8 @@ ecg_events, _, _ = mne.preprocessing.find_ecg_events(
     ch_name=None,
     verbose=False,
 )
-detected_r_peak_count = len(ecg_events)
 
-reference = raw.copy().pick("eeg", exclude="bads")
+reference = raw.copy().pick("eeg", exclude="bads", verbose="ERROR")
 reference.filter(1.0, 40.0, verbose="ERROR")
 reference.set_eeg_reference("average", projection=False, verbose="ERROR")
 reference_data = reference.get_data()
@@ -143,9 +142,15 @@ if min(len(train_events), len(held_out_events)) < 4:
         "the training and held-out intervals."
     )
 
-train_contaminated = train_contaminated.copy().pick("eeg", exclude="bads")
-held_out_contaminated = held_out_contaminated.copy().pick("eeg", exclude="bads")
-held_out_reference = held_out_reference.copy().pick("eeg", exclude="bads")
+train_contaminated = train_contaminated.copy().pick(
+    "eeg", exclude="bads", verbose="ERROR"
+)
+held_out_contaminated = held_out_contaminated.copy().pick(
+    "eeg", exclude="bads", verbose="ERROR"
+)
+held_out_reference = held_out_reference.copy().pick(
+    "eeg", exclude="bads", verbose="ERROR"
+)
 
 bias = CycleAverageBias(
     event_samples=train_events,
@@ -253,39 +258,12 @@ representative_event_time = (
 ) / sfreq
 
 print("Held-out cardiac DSS")
-print("Sample crop: 0.0-60.0 s")
-print(f"Detected R-peak count: {detected_r_peak_count}")
-print(f"Usable R-peak count: {len(r_peak_samples)}")
-print(f"Training R-peak count: {len(train_events)}")
-print(f"Held-out R-peak count: {len(held_out_events)}")
-print(f"EEG channel count: {n_channels}")
-print("Planted artifact rank: 1")
-print(
-    "Artifact amplitude scaling: "
-    f"{requested_artifact_to_reference_ratio:.1f} x robust EEG scale "
-    "(1.4826 x global median absolute deviation)"
-)
-print(f"n_components: {n_components}")
-print(f"n_select: {n_select} (rank-one planted artifact)")
-print(f"QRS-locked planted-artifact RMS before: {artifact_before_rms:.6e}")
-print(f"QRS-locked planted-artifact RMS after:  {artifact_after_rms:.6e}")
+print(f"Training/held-out R-peak counts: {len(train_events)}/{len(held_out_events)}")
 print(f"Planted-artifact residual ratio: {artifact_residual_ratio:.4f}")
 print(f"Planted-artifact attenuation: {artifact_attenuation_db:.2f} dB")
 print(f"Clean-input relative RMS change: {clean_input_relative_rms_change:.4f}")
 print(f"Clean-input waveform correlation: {clean_input_waveform_correlation:.4f}")
 print(f"Clean-input retained-power ratio: {clean_input_retained_power:.4f}")
-print(
-    "Artifact endpoint: (contaminated - reference) versus "
-    "(cleaned contaminated - cleaned reference)."
-)
-print(
-    "Preservation endpoint: the operator's change to held-out unmodified "
-    "Sample EEG, not clean-neural ground truth."
-)
-print(
-    "Cardiac locking is a bias criterion, not an artifact identity label; real "
-    "recordings can contain neural or other cardiac-correlated activity."
-)
 
 # %%
 # Inspect the isolated artifact and a cardiac-dominated EEG channel

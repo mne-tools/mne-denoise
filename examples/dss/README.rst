@@ -1,5 +1,5 @@
-DSS examples
-============
+DSS
+===
 
 These examples show four scientifically distinct ways to define structure of
 interest with Denoising Source Separation.

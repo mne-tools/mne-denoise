@@ -1,5 +1,5 @@
-SNS example
-===========
+SNS
+===
 
 This example uses a real EEG recording with deliberately added
 sensor-specific noise to show the assumption behind Sensor Noise Suppression:

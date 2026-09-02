@@ -42,7 +42,7 @@ events = mne.find_events(raw, stim_channel="STI 014", verbose=False)
 event_id = 1
 auditory_events = events[events[:, 2] == event_id]
 
-raw.pick("eeg", exclude="bads").load_data()
+raw.pick("eeg", exclude="bads", verbose="ERROR").load_data(verbose="ERROR")
 raw.filter(1.0, None, verbose="ERROR")
 raw.set_eeg_reference("average", projection=False, verbose="ERROR")
 epochs = mne.Epochs(
@@ -132,9 +132,6 @@ contaminated = mne.EvokedArray(
     comment="auditory reference with controlled TMS-like artifact",
     verbose=False,
 )
-artifact_reference_amplitude_ratio = (
-    np.sqrt(np.mean(artifact[:, artifact_mask] ** 2)) / reference_scale
-)
 
 # %%
 # Fit once on contaminated data and transform both substrates
@@ -205,31 +202,25 @@ peak_topography_gain = np.dot(cleaned_reference_peak, reference_peak) / np.dot(
 representative_channel_index = int(np.argmax(np.abs(reference_peak)))
 representative_channel = reference.ch_names[representative_channel_index]
 print("Controlled TMS-like artifact with SSP-SIR")
-print(f"Sample EEG channel count: {n_channels}")
-print(f"Sample evoked sampling frequency: {sfreq:.6f} Hz")
-print(f"Reference info lowpass: {reference_lowpass:.6f} Hz")
-print(f"SSP-SIR high_pass: {high_pass:.6f} Hz")
-print(f"Artifact burst frequency: {artifact_frequency:.3f} Hz")
-print("Artifact window: (0.000, 0.050) s")
-print(f"Artifact/reference amplitude ratio: {artifact_reference_amplitude_ratio:.3f}")
-print(f"Configured topographic overlap: {configured_overlap:.3f}")
-print(f"Actual topographic cosine similarity: {actual_overlap:.4f}")
-print(f"n_components_: {model.n_components_}")
-print(f"M_: {model.M_}")
-print(f"Artifact residual ratio: {artifact_residual_ratio:.4f}")
-print(f"Artifact attenuation: {artifact_attenuation_db:.2f} dB")
+print(
+    "Configured / actual spatial overlap: "
+    f"{configured_overlap:.3f} / {actual_overlap:.4f}"
+)
+print(
+    "Artifact residual ratio / attenuation: "
+    f"{artifact_residual_ratio:.4f} / {artifact_attenuation_db:.2f} dB"
+)
 print(
     "Artifact-window clean-input relative RMS change using local scale: "
     f"{artifact_window_clean_change:.4f}"
 )
-print(f"Late-response relative RMS change: {late_clean_change:.4f}")
-print(f"Late-response waveform correlation: {late_waveform_correlation:.4f}")
-print(f"Late-response sensor-RMS gain: {late_sensor_rms_gain:.4f}")
-print(f"Response-peak topography correlation: {peak_topography_correlation:.4f}")
-print(f"Response-peak topography gain: {peak_topography_gain:.4f}")
-print(f"Representative channel: {representative_channel}")
 print(
-    "Representative-channel rule: largest absolute clean response at the selected peak"
+    "Late-response relative RMS change / waveform correlation: "
+    f"{late_clean_change:.4f} / {late_waveform_correlation:.4f}"
+)
+print(
+    "Response-peak topography correlation / gain: "
+    f"{peak_topography_correlation:.4f} / {peak_topography_gain:.4f}"
 )
 
 # %%

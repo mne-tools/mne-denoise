@@ -1,6 +1,6 @@
 r"""
-Juggler ASR when clean windows are scarce.
-===========================================
+Juggler ASR when clean windows are scarce
+=========================================
 
 How does reference selection behave when frequent short artifacts leave few
 fully clean calibration windows? This controlled recording stresses the
@@ -22,6 +22,8 @@ References
 ----------
 .. footbibliography::
 """
+
+# sphinx_gallery_thumbnail_number = 2
 
 # %%
 # Construct a densely contaminated recording

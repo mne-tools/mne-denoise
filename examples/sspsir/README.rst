@@ -1,5 +1,5 @@
-SSP-SIR example
-===============
+SSP-SIR
+========
 
 This example uses a real MNE Sample EEG evoked response as a clean
 methodological substrate and adds a controlled short TMS-like muscle artifact.

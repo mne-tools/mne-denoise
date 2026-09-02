@@ -1,6 +1,6 @@
 r"""
-Riemannian ASR on blink-contaminated EEG.
-=========================================
+Riemannian ASR on blink-contaminated EEG
+========================================
 
 Can a robust covariance geometry change the calibration of ASR on a real EEG
 recording with eye blinks? This example compares standard ASR with the public

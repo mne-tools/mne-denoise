@@ -1,5 +1,5 @@
-iCanClean example
-=================
+iCanClean
+=========
 
 This example demonstrates reference-informed CCA cleaning with iCanClean using
 a controlled recording in which the artifact and signal of interest are known.

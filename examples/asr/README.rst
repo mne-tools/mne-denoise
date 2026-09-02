@@ -1,5 +1,5 @@
-ASR examples
-============
+ASR
+===
 
 These examples cover four distinct ASR use cases: transient burst repair
 with standard ASR, Riemannian calibration for blink-contaminated EEG,

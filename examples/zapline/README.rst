@@ -1,5 +1,5 @@
-ZapLine examples
-================
+ZapLine
+========
 
 These examples illustrate two distinct line-noise settings.
 

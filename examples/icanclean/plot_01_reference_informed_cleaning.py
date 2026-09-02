@@ -23,6 +23,8 @@ References
 .. footbibliography::
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 # %%
 # Construct a controlled primary recording and two references
 # ------------------------------------------------------------

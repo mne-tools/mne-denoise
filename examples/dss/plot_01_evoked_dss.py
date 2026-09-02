@@ -39,9 +39,8 @@ raw.crop(0.0, 360.0)
 events = mne.find_events(raw, stim_channel="STI 014", verbose=False)
 event_id = 1
 somato_events = events[events[:, 2] == event_id]
-raw_event_count = len(somato_events)
 
-raw.pick("grad", exclude="bads").load_data()
+raw.pick("grad", exclude="bads", verbose="ERROR").load_data(verbose="ERROR")
 raw.filter(1.0, 40.0, verbose="ERROR")
 epochs = mne.Epochs(
     raw,
@@ -120,26 +119,18 @@ held_out_waveform_correlation = float(
 )
 before_sensor_rms = np.sqrt(np.mean(before_evoked.get_data()[:, post_mask] ** 2))
 after_sensor_rms = np.sqrt(np.mean(after_evoked.get_data()[:, post_mask] ** 2))
-held_out_sensor_rms_gain = after_sensor_rms / before_sensor_rms
 held_out_sensor_rms_change = (after_sensor_rms - before_sensor_rms) / before_sensor_rms
 
 print("Held-out somatosensory evoked DSS")
-print("Somato crop: 0.0-360.0 s")
-print(f"Raw event count for event {event_id}: {raw_event_count}")
-print(f"Usable epoch count: {len(epochs)}")
-print(f"Training trial count: {len(train_epochs)}")
-print(f"Held-out trial count: {len(held_out_epochs)}")
-print(f"Held-out alternating A/B counts: {len(held_out_a)}/{len(held_out_b)}")
-print(f"Channel count: {len(held_out_epochs.ch_names)}")
-print(f"n_components: {n_components}")
-print(f"n_select: {n_select}")
-print(f"Held-out split-half evoked correlation before: {split_half_before:.4f}")
-print(f"Held-out split-half evoked correlation after:  {split_half_after:.4f}")
+print(f"Training/held-out trial counts: {len(train_epochs)}/{len(held_out_epochs)}")
+print(
+    "Held-out split-half evoked correlation before / after: "
+    f"{split_half_before:.4f} / {split_half_after:.4f}"
+)
 print(
     "Held-out input-vs-cleaned post-stimulus evoked waveform correlation: "
     f"{held_out_waveform_correlation:.4f}"
 )
-print(f"Held-out sensor-RMS gain (after / before): {held_out_sensor_rms_gain:.4f}")
 print(f"Held-out sensor-RMS normalized change: {held_out_sensor_rms_change:.4f}")
 print("Preservation control: not clean-neural ground truth")
 

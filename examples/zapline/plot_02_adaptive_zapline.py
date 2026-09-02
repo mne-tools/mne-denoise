@@ -19,6 +19,8 @@ References
 .. footbibliography::
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 # %%
 # Construct a controlled three-regime recording
 # ----------------------------------------------

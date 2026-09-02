@@ -1,5 +1,5 @@
-SSA examples
-============
+SSA
+===
 
 The first example shows additive Basic SSA decomposition and an
 mne-denoise-specific frequency-guided grouping rule on a controlled slow-drift

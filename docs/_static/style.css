@@ -374,6 +374,116 @@ article > section#mne-denoise > h1 {
   margin-bottom: 0.5rem;
 }
 
+/* Sphinx-Gallery */
+.sphx-glr-thumbnails {
+  display: grid !important;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  justify-content: start;
+  margin: 1.5rem 0 2rem;
+  width: 100%;
+}
+
+.sphx-glr-thumbcontainer {
+  align-items: stretch;
+  align-self: start;
+  background: var(--mdn-surface);
+  border: 1px solid var(--mdn-border);
+  border-radius: 8px;
+  box-shadow: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.75rem;
+  position: relative;
+  transition: background-color 150ms ease, border-color 150ms ease;
+  width: 100%;
+}
+
+.sphx-glr-thumbcontainer:hover,
+.sphx-glr-thumbcontainer:focus-within {
+  background: var(--mdn-surface);
+  border-color: var(--mdn-primary);
+}
+
+.sphx-glr-thumbcontainer:focus-within {
+  outline: 2px solid var(--mdn-primary);
+  outline-offset: 2px;
+}
+
+.sphx-glr-thumbcontainer > img,
+.sphx-glr-thumbcontainer .figure img {
+  aspect-ratio: 10 / 7;
+  display: block;
+  height: auto;
+  margin: 0;
+  max-height: none;
+  max-width: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.sphx-glr-thumbcontainer .figure {
+  align-items: center;
+  aspect-ratio: 10 / 7;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.sphx-glr-thumbcontainer > p {
+  inset: 0;
+  margin: 0;
+  position: absolute;
+  z-index: 2;
+}
+
+.sphx-glr-thumbcontainer > p a.internal {
+  inset: 0;
+  padding: 0;
+  position: absolute;
+}
+
+.sphx-glr-thumbcontainer > p a.internal:focus-visible {
+  border-radius: 7px;
+  outline: 3px solid var(--mdn-primary);
+  outline-offset: -3px;
+}
+
+.sphx-glr-thumbnail-title {
+  color: var(--mdn-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  position: relative;
+  text-align: left;
+  width: 100%;
+  z-index: 1;
+}
+
+.sphx-glr-thumbcontainer[tooltip]:hover::before,
+.sphx-glr-thumbcontainer[tooltip]:hover::after {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sphx-glr-thumbnails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .sphx-glr-thumbnails {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 html:not([data-theme]) .highlight,
 html[data-theme="light"] .highlight {
   background: #f4f5f5;

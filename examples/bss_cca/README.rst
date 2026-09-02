@@ -1,5 +1,5 @@
-BSS-CCA example
-================
+BSS-CCA
+========
 
 This example uses a real EEG substrate with controlled broadband muscle-like
 contamination to illustrate reference-free BSS-CCA. The method separates

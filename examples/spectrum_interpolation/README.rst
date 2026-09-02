@@ -1,5 +1,5 @@
-Spectrum interpolation example
-==============================
+Spectrum interpolation
+======================
 
 This example uses controlled nonstationary 60-Hz interference with abrupt
 changes in amplitude to illustrate the use case for spectrum interpolation.

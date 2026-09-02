@@ -82,7 +82,11 @@ sphinx_gallery_conf = {
     },
     "download_all_examples": False,
     "show_signature": False,
-    "min_reported_time": 0,
+    "thumbnail_size": (320, 224),
+    "remove_config_comments": True,
+    "min_reported_time": 1.0,
+    "line_numbers": False,
+    "nested_sections": True,
     "plot_gallery": True,
 }
 

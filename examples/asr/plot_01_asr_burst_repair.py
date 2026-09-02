@@ -1,6 +1,6 @@
 r"""
-Repairing transient EEG bursts with ASR.
-========================================
+Repairing transient EEG bursts with ASR
+=======================================
 
 Can standard Artifact Subspace Reconstruction (ASR) reduce short,
 high-amplitude multichannel bursts while preserving the underlying clean

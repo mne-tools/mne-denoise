@@ -1,6 +1,6 @@
 r"""
-Adaptive ASR for changing recording statistics.
-================================================
+Adaptive ASR for changing recording statistics
+==============================================
 
 Can adaptive calibration follow a change in the clean recording statistics
 while continuing to suppress transient artifacts? This controlled example

@@ -24,6 +24,8 @@ References
 .. footbibliography::
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 # %%
 # Load EEG and an explicit public forward solution
 # -------------------------------------------------
@@ -53,7 +55,9 @@ forward = mne.read_forward_solution(
     verbose="ERROR",
 )
 
-raw.pick("eeg", exclude="bads").crop(0.0, 20.0).load_data()
+raw.pick("eeg", exclude="bads", verbose="ERROR").crop(
+    0.0, 20.0, verbose="ERROR"
+).load_data(verbose="ERROR")
 raw.resample(200.0, verbose="ERROR")
 raw.filter(1.0, 45.0, verbose="ERROR")
 
@@ -134,25 +138,10 @@ preservation_relative_change = preservation_change / reference_scale
 
 sigma_channel_indices = np.flatnonzero(np.arange(n_channels) != sound.best_channel_)
 sigma_channel_names = [reference.ch_names[index] for index in sigma_channel_indices]
-rank_order = np.argsort(sound.sigmas_)[::-1]
-top_indices = rank_order[:5]
 print(f"Planted corrupted channels: {corrupted_channel_names}")
 print(f"Selected best-reference channel: {reference.ch_names[sound.best_channel_]}")
 print(f"Artifact residual ratio:          {artifact_residual_ratio:.3f}")
 print(f"Clean-substrate relative change:  {preservation_relative_change:.3f}")
-print("Top channels by estimated sigma:")
-for position, index in enumerate(top_indices, start=1):
-    print(f"  {position}. {sigma_channel_names[index]}: {sound.sigmas_[index]:.3e}")
-for index in corrupted_indices:
-    if index == sound.best_channel_:
-        print(
-            f"Rank of planted channel {reference.ch_names[index]}: selected reference"
-        )
-    else:
-        sigma_position = int(np.flatnonzero(sigma_channel_indices == index)[0])
-        rank = int(np.flatnonzero(rank_order == sigma_position)[0] + 1)
-        print(f"Rank of planted channel {reference.ch_names[index]}: {rank}")
-print(f"Final convergence value: {sound.convergence_[-1]:.3e}")
 
 # %%
 # Plot the fitted channel-noise diagnostic
