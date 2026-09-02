@@ -1,8 +1,8 @@
 r"""
-Enhancing a reproducible evoked response with DSS
-=================================================
+Enhancing a reproducible somatosensory response with DSS
+=========================================================
 
-Can trial-average DSS learned on one set of auditory MEG trials enrich
+Can trial-average DSS learned on one set of somatosensory MEG trials enrich
 reproducible evoked activity in independent held-out trials while limiting
 distortion of the held-out evoked response?
 
@@ -21,36 +21,34 @@ References
 """
 
 # %%
-# Load one auditory condition from the MNE Sample dataset
-# --------------------------------------------------------
+# Load one somatosensory condition from the MNE Somato dataset
+# -------------------------------------------------------------
 import mne
 import numpy as np
-from mne.datasets import sample
+from mne.datasets import somato
 
 from mne_denoise.dss import DSS, AverageBias
 from mne_denoise.viz import plot_component_score_curve, plot_evoked_gfp_comparison
 
-sample_path = sample.data_path(update_path=False)
-raw = mne.io.read_raw_fif(
-    sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
-    verbose="ERROR",
-)
-raw.crop(0.0, 60.0)
-
-# Find events before picking the homogeneous MEG channel type. One auditory
-# condition keeps the reproducibility question focused on repeated trials.
+data_path = somato.data_path(update_path=False)
+subject = "01"
+task = "somato"
+raw_fname = data_path / f"sub-{subject}" / "meg" / f"sub-{subject}_task-{task}_meg.fif"
+raw = mne.io.read_raw_fif(raw_fname, preload=False, verbose="ERROR")
+raw.crop(0.0, 360.0)
 events = mne.find_events(raw, stim_channel="STI 014", verbose=False)
-auditory_events = events[events[:, 2] == 1]
+event_id = 1
+somato_events = events[events[:, 2] == event_id]
+raw_event_count = len(somato_events)
 
-raw.pick("grad", exclude="bads")
+raw.pick("grad", exclude="bads").load_data()
 raw.filter(1.0, 40.0, verbose="ERROR")
 epochs = mne.Epochs(
     raw,
-    auditory_events,
-    event_id={"Auditory/Left": 1},
+    somato_events,
+    event_id={"Somato": event_id},
     tmin=-0.2,
-    tmax=0.4,
+    tmax=0.5,
     baseline=(None, 0.0),
     preload=True,
     reject=None,
@@ -60,13 +58,18 @@ epochs = mne.Epochs(
 # %%
 # Split trials before fitting
 # ---------------------------
-# The single selected Sample condition has a modest number of trials. A
-# deterministic alternating split keeps both the training and held-out sets
-# broad in time and gives the held-out split-half endpoint two balanced halves.
-# The held-out trials are not used by the fit or by any component-count
-# decision.
+# Alternating trials keep both the training and held-out sets broad in time.
+# The two held-out reproducibility halves are alternating as well, so their
+# comparison is not an early-versus-late drift comparison.
 train_epochs = epochs[::2]
 held_out_epochs = epochs[1::2]
+held_out_a = held_out_epochs[::2]
+held_out_b = held_out_epochs[1::2]
+if min(len(held_out_a), len(held_out_b)) < 2:
+    raise RuntimeError(
+        "The Somato crop must provide at least two trials in each alternating "
+        "held-out half."
+    )
 
 n_components = 6
 n_select = 3
@@ -75,6 +78,8 @@ model = DSS(
     n_components=n_components,
     n_select=n_select,
     component_action="retain",
+    # Use the Somato recording's declared MNE rank for both covariances.
+    cov_kws={"rank": "info"},
     verbose=False,
 )
 model.fit(train_epochs)
@@ -84,59 +89,59 @@ cleaned_held_out = model.transform(held_out_epochs)
 # %%
 # Evaluate held-out reproducibility and evoked preservation
 # ----------------------------------------------------------
-def _flattened_correlation(first, second):
-    """Return correlation after flattening channels and time."""
-    first = np.asarray(first, dtype=float).ravel()
-    second = np.asarray(second, dtype=float).ravel()
-    return float(np.corrcoef(first, second)[0, 1])
-
-
 before_evoked = held_out_epochs.average()
 after_evoked = cleaned_held_out.average()
 post_mask = before_evoked.times >= 0.0
 
-# Two independent halves of the held-out set provide the primary repeatability
-# endpoint. Both halves are evaluated with the same fitted spatial operator.
-n_held_out = len(held_out_epochs)
-half = n_held_out // 2
-before_half_a = held_out_epochs[:half].average()
-before_half_b = held_out_epochs[half:].average()
-after_half_a = cleaned_held_out[:half].average()
-after_half_b = cleaned_held_out[half:].average()
+# Two independent alternating halves of the held-out set provide the primary
+# repeatability endpoint. Both halves use the same fitted spatial operator.
+before_half_a = held_out_a.average()
+before_half_b = held_out_b.average()
+after_half_a = cleaned_held_out[::2].average()
+after_half_b = cleaned_held_out[1::2].average()
 
-split_half_before = _flattened_correlation(
-    before_half_a.get_data()[:, post_mask],
-    before_half_b.get_data()[:, post_mask],
+split_half_before = float(
+    np.corrcoef(
+        before_half_a.get_data()[:, post_mask].ravel(),
+        before_half_b.get_data()[:, post_mask].ravel(),
+    )[0, 1]
 )
-split_half_after = _flattened_correlation(
-    after_half_a.get_data()[:, post_mask],
-    after_half_b.get_data()[:, post_mask],
+split_half_after = float(
+    np.corrcoef(
+        after_half_a.get_data()[:, post_mask].ravel(),
+        after_half_b.get_data()[:, post_mask].ravel(),
+    )[0, 1]
 )
-held_out_waveform_correlation = _flattened_correlation(
-    before_evoked.get_data()[:, post_mask],
-    after_evoked.get_data()[:, post_mask],
+held_out_waveform_correlation = float(
+    np.corrcoef(
+        before_evoked.get_data()[:, post_mask].ravel(),
+        after_evoked.get_data()[:, post_mask].ravel(),
+    )[0, 1]
 )
-before_gfp_rms = np.sqrt(np.mean(before_evoked.get_data()[:, post_mask] ** 2))
-after_gfp_rms = np.sqrt(np.mean(after_evoked.get_data()[:, post_mask] ** 2))
-held_out_gfp_gain = after_gfp_rms / before_gfp_rms
+before_sensor_rms = np.sqrt(np.mean(before_evoked.get_data()[:, post_mask] ** 2))
+after_sensor_rms = np.sqrt(np.mean(after_evoked.get_data()[:, post_mask] ** 2))
+held_out_sensor_rms_gain = after_sensor_rms / before_sensor_rms
+held_out_sensor_rms_change = (after_sensor_rms - before_sensor_rms) / before_sensor_rms
 
-print("Held-out evoked DSS")
+print("Held-out somatosensory evoked DSS")
+print("Somato crop: 0.0-360.0 s")
+print(f"Raw event count for event {event_id}: {raw_event_count}")
+print(f"Usable epoch count: {len(epochs)}")
 print(f"Training trial count: {len(train_epochs)}")
-print(f"Held-out trial count: {n_held_out}")
+print(f"Held-out trial count: {len(held_out_epochs)}")
+print(f"Held-out alternating A/B counts: {len(held_out_a)}/{len(held_out_b)}")
 print(f"Channel count: {len(held_out_epochs.ch_names)}")
 print(f"n_components: {n_components}")
 print(f"n_select: {n_select}")
-print(
-    "Held-out split-half sizes (first/second held-out order): "
-    f"{half}/{n_held_out - half}"
-)
 print(f"Held-out split-half evoked correlation before: {split_half_before:.4f}")
 print(f"Held-out split-half evoked correlation after:  {split_half_after:.4f}")
 print(
-    "Held-out before-vs-after post-stimulus evoked waveform correlation: "
+    "Held-out input-vs-cleaned post-stimulus evoked waveform correlation: "
     f"{held_out_waveform_correlation:.4f}"
 )
-print(f"Held-out evoked GFP gain (after / before): {held_out_gfp_gain:.4f}")
+print(f"Held-out sensor-RMS gain (after / before): {held_out_sensor_rms_gain:.4f}")
+print(f"Held-out sensor-RMS normalized change: {held_out_sensor_rms_change:.4f}")
+print("Preservation control: not clean-neural ground truth")
 
 # %%
 # Inspect the held-out evoked result
@@ -152,7 +157,7 @@ plot_evoked_gfp_comparison(
     labels=("Held-out input", "Held-out DSS retain"),
     x_label="Time (s)",
     y_label="Sensor RMS (T/m)",
-    title="Held-out auditory evoked global field power",
+    title="Held-out somatosensory evoked sensor RMS",
     show=False,
 )
 

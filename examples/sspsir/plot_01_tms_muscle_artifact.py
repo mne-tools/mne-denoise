@@ -34,19 +34,21 @@ from mne_denoise.viz import plot_signal_overlay
 sample_path = sample.data_path(update_path=False)
 raw = mne.io.read_raw_fif(
     sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
-    preload=True,
+    preload=False,
     verbose="ERROR",
 )
 raw.crop(0.0, 60.0)
 events = mne.find_events(raw, stim_channel="STI 014", verbose=False)
-auditory_events = events[events[:, 2] == 1]
+event_id = 1
+auditory_events = events[events[:, 2] == event_id]
 
-raw.pick("eeg", exclude="bads")
-raw.filter(1.0, 45.0, verbose="ERROR")
+raw.pick("eeg", exclude="bads").load_data()
+raw.filter(1.0, None, verbose="ERROR")
+raw.set_eeg_reference("average", projection=False, verbose="ERROR")
 epochs = mne.Epochs(
     raw,
     auditory_events,
-    event_id={"Auditory/Left": 1},
+    event_id={"Auditory/Left": event_id},
     tmin=-0.10,
     tmax=0.30,
     baseline=(None, 0.0),
@@ -72,8 +74,8 @@ forward = mne.read_forward_solution(
 response_window = (0.08, 0.13)
 response_mask = (times >= response_window[0]) & (times <= response_window[1])
 response_indices = np.flatnonzero(response_mask)
-response_gfp = np.sqrt(np.mean(reference_data[:, response_mask] ** 2, axis=0))
-response_peak_index = int(response_indices[np.argmax(response_gfp)])
+response_sensor_rms = np.sqrt(np.mean(reference_data[:, response_mask] ** 2, axis=0))
+response_peak_index = int(response_indices[np.argmax(response_sensor_rms)])
 neural_topography = reference_data[:, response_peak_index].copy()
 neural_topography -= neural_topography.mean()
 neural_topography /= np.linalg.norm(neural_topography)
@@ -98,9 +100,15 @@ actual_overlap = float(
 )
 
 high_pass = 100.0
-# Choose the burst frequency after reading the Sample sampling frequency. This
-# construction is safely above high_pass and below the Sample Nyquist rate.
-artifact_frequency = 0.5 * (high_pass + sfreq / 2.0)
+nyquist = sfreq / 2.0
+reference_lowpass = float(reference.info["lowpass"])
+upper_frequency = min(0.9 * nyquist, reference_lowpass)
+if upper_frequency <= high_pass:
+    raise RuntimeError(
+        "The Sample EEG metadata do not provide a usable frequency interval "
+        "above the SSP-SIR high-pass cutoff."
+    )
+artifact_frequency = 0.5 * (high_pass + upper_frequency)
 artifact_mask = (times >= 0.0) & (times <= 0.05)
 artifact_envelope = np.exp(-0.5 * ((times - 0.025) / 0.009) ** 2)
 artifact_waveform = np.where(
@@ -146,13 +154,6 @@ cleaned_reference = model.transform(reference)
 # %%
 # Evaluate artifact attenuation and multiple preservation controls
 # ----------------------------------------------------------------
-def _flattened_correlation(first, second):
-    """Return correlation after flattening channels and time."""
-    first = np.asarray(first, dtype=float).ravel()
-    second = np.asarray(second, dtype=float).ravel()
-    return float(np.corrcoef(first, second)[0, 1])
-
-
 cleaned_contaminated_data = cleaned_contaminated.get_data()
 cleaned_reference_data = cleaned_reference.get_data()
 artifact_before = contaminated_data - reference_data
@@ -162,12 +163,15 @@ artifact_after_rms = np.sqrt(np.mean(artifact_after[:, artifact_mask] ** 2))
 artifact_residual_ratio = artifact_after_rms / artifact_before_rms
 artifact_attenuation_db = 20.0 * np.log10(1.0 / artifact_residual_ratio)
 
+artifact_window_reference_scale = np.sqrt(
+    np.mean(reference_data[:, artifact_mask] ** 2)
+)
 artifact_window_clean_change = (
     rms_change(
         reference_data[:, artifact_mask],
         cleaned_reference_data[:, artifact_mask],
     )
-    / reference_scale
+    / artifact_window_reference_scale
 )
 late_mask = (times >= response_window[0]) & (times <= response_window[1])
 late_reference_scale = np.sqrt(np.mean(reference_data[:, late_mask] ** 2))
@@ -178,22 +182,24 @@ late_clean_change = (
     )
     / late_reference_scale
 )
-late_waveform_correlation = _flattened_correlation(
-    reference_data[:, late_mask],
-    cleaned_reference_data[:, late_mask],
+late_waveform_correlation = float(
+    np.corrcoef(
+        reference_data[:, late_mask].ravel(),
+        cleaned_reference_data[:, late_mask].ravel(),
+    )[0, 1]
 )
-late_gfp_gain = (
+late_sensor_rms_gain = (
     np.sqrt(np.mean(cleaned_reference_data[:, late_mask] ** 2)) / late_reference_scale
 )
 
 reference_peak = reference_data[:, response_peak_index]
 cleaned_reference_peak = cleaned_reference_data[:, response_peak_index]
-peak_topography_correlation = _flattened_correlation(
-    reference_peak,
-    cleaned_reference_peak,
+peak_topography_correlation = float(
+    np.corrcoef(reference_peak.ravel(), cleaned_reference_peak.ravel())[0, 1]
 )
-peak_topography_gain = np.linalg.norm(cleaned_reference_peak) / np.linalg.norm(
-    reference_peak
+peak_topography_gain = np.dot(cleaned_reference_peak, reference_peak) / np.dot(
+    reference_peak,
+    reference_peak,
 )
 
 representative_channel_index = int(np.argmax(np.abs(reference_peak)))
@@ -201,26 +207,24 @@ representative_channel = reference.ch_names[representative_channel_index]
 print("Controlled TMS-like artifact with SSP-SIR")
 print(f"Sample EEG channel count: {n_channels}")
 print(f"Sample evoked sampling frequency: {sfreq:.6f} Hz")
-print("Artifact window: (0.000, 0.050) s")
+print(f"Reference info lowpass: {reference_lowpass:.6f} Hz")
+print(f"SSP-SIR high_pass: {high_pass:.6f} Hz")
 print(f"Artifact burst frequency: {artifact_frequency:.3f} Hz")
+print("Artifact window: (0.000, 0.050) s")
 print(f"Artifact/reference amplitude ratio: {artifact_reference_amplitude_ratio:.3f}")
 print(f"Configured topographic overlap: {configured_overlap:.3f}")
 print(f"Actual topographic cosine similarity: {actual_overlap:.4f}")
 print(f"n_components_: {model.n_components_}")
 print(f"M_: {model.M_}")
-print(
-    "First artifact singular values: "
-    f"{np.array2string(model.singular_values_[:4], precision=3)}"
-)
 print(f"Artifact residual ratio: {artifact_residual_ratio:.4f}")
 print(f"Artifact attenuation: {artifact_attenuation_db:.2f} dB")
 print(
-    "Artifact-window clean-input relative RMS change: "
+    "Artifact-window clean-input relative RMS change using local scale: "
     f"{artifact_window_clean_change:.4f}"
 )
-print(f"Late-response clean-input relative RMS change: {late_clean_change:.4f}")
+print(f"Late-response relative RMS change: {late_clean_change:.4f}")
 print(f"Late-response waveform correlation: {late_waveform_correlation:.4f}")
-print(f"Late-response GFP gain: {late_gfp_gain:.4f}")
+print(f"Late-response sensor-RMS gain: {late_sensor_rms_gain:.4f}")
 print(f"Response-peak topography correlation: {peak_topography_correlation:.4f}")
 print(f"Response-peak topography gain: {peak_topography_gain:.4f}")
 print(f"Representative channel: {representative_channel}")

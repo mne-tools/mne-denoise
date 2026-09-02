@@ -23,6 +23,7 @@ References
 import numpy as np
 
 from mne_denoise.dss import narrowband_dss
+from mne_denoise.qa import rms_change
 from mne_denoise.viz import plot_psd_comparison, plot_signal_overlay
 
 rng = np.random.default_rng(20260902)
@@ -53,7 +54,7 @@ observed = target_sensor + distractor_sensor + background
 # %%
 # Fit the public high-level narrowband DSS route
 # ----------------------------------------------
-n_components = 4
+n_components = 1
 n_select = 1
 model = narrowband_dss(
     sfreq=sfreq,
@@ -72,40 +73,28 @@ cleaned = model.fit_transform(observed)
 # %%
 # Compare target recovery with target-band selectivity
 # ----------------------------------------------------
-def _relative_rms_error(estimate, target):
-    """Return RMS error relative to the known target sensor signal."""
-    return float(
-        np.sqrt(np.mean((estimate - target) ** 2)) / np.sqrt(np.mean(target**2))
-    )
-
-
-def _correlation(first, second):
-    """Return a correlation without independently rescaling either trace."""
-    return float(np.corrcoef(first.ravel(), second.ravel())[0, 1])
-
-
-def _template_gain(signal, template):
-    """Return the least-squares gain of a signal relative to a template."""
-    return float(np.dot(signal, template) / np.dot(template, template))
-
-
 target_projection_before = target_topography @ observed
 target_projection_after = target_topography @ cleaned
 distractor_projection_before = distractor_topography @ observed
 distractor_projection_after = distractor_topography @ cleaned
 
-noisy_target_error = _relative_rms_error(observed, target_sensor)
-cleaned_target_error = _relative_rms_error(cleaned, target_sensor)
-target_correlation_before = _correlation(
-    target_projection_before,
+target_scale = np.sqrt(np.mean(target_sensor**2))
+noisy_target_error = rms_change(observed, target_sensor) / target_scale
+cleaned_target_error = rms_change(cleaned, target_sensor) / target_scale
+target_correlation_before = float(
+    np.corrcoef(target_projection_before.ravel(), target_waveform.ravel())[0, 1]
+)
+target_correlation_after = float(
+    np.corrcoef(target_projection_after.ravel(), target_waveform.ravel())[0, 1]
+)
+target_gain_before = np.dot(target_projection_before, target_waveform) / np.dot(
+    target_waveform,
     target_waveform,
 )
-target_correlation_after = _correlation(
-    target_projection_after,
+target_gain_after = np.dot(target_projection_after, target_waveform) / np.dot(
+    target_waveform,
     target_waveform,
 )
-target_gain_before = _template_gain(target_projection_before, target_waveform)
-target_gain_after = _template_gain(target_projection_after, target_waveform)
 target_power_ratio_before = np.mean(target_projection_before**2) / np.mean(
     distractor_projection_before**2
 )

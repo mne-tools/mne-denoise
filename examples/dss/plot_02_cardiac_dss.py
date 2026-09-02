@@ -1,17 +1,18 @@
 r"""
-Removing a cardiac-locked artifact with DSS
-===========================================
+Removing a planted cardiac-locked artifact with DSS
+====================================================
 
-Can a cardiac-locked DSS component learned from one interval attenuate ECG
-contamination in independent held-out data while preserving known neural
-activity?
+Can a cardiac-locked DSS component learned from one interval attenuate a known
+planted cardiac artifact in independent held-out data while preserving the
+unmodified MNE Sample EEG substrate?
 
-This controlled recording contains a known neural substrate, a cardiac artifact,
-small background noise, and an explicit ECG channel. The cardiac-removal
-operator is fitted only on the contaminated training interval. The same fitted
-operator is then applied to held-out contaminated data and to the corresponding
-held-out clean reference. Cardiac locking is a bias criterion, not an artifact
-label: a reproducible cardiac component can also contain neural signal
+The MNE Sample recording supplies realistic EEG data and R-peak timing. A
+fixed rank-one QRS-like artifact is then planted at those detected peaks. The
+cardiac-removal operator is fitted only on the contaminated training interval,
+and the same fitted operator is applied to held-out contaminated data and to
+the corresponding held-out reference. Cardiac locking is a bias criterion, not
+an artifact identity label: real recordings can contain neural or other
+activity correlated with the cardiac cycle
 :footcite:p:`sarela2005_dss,decheveigne_simon2008_spatial`.
 
 References
@@ -20,120 +21,141 @@ References
 """
 
 # %%
-# Construct a controlled ECG-contaminated recording
-# --------------------------------------------------
+# Load the MNE Sample substrate and detect real R peaks
+# -----------------------------------------------------
 import mne
 import numpy as np
-from mne.preprocessing import find_ecg_events
+from mne.datasets import sample
 
 from mne_denoise.dss import DSS, CycleAverageBias
 from mne_denoise.qa import rms_change
 from mne_denoise.viz import plot_evoked_gfp_comparison, plot_signal_overlay
 
-rng = np.random.default_rng(18)
-sfreq = 200.0
-duration = 60.0
-n_times = int(round(sfreq * duration))
-times = np.arange(n_times) / sfreq
-first_samp = 1_000
-n_eeg = 6
-
-neural_sources = np.vstack(
-    [
-        np.sin(2.0 * np.pi * 10.0 * times),
-        0.7 * np.sin(2.0 * np.pi * 1.25 * times + 0.4),
-        0.4 * np.sin(2.0 * np.pi * 18.0 * times + 1.1),
-    ]
+sample_path = sample.data_path(update_path=False)
+raw = mne.io.read_raw_fif(
+    sample_path / "MEG" / "sample" / "sample_audvis_raw.fif",
+    preload=False,
+    verbose="ERROR",
 )
-neural_topographies = rng.normal(size=(n_eeg, neural_sources.shape[0]))
-neural = neural_topographies @ neural_sources
-neural /= np.std(neural)
+raw.crop(0.0, 60.0).load_data()
 
-# The ECG channel contains regularly spaced QRS-like events. The neural
-# substrate also contains a slow component near the cardiac rate, so the
-# cardiac bias is not treated as a guaranteed artifact label.
-qrs_samples = np.arange(
-    int(sfreq),
-    n_times - int(sfreq),
-    int(round(0.8 * sfreq)),
-)
-qrs_offsets = np.arange(-20, 31)
-qrs_shape = np.exp(-0.5 * (qrs_offsets / 3.0) ** 2)
-qrs_shape -= 0.35 * np.exp(-0.5 * ((qrs_offsets - 8) / 5.0) ** 2)
-ecg = np.zeros(n_times)
-for sample in qrs_samples:
-    ecg[sample - 20 : sample + 31] += qrs_shape
-
-cardiac_topography = np.array([20.0, 14.0, -10.0, 7.0, -5.0, 3.0])
-cardiac_artifact = np.outer(cardiac_topography, ecg)
-background = 0.08 * rng.standard_normal((n_eeg, n_times))
-clean_reference = neural + background
-contaminated = clean_reference + cardiac_artifact
-
-ch_names = [f"EEG {index:03d}" for index in range(1, n_eeg + 1)] + ["ECG"]
-info = mne.create_info(
-    ch_names,
-    sfreq,
-    ["eeg"] * n_eeg + ["ecg"],
-)
-ecg_channel = ecg + 0.01 * rng.standard_normal(n_times)
-clean_recording = mne.io.RawArray(
-    np.vstack([clean_reference, ecg_channel]),
-    info.copy(),
-    first_samp=first_samp,
+# Detect the cardiac timing while MEG and the recording's ECG channel, when
+# available, are still present. No artificial ECG channel is constructed.
+ecg_events, _, _ = mne.preprocessing.find_ecg_events(
+    raw,
+    ch_name=None,
     verbose=False,
 )
-contaminated_recording = mne.io.RawArray(
-    np.vstack([contaminated, ecg_channel]),
-    info.copy(),
-    first_samp=first_samp,
-    verbose=False,
-)
+detected_r_peak_count = len(ecg_events)
 
-
-def _crop_seconds(inst, start, stop):
-    """Return a copied half-open temporal interval."""
-    return inst.copy().crop(
-        tmin=start,
-        tmax=stop - 1.0 / sfreq,
-    )
-
+reference = raw.copy().pick("eeg", exclude="bads")
+reference.filter(1.0, 40.0, verbose="ERROR")
+reference.set_eeg_reference("average", projection=False, verbose="ERROR")
+reference_data = reference.get_data()
+sfreq = float(reference.info["sfreq"])
+n_channels = len(reference.ch_names)
 
 # %%
-# Detect QRS events and split the temporal intervals
-# ---------------------------------------------------
-train_recording = _crop_seconds(contaminated_recording, 0.0, 30.0)
-held_out_recording = _crop_seconds(contaminated_recording, 30.0, 60.0)
-train_clean_recording = _crop_seconds(clean_recording, 0.0, 30.0)
-held_out_clean_recording = _crop_seconds(clean_recording, 30.0, 60.0)
+# Plant one rank-one QRS-like artifact at the detected peaks
+# -----------------------------------------------------------
+qrs_window = (-0.10, 0.20)
+qrs_start = int(round(qrs_window[0] * sfreq))
+qrs_stop = int(round(qrs_window[1] * sfreq))
+qrs_offsets = np.arange(qrs_start, qrs_stop)
+qrs_times = qrs_offsets / sfreq
+qrs_template = np.exp(-0.5 * ((qrs_times + 0.025) / 0.014) ** 2)
+qrs_template -= 0.65 * np.exp(-0.5 * ((qrs_times - 0.040) / 0.024) ** 2)
+qrs_template -= qrs_template.mean()
+qrs_template /= np.sqrt(np.mean(qrs_template**2))
 
-train_events, _, _ = find_ecg_events(
-    train_recording,
-    ch_name="ECG",
+rng = np.random.default_rng(18)
+cardiac_topography = rng.standard_normal(n_channels)
+cardiac_topography -= cardiac_topography.mean()
+cardiac_topography /= np.linalg.norm(cardiac_topography)
+
+cardiac_waveform = np.zeros(reference.n_times)
+r_peak_samples = ecg_events[:, 0].astype(int)
+r_peak_indices = r_peak_samples - int(reference.first_samp)
+complete_peak_mask = (r_peak_indices + qrs_start >= 0) & (
+    r_peak_indices + qrs_stop <= reference.n_times
+)
+r_peak_samples = r_peak_samples[complete_peak_mask]
+r_peak_indices = r_peak_indices[complete_peak_mask]
+if len(r_peak_samples) < 8:
+    raise RuntimeError(
+        "The cropped Sample recording must provide at least eight complete "
+        "R-peak windows for temporal training and held-out evaluation."
+    )
+for peak_index in r_peak_indices:
+    cardiac_waveform[peak_index + qrs_start : peak_index + qrs_stop] += qrs_template
+unscaled_artifact = cardiac_topography[:, np.newaxis] * cardiac_waveform
+
+reference_centered = reference_data - np.median(
+    reference_data,
+    axis=1,
+    keepdims=True,
+)
+robust_reference_scale = 1.4826 * np.median(np.abs(reference_centered))
+if not np.isfinite(robust_reference_scale) or robust_reference_scale <= 0.0:
+    raise RuntimeError("The Sample EEG robust reference scale must be positive.")
+requested_artifact_to_reference_ratio = 8.0
+artifact_scale_factor = (
+    requested_artifact_to_reference_ratio
+    * robust_reference_scale
+    / np.sqrt(np.mean(qrs_template**2))
+)
+artifact_data = unscaled_artifact * artifact_scale_factor
+contaminated_data = reference_data + artifact_data
+
+contaminated = mne.io.RawArray(
+    contaminated_data,
+    reference.info.copy(),
+    first_samp=reference.first_samp,
     verbose=False,
 )
-held_out_events, _, _ = find_ecg_events(
-    held_out_recording,
-    ch_name="ECG",
-    verbose=False,
+contaminated.set_annotations(reference.annotations.copy())
+
+# %%
+# Split the recording in time before fitting
+# -------------------------------------------
+# The first 30 seconds are training data and the second 30 seconds are held
+# out. A one-sample adjustment makes the two public Raw crops half-open.
+split_time = 30.0
+train_contaminated = contaminated.copy().crop(
+    tmin=0.0,
+    tmax=split_time - 1.0 / sfreq,
+)
+held_out_contaminated = contaminated.copy().crop(
+    tmin=split_time,
+    tmax=60.0 - 1.0 / sfreq,
+)
+held_out_reference = reference.copy().crop(
+    tmin=split_time,
+    tmax=60.0 - 1.0 / sfreq,
 )
 
-train_contaminated = train_recording.copy().pick("eeg", exclude="bads")
-held_out_contaminated = held_out_recording.copy().pick("eeg", exclude="bads")
-train_reference = train_clean_recording.copy().pick("eeg", exclude="bads")
-held_out_reference = held_out_clean_recording.copy().pick("eeg", exclude="bads")
+split_sample = int(raw.first_samp + round(split_time * sfreq))
+train_events = r_peak_samples[r_peak_samples < split_sample]
+held_out_events = r_peak_samples[r_peak_samples >= split_sample]
+if min(len(train_events), len(held_out_events)) < 4:
+    raise RuntimeError(
+        "The Sample crop must provide at least four complete R peaks in both "
+        "the training and held-out intervals."
+    )
 
-# The bias window is defined in seconds, while the event samples returned by
-# MNE are acquisition-numbered. first_samp maps them to this cropped Raw.
+train_contaminated = train_contaminated.copy().pick("eeg", exclude="bads")
+held_out_contaminated = held_out_contaminated.copy().pick("eeg", exclude="bads")
+held_out_reference = held_out_reference.copy().pick("eeg", exclude="bads")
+
 bias = CycleAverageBias(
-    event_samples=train_events[:, 0],
-    window=(-0.10, 0.20),
+    event_samples=train_events,
+    window=qrs_window,
     window_unit="seconds",
     sfreq=sfreq,
     event_origin="raw",
     first_samp=train_contaminated.first_samp,
 )
-n_components = 4
+n_components = 6
 n_select = 1
 model = DSS(
     bias=bias,
@@ -144,137 +166,163 @@ model = DSS(
     verbose=False,
 )
 model.fit(train_contaminated)
+
+# One fit is used for both held-out substrates. The reference transformation
+# makes the planted artifact difference identifiable after the same operator.
 cleaned_held_out = model.transform(held_out_contaminated)
 cleaned_held_out_reference = model.transform(held_out_reference)
 
-
 # %%
-# Evaluate held-out artifact attenuation and clean-input preservation
+# Evaluate the isolated planted artifact and clean-input preservation
 # -------------------------------------------------------------------
-def _flattened_correlation(first, second):
-    """Return correlation after flattening channels and time."""
-    first = np.asarray(first, dtype=float).ravel()
-    second = np.asarray(second, dtype=float).ravel()
-    return float(np.corrcoef(first, second)[0, 1])
-
-
-def _event_locked_average(inst, event_samples, window_samples):
-    """Average complete event windows using public MNE data access."""
-    data = inst.get_data()
-    relative_events = np.asarray(event_samples, dtype=int) - int(inst.first_samp)
-    start, stop = window_samples
-    windows = [data[:, event + start : event + stop] for event in relative_events]
-    return np.mean(np.stack(windows), axis=0)
-
-
-def _event_window_mask(inst, event_samples, window_samples):
-    """Mark event windows for the diagnostic overlay."""
-    mask = np.zeros(inst.n_times, dtype=bool)
-    relative_events = np.asarray(event_samples, dtype=int) - int(inst.first_samp)
-    start, stop = window_samples
-    for event in relative_events:
-        left = max(0, event + start)
-        right = min(inst.n_times, event + stop)
-        mask[left:right] = True
-    return mask
-
-
-evaluation_window = (
-    int(round(-0.10 * sfreq)),
-    int(round(0.20 * sfreq)),
-)
-locked_times = np.arange(*evaluation_window) / sfreq
-before_locked = _event_locked_average(
-    held_out_contaminated,
-    held_out_events[:, 0],
-    evaluation_window,
-)
-after_locked = _event_locked_average(
-    cleaned_held_out,
-    held_out_events[:, 0],
-    evaluation_window,
+artifact_before_data = held_out_contaminated.get_data() - held_out_reference.get_data()
+artifact_after_data = (
+    cleaned_held_out.get_data() - cleaned_held_out_reference.get_data()
 )
 
-before_locked_rms = np.sqrt(np.mean(before_locked**2))
-after_locked_rms = np.sqrt(np.mean(after_locked**2))
-attenuation_db = 20.0 * np.log10(before_locked_rms / after_locked_rms)
+artifact_before = mne.io.RawArray(
+    artifact_before_data,
+    held_out_contaminated.info.copy(),
+    first_samp=held_out_contaminated.first_samp,
+    verbose=False,
+)
+artifact_after = mne.io.RawArray(
+    artifact_after_data,
+    held_out_contaminated.info.copy(),
+    first_samp=held_out_contaminated.first_samp,
+    verbose=False,
+)
+artifact_before.set_annotations(held_out_contaminated.annotations.copy())
+artifact_after.set_annotations(held_out_contaminated.annotations.copy())
+
+held_out_epoch_events = np.column_stack(
+    [
+        held_out_events,
+        np.zeros(len(held_out_events), dtype=int),
+        np.ones(len(held_out_events), dtype=int),
+    ]
+)
+artifact_before_epochs = mne.Epochs(
+    artifact_before,
+    held_out_epoch_events,
+    event_id={"R peak": 1},
+    tmin=qrs_window[0],
+    tmax=qrs_window[1],
+    baseline=None,
+    preload=True,
+    reject=None,
+    verbose=False,
+)
+artifact_after_epochs = mne.Epochs(
+    artifact_after,
+    held_out_epoch_events,
+    event_id={"R peak": 1},
+    tmin=qrs_window[0],
+    tmax=qrs_window[1],
+    baseline=None,
+    preload=True,
+    reject=None,
+    verbose=False,
+)
+artifact_before_evoked = artifact_before_epochs.average()
+artifact_after_evoked = artifact_after_epochs.average()
+artifact_before_rms = np.sqrt(np.mean(artifact_before_evoked.get_data() ** 2))
+artifact_after_rms = np.sqrt(np.mean(artifact_after_evoked.get_data() ** 2))
+artifact_residual_ratio = artifact_after_rms / artifact_before_rms
+artifact_attenuation_db = 20.0 * np.log10(artifact_before_rms / artifact_after_rms)
 
 reference_data = held_out_reference.get_data()
 cleaned_reference_data = cleaned_held_out_reference.get_data()
 reference_scale = np.sqrt(np.mean(reference_data**2))
-clean_input_relative_change = (
+clean_input_relative_rms_change = (
     rms_change(reference_data, cleaned_reference_data) / reference_scale
 )
-clean_input_waveform_correlation = _flattened_correlation(
-    reference_data,
-    cleaned_reference_data,
+clean_input_waveform_correlation = float(
+    np.corrcoef(reference_data.ravel(), cleaned_reference_data.ravel())[0, 1]
 )
 clean_input_retained_power = np.sum(cleaned_reference_data**2) / np.sum(
     reference_data**2
 )
 
-event_mask = _event_window_mask(
-    held_out_contaminated,
-    held_out_events[:, 0],
-    evaluation_window,
-)
-held_start = int(round(30.0 * sfreq))
-held_stop = int(round(60.0 * sfreq))
-cardiac_channel_index = int(
-    np.argmax(np.sqrt(np.mean(cardiac_artifact[:, held_start:held_stop] ** 2, axis=1)))
-)
+# This channel is predeclared from the planted topography, not selected from
+# the held-out attenuation result.
+cardiac_channel_index = int(np.argmax(np.abs(cardiac_topography)))
 cardiac_channel = held_out_contaminated.ch_names[cardiac_channel_index]
+representative_event_time = (
+    int(held_out_events[0]) - int(held_out_contaminated.first_samp)
+) / sfreq
 
-train_duration = (
-    train_contaminated.times[-1] - train_contaminated.times[0] + 1.0 / sfreq
-)
-held_out_duration = (
-    held_out_contaminated.times[-1] - held_out_contaminated.times[0] + 1.0 / sfreq
-)
 print("Held-out cardiac DSS")
-print(f"Training duration: {train_duration:.3f} s")
-print(f"Held-out duration: {held_out_duration:.3f} s")
-print(f"Training QRS event count: {len(train_events)}")
-print(f"Held-out QRS event count: {len(held_out_events)}")
+print("Sample crop: 0.0-60.0 s")
+print(f"Detected R-peak count: {detected_r_peak_count}")
+print(f"Usable R-peak count: {len(r_peak_samples)}")
+print(f"Training R-peak count: {len(train_events)}")
+print(f"Held-out R-peak count: {len(held_out_events)}")
+print(f"EEG channel count: {n_channels}")
+print("Planted artifact rank: 1")
+print(
+    "Artifact amplitude scaling: "
+    f"{requested_artifact_to_reference_ratio:.1f} x robust EEG scale "
+    "(1.4826 x global median absolute deviation)"
+)
 print(f"n_components: {n_components}")
-print(f"n_select: {n_select}")
-print(f"Held-out QRS-locked RMS attenuation: {attenuation_db:.2f} dB")
-print(f"Clean-input relative RMS change: {clean_input_relative_change:.4f}")
+print(f"n_select: {n_select} (rank-one planted artifact)")
+print(f"QRS-locked planted-artifact RMS before: {artifact_before_rms:.6e}")
+print(f"QRS-locked planted-artifact RMS after:  {artifact_after_rms:.6e}")
+print(f"Planted-artifact residual ratio: {artifact_residual_ratio:.4f}")
+print(f"Planted-artifact attenuation: {artifact_attenuation_db:.2f} dB")
+print(f"Clean-input relative RMS change: {clean_input_relative_rms_change:.4f}")
 print(f"Clean-input waveform correlation: {clean_input_waveform_correlation:.4f}")
 print(f"Clean-input retained-power ratio: {clean_input_retained_power:.4f}")
+print(
+    "Artifact endpoint: (contaminated - reference) versus "
+    "(cleaned contaminated - cleaned reference)."
+)
+print(
+    "Preservation endpoint: the operator's change to held-out unmodified "
+    "Sample EEG, not clean-neural ground truth."
+)
+print(
+    "Cardiac locking is a bias criterion, not an artifact identity label; real "
+    "recordings can contain neural or other cardiac-correlated activity."
+)
 
 # %%
-# Inspect the held-out QRS-locked result
-# --------------------------------------
+# Inspect the isolated artifact and a cardiac-dominated EEG channel
+# -----------------------------------------------------------------
 plot_evoked_gfp_comparison(
-    before_locked,
-    after_locked,
-    times=locked_times,
+    artifact_before_evoked,
+    artifact_after_evoked,
+    times=artifact_before_evoked.times,
     ci=None,
-    labels=("Held-out contaminated", "Held-out DSS subtraction"),
-    x_label="Time from QRS (s)",
+    labels=("planted cardiac artifact", "residual after DSS"),
+    x_label="Time from R peak (s)",
     y_label="Sensor RMS (a.u.)",
-    title="Held-out QRS-locked global field power",
+    title="Held-out planted cardiac artifact around real R peaks",
     show=False,
 )
 
-first_event_time = (held_out_events[0, 0] - held_out_contaminated.first_samp) / sfreq
 plot_signal_overlay(
     held_out_contaminated,
     cleaned_held_out,
     held_out_contaminated.times,
     pick=cardiac_channel,
-    start=max(0.0, first_event_time - 0.35),
-    stop=min(held_out_contaminated.times[-1], first_event_time + 0.50),
+    start=max(0.0, representative_event_time - 0.35),
+    stop=min(held_out_contaminated.times[-1], representative_event_time + 0.50),
     scale_after=False,
     before_label="held-out contaminated",
-    after_label="DSS cardiac subtraction",
+    after_label="DSS cleaned",
     reference=reference_data[cardiac_channel_index],
-    reference_label="held-out clean reference",
-    highlight_mask=event_mask,
-    highlight_label="QRS-locked evaluation window",
+    reference_label="held-out Sample EEG reference",
+    highlight_spans=[
+        {
+            "onset": representative_event_time + qrs_window[0],
+            "duration": qrs_window[1] - qrs_window[0],
+            "label": "QRS-locked evaluation window",
+        }
+    ],
     x_label="Time in held-out interval (s)",
-    y_label="Amplitude (a.u.)",
+    y_label="EEG amplitude (V)",
     title=f"Cardiac-locked subtraction at {cardiac_channel}",
     show=False,
 )
@@ -282,9 +330,11 @@ plot_signal_overlay(
 # %%
 # Interpretation
 # --------------
-# The artifact endpoint uses QRS events from the held-out interval, whereas the
-# preservation values come from applying the same fitted model to the held-out
-# clean-reference substrate. This is an operator-control measurement, not
-# evidence that a high correlation proves neural preservation. A component
-# reproducible at cardiac events can contain neural signal as well as cardiac
-# contamination, so the selected component count remains a scientific choice.
+# R-peak timing comes from the real MNE Sample recording, while the EEG
+# substrate is real but the added rank-one cardiac artifact is controlled. The
+# difference signals isolate that planted artifact before and after the same
+# fitted operator. Cardiac locking is only the DSS bias criterion, so a real
+# cardiac-locked component can include neural or other activity correlated with
+# the cardiac cycle. The preservation values quantify how the learned operator
+# changes the unmodified held-out Sample EEG substrate; they do not establish
+# preservation of a noise-free neural ground truth.
