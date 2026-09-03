@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Spectrum Interpolation Examples &#8212; mne-denoise 0.0.2.dev224+g33850b3bf documentation</title>
+    <title>Spectrum interpolation &#8212; mne-denoise 0.0.2.dev225+gd1e2818b8 documentation</title>
   
   
   
@@ -37,7 +37,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e305a2df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=fc7d3997" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=54fa77fa"></script>
+    <script src="../../_static/documentation_options.js?v=079e5152"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,11 +63,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Spectrum Interpolation: Power-Line Noise Removal." href="plot_01_spectrum_interpolation.html" />
-    <link rel="prev" title="Guided ASR: preserving neural activity that ASR would over-clean." href="../asr/plot_15_guided_asr.html" />
+    <link rel="next" title="Removing nonstationary line noise with spectrum interpolation" href="plot_01_nonstationary_line_noise.html" />
+    <link rel="prev" title="Forward-informed sensor-noise suppression with SOUND" href="../sound/plot_01_forward_informed_sensor_noise.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.2.dev224+g33850b3bf" />
+  <meta name="docsearch:version" content="0.0.2.dev225+gd1e2818b8" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -433,75 +433,52 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../sns/index.html">Sensor Noise Suppression</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../sns/plot_01_sns_basics.html">Basic Sensor Noise Suppression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../sns/plot_02_algorithm_properties.html">SNS assumptions and diagnostics</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../asr/index.html">ASR</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_01_asr_burst_repair.html">Repairing transient EEG bursts with ASR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_02_riemannian_asr_blinks.html">Riemannian ASR on blink-contaminated EEG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_03_adaptive_asr.html">Adaptive ASR for changing recording statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../asr/plot_04_juggler_asr.html">Juggler ASR when clean windows are scarce</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../bss_cca/index.html">Reference-free BSS-CCA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../bss_cca/plot_01_bss_cca_basics.html">Basic reference-free BSS-CCA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../bss_cca/plot_02_bss_cca_properties.html">BSS-CCA algorithm properties</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sns/index.html">SNS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sns/plot_01_sensor_noise_suppression.html">Suppressing sensor-specific noise with SNS</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../ssa/index.html">Singular Spectrum Analysis</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../ssa/plot_01_ssa_basics.html">Basic SSA decomposition and frequency-guided cleaning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../ssa/plot_02_local_ssa_properties.html">Local SSA properties on a synthetic signal</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sound/index.html">SOUND</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sound/plot_01_forward_informed_sensor_noise.html">Forward-informed sensor-noise suppression with SOUND</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../dss/index.html">DSS Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_01_dss_fundamentals.html">Fundamentals of DSS.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_02_artifact_correction.html">Artifact Correction with DSS.</a></li>
-
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_03_evoked_responses.html">Denoising Evoked Responses.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_04_spectral_dss.html">Denoising Rhythms (Spectral DSS).</a></li>
-
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_05_periodic_dss.html">Periodic Signals (SSVEP and Quasi-Periodic).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_06_temporal_dss.html">Temporal Biases for Ordinary DSS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_07_spectrogram_dss.html">Time-Frequency DSS: Spectrogram Masking.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_08_blind_source_separation.html">Blind Source Separation and ICA Equivalence.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_09_custom_bias.html">Custom DSS: Defining Your Own Bias.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_11_wiener_masking.html">Adaptive Wiener Masking for Bursty Signals.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_12_joint_dss.html">Joint DSS (Multi-Dataset Repeatability).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../dss/plot_13_cardiac_composition.html">Cardiac DSS as an Explicit Composition</a></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Spectrum interpolation</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="plot_01_nonstationary_line_noise.html">Removing nonstationary line noise with spectrum interpolation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zapline/index.html">ZapLine Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_01_basic_usage.html">ZapLine: Line Noise Removal Fundamentals.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_02_parameter_tuning.html">ZapLine: Parameter Tuning and Real Data.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_03_epoched_data.html">ZapLine: Epoched Data and Real Data Examples.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_04_adaptive_mode.html">ZapLine-plus: Adaptive Cleaning on Non-Stationary Noise.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_05_adaptive_advanced.html">ZapLine-plus: Advanced Settings and Features.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_06_ctf_meg.html">ZapLine on MEG-like data with many co-equal noise components.</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zapline/index.html">ZapLine</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_01_zapline_real_meg.html">Removing 60-Hz line noise and its harmonic from real MEG with ZapLine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../zapline/plot_02_adaptive_zapline.html">Adaptive ZapLine for changing line-noise statistics</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../asr/index.html">ASR Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_01_asr_basics.html">Artifact Subspace Reconstruction: Basic Usage.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_02_mne_raw_qc.html">Artifact Subspace Reconstruction: Raw QC and Annotations.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_03_adaptive_asr.html">Adaptive ASR with chunk updates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_04_juggler_asr.html">JugglerASR for dense short bursts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_05_asr_visualization.html">Visualizing ASR with mne_denoise.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_06_cutoff_tuning.html">Choosing the ASR cutoff.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_07_riemannian_asr.html">Riemannian ASR versus standard ASR.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_08_adaptive_variants.html">Adaptive ASR variants (PSP / PSW / MW).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_09_juggler_strategies.html">Juggler ASR: DBSCAN vs GEV reference selection.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_10_choosing_a_variant.html">Choosing an ASR variant.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_11_epochs_and_meg.html">ASR on Epochs and on MEG.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_12_diagnostics_qc.html">ASR diagnostics and quality control.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_13_pipeline_filter_asr_ica.html">A realistic pipeline: filter, ASR, then ICA.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_14_rms_distribution.html">Quantifying Dataset Noise with RMS Statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../asr/plot_15_guided_asr.html">Guided ASR: preserving neural activity that ASR would over-clean.</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../dss/index.html">DSS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dss/plot_01_evoked_dss.html">Enhancing a reproducible somatosensory response with DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dss/plot_02_cardiac_dss.html">Removing a planted cardiac-locked artifact with DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dss/plot_03_narrowband_dss.html">Extracting a weak narrowband source with DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dss/plot_04_time_shift_dss.html">Recovering delayed reproducible structure with TimeShiftDSS</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Spectrum Interpolation Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="plot_01_spectrum_interpolation.html">Spectrum Interpolation: Power-Line Noise Removal.</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ssa/index.html">SSA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ssa/plot_01_basic_ssa.html">Basic SSA decomposition with frequency-guided grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ssa/plot_02_local_ssa_artifact.html">Removing a high-amplitude single-channel artifact with local SSA</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../sound/index.html">SOUND Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../sound/plot_01_sound_basics.html">SOUND: Suppressing Channel-Specific Noise with a Forward Model</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../bss_cca/index.html">BSS-CCA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../bss_cca/plot_01_muscle_artifact.html">Attenuating broadband muscle artifact with BSS-CCA</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../sspsir/index.html">SSP-SIR Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../sspsir/plot_01_sspsir_basics.html">SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../icanclean/index.html">iCanClean</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../icanclean/plot_01_reference_informed_cleaning.html">Reference-informed cleaning with iCanClean</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sspsir/index.html">SSP-SIR</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sspsir/plot_01_tms_muscle_artifact.html">Suppressing a TMS-like muscle artifact with SSP-SIR</a></li>
 </ul>
 </details></li>
 </ul>
@@ -537,42 +514,18 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="spectrum-interpolation-examples">
-<span id="sphx-glr-auto-examples-spectrum-interpolation"></span><h1>Spectrum Interpolation Examples<a class="headerlink" href="#spectrum-interpolation-examples" title="Link to this heading">#</a></h1>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
-<p>Examples demonstrating spectrum-interpolation line-noise removal
-(Leske &amp; Dalal, 2019). The power-line frequency and its harmonics are removed by
-interpolating the amplitude spectrum across a narrow band while preserving the
-phase, leaving broadband activity around the line frequency largely intact.
-The FFT-based method is best suited to continuous recordings or long segments;
-short epochs should be inspected for edge effects.</p>
-</section>
-<section id="files">
-<h2>Files<a class="headerlink" href="#files" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_spectrum_interpolation.py</span></code>: Basic spectrum interpolation on
-synthetic data with 60 Hz line noise and harmonics.</p></li>
-</ul>
-</section>
-<section id="data-requirements">
-<h2>Data Requirements<a class="headerlink" href="#data-requirements" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>The example runs directly on synthetic data with no external downloads.</p></li>
-</ul>
-</section>
-<section id="references">
-<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Leske, S., &amp; Dalal, S. S. (2019). Reducing power line noise in EEG and MEG
-data via spectrum interpolation. NeuroImage, 189, 763-776.</p></li>
-</ul>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates SpectrumInterpolation on a synthetic recording contaminated by 60 Hz line noise and its harmonics."><img alt="" src="../../_images/sphx_glr_plot_01_spectrum_interpolation_thumb.png" />
-<p><a class="reference internal" href="plot_01_spectrum_interpolation.html"><span class="doc">Spectrum Interpolation: Power-Line Noise Removal.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Spectrum Interpolation: Power-Line Noise Removal.</div>
+  <section id="spectrum-interpolation">
+<span id="sphx-glr-auto-examples-spectrum-interpolation"></span><h1>Spectrum interpolation<a class="headerlink" href="#spectrum-interpolation" title="Link to this heading">#</a></h1>
+<p>This example uses controlled nonstationary 60-Hz interference with abrupt
+changes in amplitude to illustrate the use case for spectrum interpolation.</p>
+<p>Known clean data provide a time-domain preservation reference, and a public
+notch filter is included only as a contextual comparison. The example
+evaluates line attenuation and signal distortion separately.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can spectrum interpolation attenuate 60-Hz interference whose amplitude changes and switches abruptly while limiting distortion of a known time-domain signal? This controlled multichannel example includes a transient in the clean substrate, then compares spectrum interpolation with a public IIR notch filter as a contextual reference."><img alt="" src="../../_images/sphx_glr_plot_01_nonstationary_line_noise_thumb.png" />
+<p><a class="reference internal" href="plot_01_nonstationary_line_noise.html"><span class="doc">Removing nonstationary line noise with spectrum interpolation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Removing nonstationary line noise with spectrum interpolation</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
-</section>
 </section>
 
 
@@ -586,20 +539,20 @@ data via spectrum interpolation. NeuroImage, 189, 763-776.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../asr/plot_15_guided_asr.html"
+       href="../sound/plot_01_forward_informed_sensor_noise.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Guided ASR: preserving neural activity that ASR would over-clean.</p>
+        <p class="prev-next-title">Forward-informed sensor-noise suppression with SOUND</p>
       </div>
     </a>
     <a class="right-next"
-       href="plot_01_spectrum_interpolation.html"
+       href="plot_01_nonstationary_line_noise.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Spectrum Interpolation: Power-Line Noise Removal.</p>
+        <p class="prev-next-title">Removing nonstationary line noise with spectrum interpolation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -613,21 +566,6 @@ data via spectrum interpolation. NeuroImage, 189, 763-776.</p></li>
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files">Files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-requirements">Data Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
-</ul>
-  </nav></div>
 
   <div class="sidebar-secondary-item">
 

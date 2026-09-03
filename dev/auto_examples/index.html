@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Examples Gallery &#8212; mne-denoise 0.0.2.dev224+g33850b3bf documentation</title>
+    <title>Examples &#8212; mne-denoise 0.0.2.dev225+gd1e2818b8 documentation</title>
   
   
   
@@ -37,7 +37,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/style.css?v=e305a2df" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css?v=fc7d3997" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=54fa77fa"></script>
+    <script src="../_static/documentation_options.js?v=079e5152"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,11 +63,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Sensor Noise Suppression" href="sns/index.html" />
+    <link rel="next" title="ASR" href="asr/index.html" />
     <link rel="prev" title="Evaluating denoising" href="../evaluation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.2.dev224+g33850b3bf" />
+  <meta name="docsearch:version" content="0.0.2.dev225+gd1e2818b8" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -433,75 +433,52 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="sns/index.html">Sensor Noise Suppression</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="sns/plot_01_sns_basics.html">Basic Sensor Noise Suppression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sns/plot_02_algorithm_properties.html">SNS assumptions and diagnostics</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="asr/index.html">ASR</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="asr/plot_01_asr_burst_repair.html">Repairing transient EEG bursts with ASR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asr/plot_02_riemannian_asr_blinks.html">Riemannian ASR on blink-contaminated EEG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asr/plot_03_adaptive_asr.html">Adaptive ASR for changing recording statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asr/plot_04_juggler_asr.html">Juggler ASR when clean windows are scarce</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="bss_cca/index.html">Reference-free BSS-CCA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="bss_cca/plot_01_bss_cca_basics.html">Basic reference-free BSS-CCA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bss_cca/plot_02_bss_cca_properties.html">BSS-CCA algorithm properties</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sns/index.html">SNS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="sns/plot_01_sensor_noise_suppression.html">Suppressing sensor-specific noise with SNS</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="ssa/index.html">Singular Spectrum Analysis</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="ssa/plot_01_ssa_basics.html">Basic SSA decomposition and frequency-guided cleaning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ssa/plot_02_local_ssa_properties.html">Local SSA properties on a synthetic signal</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sound/index.html">SOUND</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="sound/plot_01_forward_informed_sensor_noise.html">Forward-informed sensor-noise suppression with SOUND</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="dss/index.html">DSS Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_01_dss_fundamentals.html">Fundamentals of DSS.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_02_artifact_correction.html">Artifact Correction with DSS.</a></li>
-
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_03_evoked_responses.html">Denoising Evoked Responses.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_04_spectral_dss.html">Denoising Rhythms (Spectral DSS).</a></li>
-
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_05_periodic_dss.html">Periodic Signals (SSVEP and Quasi-Periodic).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_06_temporal_dss.html">Temporal Biases for Ordinary DSS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_07_spectrogram_dss.html">Time-Frequency DSS: Spectrogram Masking.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_08_blind_source_separation.html">Blind Source Separation and ICA Equivalence.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_09_custom_bias.html">Custom DSS: Defining Your Own Bias.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_11_wiener_masking.html">Adaptive Wiener Masking for Bursty Signals.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_12_joint_dss.html">Joint DSS (Multi-Dataset Repeatability).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dss/plot_13_cardiac_composition.html">Cardiac DSS as an Explicit Composition</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="spectrum_interpolation/index.html">Spectrum interpolation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="spectrum_interpolation/plot_01_nonstationary_line_noise.html">Removing nonstationary line noise with spectrum interpolation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="zapline/index.html">ZapLine Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="zapline/plot_01_basic_usage.html">ZapLine: Line Noise Removal Fundamentals.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zapline/plot_02_parameter_tuning.html">ZapLine: Parameter Tuning and Real Data.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zapline/plot_03_epoched_data.html">ZapLine: Epoched Data and Real Data Examples.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zapline/plot_04_adaptive_mode.html">ZapLine-plus: Adaptive Cleaning on Non-Stationary Noise.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zapline/plot_05_adaptive_advanced.html">ZapLine-plus: Advanced Settings and Features.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zapline/plot_06_ctf_meg.html">ZapLine on MEG-like data with many co-equal noise components.</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="zapline/index.html">ZapLine</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="zapline/plot_01_zapline_real_meg.html">Removing 60-Hz line noise and its harmonic from real MEG with ZapLine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zapline/plot_02_adaptive_zapline.html">Adaptive ZapLine for changing line-noise statistics</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="asr/index.html">ASR Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_01_asr_basics.html">Artifact Subspace Reconstruction: Basic Usage.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_02_mne_raw_qc.html">Artifact Subspace Reconstruction: Raw QC and Annotations.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_03_adaptive_asr.html">Adaptive ASR with chunk updates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_04_juggler_asr.html">JugglerASR for dense short bursts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_05_asr_visualization.html">Visualizing ASR with mne_denoise.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_06_cutoff_tuning.html">Choosing the ASR cutoff.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_07_riemannian_asr.html">Riemannian ASR versus standard ASR.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_08_adaptive_variants.html">Adaptive ASR variants (PSP / PSW / MW).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_09_juggler_strategies.html">Juggler ASR: DBSCAN vs GEV reference selection.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_10_choosing_a_variant.html">Choosing an ASR variant.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_11_epochs_and_meg.html">ASR on Epochs and on MEG.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_12_diagnostics_qc.html">ASR diagnostics and quality control.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_13_pipeline_filter_asr_ica.html">A realistic pipeline: filter, ASR, then ICA.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_14_rms_distribution.html">Quantifying Dataset Noise with RMS Statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="asr/plot_15_guided_asr.html">Guided ASR: preserving neural activity that ASR would over-clean.</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dss/index.html">DSS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="dss/plot_01_evoked_dss.html">Enhancing a reproducible somatosensory response with DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dss/plot_02_cardiac_dss.html">Removing a planted cardiac-locked artifact with DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dss/plot_03_narrowband_dss.html">Extracting a weak narrowband source with DSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dss/plot_04_time_shift_dss.html">Recovering delayed reproducible structure with TimeShiftDSS</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="spectrum_interpolation/index.html">Spectrum Interpolation Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="spectrum_interpolation/plot_01_spectrum_interpolation.html">Spectrum Interpolation: Power-Line Noise Removal.</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="ssa/index.html">SSA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="ssa/plot_01_basic_ssa.html">Basic SSA decomposition with frequency-guided grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ssa/plot_02_local_ssa_artifact.html">Removing a high-amplitude single-channel artifact with local SSA</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sound/index.html">SOUND Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="sound/plot_01_sound_basics.html">SOUND: Suppressing Channel-Specific Noise with a Forward Model</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="bss_cca/index.html">BSS-CCA</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="bss_cca/plot_01_muscle_artifact.html">Attenuating broadband muscle artifact with BSS-CCA</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sspsir/index.html">SSP-SIR Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="sspsir/plot_01_sspsir_basics.html">SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="icanclean/index.html">iCanClean</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="icanclean/plot_01_reference_informed_cleaning.html">Reference-informed cleaning with iCanClean</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sspsir/index.html">SSP-SIR</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="sspsir/plot_01_tms_muscle_artifact.html">Suppressing a TMS-like muscle artifact with SSP-SIR</a></li>
 </ul>
 </details></li>
 </ul>
@@ -537,400 +514,175 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="examples-gallery">
-<h1>Examples Gallery<a class="headerlink" href="#examples-gallery" title="Link to this heading">#</a></h1>
-<p>This gallery contains examples demonstrating the usage of <code class="docutils literal notranslate"><span class="pre">mne-denoise</span></code>.</p>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"></div><section id="sensor-noise-suppression">
-<h2>Sensor Noise Suppression<a class="headerlink" href="#sensor-noise-suppression" title="Link to this heading">#</a></h2>
-<p>Examples of Sensor Noise Suppression on NumPy and MNE data, followed by
-deterministic demonstrations of the algorithm’s assumptions and diagnostics.</p>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example adds independent sensor noise to a spatially redundant signal, fits SNS, and applies the same workflow to an MNE Raw object."><img alt="" src="../_images/sphx_glr_plot_01_sns_basics_thumb.png" />
-<p><a class="reference internal" href="sns/plot_01_sns_basics.html"><span class="doc">Basic Sensor Noise Suppression</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Basic Sensor Noise Suppression</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="Deterministic simulations illustrate when SNS works: spatially redundant signals can be regenerated, independent sensor noise is attenuated, robust fitting limits the influence of brief glitches, and successive passes make progressively smaller changes."><img alt="" src="../_images/sphx_glr_plot_02_algorithm_properties_thumb.png" />
-<p><a class="reference internal" href="sns/plot_02_algorithm_properties.html"><span class="doc">SNS assumptions and diagnostics</span></a></p>
-  <div class="sphx-glr-thumbnail-title">SNS assumptions and diagnostics</div>
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
+<p>The examples below show how <code class="docutils literal notranslate"><span class="pre">mne-denoise</span></code> methods can be used for specific
+scientific denoising problems in EEG and MEG.</p>
+<p>Each example starts from the structure that makes a method appropriate:
+clean calibration data, spatial redundancy, a forward model, spectral
+structure, repeated trials, or reference channels. Where possible, examples
+evaluate both suppression of the target artifact and preservation of the
+signal of interest.</p>
+<p>Controlled simulations and deliberately contaminated recordings are used when
+ground truth is needed. Real MNE datasets are used when sensor geometry,
+recording structure, or container behavior is scientifically relevant.</p>
+<p>The examples are demonstrations, not universal benchmarks or parameter
+recommendations. Parameters should be validated for the recording and
+scientific endpoint at hand.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"></div></section>
+<section id="asr">
+<h1>ASR<a class="headerlink" href="#asr" title="Link to this heading">#</a></h1>
+<p>These examples cover four distinct ASR use cases: transient burst repair
+with standard ASR, Riemannian calibration for blink-contaminated EEG,
+adaptive calibration when recording statistics change, and Juggler-style
+reference selection when clean windows are scarce.</p>
+<p>The examples use controlled data when signal preservation requires ground
+truth and real EEG when the recording context itself is informative.
+Comparisons are illustrative rather than universal benchmarks.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can standard Artifact Subspace Reconstruction (ASR) reduce short, high-amplitude multichannel bursts while preserving the underlying clean signal? A controlled recording answers both parts of that question because the clean substrate and artifact mask are known."><img alt="" src="../_images/sphx_glr_plot_01_asr_burst_repair_thumb.png" />
+<p><a class="reference internal" href="asr/plot_01_asr_burst_repair.html"><span class="doc">Repairing transient EEG bursts with ASR</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Repairing transient EEG bursts with ASR</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Can a robust covariance geometry change the calibration of ASR on a real EEG recording with eye blinks? This example compares standard ASR with the public method=&quot;riemannian_windowed&quot; backend on the MNE Sample dataset."><img alt="" src="../_images/sphx_glr_plot_02_riemannian_asr_blinks_thumb.png" />
+<p><a class="reference internal" href="asr/plot_02_riemannian_asr_blinks.html"><span class="doc">Riemannian ASR on blink-contaminated EEG</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Riemannian ASR on blink-contaminated EEG</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Can adaptive calibration follow a change in the clean recording statistics while continuing to suppress transient artifacts? This controlled example contains a baseline calibration chunk, a changed-regime adaptation chunk, and an independent changed-regime test chunk. Frozen ASR is compared with AdaptiveASR after one adaptation chunk."><img alt="" src="../_images/sphx_glr_plot_03_adaptive_asr_thumb.png" />
+<p><a class="reference internal" href="asr/plot_03_adaptive_asr.html"><span class="doc">Adaptive ASR for changing recording statistics</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Adaptive ASR for changing recording statistics</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="How does reference selection behave when frequent short artifacts leave few fully clean calibration windows? This controlled recording stresses the window-based calibration assumption behind standard ASR and compares it with the public JugglerASR(strategy=&quot;dbscan&quot;) estimator, which selects reference samples point by point."><img alt="" src="../_images/sphx_glr_plot_04_juggler_asr_thumb.png" />
+<p><a class="reference internal" href="asr/plot_04_juggler_asr.html"><span class="doc">Juggler ASR when clean windows are scarce</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Juggler ASR when clean windows are scarce</div>
 </div></div></section>
-<section id="reference-free-bss-cca">
-<h2>Reference-free BSS-CCA<a class="headerlink" href="#reference-free-bss-cca" title="Link to this heading">#</a></h2>
-<p>Examples of reference-free BSS-CCA muscle-artifact attenuation on NumPy and
-MNE data, followed by deterministic demonstrations of the algorithm’s
-assumptions, diagnostics, and failure modes.</p>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example mixes narrow-band neural sources with broadband muscle sources, attenuates the muscle activity with BSS-CCA, and then runs the same workflow on an MNE Raw object."><img alt="" src="../_images/sphx_glr_plot_01_bss_cca_basics_thumb.png" />
-<p><a class="reference internal" href="bss_cca/plot_01_bss_cca_basics.html"><span class="doc">Basic reference-free BSS-CCA</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Basic reference-free BSS-CCA</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="A deterministic, synthetic demonstration of what BSS-CCA does and where it breaks. This is not a replication of any published experiment — every signal here is simulated, and the numbers depend on the simulation."><img alt="" src="../_images/sphx_glr_plot_02_bss_cca_properties_thumb.png" />
-<p><a class="reference internal" href="bss_cca/plot_02_bss_cca_properties.html"><span class="doc">BSS-CCA algorithm properties</span></a></p>
-  <div class="sphx-glr-thumbnail-title">BSS-CCA algorithm properties</div>
+<section id="sns">
+<h1>SNS<a class="headerlink" href="#sns" title="Link to this heading">#</a></h1>
+<p>This example uses a real EEG recording with deliberately added
+sensor-specific noise to show the assumption behind Sensor Noise Suppression:
+signals represented redundantly across sensors can be used to reconstruct
+noise that is specific to individual channels.</p>
+<p>Because the unmodified recording is available as a reference substrate, the
+example evaluates both recovery of the corrupted channels and change on
+untouched channels.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can SNS recover channels contaminated by independent sensor noise while making relatively small changes to channels that were not deliberately corrupted? This example uses an MNE Sample EEG recording to make the spatial covariance realistic, then adds known broadband noise to two sensors."><img alt="" src="../_images/sphx_glr_plot_01_sensor_noise_suppression_thumb.png" />
+<p><a class="reference internal" href="sns/plot_01_sensor_noise_suppression.html"><span class="doc">Suppressing sensor-specific noise with SNS</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Suppressing sensor-specific noise with SNS</div>
 </div></div></section>
-</section>
-<section id="singular-spectrum-analysis">
-<h1>Singular Spectrum Analysis<a class="headerlink" href="#singular-spectrum-analysis" title="Link to this heading">#</a></h1>
-<p>Examples of additive Basic SSA, frequency-guided grouping, and Teixeira local
-SSA on deterministic synthetic signals.</p>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This network-free example separates a slow synthetic drift from an alpha rhythm. The frequency grouping is an mne-denoise extension, not a grouping rule prescribed by Basic SSA."><img alt="" src="../_images/sphx_glr_plot_01_ssa_basics_thumb.png" />
-<p><a class="reference internal" href="ssa/plot_01_ssa_basics.html"><span class="doc">Basic SSA decomposition and frequency-guided cleaning</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Basic SSA decomposition and frequency-guided cleaning</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This is an algorithm demonstration, not a replication of Teixeira et al.&#x27;s figures. The desired signal is broadband so that the example exercises the paper&#x27;s high-energy-structure-versus-residual assumption without constructing an unrealistically perfect separability case."><img alt="" src="../_images/sphx_glr_plot_02_local_ssa_properties_thumb.png" />
-<p><a class="reference internal" href="ssa/plot_02_local_ssa_properties.html"><span class="doc">Local SSA properties on a synthetic signal</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Local SSA properties on a synthetic signal</div>
+<section id="sound">
+<h1>SOUND<a class="headerlink" href="#sound" title="Link to this heading">#</a></h1>
+<p>This example uses the MNE Sample EEG recording and its public forward solution
+to show how forward-model information can estimate channel-specific noise.
+Known planted corruption provides an artifact-recovery endpoint, while
+applying the same fitted operator to the unmodified recording provides a
+signal-preservation control.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can SOUND use an anatomical forward model to identify and reduce deliberately added channel-specific noise while limiting distortion of the underlying recording? This example uses EEG from the MNE Sample dataset together with the public Sample forward solution, then plants independent broadband noise in three sensors."><img alt="" src="../_images/sphx_glr_plot_01_forward_informed_sensor_noise_thumb.png" />
+<p><a class="reference internal" href="sound/plot_01_forward_informed_sensor_noise.html"><span class="doc">Forward-informed sensor-noise suppression with SOUND</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Forward-informed sensor-noise suppression with SOUND</div>
 </div></div></section>
-<section id="dss-examples">
-<h1>DSS Examples<a class="headerlink" href="#dss-examples" title="Link to this heading">#</a></h1>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
-<p>Examples demonstrating Denoising Source Separation (DSS) across evoked,
-spectral, temporal, and blind-separation use cases.</p>
-</section>
-<section id="files">
-<h2>Files<a class="headerlink" href="#files" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_dss_fundamentals.py</span></code>: Core DSS concepts with trial-average and bandpass biases.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_02_artifact_correction.py</span></code>: Blink and heartbeat correction with DSS.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_03_evoked_responses.py</span></code>: Evoked-response denoising and contrast-focused DSS.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_04_spectral_dss.py</span></code>: Frequency-specific component extraction on synthetic and real data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_05_periodic_dss.py</span></code>: Periodic signal extraction for SSVEP and quasi-periodic structure.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_06_temporal_dss.py</span></code>: Time-shift and smoothness biases for temporally structured signals.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_07_spectrogram_dss.py</span></code>: Time-frequency masking with spectrogram-based DSS.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_08_blind_source_separation.py</span></code>: Blind source separation and FastICA equivalence.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_09_custom_bias.py</span></code>: Defining custom DSS biases.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_11_wiener_masking.py</span></code>: Adaptive Wiener masking for bursty signals.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_12_joint_dss.py</span></code>: Joint DSS for multi-dataset repeatability.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_13_cardiac_composition.py</span></code>: Explicit, held-out cardiac DSS composition with attenuation and preservation checks.</p></li>
-</ul>
-</section>
-<section id="data-requirements">
-<h2>Data Requirements<a class="headerlink" href="#data-requirements" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Synthetic sections run directly with no external data.</p></li>
-<li><p>Examples using MNE datasets download and cache them through MNE when needed.</p></li>
-</ul>
-</section>
-<section id="references">
-<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Särelä &amp; Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res.</p></li>
-<li><p>de Cheveigné &amp; Simon (2008). Denoising based on spatial filtering. J. Neurosci. Methods.</p></li>
-<li><p>de Cheveigné &amp; Parra (2014). Joint decorrelation. NeuroImage.</p></li>
-</ul>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces Denoising Source Separation (DSS), a technique for extracting brain sources based on a specific criterion of &quot;interestingness&quot; (bias)."><img alt="" src="../_images/sphx_glr_plot_01_dss_fundamentals_thumb.png" />
-<p><a class="reference internal" href="dss/plot_01_dss_fundamentals.html"><span class="doc">Fundamentals of DSS.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Fundamentals of DSS.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="DSS is a powerful tool for removing artifacts (ECG, EOG) from data. The core idea is: Artifacts are repetitive."><img alt="" src="../_images/sphx_glr_plot_02_artifact_correction_thumb.png" />
-<p><a class="reference internal" href="dss/plot_02_artifact_correction.html"><span class="doc">Artifact Correction with DSS.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Artifact Correction with DSS.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use DSS to enhance evoked responses (ERPs/ERFs). It covers both standard average-bias denoising of the shared evoked response and a custom contrast bias that isolates the difference between two experimental conditions."><img alt="" src="../_images/sphx_glr_plot_03_evoked_responses_thumb.png" />
-<p><a class="reference internal" href="dss/plot_03_evoked_responses.html"><span class="doc">Denoising Evoked Responses.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Denoising Evoked Responses.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use DSS to isolate oscillatory brain rhythms (e.g., Alpha, Beta) using spectral biases."><img alt="" src="../_images/sphx_glr_plot_04_spectral_dss_thumb.png" />
-<p><a class="reference internal" href="dss/plot_04_spectral_dss.html"><span class="doc">Denoising Rhythms (Spectral DSS).</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Denoising Rhythms (Spectral DSS).</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates periodic signal extraction with DSS. It combines PeakFilterBias, CombFilterBias, and QuasiPeriodicDenoiser with DSS and IterativeDSS to cover single-frequency extraction, SSVEP harmonics, and quasi-periodic structure such as ECG-like activity."><img alt="" src="../_images/sphx_glr_plot_05_periodic_dss_thumb.png" />
-<p><a class="reference internal" href="dss/plot_05_periodic_dss.html"><span class="doc">Periodic Signals (SSVEP and Quasi-Periodic).</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Periodic Signals (SSVEP and Quasi-Periodic).</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates DSS for extracting temporally structured signals: autocorrelated components, slow drifts, and smooth waveforms."><img alt="" src="../_images/sphx_glr_plot_06_temporal_dss_thumb.png" />
-<p><a class="reference internal" href="dss/plot_06_temporal_dss.html"><span class="doc">Temporal Biases for Ordinary DSS</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Temporal Biases for Ordinary DSS</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates DSS for extracting transient oscillatory bursts using time-frequency (TF) domain constraints via spectrogram masking."><img alt="" src="../_images/sphx_glr_plot_07_spectrogram_dss_thumb.png" />
-<p><a class="reference internal" href="dss/plot_07_spectrogram_dss.html"><span class="doc">Time-Frequency DSS: Spectrogram Masking.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Time-Frequency DSS: Spectrogram Masking.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how Nonlinear DSS can perform Blind Source Separation (BSS), effectively recovering independent sources from mixed signals. It explicitly shows the equivalence between DSS with specific nonlinearities and ICA."><img alt="" src="../_images/sphx_glr_plot_08_blind_source_separation_thumb.png" />
-<p><a class="reference internal" href="dss/plot_08_blind_source_separation.html"><span class="doc">Blind Source Separation and ICA Equivalence.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Blind Source Separation and ICA Equivalence.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to extend DSS by defining custom bias criteria. This is useful when you have domain-specific knowledge about the target source (e.g., &quot;it has sharp gradients&quot;, &quot;it occurs after a specific trigger&quot;, etc.)."><img alt="" src="../_images/sphx_glr_plot_09_custom_bias_thumb.png" />
-<p><a class="reference internal" href="dss/plot_09_custom_bias.html"><span class="doc">Custom DSS: Defining Your Own Bias.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Custom DSS: Defining Your Own Bias.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the WienerMaskDenoiser, a nonlinear function that adapts to the local variance (envelope) of the signal."><img alt="" src="../_images/sphx_glr_plot_11_wiener_masking_thumb.png" />
-<p><a class="reference internal" href="dss/plot_11_wiener_masking.html"><span class="doc">Adaptive Wiener Masking for Bursty Signals.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Adaptive Wiener Masking for Bursty Signals.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates Joint Denoising Source Separation (JDSS), a method for extracting components that are reproducible across multiple datasets."><img alt="" src="../_images/sphx_glr_plot_12_joint_dss_thumb.png" />
-<p><a class="reference internal" href="dss/plot_12_joint_dss.html"><span class="doc">Joint DSS (Multi-Dataset Repeatability).</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Joint DSS (Multi-Dataset Repeatability).</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example keeps cardiac cleaning visible as three public operations:"><img alt="" src="../_images/sphx_glr_plot_13_cardiac_composition_thumb.png" />
-<p><a class="reference internal" href="dss/plot_13_cardiac_composition.html"><span class="doc">Cardiac DSS as an Explicit Composition</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Cardiac DSS as an Explicit Composition</div>
+<section id="spectrum-interpolation">
+<h1>Spectrum interpolation<a class="headerlink" href="#spectrum-interpolation" title="Link to this heading">#</a></h1>
+<p>This example uses controlled nonstationary 60-Hz interference with abrupt
+changes in amplitude to illustrate the use case for spectrum interpolation.</p>
+<p>Known clean data provide a time-domain preservation reference, and a public
+notch filter is included only as a contextual comparison. The example
+evaluates line attenuation and signal distortion separately.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can spectrum interpolation attenuate 60-Hz interference whose amplitude changes and switches abruptly while limiting distortion of a known time-domain signal? This controlled multichannel example includes a transient in the clean substrate, then compares spectrum interpolation with a public IIR notch filter as a contextual reference."><img alt="" src="../_images/sphx_glr_plot_01_nonstationary_line_noise_thumb.png" />
+<p><a class="reference internal" href="spectrum_interpolation/plot_01_nonstationary_line_noise.html"><span class="doc">Removing nonstationary line noise with spectrum interpolation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Removing nonstationary line noise with spectrum interpolation</div>
 </div></div></section>
-</section>
-<section id="zapline-examples">
-<h1>ZapLine Examples<a class="headerlink" href="#zapline-examples" title="Link to this heading">#</a></h1>
-<section id="id1">
-<h2>Overview<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
-<p>Examples demonstrating ZapLine and ZapLine-plus for removing power-line
-artifacts from synthetic, epoched, continuous, and adaptive-cleaning scenarios.</p>
-</section>
-<section id="id2">
-<h2>Files<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_basic_usage.py</span></code>: Basic ZapLine usage on synthetic line-noise data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_02_parameter_tuning.py</span></code>: Parameter tuning and real NoiseTools MEG data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_03_epoched_data.py</span></code>: Epoched ZapLine workflows and high-channel MEG data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_04_adaptive_mode.py</span></code>: ZapLine-plus style adaptive cleaning on non-stationary data.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_05_adaptive_advanced.py</span></code>: Advanced harmonic and chunk-level adaptive outputs.</p></li>
-</ul>
-</section>
-<section id="id3">
-<h2>Data Requirements<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Synthetic sections run directly with no external data.</p></li>
-<li><p>Examples using MNE datasets download and cache them through MNE when needed.</p></li>
-<li><p>NoiseTools-backed examples download and cache the required <cite>.mat</cite> files into
-<code class="docutils literal notranslate"><span class="pre">examples/zapline/data</span></code> the first time they are run.</p></li>
-</ul>
-</section>
-<section id="id4">
-<h2>References<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>de Cheveigné (2020). ZapLine: A simple and effective method to remove power line artifacts. NeuroImage.</p></li>
-<li><p>Klug &amp; Kloosterman (2022). Zapline-plus: A Zapline extension for automatic and adaptive removal of frequency-specific noise artifacts in M/EEG. Human Brain Mapping.</p></li>
-</ul>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example introduces ZapLine on a controlled synthetic dataset. The goal is to show the basic workflow first on a simple 50 Hz contamination problem, then extend it to harmonics and more realistic multi-channel structure."><img alt="" src="../_images/sphx_glr_plot_01_basic_usage_thumb.png" />
-<p><a class="reference internal" href="zapline/plot_01_basic_usage.html"><span class="doc">ZapLine: Line Noise Removal Fundamentals.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ZapLine: Line Noise Removal Fundamentals.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example shows how the main ZapLine tuning parameters change the cleaning behavior on synthetic data, then applies the same workflow to the real MNE Sample MEG recording."><img alt="" src="../_images/sphx_glr_plot_02_parameter_tuning_thumb.png" />
-<p><a class="reference internal" href="zapline/plot_02_parameter_tuning.html"><span class="doc">ZapLine: Parameter Tuning and Real Data.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ZapLine: Parameter Tuning and Real Data.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example shows how ZapLine can be applied when the data are naturally epoched, then extends the same workflow to real MNE Sample MEG data."><img alt="" src="../_images/sphx_glr_plot_03_epoched_data_thumb.png" />
-<p><a class="reference internal" href="zapline/plot_03_epoched_data.html"><span class="doc">ZapLine: Epoched Data and Real Data Examples.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ZapLine: Epoched Data and Real Data Examples.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example follows the main steps of ZapLine-plus on a synthetic recording whose line noise changes in frequency, topography, and strength over time. The goal is to make the adaptive logic visible: frequency detection, segmentation, and chunk-wise cleaning."><img alt="" src="../_images/sphx_glr_plot_04_adaptive_mode_thumb.png" />
-<p><a class="reference internal" href="zapline/plot_04_adaptive_mode.html"><span class="doc">ZapLine-plus: Adaptive Cleaning on Non-Stationary Noise.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ZapLine-plus: Adaptive Cleaning on Non-Stationary Noise.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example focuses on the extra adaptive features around the core ZapLine step: harmonic handling, chunk metadata, and the hybrid fallback path when a plain component projection is not enough."><img alt="" src="../_images/sphx_glr_plot_05_adaptive_advanced_thumb.png" />
-<p><a class="reference internal" href="zapline/plot_05_adaptive_advanced.html"><span class="doc">ZapLine-plus: Advanced Settings and Features.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ZapLine-plus: Advanced Settings and Features.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the auto-mode fix from Issue #34. With high-channel-count MEG recordings (e.g., CTF 275-magnetometer systems), line noise couples into many sensors through different lead-field paths, producing several co-equal strong DSS components. The classic iterative_outlier_removal selector underdetects in this regime because no single eigenvalue stands out from the others; the new auto_select_components_robust falls back to a log-space knee detector that catches the cluster boundary."><img alt="" src="../_images/sphx_glr_plot_06_ctf_meg_thumb.png" />
-<p><a class="reference internal" href="zapline/plot_06_ctf_meg.html"><span class="doc">ZapLine on MEG-like data with many co-equal noise components.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ZapLine on MEG-like data with many co-equal noise components.</div>
+<section id="zapline">
+<h1>ZapLine<a class="headerlink" href="#zapline" title="Link to this heading">#</a></h1>
+<p>These examples illustrate two distinct line-noise settings.</p>
+<p>The first applies standard ZapLine to real MNE Sample MEG with a stable 60-Hz
+target and evaluates line attenuation together with off-band spectral change.</p>
+<p>The second uses controlled nonstationary frequency-specific noise to compare a
+single global fit with adaptive ZapLine. Known clean data make it possible to
+evaluate reconstruction and signal preservation separately.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can standard ZapLine attenuate a 60-Hz line-noise component and its 120-Hz harmonic in a real multichannel MEG recording while limiting off-target spectral change? The MNE Sample gradiometers provide a compact real-data example with no known clean neural reference, so attenuation and spectral preservation are reported as separate quantities."><img alt="" src="../_images/sphx_glr_plot_01_zapline_real_meg_thumb.png" />
+<p><a class="reference internal" href="zapline/plot_01_zapline_real_meg.html"><span class="doc">Removing 60-Hz line noise and its harmonic from real MEG with ZapLine</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Removing 60-Hz line noise and its harmonic from real MEG with ZapLine</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="When line-noise frequency, strength, or spatial pattern changes over time, does adaptive ZapLine provide a better controlled reconstruction than one global ZapLine fit? Three known regimes make it possible to compare artifact recovery with a separate 10-Hz target-signal preservation endpoint."><img alt="" src="../_images/sphx_glr_plot_02_adaptive_zapline_thumb.png" />
+<p><a class="reference internal" href="zapline/plot_02_adaptive_zapline.html"><span class="doc">Adaptive ZapLine for changing line-noise statistics</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Adaptive ZapLine for changing line-noise statistics</div>
 </div></div></section>
-</section>
-<section id="asr-examples">
-<h1>ASR Examples<a class="headerlink" href="#asr-examples" title="Link to this heading">#</a></h1>
-<p>Examples demonstrating Artifact Subspace Reconstruction (ASR) for burst-artifact
-repair in EEG (and MEG) data — from a basic clean to a full preprocessing
-pipeline, with each method example grounded in its source paper.</p>
-<section id="getting-started">
-<h2>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_asr_basics.py</span></code>: Standard ASR on synthetic multichannel bursts.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_02_mne_raw_qc.py</span></code>: MNE <code class="docutils literal notranslate"><span class="pre">Raw</span></code> usage with repair annotations and an
-optional clean_windows-style final rejection mask.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_05_asr_visualization.py</span></code>: The ASR-specific <code class="docutils literal notranslate"><span class="pre">mne_denoise.viz</span></code> plots
-(repair timeline, component reconstruction, calibration fraction) alongside the
-generic before/after and PSD helpers.</p></li>
-</ul>
-</section>
-<section id="cutoff-and-variants">
-<h2>Cutoff and variants<a class="headerlink" href="#cutoff-and-variants" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_06_cutoff_tuning.py</span></code>: How <code class="docutils literal notranslate"><span class="pre">cutoff</span></code> trades data modified against
-variance removed (Chang 2020).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_07_riemannian_asr.py</span></code>: Riemannian (<code class="docutils literal notranslate"><span class="pre">method=&quot;riemannian_windowed&quot;</span></code>)
-vs standard ASR on real blinks (Blum 2019).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_03_adaptive_asr.py</span></code>: AASR-style streaming with <code class="docutils literal notranslate"><span class="pre">fit</span></code> /
-<code class="docutils literal notranslate"><span class="pre">partial_fit</span></code> / <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_08_adaptive_variants.py</span></code>: Adaptive <code class="docutils literal notranslate"><span class="pre">psp</span></code> vs <code class="docutils literal notranslate"><span class="pre">psw</span></code> vs <code class="docutils literal notranslate"><span class="pre">mw</span></code> on
-non-stationary data, with the moving-window adaptation trajectory (Tsai).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_04_juggler_asr.py</span></code>: Juggler DBSCAN calibration on dense short bursts.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_09_juggler_strategies.py</span></code>: Juggler <code class="docutils literal notranslate"><span class="pre">dbscan</span></code> vs <code class="docutils literal notranslate"><span class="pre">gev</span></code> reference
-selection under heavy contamination (Kim 2025).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_10_choosing_a_variant.py</span></code>: Standard vs Riemannian vs Juggler on one
-substrate, with a short recommendation.</p></li>
-</ul>
-</section>
-<section id="i-o-qc-and-pipelines">
-<h2>I/O, QC, and pipelines<a class="headerlink" href="#i-o-qc-and-pipelines" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_11_epochs_and_meg.py</span></code>: ASR on <code class="docutils literal notranslate"><span class="pre">mne.Epochs</span></code> and on MEG magnetometers.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_12_diagnostics_qc.py</span></code>: <code class="docutils literal notranslate"><span class="pre">get_diagnostics</span></code> / <code class="docutils literal notranslate"><span class="pre">variance_removed</span></code>
-/ <code class="docutils literal notranslate"><span class="pre">to_annotations</span></code> and the three ASR diagnostic plots.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_13_pipeline_filter_asr_ica.py</span></code>: A realistic <code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">-&gt;</span> <span class="pre">ASR</span> <span class="pre">-&gt;</span> <span class="pre">ICA</span></code>
-workflow on real EEG.</p></li>
-</ul>
-</section>
-<section id="experimental-research-prototypes">
-<h2>Experimental research prototypes<a class="headerlink" href="#experimental-research-prototypes" title="Link to this heading">#</a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_15_guided_asr.py</span></code>: DSS-guided soft ASR (<code class="docutils literal notranslate"><span class="pre">GuidedASR</span></code>), demonstrated
-on synthetic data only.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p><code class="docutils literal notranslate"><span class="pre">GuidedASR</span></code> is an unpublished, unvalidated research prototype. Its
-current evidence is limited to unit tests and synthetic benchmarks. Do
-not treat it as a validated EEG preprocessing method, and independently
-verify signal preservation and artifact attenuation for your data.</p>
-</div>
-</li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
-<p>Most examples use synthetic data so they run without downloads; <code class="docutils literal notranslate"><span class="pre">plot_07</span></code> and
-<code class="docutils literal notranslate"><span class="pre">plot_13</span></code> (and the MEG part of <code class="docutils literal notranslate"><span class="pre">plot_11</span></code>) use the MNE <em>sample</em> dataset.
-Apply ASR to real EEG only after bad-channel handling, referencing, and
-high-pass filtering in the surrounding MNE workflow.</p>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates standard ASR on a synthetic multichannel EEG signal with short spatial burst artifacts."><img alt="" src="../_images/sphx_glr_plot_01_asr_basics_thumb.png" />
-<p><a class="reference internal" href="asr/plot_01_asr_basics.html"><span class="doc">Artifact Subspace Reconstruction: Basic Usage.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Artifact Subspace Reconstruction: Basic Usage.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example shows ASR on an mne.io.RawArray with optional clean_windows- style final window rejection. The repaired spans and rejected spans are kept as annotations for downstream QC instead of deleting samples immediately."><img alt="" src="../_images/sphx_glr_plot_02_mne_raw_qc_thumb.png" />
-<p><a class="reference internal" href="asr/plot_02_mne_raw_qc.html"><span class="doc">Artifact Subspace Reconstruction: Raw QC and Annotations.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Artifact Subspace Reconstruction: Raw QC and Annotations.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the AASR-style adaptive update workflow. The calibration state is initialized on one chunk, updated on a second chunk, and then applied to the full signal with MATLAB-style reconstruct."><img alt="" src="../_images/sphx_glr_plot_03_adaptive_asr_thumb.png" />
-<p><a class="reference internal" href="asr/plot_03_adaptive_asr.html"><span class="doc">Adaptive ASR with chunk updates</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Adaptive ASR with chunk updates</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example highlights Juggler-style calibration on a synthetic signal with frequent short bursts that leave little fully clean time window support."><img alt="" src="../_images/sphx_glr_plot_04_juggler_asr_thumb.png" />
-<p><a class="reference internal" href="asr/plot_04_juggler_asr.html"><span class="doc">JugglerASR for dense short bursts</span></a></p>
-  <div class="sphx-glr-thumbnail-title">JugglerASR for dense short bursts</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="After cleaning EEG with ASR you usually want to see what happened: which segments were repaired, how aggressive the cleaning was, and how the variants compare. mne_denoise.viz keeps three ASR-specific diagnostics that have no generic equivalent --- the per-window repair timeline, the window-by-component reconstruction map, and the calibration / reference fraction --- and reuses the generic before/after plots (~mne_denoise.viz.plot_signal_overlay, plot_psd_comparison, plot_power_ratio_map) for everything else."><img alt="" src="../_images/sphx_glr_plot_05_asr_visualization_thumb.png" />
-<p><a class="reference internal" href="asr/plot_05_asr_visualization.html"><span class="doc">Visualizing ASR with mne_denoise.viz</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Visualizing ASR with mne_denoise.viz</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="The ASR cutoff (standard-deviation threshold) is the single most important knob: lower values clean aggressively (and risk removing real high-variance brain activity), higher values are conservative. This example sweeps the cutoff and plots the two quantities Chang et al. (2020) use to characterise it --- the fraction of data modified and the variance removed --- reproducing the monotone trade-off of their Figs 2-3 and the commonly recommended 20-30 band."><img alt="" src="../_images/sphx_glr_plot_06_cutoff_tuning_thumb.png" />
-<p><a class="reference internal" href="asr/plot_06_cutoff_tuning.html"><span class="doc">Choosing the ASR cutoff.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Choosing the ASR cutoff.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="Blum et al. (2019) replace ASR&#x27;s sample-covariance calibration with a Riemannian geometric median, making the clean-covariance estimate robust to the occasional contaminated calibration window. mne-denoise exposes this as method=&quot;riemannian_windowed&quot; --- it keeps the Riemannian robust calibration but applies a standard per-window eigendecomposition at processing time, so (unlike the MATLAB-parity method=&quot;riemannian&quot;) the cutoff knob still works."><img alt="" src="../_images/sphx_glr_plot_07_riemannian_asr_thumb.png" />
-<p><a class="reference internal" href="asr/plot_07_riemannian_asr.html"><span class="doc">Riemannian ASR versus standard ASR.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Riemannian ASR versus standard ASR.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="Adaptive ASR (Tsai et al.) keeps standard ASR&#x27;s burst reconstruction but lets the clean-subspace model track non-stationary recordings. mne-denoise exposes three calibration rules via AdaptiveASR:"><img alt="" src="../_images/sphx_glr_plot_08_adaptive_variants_thumb.png" />
-<p><a class="reference internal" href="asr/plot_08_adaptive_variants.html"><span class="doc">Adaptive ASR variants (PSP / PSW / MW).</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Adaptive ASR variants (PSP / PSW / MW).</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="On heavily contaminated recordings (mobile / MoBI EEG, dense brief bursts), ASR&#x27;s window-based clean-data selector starves --- too few windows are clean enough to calibrate. Kim et al. (2025) instead select clean samples point-by-point. mne-denoise exposes two selectors via JugglerASR:"><img alt="" src="../_images/sphx_glr_plot_09_juggler_strategies_thumb.png" />
-<p><a class="reference internal" href="asr/plot_09_juggler_strategies.html"><span class="doc">Juggler ASR: DBSCAN vs GEV reference selection.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Juggler ASR: DBSCAN vs GEV reference selection.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="A runnable version of the &quot;Choosing a variant&quot; section of the ASR user guide. mne-denoise ships several ASR backends; this example runs the three you will most often choose between on one substrate and prints a short recommendation:"><img alt="" src="../_images/sphx_glr_plot_10_choosing_a_variant_thumb.png" />
-<p><a class="reference internal" href="asr/plot_10_choosing_a_variant.html"><span class="doc">Choosing an ASR variant.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Choosing an ASR variant.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="The same ASR estimator works across MNE container types and channel types. This example shows two cases the other examples do not:"><img alt="" src="../_images/sphx_glr_plot_11_epochs_and_meg_thumb.png" />
-<p><a class="reference internal" href="asr/plot_11_epochs_and_meg.html"><span class="doc">ASR on Epochs and on MEG.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ASR on Epochs and on MEG.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="Every fitted ASR estimator records what it did, so you can audit the cleaning instead of trusting it blindly. This example tours the QC surface:"><img alt="" src="../_images/sphx_glr_plot_12_diagnostics_qc_thumb.png" />
-<p><a class="reference internal" href="asr/plot_12_diagnostics_qc.html"><span class="doc">ASR diagnostics and quality control.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">ASR diagnostics and quality control.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="ASR sits between high-pass filtering and ICA in a standard EEG pipeline: it repairs high-amplitude transients before ICA, so the decomposition is not dominated by a handful of huge bursts. This capstone runs the full filter -&gt; ASR -&gt; ICA workflow on real EEG (the MNE sample dataset) and shows that ICA fit on ASR-cleaned data has less extreme component activations."><img alt="" src="../_images/sphx_glr_plot_13_pipeline_filter_asr_ica_thumb.png" />
-<p><a class="reference internal" href="asr/plot_13_pipeline_filter_asr_ica.html"><span class="doc">A realistic pipeline: filter, ASR, then ICA.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">A realistic pipeline: filter, ASR, then ICA.</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use ASR&#x27;s robust mathematical estimators independently of the full ASR pipeline to quantify the baseline noisiness of a dataset."><img alt="" src="../_images/sphx_glr_plot_14_rms_distribution_thumb.png" />
-<p><a class="reference internal" href="asr/plot_14_rms_distribution.html"><span class="doc">Quantifying Dataset Noise with RMS Statistics</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Quantifying Dataset Noise with RMS Statistics</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="Standard ASR decides purely on variance, so a strong, spatially structured neural burst (here a transient 10 Hz oscillation) looks just as &quot;abnormal&quot; as an artifact and gets reconstructed away. GuidedASR keeps ASR&#x27;s abnormality detection but adds DSS-style bias operators that recognise the neural direction and a continuous reconstruction weight that rescues it, while still removing a genuine artifact."><img alt="" src="../_images/sphx_glr_plot_15_guided_asr_thumb.png" />
-<p><a class="reference internal" href="asr/plot_15_guided_asr.html"><span class="doc">Guided ASR: preserving neural activity that ASR would over-clean.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Guided ASR: preserving neural activity that ASR would over-clean.</div>
+<section id="dss">
+<h1>DSS<a class="headerlink" href="#dss" title="Link to this heading">#</a></h1>
+<p>These examples show four scientifically distinct ways to define structure of
+interest with Denoising Source Separation.</p>
+<p>The evoked example uses trial reproducibility on real held-out somatosensory
+MEG data. The cardiac example combines real Sample EEG and real R-peak timing
+with a controlled planted cardiac artifact, then uses an independent clean-input
+preservation control. The narrowband example uses controlled spectral structure
+to recover a known target source. The TimeShiftDSS example extends
+reproducibility into lag-augmented spatiotemporal space and uses held-out and
+surrogate validation.</p>
+<p>A DSS bias defines what the decomposition emphasizes; it does not by itself
+establish that a selected component is neural signal or artifact.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can trial-average DSS learned on one set of somatosensory MEG trials enrich reproducible evoked activity in independent held-out trials while limiting distortion of the held-out evoked response?"><img alt="" src="../_images/sphx_glr_plot_01_evoked_dss_thumb.png" />
+<p><a class="reference internal" href="dss/plot_01_evoked_dss.html"><span class="doc">Enhancing a reproducible somatosensory response with DSS</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Enhancing a reproducible somatosensory response with DSS</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Can a cardiac-locked DSS component learned from one interval attenuate a known planted cardiac artifact in independent held-out data while preserving the unmodified MNE Sample EEG substrate?"><img alt="" src="../_images/sphx_glr_plot_02_cardiac_dss_thumb.png" />
+<p><a class="reference internal" href="dss/plot_02_cardiac_dss.html"><span class="doc">Removing a planted cardiac-locked artifact with DSS</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Removing a planted cardiac-locked artifact with DSS</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Can bandpass-biased DSS recover a weak known 10-Hz spatial source from multichannel data containing broadband noise and stronger off-target oscillatory activity?"><img alt="" src="../_images/sphx_glr_plot_03_narrowband_dss_thumb.png" />
+<p><a class="reference internal" href="dss/plot_03_narrowband_dss.html"><span class="doc">Extracting a weak narrowband source with DSS</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Extracting a weak narrowband source with DSS</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="When a weak reproducible response reaches sensors with different temporal delays, does lag-augmented TimeShiftDSS recover held-out signal structure better than ordinary static spatial DSS?"><img alt="" src="../_images/sphx_glr_plot_04_time_shift_dss_thumb.png" />
+<p><a class="reference internal" href="dss/plot_04_time_shift_dss.html"><span class="doc">Recovering delayed reproducible structure with TimeShiftDSS</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Recovering delayed reproducible structure with TimeShiftDSS</div>
 </div></div></section>
-</section>
-<section id="spectrum-interpolation-examples">
-<h1>Spectrum Interpolation Examples<a class="headerlink" href="#spectrum-interpolation-examples" title="Link to this heading">#</a></h1>
-<section id="id5">
-<h2>Overview<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
-<p>Examples demonstrating spectrum-interpolation line-noise removal
-(Leske &amp; Dalal, 2019). The power-line frequency and its harmonics are removed by
-interpolating the amplitude spectrum across a narrow band while preserving the
-phase, leaving broadband activity around the line frequency largely intact.
-The FFT-based method is best suited to continuous recordings or long segments;
-short epochs should be inspected for edge effects.</p>
-</section>
-<section id="id6">
-<h2>Files<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_spectrum_interpolation.py</span></code>: Basic spectrum interpolation on
-synthetic data with 60 Hz line noise and harmonics.</p></li>
-</ul>
-</section>
-<section id="id7">
-<h2>Data Requirements<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>The example runs directly on synthetic data with no external downloads.</p></li>
-</ul>
-</section>
-<section id="id8">
-<h2>References<a class="headerlink" href="#id8" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Leske, S., &amp; Dalal, S. S. (2019). Reducing power line noise in EEG and MEG
-data via spectrum interpolation. NeuroImage, 189, 763-776.</p></li>
-</ul>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates SpectrumInterpolation on a synthetic recording contaminated by 60 Hz line noise and its harmonics."><img alt="" src="../_images/sphx_glr_plot_01_spectrum_interpolation_thumb.png" />
-<p><a class="reference internal" href="spectrum_interpolation/plot_01_spectrum_interpolation.html"><span class="doc">Spectrum Interpolation: Power-Line Noise Removal.</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Spectrum Interpolation: Power-Line Noise Removal.</div>
+<section id="ssa">
+<h1>SSA<a class="headerlink" href="#ssa" title="Link to this heading">#</a></h1>
+<p>The first example shows additive Basic SSA decomposition and an
+mne-denoise-specific frequency-guided grouping rule on a controlled slow-drift
+problem.</p>
+<p>The second illustrates local SSA for a high-amplitude single-channel EOG-like
+artifact. Known clean structure is retained so artifact recovery and neural
+transient preservation can be evaluated separately.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can SSA separate additive temporal structure so that a frequency-guided grouping rule removes a slow drift while retaining a known alpha component? This compact, controlled example keeps the clean substrate explicit."><img alt="" src="../_images/sphx_glr_plot_01_basic_ssa_thumb.png" />
+<p><a class="reference internal" href="ssa/plot_01_basic_ssa.html"><span class="doc">Basic SSA decomposition with frequency-guided grouping</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic SSA decomposition with frequency-guided grouping</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Can local SSA remove a large EOG-like waveform from a single-channel EEG-like signal while preserving a known neural transient? The transient deliberately overlaps the artifact so that recovery and preservation are evaluated as separate endpoints."><img alt="" src="../_images/sphx_glr_plot_02_local_ssa_artifact_thumb.png" />
+<p><a class="reference internal" href="ssa/plot_02_local_ssa_artifact.html"><span class="doc">Removing a high-amplitude single-channel artifact with local SSA</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Removing a high-amplitude single-channel artifact with local SSA</div>
 </div></div></section>
-</section>
-<section id="sound-examples">
-<h1>SOUND Examples<a class="headerlink" href="#sound-examples" title="Link to this heading">#</a></h1>
-<section id="id9">
-<h2>Overview<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
-<p>Examples demonstrating SOUND (Source-estimate-Utilizing Noise-discarding), which
-suppresses channel-specific noise by asking whether each sensor’s signal is
-consistent with what a forward model says the head could have produced.</p>
-</section>
-<section id="id10">
-<h2>Files<a class="headerlink" href="#id10" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_sound_basics.py</span></code>: SOUND on synthetic EEG with deliberately corrupted
-sensors; recovering them, checking the intact channels are not damaged, and
-sweeping <code class="docutils literal notranslate"><span class="pre">lambda_</span></code>.</p></li>
-</ul>
-</section>
-<section id="id11">
-<h2>Data Requirements<a class="headerlink" href="#id11" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>All sections run directly with no external data.</p></li>
-<li><p>The lead field is built from the montage with a three-layer spherical head
-model, so no MRI or forward solution is needed.</p></li>
-</ul>
-</section>
-<section id="id12">
-<h2>References<a class="headerlink" href="#id12" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Mutanen, Metsomaa, Liljander &amp; Ilmoniemi (2018). Automatic and robust noise
-suppression in EEG and MEG: The SOUND algorithm. NeuroImage.</p></li>
-</ul>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="SOUND asks a question no purely statistical cleaner can: is what this sensor reports physically consistent with what its neighbours report, given the shape of the head? A channel whose signal cannot be explained by any cortical source configuration is carrying noise, and SOUND estimates how much -- per channel, iteratively -- then applies a Wiener filter that trusts each sensor in proportion to how clean it is."><img alt="" src="../_images/sphx_glr_plot_01_sound_basics_thumb.png" />
-<p><a class="reference internal" href="sound/plot_01_sound_basics.html"><span class="doc">SOUND: Suppressing Channel-Specific Noise with a Forward Model</span></a></p>
-  <div class="sphx-glr-thumbnail-title">SOUND: Suppressing Channel-Specific Noise with a Forward Model</div>
+<section id="bss-cca">
+<h1>BSS-CCA<a class="headerlink" href="#bss-cca" title="Link to this heading">#</a></h1>
+<p>This example uses a real EEG substrate with controlled broadband muscle-like
+contamination to illustrate reference-free BSS-CCA. The method separates
+components according to lagged temporal correlation, so broadband
+low-correlation components can be attenuated without a dedicated reference
+channel.</p>
+<p>The controlled construction makes it possible to evaluate both artifact
+recovery and change outside the contaminated periods. Low lagged correlation
+is a selection heuristic, not an automatic artifact label.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can lagged CCA separate a deliberately added broadband muscle-like process from a cleaner EEG substrate while preserving data outside the artifact periods? This example uses a real MNE Sample EEG recording with two controlled, spatially structured muscle-like processes active in known time windows."><img alt="" src="../_images/sphx_glr_plot_01_muscle_artifact_thumb.png" />
+<p><a class="reference internal" href="bss_cca/plot_01_muscle_artifact.html"><span class="doc">Attenuating broadband muscle artifact with BSS-CCA</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Attenuating broadband muscle artifact with BSS-CCA</div>
 </div></div></section>
-</section>
-<section id="ssp-sir-examples">
-<h1>SSP-SIR Examples<a class="headerlink" href="#ssp-sir-examples" title="Link to this heading">#</a></h1>
-<section id="id13">
-<h2>Overview<a class="headerlink" href="#id13" title="Link to this heading">#</a></h2>
-<p>Examples demonstrating SSP-SIR, which suppresses TMS-evoked muscle artifacts by
-projecting out the artifact subspace and reconstructing the brain signal lost to
-that projection through a forward model.</p>
-</section>
-<section id="id14">
-<h2>Files<a class="headerlink" href="#id14" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_sspsir_basics.py</span></code>: SSP-SIR on a simulated TMS-evoked response buried
-under muscle bursts; reading <code class="docutils literal notranslate"><span class="pre">n_components</span></code> off the singular-value elbow,
-why the projection is crossfaded rather than applied to the whole epoch, and
-inspecting the removed topographies via <code class="docutils literal notranslate"><span class="pre">projs_</span></code>.</p></li>
-</ul>
-</section>
-<section id="id15">
-<h2>Data Requirements<a class="headerlink" href="#id15" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>All sections run directly with no external data.</p></li>
-<li><p>The lead field is built from the montage with a three-layer spherical head
-model, so no MRI or forward solution is needed.</p></li>
-</ul>
-</section>
-<section id="id16">
-<h2>References<a class="headerlink" href="#id16" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Mutanen, Kukkonen, Nieminen, Stenroos, Sarvas &amp; Ilmoniemi (2016). Recovering
-TMS-evoked EEG responses masked by muscle artifacts. NeuroImage.</p></li>
-<li><p>Mutanen et al. (2024). A simulation study: comparing independent component
-analysis and signal-space projection - source-informed reconstruction for
-rejecting muscle artifacts evoked by transcranial magnetic stimulation.
-Frontiers in Human Neuroscience.</p></li>
-<li><p>Mutanen et al. (2022). Source-based artifact-rejection techniques for
-TMS-EEG. Journal of Neuroscience Methods.</p></li>
-<li><p>Hernandez-Pavon et al. (2022). Removing artifacts from TMS-evoked EEG: A
-methods review and a unifying theoretical framework. Journal of Neuroscience
-Methods.</p></li>
-</ul>
-<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="A TMS pulse fires the scalp muscles directly under the coil. The resulting deflection can be a thousand times larger than the cortical response it overlaps, and it is over within tens of milliseconds."><img alt="" src="../_images/sphx_glr_plot_01_sspsir_basics_thumb.png" />
-<p><a class="reference internal" href="sspsir/plot_01_sspsir_basics.html"><span class="doc">SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts</span></a></p>
-  <div class="sphx-glr-thumbnail-title">SSP-SIR: Recovering TMS-Evoked Responses Buried Under Muscle Artifacts</div>
+<section id="icanclean">
+<h1>iCanClean<a class="headerlink" href="#icanclean" title="Link to this heading">#</a></h1>
+<p>This example demonstrates reference-informed CCA cleaning with iCanClean using
+a controlled recording in which the artifact and signal of interest are known.</p>
+<p>Two reference conditions are compared: one that primarily captures the
+artifact and one that also contains signal of interest. The comparison
+illustrates why shared variance is not, by itself, evidence that a component
+should be removed.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can a reference channel help remove an artifact shared with the primary recording, and what happens when the reference also contains signal of interest? This controlled MNE Raw construction contains a known 10-Hz target signal, a separate broadband artifact, and two otherwise comparable reference conditions."><img alt="" src="../_images/sphx_glr_plot_01_reference_informed_cleaning_thumb.png" />
+<p><a class="reference internal" href="icanclean/plot_01_reference_informed_cleaning.html"><span class="doc">Reference-informed cleaning with iCanClean</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Reference-informed cleaning with iCanClean</div>
+</div></div></section>
+<section id="ssp-sir">
+<h1>SSP-SIR<a class="headerlink" href="#ssp-sir" title="Link to this heading">#</a></h1>
+<p>This example uses a real MNE Sample EEG evoked response as a clean
+methodological substrate and adds a controlled short TMS-like muscle artifact.</p>
+<p>The artifact direction is constructed with known spatial overlap with a clean
+response topography. SSP-SIR is then evaluated with separate artifact
+attenuation and clean-input preservation controls using a public MNE forward
+solution.</p>
+<p>The example is a controlled illustration, not validation on real TMS-EEG.</p>
+<div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Can SSP-SIR suppress a short high-amplitude TMS-like muscle artifact while limiting distortion of a known EEG response, when the artifact spatial direction partly overlaps the neural topography?"><img alt="" src="../_images/sphx_glr_plot_01_tms_muscle_artifact_thumb.png" />
+<p><a class="reference internal" href="sspsir/plot_01_tms_muscle_artifact.html"><span class="doc">Suppressing a TMS-like muscle artifact with SSP-SIR</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Suppressing a TMS-like muscle artifact with SSP-SIR</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
-</section>
 </section>
 
 
@@ -953,11 +705,11 @@ Methods.</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="sns/index.html"
+       href="asr/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Sensor Noise Suppression</p>
+        <p class="prev-next-title">ASR</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -980,55 +732,17 @@ Methods.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Examples Gallery</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensor-noise-suppression">Sensor Noise Suppression</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-free-bss-cca">Reference-free BSS-CCA</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#singular-spectrum-analysis">Singular Spectrum Analysis</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#dss-examples">DSS Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files">Files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-requirements">Data Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#zapline-examples">ZapLine Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Data Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">References</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#asr-examples">ASR Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started">Getting started</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-and-variants">Cutoff and variants</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#i-o-qc-and-pipelines">I/O, QC, and pipelines</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experimental-research-prototypes">Experimental research prototypes</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#spectrum-interpolation-examples">Spectrum Interpolation Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Data Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">References</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#sound-examples">SOUND Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Data Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">References</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ssp-sir-examples">SSP-SIR Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Data Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">References</a></li>
-</ul>
-</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Examples</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#asr">ASR</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#sns">SNS</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#sound">SOUND</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#spectrum-interpolation">Spectrum interpolation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#zapline">ZapLine</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#dss">DSS</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ssa">SSA</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#bss-cca">BSS-CCA</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#icanclean">iCanClean</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ssp-sir">SSP-SIR</a></li>
 </ul>
 
   </nav></div>
