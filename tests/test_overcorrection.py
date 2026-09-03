@@ -134,15 +134,31 @@ def test_works_on_a_fitted_sspsir_operator():
     import mne
 
     from mne_denoise._leadfield import make_spherical_leadfield
-    from mne_denoise.sspsir import compute_sspsir
+    from mne_denoise.sspsir import SSPSIR
 
     names = mne.channels.make_standard_montage("standard_1020").ch_names[:24]
     info = mne.create_info(names, 1000.0, "eeg")
     info.set_montage("standard_1020")
     lf = make_spherical_leadfield(info, n_dipoles=200)
     topos = np.linalg.svd(lf, full_matrices=False)[0][:, :2]
+    times = np.arange(400) / 1000.0
+    sources = np.stack(
+        [
+            np.sin(2.0 * np.pi * 180.0 * times),
+            np.cos(2.0 * np.pi * 210.0 * times),
+        ]
+    )
+    data = topos @ sources
+    evoked = mne.EvokedArray(data * 1e-6, info, tmin=0.0)
 
-    m = quantify_overcorrection(compute_sspsir(lf, topos, M=15), lf)
+    ss = SSPSIR(
+        n_components=2,
+        M=15,
+        n_dipoles=200,
+        art_window=(0.0, 0.399),
+        blend="constant",
+    ).fit(evoked)
+    m = quantify_overcorrection(ss.operator_, ss.leadfield_)
     assert m["correlation"].shape == (200,)
     # Removing two dimensions should preserve most sources but not all.
     assert 0.0 < np.nanmean(m["goodness_of_fit"]) < 1.0

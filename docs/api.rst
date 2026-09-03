@@ -238,13 +238,6 @@ SSP-SIR
 
    SSPSIR
 
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   compute_sspsir
-   compute_sir
-
 Additional API
 --------------
 

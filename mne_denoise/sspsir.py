@@ -14,7 +14,11 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _mne
 from ._data import extract_data_from_mne, reconstruct_mne_object
-from ._leadfield import _validate_leadfield, resolve_leadfield
+from ._leadfield import (
+    _average_reference,
+    _make_spherical_forward,
+    _validate_leadfield,
+)
 from ._logging import logger, verbose
 from ._validation import (
     check_channel_layout,
@@ -23,33 +27,10 @@ from ._validation import (
     check_positive_real,
 )
 
-__all__ = ["SSPSIR", "compute_sir", "compute_sspsir"]
+__all__ = ["SSPSIR"]
 
 #: 10-90% transition width (s) of the crossfade around a user artifact window.
 _SMOOTH_LENGTH = 0.010
-
-
-def _truncated_svd(
-    matrix: np.ndarray, M: int, what: str
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return leading singular triplets up to the requested numerical rank."""
-    if isinstance(M, (bool, np.bool_)) or not isinstance(M, Integral) or M < 1:
-        raise ValueError(f"M must be a positive integer, got {M!r}.")
-    u, s, vt = np.linalg.svd(matrix, full_matrices=False)
-    requested_rank = int(M)
-    tol = s[0] * max(matrix.shape) * np.finfo(s.dtype).eps if s.size else 0.0
-    numerical_rank = int(np.count_nonzero(s > tol))
-    if numerical_rank == 0:
-        raise ValueError(f"Cannot reconstruct from {what}: its numerical rank is zero.")
-    if numerical_rank < requested_rank:
-        warnings.warn(
-            f"M={M} exceeds the numerical rank ({numerical_rank}) of {what}; "
-            f"using M={numerical_rank} instead.",
-            RuntimeWarning,
-            stacklevel=3,
-        )
-    rank = min(requested_rank, numerical_rank)
-    return u[:, :rank], s[:rank], vt[:rank]
 
 
 def _artifact_subspace(
@@ -103,137 +84,32 @@ def _artifact_subspace(
     return u[:, :n_pc], n_pc, s
 
 
-def compute_sspsir(
-    leadfield: np.ndarray, artifact_topographies: np.ndarray, M: int
-) -> np.ndarray:
-    """Build the projected SSP-SIR reconstruction operator.
-
-    Parameters
-    ----------
-    leadfield : ndarray, shape (n_channels, n_sources)
-        Average-referenced lead field.
-    artifact_topographies : ndarray, shape (n_channels, n_components)
-        Orthonormal artifact subspace.
-    M : int
-        Source-informed reconstruction rank.
-
-    Returns
-    -------
-    ndarray, shape (n_channels, n_channels)
-        Artifact-suppressing operator.
-
-    See Also
-    --------
-    SSPSIR
-        Estimator that fits the artifact subspace and applies the operator.
-    compute_sir
-        Unprojected source-informed reconstruction operator.
-
-    Notes
-    -----
-    This operator implements the projected SSP-SIR reconstruction
-    :footcite:p:`mutanen2016_sspsir`.
-
-    References
-    ----------
-    .. footbibliography::
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.sspsir import compute_sspsir
-    >>> rng = np.random.default_rng(0)
-    >>> leadfield = rng.standard_normal((8, 16))
-    >>> leadfield -= leadfield.mean(axis=0, keepdims=True)
-    >>> artifact_topographies = rng.standard_normal((8, 2))
-    >>> artifact_topographies -= artifact_topographies.mean(axis=0, keepdims=True)
-    >>> artifact_topographies = np.linalg.qr(artifact_topographies)[0][:, :2]
-    >>> operator = compute_sspsir(leadfield, artifact_topographies, M=3)
-    """
-    leadfield = _validate_leadfield(leadfield)
-    artifact_topographies = np.asarray(artifact_topographies, dtype=float)
-    if artifact_topographies.ndim != 2:
-        raise ValueError(
-            "artifact_topographies must be 2D, got shape "
-            f"{artifact_topographies.shape}."
-        )
-    if not np.isfinite(artifact_topographies).all():
-        raise ValueError("artifact_topographies must contain only finite values.")
-    n_channels = leadfield.shape[0]
-    if artifact_topographies.shape[0] != n_channels:
-        raise ValueError(
-            f"Lead field has {n_channels} channels but the artifact "
-            f"topographies have {artifact_topographies.shape[0]}."
-        )
-    n_artifact = artifact_topographies.shape[1]
-    if not 1 <= n_artifact < n_channels:
-        raise ValueError(
-            "artifact_topographies must contain between 1 and n_channels - 1 "
-            "components."
-        )
-    gram = artifact_topographies.T @ artifact_topographies
-    if not np.allclose(gram, np.eye(n_artifact), rtol=1e-7, atol=1e-9):
-        raise ValueError("artifact_topographies must have orthonormal columns.")
-    proj = np.eye(n_channels) - artifact_topographies @ artifact_topographies.T
-    pl = proj @ leadfield
-    u, s, vt = _truncated_svd(pl, M, "the projected lead field")
-    return leadfield @ (vt.T / s) @ u.T @ proj
-
-
-def compute_sir(leadfield: np.ndarray, M: int) -> np.ndarray:
-    """Build the unprojected source-informed reconstruction operator.
-
-    Parameters
-    ----------
-    leadfield : ndarray, shape (n_channels, n_sources)
-        Average-referenced lead field.
-    M : int
-        Source-informed reconstruction rank.
-
-    Returns
-    -------
-    ndarray, shape (n_channels, n_channels)
-        Rank-truncated source-informed operator.
-
-    See Also
-    --------
-    SSPSIR
-        Estimator that fits the artifact subspace and applies source-informed
-        reconstruction.
-    compute_sspsir
-        Projected source-informed reconstruction operator.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mne_denoise.sspsir import compute_sir
-    >>> rng = np.random.default_rng(0)
-    >>> leadfield = rng.standard_normal((8, 16))
-    >>> leadfield -= leadfield.mean(axis=0, keepdims=True)
-    >>> operator = compute_sir(leadfield, M=3)
-    """
-    leadfield = _validate_leadfield(leadfield)
-    u, _, _ = _truncated_svd(leadfield, M, "the lead field")
-    return u @ u.T
+def _as_mne_projection(topography: np.ndarray, ch_names: list[str], desc: str):
+    """Wrap one channel topography as an inactive MNE projection."""
+    _mne.require_mne("SSP-SIR projections")
+    topography = np.asarray(topography, dtype=float)
+    if topography.ndim == 1:
+        topography = topography[:, np.newaxis]
+    return _mne.mne.Projection(
+        data={
+            "data": topography.T,
+            "col_names": list(ch_names),
+            "row_names": None,
+            "ncol": len(ch_names),
+            "nrow": 1,
+        },
+        active=False,
+        desc=desc,
+        kind=1,  # FIFFV_PROJ_ITEM_FIELD
+        explained_var=None,
+    )
 
 
 def _as_mne_projections(topographies: np.ndarray, ch_names: list[str]) -> list:
     """Wrap artifact topographies as MNE projection objects."""
-    _mne.require_mne("SSP-SIR artifact projections")
-
     return [
-        _mne.mne.Projection(
-            data={
-                "data": topographies[:, i : i + 1].T,
-                "col_names": list(ch_names),
-                "row_names": None,
-                "ncol": len(ch_names),
-                "nrow": 1,
-            },
-            active=False,
-            desc=f"SSP-SIR artifact {i + 1}",
-            kind=1,  # FIFFV_PROJ_ITEM_FIELD
-            explained_var=None,
+        _as_mne_projection(
+            topographies[:, i], ch_names, desc=f"SSP-SIR artifact {i + 1}"
         )
         for i in range(topographies.shape[1])
     ]
@@ -295,10 +171,6 @@ class SSPSIR(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    compute_sspsir
-        Construct the projected source-informed reconstruction operator.
-    compute_sir
-        Construct the unprojected source-informed reconstruction operator.
     mne_denoise.sound.SOUND
         Another forward-model-based denoising method with a different noise model.
 
@@ -478,20 +350,145 @@ class SSPSIR(BaseEstimator, TransformerMixin):
             self.singular_values_,
         ) = _artifact_subspace(svd_input, self.n_components)
 
-        self.leadfield_ = resolve_leadfield(
-            inst=orig_inst,
-            ch_names=ch_names,
-            n_channels=n_channels,
-            method="SSP-SIR",
-            forward=self.forward,
-            n_dipoles=self.n_dipoles,
+        _mne.require_mne("SSP-SIR Forward resolution")
+        if orig_inst is not None:
+            fitted_ch_names = list(ch_names)
+            if self.forward is None:
+                info = orig_inst.copy().pick(fitted_ch_names).info
+                resolved_forward = _make_spherical_forward(
+                    info,
+                    n_dipoles=self.n_dipoles,
+                )
+            else:
+                _validate_leadfield(
+                    self.forward["sol"]["data"],
+                    what="The supplied forward gain matrix",
+                )
+                resolved_forward = _mne.mne.pick_channels_forward(
+                    self.forward,
+                    include=fitted_ch_names,
+                    ordered=True,
+                    copy=True,
+                )
+        else:
+            if self.forward is None:
+                raise ValueError(
+                    "SSP-SIR needs channel positions: pass an MNE object with a "
+                    "montage, or provide a `forward` for array input."
+                )
+            gain = _validate_leadfield(
+                self.forward["sol"]["data"],
+                what="The supplied forward gain matrix",
+            )
+            if gain.shape[0] != n_channels:
+                raise ValueError(
+                    "For array input, the forward must have the same number of "
+                    f"channels as the data ({gain.shape[0]} vs {n_channels})."
+                )
+            row_names = list(self.forward["sol"]["row_names"])
+            if len(row_names) != n_channels:
+                raise ValueError(
+                    "The supplied forward has a different number of row names and "
+                    "gain-matrix rows."
+                )
+            fitted_ch_names = row_names
+            resolved_forward = _mne.mne.pick_channels_forward(
+                self.forward,
+                include=fitted_ch_names,
+                ordered=True,
+                copy=True,
+            )
+
+        gain = _validate_leadfield(
+            resolved_forward["sol"]["data"],
+            what="The supplied forward gain matrix",
         )
+        self.leadfield_ = _average_reference(gain)
+
+        if orig_inst is not None:
+            source_info = orig_inst.info
+        else:
+            source_info = resolved_forward["info"]
+        source_picks = _mne.mne.pick_channels(
+            source_info["ch_names"], include=fitted_ch_names, ordered=True
+        )
+        fitted_ch_types = source_info.get_channel_types(picks=source_picks)
+        clean_info = _mne.mne.create_info(fitted_ch_names, sfreq, fitted_ch_types)
+
+        artifact_projs = _as_mne_projections(
+            self.artifact_topographies_, fitted_ch_names
+        )
+        self.projs_ = artifact_projs if orig_inst is not None else []
+
+        channel_types = set(fitted_ch_types)
+        has_eeg = "eeg" in channel_types
+        has_meg = bool(channel_types.intersection(("mag", "grad", "meg")))
+        if has_eeg and has_meg:
+            raise ValueError(
+                "SSP-SIR requires one homogeneous sensor family for a single M; "
+                "mixed EEG and MEG Forward rows are not supported."
+            )
+        if has_eeg:
+            rank_key = "eeg"
+            common_desc = "Average EEG reference"
+        elif has_meg:
+            rank_key = "meg"
+            common_desc = "SSP-SIR common mode"
+        else:
+            raise ValueError("SSP-SIR requires EEG or MEG data channels.")
+
+        common_mode = np.ones(n_channels) / np.sqrt(n_channels)
+        common_mode_proj = _as_mne_projection(common_mode, fitted_ch_names, common_desc)
 
         data_rank = int(np.linalg.matrix_rank(evoked))
-        M = self.M if self.M is not None else max(1, data_rank - self.n_components_)
-        self.operator_ = compute_sspsir(self.leadfield_, self.artifact_topographies_, M)
+        requested_M = (
+            int(self.M) if self.M is not None else data_rank - self.n_components_
+        )
+        if requested_M < 1:
+            raise ValueError(f"M must be a positive integer, got {requested_M!r}.")
+        projected_leadfield = self.leadfield_ - self.artifact_topographies_ @ (
+            self.artifact_topographies_.T @ self.leadfield_
+        )
+        available_rank = int(np.linalg.matrix_rank(projected_leadfield))
+        if available_rank == 0:
+            raise ValueError(
+                "Cannot reconstruct from the projected lead field: its numerical "
+                "rank is zero."
+            )
+        M = requested_M
+        if available_rank < M:
+            warnings.warn(
+                f"M={M} exceeds the numerical rank ({available_rank}) of the "
+                "projected lead field; using "
+                f"M={available_rank} instead.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            M = available_rank
+        identity = _mne.mne.EvokedArray(
+            np.eye(n_channels),
+            clean_info,
+            tmin=0.0,
+            verbose=False,
+        )
+        all_projs = [common_mode_proj, *artifact_projs]
+        identity.add_proj(all_projs, verbose=False)
+
+        projected = identity.copy()
+        self.operator_ = projected.reconstruct_proj(
+            projs=projected.info["projs"],
+            forward=resolved_forward,
+            rank={rank_key: M},
+            verbose=False,
+        ).data
         self.M_ = int(np.linalg.matrix_rank(self.operator_))
-        self.operator_orig_ = compute_sir(self.leadfield_, self.M_)
+        unprojected = identity.copy()
+        self.operator_orig_ = unprojected.reconstruct_proj(
+            projs=[unprojected.info["projs"][0]],
+            forward=resolved_forward,
+            rank={rank_key: self.M_},
+            verbose=False,
+        ).data
         self.kernel_ = (
             np.ones(evoked.shape[1])
             if self.blend == "constant"
@@ -499,12 +496,7 @@ class SSPSIR(BaseEstimator, TransformerMixin):
         )
         self.sfreq_ = sfreq
         self.times_ = times.copy()
-        self._mne_ch_names_ = ch_names
-        self.projs_ = (
-            _as_mne_projections(self.artifact_topographies_, ch_names)
-            if ch_names is not None
-            else []
-        )
+        self._mne_ch_names_ = fitted_ch_names
         logger.info(
             "SSP-SIR: channels=%d, removed %d artifact component(s), "
             "SIR truncation M=%d (data rank %d), blend=%s",

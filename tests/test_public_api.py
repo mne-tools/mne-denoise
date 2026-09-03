@@ -64,8 +64,6 @@ CANONICAL_PUBLIC_PATHS = (
     ("mne_denoise.ssa", "LocalSingularSpectrumAnalysis"),
     ("mne_denoise.ssa", "SingularSpectrumAnalysis"),
     ("mne_denoise.sspsir", "SSPSIR"),
-    ("mne_denoise.sspsir", "compute_sir"),
-    ("mne_denoise.sspsir", "compute_sspsir"),
     ("mne_denoise.viz", "plot_psd_comparison"),
     ("mne_denoise.viz", "set_theme"),
     ("mne_denoise.zapline", "ZapLine"),
