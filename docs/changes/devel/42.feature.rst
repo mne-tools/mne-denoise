@@ -1,0 +1,4 @@
+**DSS**:
+- ``DSS`` now estimates covariances for :class:`mne.Evoked` inputs with
+  :func:`mne.compute_covariance` instead of falling back to the NumPy path
+  (Issue #39).

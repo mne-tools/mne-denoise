@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -694,7 +695,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.info_ = inst.info
         self._mne_info = self.info_
 
-        if weights is not None or not self.center or mne_type == "evoked":
+        if weights is not None or not self.center:
             # Weighted or explicitly uncentered MNE input uses the canonical
             # channel-first NumPy path.
             self._fit_numpy(data, weights=weights)
@@ -723,9 +724,26 @@ class DSS(BaseEstimator, TransformerMixin):
             baseline_cov = _mne.mne.compute_covariance(inst, method=method, **kws)
             biased_cov = _mne.mne.compute_covariance(biased_inst, method=method, **kws)
 
-        else:  # Evoked - use numpy path since MNE doesn't support Evoked covariance
-            self._fit_numpy(data, weights=weights)
-            return
+        elif mne_type == "evoked":
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    message="Evoked is not baseline corrected",
+                    category=RuntimeWarning,
+                )
+                baseline_cov = _mne.mne.compute_covariance(
+                    inst=inst,
+                    method=method,
+                    **kws,
+                )
+                biased_cov = _mne.mne.compute_covariance(
+                    inst=biased_inst,
+                    method=method,
+                    **kws,
+                )
+
+        else:
+            raise RuntimeError(f"Unsupported MNE input type: {mne_type}")
 
         # Extract data from MNE covariances
         self.filters_, self.patterns_, self.eigenvalues_ = compute_dss(
