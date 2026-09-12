@@ -12,7 +12,7 @@ from mne_denoise.zapline import ZapLine
 def synthetic_data():
     """Create synthetic epochs with signal and noise."""
     info = mne.create_info(["Fz", "Cz", "Pz", "Oz", "F3"], 100.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
 
     n_epochs = 10
     n_times = 200

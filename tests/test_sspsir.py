@@ -12,9 +12,9 @@ from mne_denoise.sspsir import SSPSIR
 
 @pytest.fixture(scope="module")
 def eeg_info():
-    ch = mne.channels.make_standard_montage("standard_1020").ch_names[:24]
+    ch = mne.channels.make_standard_montage("colin27_1020").ch_names[:24]
     info = mne.create_info(ch, 1000.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     return info
 
 
@@ -321,6 +321,39 @@ def test_sspsir_forward_integrations(tms_epochs, forward):
     assert mne_out.ch_names == epochs.ch_names
     assert mne_out.get_data().shape == epochs.get_data().shape
     np.testing.assert_array_equal(mne_out.times, epochs.times)
+
+    evoked_data = epochs.get_data().mean(axis=0)
+    evoked_data -= evoked_data.mean(axis=0, keepdims=True)
+    expected_default_M = max(
+        1, np.linalg.matrix_rank(evoked_data) - mne_model.n_components_
+    )
+    assert mne_model.M_ == expected_default_M
+
+    explicit_model = SSPSIR(n_components=2, M=3, forward=forward, blend="constant").fit(
+        epochs
+    )
+    assert explicit_model.M_ == 3
+    assert np.linalg.matrix_rank(explicit_model.operator_) == 3
+    assert np.linalg.matrix_rank(explicit_model.operator_orig_) == 3
+
+    low_rank_topographies = np.random.default_rng(12).standard_normal((24, 2))
+    low_rank_topographies -= low_rank_topographies.mean(axis=0, keepdims=True)
+    low_rank_times = np.arange(epochs.get_data().shape[-1]) / epochs.info["sfreq"]
+    low_rank_sources = np.vstack(
+        [
+            np.sin(2.0 * np.pi * 8.0 * low_rank_times),
+            np.cos(2.0 * np.pi * 13.0 * low_rank_times),
+        ]
+    )
+    low_rank_data = low_rank_topographies @ low_rank_sources * 1e-6
+    low_rank_epochs = mne.EpochsArray(
+        np.repeat(low_rank_data[np.newaxis], 2, axis=0),
+        epochs.info.copy(),
+        tmin=epochs.tmin,
+        verbose=False,
+    )
+    low_rank_model = SSPSIR(n_components=2, forward=forward).fit(low_rank_epochs)
+    assert low_rank_model.M_ == 1
 
     evoked = epochs.average()
     evoked_out = SSPSIR(n_components=2).fit_transform(evoked)

@@ -136,9 +136,9 @@ def test_works_on_a_fitted_sspsir_operator():
     from mne_denoise._leadfield import make_spherical_leadfield
     from mne_denoise.sspsir import SSPSIR
 
-    names = mne.channels.make_standard_montage("standard_1020").ch_names[:24]
+    names = mne.channels.make_standard_montage("colin27_1020").ch_names[:24]
     info = mne.create_info(names, 1000.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     lf = make_spherical_leadfield(info, n_dipoles=200)
     topos = np.linalg.svd(lf, full_matrices=False)[0][:, :2]
     times = np.arange(400) / 1000.0

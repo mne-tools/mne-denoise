@@ -18,9 +18,9 @@ from mne_denoise._leadfield import (
 
 @pytest.fixture(scope="module")
 def eeg_info():
-    ch = mne.channels.make_standard_montage("standard_1020").ch_names[:24]
+    ch = mne.channels.make_standard_montage("colin27_1020").ch_names[:24]
     info = mne.create_info(ch, 1000.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     return info
 
 
@@ -73,9 +73,9 @@ def test_spherical_leadfield_matches_reference_geometry():
     deterministic lattice must land inside the spread that the reference's own
     random draws produce.
     """
-    ch = mne.channels.make_standard_montage("standard_1020").ch_names[:32]
+    ch = mne.channels.make_standard_montage("colin27_1020").ch_names[:32]
     info = mne.create_info(ch, 1000.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     sphere = mne.make_sphere_model(
         r0="auto",
         head_radius=0.088,
@@ -220,7 +220,7 @@ def test_resolve_leadfield_aligns_forward_channels(eeg_info, forward):
     names = list(eeg_info["ch_names"])
     shuffled = names[::-1]
     flipped_info = mne.create_info(shuffled, 1000.0, "eeg")
-    flipped_info.set_montage("standard_1020")
+    flipped_info.set_montage("colin27_1020")
 
     leadfield = resolve_leadfield(
         inst=_raw(flipped_info),
@@ -237,9 +237,9 @@ def test_resolve_leadfield_aligns_forward_channels(eeg_info, forward):
 
 
 def test_resolve_leadfield_forward_missing_channels_raises(forward):
-    ch = mne.channels.make_standard_montage("standard_1020").ch_names[:26]
+    ch = mne.channels.make_standard_montage("colin27_1020").ch_names[:26]
     info = mne.create_info(ch, 1000.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     with pytest.raises(ValueError, match="Missing channels"):
         resolve_leadfield(
             inst=_raw(info),
