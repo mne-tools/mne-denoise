@@ -11,9 +11,9 @@ from mne_denoise.sound import SOUND, _ddwiener, compute_sound, compute_sound_ref
 
 @pytest.fixture(scope="module")
 def eeg_info():
-    ch = mne.channels.make_standard_montage("standard_1020").ch_names[:24]
+    ch = mne.channels.make_standard_montage("colin27_1020").ch_names[:24]
     info = mne.create_info(ch, 500.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     return info
 
 

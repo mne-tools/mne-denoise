@@ -52,7 +52,6 @@ def test_no_mne_imports_and_pure_numerical_cores_remain_usable():
         from mne_denoise.sns import compute_sns
         from mne_denoise.sound import compute_sound, compute_sound_ref_best
         from mne_denoise.spectrum_interpolation import interpolate_spectrum
-        from mne_denoise.sspsir import compute_sir, compute_sspsir
         from mne_denoise.ssa import compute_basic_ssa
 
         rng = np.random.default_rng(0)
@@ -67,9 +66,6 @@ def test_no_mne_imports_and_pure_numerical_cores_remain_usable():
 
         compute_sound(data, leadfield, n_iter=1, random_state=0)
         compute_sound_ref_best(data, leadfield, n_iter=1, random_state=0)
-        compute_sir(leadfield, 2)
-        artifact_basis, _ = np.linalg.qr(rng.standard_normal((4, 1)))
-        compute_sspsir(leadfield, artifact_basis, 1)
         compute_dss(np.eye(4), np.diag([4.0, 3.0, 2.0, 1.0]), n_components=2)
         iterative_dss(data, lambda source: source**3, 1, max_iter=2, random_state=0)
         compute_sns(data, n_neighbors=2)

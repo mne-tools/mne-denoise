@@ -1,0 +1,2 @@
+**SSP-SIR** now delegates Forward-based source-informed projection reconstruction
+to MNE-Python instead of maintaining a local reconstruction implementation.

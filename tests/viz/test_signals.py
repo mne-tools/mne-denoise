@@ -76,7 +76,7 @@ def test_plot_channel_time_course_maps_requested_channel_and_traces():
 def test_plot_power_ratio_map_uses_after_over_before_and_channel_metadata():
     """Power-ratio maps expose the documented ratio label and MNE metadata path."""
     info = mne.create_info(["Fz", "Cz", "Pz"], 100.0, ch_types="eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     fig = plot_power_ratio_map(
         np.array([1.0, 2.0, 4.0]),
         np.array([0.5, 1.0, 8.0]),

@@ -7,14 +7,14 @@ import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 
-from mne_denoise.sspsir import SSPSIR, compute_sir, compute_sspsir
+from mne_denoise.sspsir import SSPSIR
 
 
 @pytest.fixture(scope="module")
 def eeg_info():
-    ch = mne.channels.make_standard_montage("standard_1020").ch_names[:24]
+    ch = mne.channels.make_standard_montage("colin27_1020").ch_names[:24]
     info = mne.create_info(ch, 1000.0, "eeg")
-    info.set_montage("standard_1020")
+    info.set_montage("colin27_1020")
     return info
 
 
@@ -279,98 +279,6 @@ def test_sspsir_not_fitted_raises():
         SSPSIR(n_components=2).transform(np.zeros((24, 100)))
 
 
-def test_compute_sir_operator_math_and_inputs():
-    """SIR is a finite rank-M orthogonal projection, not an identity map."""
-    leadfield = np.random.default_rng(2).standard_normal((5, 8))
-    M = 2
-    operator = compute_sir(leadfield, M=M)
-    u, _, _ = np.linalg.svd(leadfield, full_matrices=False)
-    expected = u[:, :M] @ u[:, :M].T
-
-    assert operator.shape == (5, 5)
-    assert np.isfinite(operator).all()
-    assert np.linalg.matrix_rank(operator) == M
-    assert not np.allclose(operator, np.eye(5))
-    np.testing.assert_allclose(operator, expected)
-    np.testing.assert_allclose(operator @ operator, operator)
-
-    _assert_value_error(
-        "SIR noninteger M",
-        lambda: compute_sir(np.eye(3), M=1.5),
-        "positive integer",
-    )
-    _assert_value_error(
-        "SIR zero-rank leadfield",
-        lambda: compute_sir(np.zeros((3, 4)), M=1),
-        "rank is zero",
-    )
-
-
-def test_compute_sspsir_operator_math_and_inputs():
-    """SSP-SIR removes its orthonormal artifact subspace and validates inputs."""
-    rng = np.random.default_rng(11)
-    leadfield = rng.standard_normal((5, 10))
-    artifact_topographies = np.linalg.qr(rng.standard_normal((5, 2)))[0][:, :2]
-    operator = compute_sspsir(leadfield, artifact_topographies, M=2)
-
-    assert operator.shape == (5, 5)
-    assert np.isfinite(operator).all()
-    np.testing.assert_allclose(operator @ artifact_topographies, 0.0, atol=1e-10)
-
-    cases = [
-        (
-            "artifact topographies not 2D",
-            leadfield,
-            np.ones(5),
-            2,
-            "artifact_topographies must be 2D",
-        ),
-        (
-            "artifact topographies nonfinite",
-            leadfield,
-            np.full((5, 1), np.nan),
-            2,
-            "finite",
-        ),
-        (
-            "artifact topographies empty",
-            leadfield,
-            np.empty((5, 0)),
-            2,
-            "between 1",
-        ),
-        (
-            "artifact topographies channel mismatch",
-            leadfield,
-            np.ones((4, 1)),
-            2,
-            "Lead field has 5 channels",
-        ),
-        (
-            "artifact topographies nonorthonormal",
-            leadfield,
-            np.ones((5, 2)),
-            2,
-            "orthonormal",
-        ),
-        (
-            "SSP-SIR nonpositive M",
-            leadfield,
-            artifact_topographies,
-            0,
-            "positive integer",
-        ),
-    ]
-    for label, test_leadfield, topographies, M, expected in cases:
-        _assert_value_error(
-            label,
-            lambda test_leadfield=test_leadfield, topographies=topographies, M=M: (
-                compute_sspsir(test_leadfield, topographies, M)
-            ),
-            expected,
-        )
-
-
 def test_sspsir_clips_m_to_operator_rank(tms_epochs):
     with pytest.warns(RuntimeWarning, match="exceeds the numerical rank"):
         ss = SSPSIR(n_components=2, M=100).fit(tms_epochs[0])
@@ -413,6 +321,39 @@ def test_sspsir_forward_integrations(tms_epochs, forward):
     assert mne_out.ch_names == epochs.ch_names
     assert mne_out.get_data().shape == epochs.get_data().shape
     np.testing.assert_array_equal(mne_out.times, epochs.times)
+
+    evoked_data = epochs.get_data().mean(axis=0)
+    evoked_data -= evoked_data.mean(axis=0, keepdims=True)
+    expected_default_M = max(
+        1, np.linalg.matrix_rank(evoked_data) - mne_model.n_components_
+    )
+    assert mne_model.M_ == expected_default_M
+
+    explicit_model = SSPSIR(n_components=2, M=3, forward=forward, blend="constant").fit(
+        epochs
+    )
+    assert explicit_model.M_ == 3
+    assert np.linalg.matrix_rank(explicit_model.operator_) == 3
+    assert np.linalg.matrix_rank(explicit_model.operator_orig_) == 3
+
+    low_rank_topographies = np.random.default_rng(12).standard_normal((24, 2))
+    low_rank_topographies -= low_rank_topographies.mean(axis=0, keepdims=True)
+    low_rank_times = np.arange(epochs.get_data().shape[-1]) / epochs.info["sfreq"]
+    low_rank_sources = np.vstack(
+        [
+            np.sin(2.0 * np.pi * 8.0 * low_rank_times),
+            np.cos(2.0 * np.pi * 13.0 * low_rank_times),
+        ]
+    )
+    low_rank_data = low_rank_topographies @ low_rank_sources * 1e-6
+    low_rank_epochs = mne.EpochsArray(
+        np.repeat(low_rank_data[np.newaxis], 2, axis=0),
+        epochs.info.copy(),
+        tmin=epochs.tmin,
+        verbose=False,
+    )
+    low_rank_model = SSPSIR(n_components=2, forward=forward).fit(low_rank_epochs)
+    assert low_rank_model.M_ == 1
 
     evoked = epochs.average()
     evoked_out = SSPSIR(n_components=2).fit_transform(evoked)

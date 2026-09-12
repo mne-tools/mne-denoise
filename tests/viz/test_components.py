@@ -221,7 +221,7 @@ def test_plot_component_summary_handles_fitted_subset_patterns():
         ch_names=["Fp1", "Fp2", "EOG"], sfreq=100.0, ch_types=["eeg", "eeg", "eog"]
     )
     info.set_montage(
-        mne.channels.make_standard_montage("standard_1020"), on_missing="ignore"
+        mne.channels.make_standard_montage("colin27_1020"), on_missing="ignore"
     )
 
     class SubsetEstimator:

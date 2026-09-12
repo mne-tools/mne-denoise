@@ -100,21 +100,21 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/3c/2e/8d0c2ab90a8c1d9
 
 [[packages]]
 name = "matplotlib"
-version = "3.8.0"
-sdist = { url = "https://files.pythonhosted.org/packages/23/e1/77016194621fb1356aafeb2186f07b5dede62ea2043bf03f82325c4fccc5/matplotlib-3.8.0.tar.gz", upload-time = 2023-09-15T04:49:03Z, size = 35864435, hashes = { sha256 = "df8505e1c19d5c2c26aff3497a7cbd3ccfc2e97043d1e4db3e76afa399164b69" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/77/cd/1464efc9fe354026b8d2fb4ebb2f1746559b0e38308104d3ee60a5a05c71/matplotlib-3.8.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2023-09-15T04:51:54Z, size = 11602343, hashes = { sha256 = "dae97fdd6996b3a25da8ee43e3fc734fff502f396801063c6b76c20b56683196" } }]
+version = "3.9.0"
+sdist = { url = "https://files.pythonhosted.org/packages/c5/a4/a7236bf8b0137deff48737c6ccf2154ef4486e57c6a5b7c309bf515992bd/matplotlib-3.9.0.tar.gz", upload-time = 2024-05-15T23:38:15Z, size = 36069890, hashes = { sha256 = "e6d29ea6c19e34b30fb7d88b7081f869a03014f66fe06d62cc77d5a6ea88ed7a" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/f4/ff/da311c1e679eed54d3aed67754a4e859bd3b773060c2fa187962e60fcb85/matplotlib-3.9.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2024-05-15T23:37:42Z, size = 8298411, hashes = { sha256 = "0a490715b3b9984fa609116481b22178348c1a220a4499cda79132000a79b4db" } }]
 
 [[packages]]
 name = "mne"
-version = "1.12.1"
-sdist = { url = "https://files.pythonhosted.org/packages/95/72/24cd8137df5a185fe0856ff9b6f8a8f9d387d6783c51961a1c6300a4efe8/mne-1.12.1.tar.gz", upload-time = 2026-04-20T17:16:57Z, size = 7211821, hashes = { sha256 = "244f844057f28a4da2509039dba637832ffb65f678ca76fc667312c493b12044" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/6c/da/a3280dbd8f0024b287b625ef97f8ef79ae853ed852e7732641d0ec3c2160/mne-1.12.1-py3-none-any.whl", upload-time = 2026-04-20T17:16:54Z, size = 7509566, hashes = { sha256 = "7823bd276d570e9bed2e63e8d86fdbe74d5ee7817b6d01a8e4dc9510ef9e3a91" } }]
+version = "1.13.0"
+sdist = { url = "https://files.pythonhosted.org/packages/54/c0/1b625c3dea2194ebe0f7ca2ef3f7b46e631f252fc3cf29af4a495beff418/mne-1.13.0.tar.gz", upload-time = 2026-09-09T17:02:20Z, size = 7360722, hashes = { sha256 = "9308523df88bd6fdf6e60af07cdb459eac079c93dbc48032de30653e393e1344" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/bd/fb/122d771ed77beac13dd38916623b4a635e3537bca48119090588274136ed/mne-1.13.0-py3-none-any.whl", upload-time = 2026-09-09T17:02:17Z, size = 7666619, hashes = { sha256 = "dab19b08b8dfe978b23bfe3d77371853609745aa9036eb47006d02e48a2480f6" } }]
 
 [[packages]]
 name = "numpy"
-version = "1.26.0"
-sdist = { url = "https://files.pythonhosted.org/packages/55/b3/b13bce39ba82b7398c06d10446f5ffd5c07db39b09bd37370dc720c7951c/numpy-1.26.0.tar.gz", upload-time = 2023-09-16T20:12:58Z, size = 15633455, hashes = { sha256 = "f93fc78fe8bf15afe2b8d6b6499f1c73953169fad1e9a8dd086cdff3190e7fdf" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/e3/e2/4ecfbc4a2e3f9d227b008c92a5d1f0370190a639b24fec3b226841eaaf19/numpy-1.26.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2023-09-16T20:05:55Z, size = 17883864, hashes = { sha256 = "7f6bad22a791226d0a5c7c27a80a20e11cfe09ad5ef9084d4d3fc4a299cca505" } }]
+version = "2.1.0"
+sdist = { url = "https://files.pythonhosted.org/packages/54/a4/f8188c4f3e07f7737683588210c073478abcb542048cf4ab6fedad0b458a/numpy-2.1.0.tar.gz", upload-time = 2024-08-18T22:13:47Z, size = 18868922, hashes = { sha256 = "7dc90da0081f7e1da49ec4e398ede6a8e9cc4f5ebe5f9e06b443ed889ee9aaa2" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/48/3e/bf807eb050abc23adc556f34fcf931ca2d67ad8dfc9c17fcd9332c01347f/numpy-2.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2024-08-18T21:54:36Z, size = 16040181, hashes = { sha256 = "24003ba8ff22ea29a8c306e61d316ac74111cebf942afbf692df65509a05f111" } }]
 
 [[packages]]
 name = "packaging"
@@ -124,9 +124,9 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9ead
 
 [[packages]]
 name = "pandas"
-version = "2.1.1"
-sdist = { url = "https://files.pythonhosted.org/packages/3d/0e/2c225d7a5de6ca0ec7d729aff6ef560544596f3a9bfed77f6dbc1713dbb5/pandas-2.1.1.tar.gz", upload-time = 2023-09-20T21:05:19Z, size = 4266250, hashes = { sha256 = "fecb198dc389429be557cde50a2d46da8434a17fe37d7d41ff102e3987fd947b" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/41/db/fc107df31c06976764e753074cc71cbe1c7062481f668746f8d498cafcb6/pandas-2.1.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2023-09-20T21:04:48Z, size = 11652903, hashes = { sha256 = "29deb61de5a8a93bdd033df328441a79fcf8dd3c12d5ed0b41a395eef9cd76f0" } }]
+version = "2.2.2"
+sdist = { url = "https://files.pythonhosted.org/packages/88/d9/ecf715f34c73ccb1d8ceb82fc01cd1028a65a5f6dbc57bfa6ea155119058/pandas-2.2.2.tar.gz", upload-time = 2024-04-10T19:45:48Z, size = 4398391, hashes = { sha256 = "9e79019aba43cb4fda9e4d983f8e88ca0373adbb697ae9c6c43093218de28b54" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/40/10/79e52ef01dfeb1c1ca47a109a01a248754ebe990e159a844ece12914de83/pandas-2.2.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2024-04-10T19:45:09Z, size = 12733396, hashes = { sha256 = "eee3a87076c0756de40b05c5e9a6069c035ba43e8dd71c379e68cab2c20f16ad" } }]
 
 [[packages]]
 name = "pillow"
@@ -202,9 +202,9 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/ae/54/e70102a9c12d27d
 
 [[packages]]
 name = "scipy"
-version = "1.13.0"
-sdist = { url = "https://files.pythonhosted.org/packages/fb/a3/328965862f41ba67d27ddd26205962007ec87d99eec6d364a29bf00ac093/scipy-1.13.0.tar.gz", upload-time = 2024-04-02T21:48:22Z, size = 57204550, hashes = { sha256 = "58569af537ea29d3f78e5abd18398459f195546bb3be23d16677fb26616cc11e" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/87/8c/97e545034c94d0bbbc3af3202551c3d6020e5f8d2ee37ebcabd9a2048174/scipy-1.13.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2024-04-02T21:43:02Z, size = 38213102, hashes = { sha256 = "1e7626dfd91cdea5714f343ce1176b6c4745155d234f1033584154f60ef1ff42" } }]
+version = "1.14.0"
+sdist = { url = "https://files.pythonhosted.org/packages/4e/e5/0230da034a2e1b1feb32621d7cd57c59484091d6dccc9e6b855b0d309fc9/scipy-1.14.0.tar.gz", upload-time = 2024-06-24T20:35:18Z, size = 58618870, hashes = { sha256 = "b5923f48cb840380f9854339176ef21763118a7300a88203ccd0bdd26e58527b" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/9b/00/ce54410e344b3a6032cd42ed53fe425cf57a66d28e337670292bbb419ebc/scipy-1.14.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", upload-time = 2024-06-24T20:34:23Z, size = 40785123, hashes = { sha256 = "a01cc03bcdc777c9da3cfdcc74b5a75caffb48a6c39c8450a9a05f82c4250a14" } }]
 
 [[packages]]
 name = "seaborn"

@@ -124,6 +124,68 @@ def fibonacci_sphere(n_points: int) -> np.ndarray:
     )
 
 
+def _make_spherical_forward(
+    info: mne.Info,
+    *,
+    n_dipoles: int = 5000,
+    head_model: SphericalHeadModel = REFERENCE_HEAD,
+    verbose: bool = False,
+) -> mne.Forward:
+    """Build the spherical fallback ``Forward`` from an EEG montage."""
+    if (
+        isinstance(n_dipoles, (bool, np.bool_))
+        or not isinstance(n_dipoles, Integral)
+        or n_dipoles < 1
+    ):
+        raise ValueError(f"n_dipoles must be a positive integer, got {n_dipoles!r}.")
+    _mne.require_mne("automatic spherical lead-field construction")
+    eeg_picks = _mne.mne.pick_types(info, meg=False, eeg=True, exclude=())
+    if len(eeg_picks) != len(info["ch_names"]):
+        raise ValueError(
+            "Automatic spherical lead-field construction supports EEG channels "
+            "only; provide an explicit forward model for MEG or mixed channel types."
+        )
+
+    with warnings.catch_warnings():
+        # The best-fit sphere centre can sit >20 mm from the head-frame origin
+        # for partial or idealised montages; harmless for spanning the
+        # topography subspace that SOUND and SSP-SIR rely on.
+        warnings.filterwarnings("ignore", message=".*from head frame origin.*")
+        sphere = _mne.mne.make_sphere_model(
+            r0="auto",
+            head_radius="auto",
+            info=info,
+            relative_radii=head_model.relative_radii,
+            sigmas=head_model.conductivities,
+            verbose=verbose,
+        )
+        # ``sphere["layers"][-1]["rad"]`` is the fitted scalp radius in
+        # metres; the source shell tracks it so the geometry stays
+        # proportional.
+        head_radius = float(sphere["layers"][-1]["rad"])
+        directions = fibonacci_sphere(n_dipoles)
+        positions = (
+            directions * (head_model.dipole_relative_radius * head_radius)
+            + sphere["r0"]
+        )
+        src = _mne.mne.setup_volume_source_space(
+            pos={"rr": positions, "nn": directions}, sphere_units="m", verbose=verbose
+        )
+        forward = _mne.mne.make_forward_solution(
+            info,
+            trans=None,
+            src=src,
+            bem=sphere,
+            eeg=True,
+            meg=False,
+            verbose=verbose,
+        )
+        forward = _mne.mne.convert_forward_solution(
+            forward, force_fixed=True, use_cps=False, verbose=verbose
+        )
+    return forward
+
+
 def make_spherical_leadfield(
     info: mne.Info,
     *,
@@ -154,51 +216,13 @@ def make_spherical_leadfield(
     The source shell follows the fitted scalp radius. Dipoles use the deterministic
     Fibonacci construction above.
     """
-    if (
-        isinstance(n_dipoles, (bool, np.bool_))
-        or not isinstance(n_dipoles, Integral)
-        or n_dipoles < 1
-    ):
-        raise ValueError(f"n_dipoles must be a positive integer, got {n_dipoles!r}.")
-    _mne.require_mne("automatic spherical lead-field construction")
-    eeg_picks = _mne.mne.pick_types(info, meg=False, eeg=True, exclude=())
-    if len(eeg_picks) != len(info["ch_names"]):
-        raise ValueError(
-            "Automatic spherical lead-field construction supports EEG channels "
-            "only; provide an explicit forward model for MEG or mixed channel types."
-        )
-
-    with warnings.catch_warnings():
-        # The best-fit sphere centre can sit >20 mm from the head-frame origin
-        # for partial or idealised montages; harmless for spanning the
-        # topography subspace that SOUND and SSP-SIR rely on.
-        warnings.filterwarnings("ignore", message=".*from head frame origin.*")
-        sphere = _mne.mne.make_sphere_model(
-            r0="auto",
-            head_radius="auto",
-            info=info,
-            relative_radii=head_model.relative_radii,
-            sigmas=head_model.conductivities,
-            verbose=verbose,
-        )
-        # ``sphere["layers"][-1]["rad"]`` is the fitted scalp radius in metres;
-        # the source shell tracks it so the geometry stays proportional.
-        head_radius = float(sphere["layers"][-1]["rad"])
-        directions = fibonacci_sphere(n_dipoles)
-        positions = (
-            directions * (head_model.dipole_relative_radius * head_radius)
-            + sphere["r0"]
-        )
-        src = _mne.mne.setup_volume_source_space(
-            pos={"rr": positions, "nn": directions}, sphere_units="m", verbose=verbose
-        )
-        fwd = _mne.mne.make_forward_solution(
-            info, trans=None, src=src, bem=sphere, eeg=True, meg=False, verbose=verbose
-        )
-        fwd = _mne.mne.convert_forward_solution(
-            fwd, force_fixed=True, use_cps=False, verbose=verbose
-        )
-    return _average_reference(np.asarray(fwd["sol"]["data"], dtype=float))
+    forward = _make_spherical_forward(
+        info, n_dipoles=n_dipoles, head_model=head_model, verbose=verbose
+    )
+    gain = _validate_leadfield(
+        forward["sol"]["data"], what="The supplied forward gain matrix"
+    )
+    return _average_reference(gain)
 
 
 def resolve_leadfield(
