@@ -720,13 +720,18 @@ class DSS(BaseEstimator, TransformerMixin):
             )
 
         else:  # Epochs and Evoked
+            baseline_cov_inst = inst
+            biased_cov_inst = biased_inst
+            if mne_type == "evoked":
+                baseline_cov_inst = inst.copy().apply_baseline((None, None))
+                biased_cov_inst = biased_inst.copy().apply_baseline((None, None))
             baseline_cov = _mne.mne.compute_covariance(
-                inst=inst,
+                inst=baseline_cov_inst,
                 method=method,
                 **kws,
             )
             biased_cov = _mne.mne.compute_covariance(
-                inst=biased_inst,
+                inst=biased_cov_inst,
                 method=method,
                 **kws,
             )

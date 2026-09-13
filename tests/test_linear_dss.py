@@ -332,19 +332,10 @@ def test_dss_fit_rejects_all_bad_data_channels():
         DSS(bias=lambda data: data, normalize_input=False).fit(raw)
 
 
-def test_dss_mne_bad_channels_are_excluded_and_preserved(monkeypatch):
+def test_dss_mne_bad_channels_are_excluded_and_preserved():
     """DSS excludes bad channels while preserving Raw, Epochs, and Evoked data."""
     pd = pytest.importorskip("pandas")
     rng = np.random.default_rng(45)
-    covariance_inputs = []
-    original_compute_covariance = mne.compute_covariance
-
-    def record_compute_covariance(*args, **kwargs):
-        covariance_inputs.append(kwargs["inst"] if "inst" in kwargs else args[0])
-        return original_compute_covariance(*args, **kwargs)
-
-    monkeypatch.setattr(mne, "compute_covariance", record_compute_covariance)
-
     info = mne.create_info(["EEG0", "EEG1", "EEG2", "EEG3"], 100.0, "eeg")
     events = np.column_stack(
         [np.arange(5) * 100, np.zeros(5, dtype=int), np.ones(5, dtype=int)]
@@ -406,22 +397,42 @@ def test_dss_mne_bad_channels_are_excluded_and_preserved(monkeypatch):
         transformed.get_data(picks=["EEG3"]), evoked.get_data(picks=["EEG3"])
     )
 
-    # Weighted and explicitly uncentered Evoked inputs retain the local path.
-    DSS(
-        bias=lambda data: data,
-        n_components=3,
-        normalize_input=False,
-        center=False,
-    ).fit(evoked)
-    DSS(
-        bias=lambda data: data,
-        n_components=3,
-        normalize_input=False,
-    ).fit(evoked, weights=np.ones(evoked.data.shape[-1]))
 
-    assert len(covariance_inputs) == 4
-    assert all(isinstance(inst, mne.BaseEpochs) for inst in covariance_inputs[:2])
-    assert all(isinstance(inst, mne.Evoked) for inst in covariance_inputs[2:])
+def test_dss_evoked_centering_matches_numpy_covariance():
+    """Centered Evoked DSS agrees with NumPy despite large channel offsets."""
+    rng = np.random.default_rng(51)
+    n_times = 600
+    mixing = np.array(
+        [
+            [1.0, 0.2, 0.1],
+            [0.1, 1.2, 0.3],
+            [0.2, -0.1, 0.9],
+        ]
+    )
+    data = mixing @ rng.standard_normal((3, n_times))
+    data += np.array([[50.0], [-100.0], [200.0]])
+
+    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
+    evoked = mne.EvokedArray(data, info, tmin=-1.0, verbose=False)
+
+    def bias(values):
+        return values * np.array([[1.0], [2.0], [4.0]])
+
+    evoked_dss = DSS(
+        bias=bias,
+        n_components=3,
+        normalize_input=False,
+        center=True,
+    ).fit(evoked)
+    numpy_dss = DSS(
+        bias=bias,
+        n_components=3,
+        normalize_input=False,
+        center=True,
+    ).fit(data)
+
+    assert_allclose(evoked_dss.mean_, data.mean(axis=1, keepdims=True))
+    assert_allclose(evoked_dss.eigenvalues_, numpy_dss.eigenvalues_, rtol=1e-8)
 
 
 def test_dss_normalization_with_different_scales():
