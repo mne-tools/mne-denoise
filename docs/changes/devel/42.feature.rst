@@ -1,0 +1,5 @@
+**DSS**:
+- Centered, unweighted ``DSS`` fits on :class:`mne.Evoked` now use the public
+  :func:`mne.compute_covariance` API available in MNE-Python 1.13, while
+  weighted and explicitly uncentered fits retain the NumPy covariance path
+  (Issue #39).

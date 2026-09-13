@@ -398,6 +398,43 @@ def test_dss_mne_bad_channels_are_excluded_and_preserved():
     )
 
 
+def test_dss_evoked_centering_matches_numpy_covariance():
+    """Centered Evoked DSS agrees with NumPy despite large channel offsets."""
+    rng = np.random.default_rng(51)
+    n_times = 600
+    mixing = np.array(
+        [
+            [1.0, 0.2, 0.1],
+            [0.1, 1.2, 0.3],
+            [0.2, -0.1, 0.9],
+        ]
+    )
+    data = mixing @ rng.standard_normal((3, n_times))
+    data += np.array([[50.0], [-100.0], [200.0]])
+
+    info = mne.create_info(["EEG0", "EEG1", "EEG2"], 100.0, "eeg")
+    evoked = mne.EvokedArray(data, info, tmin=-1.0, verbose=False)
+
+    def bias(values):
+        return values * np.array([[1.0], [2.0], [4.0]])
+
+    evoked_dss = DSS(
+        bias=bias,
+        n_components=3,
+        normalize_input=False,
+        center=True,
+    ).fit(evoked)
+    numpy_dss = DSS(
+        bias=bias,
+        n_components=3,
+        normalize_input=False,
+        center=True,
+    ).fit(data)
+
+    assert_allclose(evoked_dss.mean_, data.mean(axis=1, keepdims=True))
+    assert_allclose(evoked_dss.eigenvalues_, numpy_dss.eigenvalues_, rtol=1e-8)
+
+
 def test_dss_normalization_with_different_scales():
     """Test DSS normalization with channels at vastly different scales."""
     rng = np.random.RandomState(42)

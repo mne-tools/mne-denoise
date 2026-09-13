@@ -694,7 +694,7 @@ class DSS(BaseEstimator, TransformerMixin):
         self.info_ = inst.info
         self._mne_info = self.info_
 
-        if weights is not None or not self.center or mne_type == "evoked":
+        if weights is not None or not self.center:
             # Weighted or explicitly uncentered MNE input uses the canonical
             # channel-first NumPy path.
             self._fit_numpy(data, weights=weights)
@@ -719,13 +719,22 @@ class DSS(BaseEstimator, TransformerMixin):
                 biased_inst, method=method, **kws
             )
 
-        elif mne_type == "epochs":
-            baseline_cov = _mne.mne.compute_covariance(inst, method=method, **kws)
-            biased_cov = _mne.mne.compute_covariance(biased_inst, method=method, **kws)
-
-        else:  # Evoked - use numpy path since MNE doesn't support Evoked covariance
-            self._fit_numpy(data, weights=weights)
-            return
+        else:  # Epochs and Evoked
+            baseline_cov_inst = inst
+            biased_cov_inst = biased_inst
+            if mne_type == "evoked":
+                baseline_cov_inst = inst.copy().apply_baseline((None, None))
+                biased_cov_inst = biased_inst.copy().apply_baseline((None, None))
+            baseline_cov = _mne.mne.compute_covariance(
+                inst=baseline_cov_inst,
+                method=method,
+                **kws,
+            )
+            biased_cov = _mne.mne.compute_covariance(
+                inst=biased_cov_inst,
+                method=method,
+                **kws,
+            )
 
         # Extract data from MNE covariances
         self.filters_, self.patterns_, self.eigenvalues_ = compute_dss(
