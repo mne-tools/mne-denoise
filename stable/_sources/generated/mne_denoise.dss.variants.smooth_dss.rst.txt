@@ -1,0 +1,6 @@
+﻿mne\_denoise.dss.variants.smooth\_dss
+=====================================
+
+.. currentmodule:: mne_denoise.dss.variants
+
+.. autofunction:: smooth_dss

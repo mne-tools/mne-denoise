@@ -1,6 +1,0 @@
-﻿mne\_denoise.qa.overclean\_proportion
-=====================================
-
-.. currentmodule:: mne_denoise.qa
-
-.. autofunction:: overclean_proportion

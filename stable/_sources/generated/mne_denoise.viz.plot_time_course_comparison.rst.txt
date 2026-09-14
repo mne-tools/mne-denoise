@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_time\_course\_comparison
+===============================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_time_course_comparison

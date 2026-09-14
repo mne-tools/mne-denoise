@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_zapline\_patterns
+========================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_zapline_patterns

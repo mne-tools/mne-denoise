@@ -1,0 +1,1379 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.dss.nonlinear &#8212; mne-denoise 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/dss/nonlinear';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.1" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    DSS Module Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    DSS Module Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.dss.nonlinear</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.dss.nonlinear</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Core nonlinear/iterative DSS algorithm and Estimator.</span>
+
+<span class="sd">This module contains:</span>
+<span class="sd">1. `iterative_dss`: The core mathematical implementation of Nonlinear DSS.</span>
+<span class="sd">2. `IterativeDSS`: The Scikit-learn estimator compatible with MNE-Python objects or NumPy arrays.</span>
+
+<span class="sd">Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)</span>
+<span class="sd">         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">.. [1] Särelä &amp; Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_data_from_mne</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils.whitening</span><span class="w"> </span><span class="kn">import</span> <span class="n">whiten_data</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_callable</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Resolve parameters that can be float, callable, or None."""</span>
+    <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">param</span>
+    <span class="c1"># Wrap constant in callable</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">param</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">iterative_dss_one</span><span class="p">(</span>
+    <span class="n">X_whitened</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">denoiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Fixed-point iteration for extracting a single DSS component.</span>
+
+<span class="sd">    This implements Algorithm 1 from Särelä &amp; Valpola (2005) [1]_ with optional</span>
+<span class="sd">    Newton step acceleration (FastICA equivalence).</span>
+
+<span class="sd">    The algorithm finds a spatial filter **w** that maximizes the objective:</span>
+
+<span class="sd">    .. math:: J(w) = E[f(w^T X)^2]</span>
+
+<span class="sd">    where f(·) is the nonlinear denoising function.</span>
+
+<span class="sd">    **Algorithm**::</span>
+
+<span class="sd">        Initialize: w = random unit vector</span>
+
+<span class="sd">        Repeat until converged:</span>
+<span class="sd">            1. source = w @ X                    # Project data → 1D source</span>
+<span class="sd">            2. source_denoised = f(source)       # Apply nonlinearity</span>
+<span class="sd">            3. source_denoised *= alpha          # (optional) signal normalization</span>
+<span class="sd">            4. w_new = E[X · source_denoised]    # Gradient direction</span>
+<span class="sd">            5. w_new += beta · w                 # (optional) Newton step</span>
+<span class="sd">            6. w_new = normalize(w_new)          # Unit norm constraint</span>
+<span class="sd">            7. w = w_old + gamma·(w_new - w_old) # (optional) relaxation</span>
+<span class="sd">            8. Check convergence: |w · w_old| ≈ 1</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X_whitened : ndarray, shape (n_components, n_times)</span>
+<span class="sd">        Whitened data matrix. Must have identity covariance.</span>
+<span class="sd">    denoiser : callable</span>
+<span class="sd">        Nonlinear denoising function f(s) → s_denoised.</span>
+<span class="sd">        Examples: TanhMaskDenoiser, GaussDenoiser, WienerMaskDenoiser.</span>
+<span class="sd">    w_init : ndarray, shape (n_components,), optional</span>
+<span class="sd">        Initial weight vector. If None, random initialization.</span>
+<span class="sd">    max_iter : int</span>
+<span class="sd">        Maximum iterations. Default 100.</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Convergence tolerance. Default 1e-6.</span>
+<span class="sd">    alpha : float or callable, optional</span>
+<span class="sd">        Signal normalization factor applied after denoising:</span>
+<span class="sd">        ``source_denoised *= alpha``.</span>
+<span class="sd">        Useful for denoisers with different output variance.</span>
+<span class="sd">    beta : float or callable, optional</span>
+<span class="sd">        Spectral shift parameter for Newton-like acceleration.</span>
+<span class="sd">        For tanh denoiser: ``beta = -E[1 - tanh(s)²]`` (use ``beta_tanh``).</span>
+<span class="sd">        For cubic denoiser: ``beta = -3`` (use ``beta_pow3``).</span>
+<span class="sd">    gamma : float or callable, optional</span>
+<span class="sd">        Learning rate / relaxation parameter. Controls step size:</span>
+<span class="sd">        ``w = w_old + gamma · (w_new - w_old)``.</span>
+<span class="sd">        Default None (gamma=1, full step).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    w : ndarray, shape (n_components,)</span>
+<span class="sd">        Optimal spatial filter (unit norm).</span>
+<span class="sd">    source : ndarray, shape (n_times,)</span>
+<span class="sd">        Extracted source time series.</span>
+<span class="sd">    n_iter : int</span>
+<span class="sd">        Number of iterations performed.</span>
+<span class="sd">    converged : bool</span>
+<span class="sd">        Whether the algorithm converged within max_iter.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Särelä &amp; Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.</span>
+<span class="sd">    """</span>
+    <span class="n">n_components</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">X_whitened</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Initialize RNG (handle both int and Generator)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">):</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">random_state</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+
+    <span class="c1"># Initialize weight vector</span>
+    <span class="k">if</span> <span class="n">w_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w_init</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n_components</span><span class="p">)</span>
+
+    <span class="c1"># Normalize</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_components</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n_components</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">norm</span>
+
+    <span class="c1"># Resolve parameters to callables</span>
+    <span class="n">alpha_func</span> <span class="o">=</span> <span class="n">_resolve_callable</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">beta_func</span> <span class="o">=</span> <span class="n">_resolve_callable</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">gamma_func</span> <span class="o">=</span> <span class="n">_resolve_callable</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">n_iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="n">n_iter</span> <span class="o">=</span> <span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">w_old</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Step 2: Extract source</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">w</span> <span class="o">@</span> <span class="n">X_whitened</span>  <span class="c1"># (n_times,)</span>
+
+        <span class="c1"># Step 3: Apply denoiser</span>
+        <span class="n">source_denoised</span> <span class="o">=</span> <span class="n">denoiser</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="c1"># Apply alpha (signal normalization)</span>
+        <span class="k">if</span> <span class="n">alpha_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">source_denoised</span> <span class="o">=</span> <span class="n">alpha_func</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">*</span> <span class="n">source_denoised</span>
+
+        <span class="c1"># Calculate beta step if applicable</span>
+        <span class="n">step_beta</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">beta_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">step_beta</span> <span class="o">=</span> <span class="n">beta_func</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="c1"># Step 4: Update weights</span>
+        <span class="c1"># w_new = E[X * f(s)] + beta * w</span>
+        <span class="c1"># Standard DSS: w_new = E[X * f(s)]</span>
+        <span class="c1"># FastICA Newton: beta = -E[f'(s)]</span>
+        <span class="n">gradient_part</span> <span class="o">=</span> <span class="n">X_whitened</span> <span class="o">@</span> <span class="n">source_denoised</span> <span class="o">/</span> <span class="n">n_times</span>
+        <span class="n">w_new</span> <span class="o">=</span> <span class="n">gradient_part</span> <span class="o">+</span> <span class="n">step_beta</span> <span class="o">*</span> <span class="n">w</span>
+
+        <span class="c1"># Step 5: Normalize</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">w_new</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">:</span>
+            <span class="c1"># Denoiser killed the signal, reinitialize</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n_components</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">w_normalized</span> <span class="o">=</span> <span class="n">w_new</span> <span class="o">/</span> <span class="n">norm</span>
+
+        <span class="c1"># Apply gamma (learning rate / relaxation)</span>
+        <span class="k">if</span> <span class="n">gamma_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">step_gamma</span> <span class="o">=</span> <span class="n">gamma_func</span><span class="p">(</span><span class="n">w_normalized</span><span class="p">,</span> <span class="n">w_old</span><span class="p">,</span> <span class="n">iteration</span><span class="p">)</span>
+            <span class="c1"># w = w_old + gamma * (w_new - w_old)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w_old</span> <span class="o">+</span> <span class="n">step_gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">w_normalized</span> <span class="o">-</span> <span class="n">w_old</span><span class="p">)</span>
+            <span class="c1"># Re-normalize after relaxation</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w_normalized</span>
+
+        <span class="c1"># Check convergence (using abs because sign can flip)</span>
+        <span class="n">correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">w_old</span><span class="p">))</span>
+        <span class="k">if</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">correlation</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+
+    <span class="c1"># Final source extraction</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">w</span> <span class="o">@</span> <span class="n">X_whitened</span>
+
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">converged</span>
+
+
+<div class="viewcode-block" id="iterative_dss">
+<a class="viewcode-back" href="../../../generated/mne_denoise.dss.iterative_dss.html#mne_denoise.dss.iterative_dss">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">iterative_dss</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">denoiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"deflation"</span><span class="p">,</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract multiple DSS components using iterative (nonlinear) algorithm.</span>
+
+<span class="sd">    This implements the Iterative DSS algorithm from Särelä &amp; Valpola (2005) [1]_.</span>
+<span class="sd">    Unlike linear DSS which uses a closed-form eigendecomposition, iterative DSS</span>
+<span class="sd">    uses fixed-point iteration with a nonlinear denoising function.</span>
+
+<span class="sd">    **Algorithm Overview**::</span>
+
+<span class="sd">        1. Center data: X = X - mean(X)</span>
+<span class="sd">        2. Whiten data: X_white = Whitener @ X  (identity covariance)</span>
+<span class="sd">        3. Extract components using deflation or symmetric method:</span>
+
+<span class="sd">           Deflation (sequential):</span>
+<span class="sd">               For each component i = 1..n_components:</span>
+<span class="sd">                   w_i = iterative_dss_one(X_deflated)</span>
+<span class="sd">                   Orthogonalize w_i against w_1..w_{i-1}</span>
+<span class="sd">                   Deflate: X_deflated -= w_i @ w_i.T @ X_deflated</span>
+
+<span class="sd">           Symmetric (parallel):</span>
+<span class="sd">               Initialize W = [w_1, ..., w_n] randomly</span>
+<span class="sd">               Repeat until converged:</span>
+<span class="sd">                   Update all w_i simultaneously</span>
+<span class="sd">                   W = symmetric_orthogonalize(W)</span>
+
+<span class="sd">        4. Convert filters to sensor space: filters = W @ Whitener</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : ndarray, shape (n_channels, n_times) or (n_epochs, n_channels, n_times)</span>
+<span class="sd">        Input multichannel data.</span>
+<span class="sd">    denoiser : callable or NonlinearDenoiser</span>
+<span class="sd">        Nonlinear denoising function f(s) → s_denoised.</span>
+<span class="sd">        Examples: TanhMaskDenoiser, GaussDenoiser, WienerMaskDenoiser.</span>
+<span class="sd">    n_components : int</span>
+<span class="sd">        Number of components to extract.</span>
+<span class="sd">    method : {'deflation', 'symmetric'}</span>
+<span class="sd">        Component extraction method:</span>
+
+<span class="sd">        - ``'deflation'``: Extract one-by-one, orthogonalizing after each.</span>
+<span class="sd">          More stable, but order-dependent.</span>
+<span class="sd">        - ``'symmetric'``: Update all simultaneously, then orthogonalize.</span>
+<span class="sd">          Order-independent, may be less stable.</span>
+
+<span class="sd">        Default ``'deflation'``.</span>
+<span class="sd">    rank : int, optional</span>
+<span class="sd">        Rank for whitening. If None, auto-determined from eigenvalue threshold.</span>
+<span class="sd">    reg : float</span>
+<span class="sd">        Regularization for whitening eigenvalue cutoff. Default 1e-9.</span>
+<span class="sd">    max_iter : int</span>
+<span class="sd">        Maximum iterations per component. Default 100.</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Convergence tolerance. Default 1e-6.</span>
+<span class="sd">    w_init : ndarray, shape (n_components, n_whitened), optional</span>
+<span class="sd">        Initial weight matrix. If None, random initialization.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Print convergence info. Default False.</span>
+<span class="sd">    alpha : float or callable, optional</span>
+<span class="sd">        Signal normalization factor (see ``iterative_dss_one``).</span>
+<span class="sd">    beta : float or callable, optional</span>
+<span class="sd">        Newton step parameter (see ``iterative_dss_one``).</span>
+<span class="sd">    gamma : float or callable, optional</span>
+<span class="sd">        Learning rate / relaxation (see ``iterative_dss_one``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filters : ndarray, shape (n_components, n_channels)</span>
+<span class="sd">        DSS spatial filters in sensor space.</span>
+<span class="sd">        Apply as: ``sources = filters @ data``.</span>
+<span class="sd">    sources : ndarray, shape (n_components, n_times)</span>
+<span class="sd">        Extracted source time series.</span>
+<span class="sd">    patterns : ndarray, shape (n_channels, n_components)</span>
+<span class="sd">        Spatial patterns for visualization / reconstruction.</span>
+<span class="sd">        Reconstruct as: ``data_recon = patterns @ sources``.</span>
+<span class="sd">    convergence_info : ndarray, shape (n_components, 2)</span>
+<span class="sd">        ``[n_iterations, converged]`` for each component.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss import iterative_dss</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss.denoisers import TanhMaskDenoiser</span>
+<span class="sd">    &gt;&gt;&gt; # Basic usage with numpy array</span>
+<span class="sd">    &gt;&gt;&gt; data = np.random.randn(10, 1000)</span>
+<span class="sd">    &gt;&gt;&gt; denoiser = TanhMaskDenoiser()</span>
+<span class="sd">    &gt;&gt;&gt; filters, sources, patterns, _ = iterative_dss(</span>
+<span class="sd">    ...     data, denoiser, n_components=2, method="symmetric"</span>
+<span class="sd">    ... )</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    iterative_dss_one : Single component extraction.</span>
+<span class="sd">    IterativeDSS : Sklearn-style estimator wrapper.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Särelä &amp; Valpola (2005). Denoising Source Separation. JMLR, 6, 233-272.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Use helper for validation/extraction</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Flatten if 3D (assume n_epochs, n_channels, n_times)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">n_epochs</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">if</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Data must be 2D or 3D, got </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">D"</span><span class="p">)</span>
+
+    <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">=</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Center data</span>
+    <span class="n">data_centered</span> <span class="o">=</span> <span class="n">data_2d</span> <span class="o">-</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Whiten data</span>
+    <span class="n">X_whitened</span><span class="p">,</span> <span class="n">whitener</span><span class="p">,</span> <span class="n">dewhitener</span> <span class="o">=</span> <span class="n">whiten_data</span><span class="p">(</span><span class="n">data_centered</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
+    <span class="n">n_whitened</span> <span class="o">=</span> <span class="n">X_whitened</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Limit components to whitened dimension</span>
+    <span class="n">n_components</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_whitened</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"deflation"</span><span class="p">:</span>
+        <span class="n">filters_whitened</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">convergence_info</span> <span class="o">=</span> <span class="n">_iterative_dss_deflation</span><span class="p">(</span>
+            <span class="n">X_whitened</span><span class="p">,</span>
+            <span class="n">denoiser</span><span class="p">,</span>
+            <span class="n">n_components</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">w_init</span><span class="o">=</span><span class="n">w_init</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"symmetric"</span><span class="p">:</span>
+        <span class="n">filters_whitened</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">convergence_info</span> <span class="o">=</span> <span class="n">_iterative_dss_symmetric</span><span class="p">(</span>
+            <span class="n">X_whitened</span><span class="p">,</span>
+            <span class="n">denoiser</span><span class="p">,</span>
+            <span class="n">n_components</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">w_init</span><span class="o">=</span><span class="n">w_init</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">. Use 'deflation' or 'symmetric'"</span><span class="p">)</span>
+
+    <span class="c1"># Convert filters from whitened to sensor space</span>
+    <span class="c1"># filters_whitened: (n_components, n_whitened)</span>
+    <span class="c1"># whitener: (n_whitened, n_channels)</span>
+    <span class="c1"># sensor_filter = whitened_filter @ whitener</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">filters_whitened</span> <span class="o">@</span> <span class="n">whitener</span>  <span class="c1"># (n_components, n_channels)</span>
+
+    <span class="c1"># Compute patterns using covariance of CENTERED data</span>
+    <span class="c1"># patterns = C @ filters.T, normalized</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">data_centered</span> <span class="o">@</span> <span class="n">data_centered</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">n_samples</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="n">C</span> <span class="o">@</span> <span class="n">filters</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">pattern_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">patterns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pattern_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pattern_norms</span> <span class="o">&gt;</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="n">pattern_norms</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="n">patterns</span> <span class="o">/</span> <span class="n">pattern_norms</span>
+
+    <span class="k">return</span> <span class="n">filters</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">convergence_info</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iterative_dss_deflation</span><span class="p">(</span>
+    <span class="n">X_whitened</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">denoiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract components one-by-one using deflation.</span>
+
+<span class="sd">    **Algorithm**::</span>
+
+<span class="sd">        For i = 1..n_components:</span>
+<span class="sd">            1. w_i = iterative_dss_one(X_deflated)     # Extract one component</span>
+<span class="sd">            2. Orthogonalize: w_i -= W_prev.T @ (W_prev @ w_i)</span>
+<span class="sd">            3. Normalize: w_i = w_i / ||w_i||</span>
+<span class="sd">            4. s_i = w_i @ X_whitened                  # Extract source</span>
+<span class="sd">            5. Deflate: X_deflated -= w_i @ w_i.T @ X_deflated</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X_whitened : ndarray, shape (n_whitened, n_times)</span>
+<span class="sd">        Whitened data with identity covariance.</span>
+<span class="sd">    denoiser : callable</span>
+<span class="sd">        Nonlinear denoising function.</span>
+<span class="sd">    n_components : int</span>
+<span class="sd">        Number of components to extract.</span>
+<span class="sd">    max_iter, tol : int, float</span>
+<span class="sd">        Convergence parameters passed to ``iterative_dss_one``.</span>
+<span class="sd">    w_init : ndarray, optional</span>
+<span class="sd">        Initial weight matrix.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Print progress.</span>
+<span class="sd">    alpha, beta, gamma : optional</span>
+<span class="sd">        Passed to ``iterative_dss_one``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    W : ndarray, shape (n_components, n_whitened)</span>
+<span class="sd">        Weight matrix (spatial filters in whitened space).</span>
+<span class="sd">    sources : ndarray, shape (n_components, n_times)</span>
+<span class="sd">        Extracted source time series.</span>
+<span class="sd">    convergence_info : ndarray, shape (n_components, 2)</span>
+<span class="sd">        [n_iter, converged] per component.</span>
+<span class="sd">    """</span>
+    <span class="n">n_whitened</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">X_whitened</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Initialize RNG (handle both int and Generator)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">):</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">random_state</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+
+    <span class="c1"># Storage</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_whitened</span><span class="p">))</span>
+    <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_times</span><span class="p">))</span>
+    <span class="n">convergence_info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_components</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">X_deflated</span> <span class="o">=</span> <span class="n">X_whitened</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_components</span><span class="p">):</span>
+        <span class="c1"># Get initial weight</span>
+        <span class="k">if</span> <span class="n">w_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">w_init</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">w_i</span> <span class="o">=</span> <span class="n">w_init</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w_i</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Run single-component iteration</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">converged</span> <span class="o">=</span> <span class="n">iterative_dss_one</span><span class="p">(</span>
+            <span class="n">X_deflated</span><span class="p">,</span>
+            <span class="n">denoiser</span><span class="p">,</span>
+            <span class="n">w_init</span><span class="o">=</span><span class="n">w_i</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"converged"</span> <span class="k">if</span> <span class="n">converged</span> <span class="k">else</span> <span class="s2">"max_iter"</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Component </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">n_iter</span><span class="si">}</span><span class="s2"> iterations (</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+
+        <span class="c1"># Orthogonalize against previous components (vectorized)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">W_prev</span> <span class="o">=</span> <span class="n">W</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># (i, n_whitened)</span>
+            <span class="c1"># w = w - sum( (w @ w_prev.T) * w_prev )</span>
+            <span class="c1"># Vectorized: w - W_prev.T @ (W_prev @ w)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">-</span> <span class="n">W_prev</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">W_prev</span> <span class="o">@</span> <span class="n">w</span><span class="p">)</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">norm</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Component </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: degenerate, using random"</span><span class="p">)</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n_whitened</span><span class="p">)</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">-</span> <span class="n">W_prev</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">W_prev</span> <span class="o">@</span> <span class="n">w</span><span class="p">)</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">norm</span>
+
+        <span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
+        <span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span> <span class="o">@</span> <span class="n">X_whitened</span>
+        <span class="n">convergence_info</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">n_iter</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">converged</span><span class="p">)]</span>
+
+        <span class="c1"># Deflate: remove component from data</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+        <span class="n">X_deflated</span> <span class="o">=</span> <span class="n">X_deflated</span> <span class="o">-</span> <span class="n">outer</span> <span class="o">@</span> <span class="n">X_deflated</span>
+
+    <span class="k">return</span> <span class="n">W</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">convergence_info</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iterative_dss_symmetric</span><span class="p">(</span>
+    <span class="n">X_whitened</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">denoiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract components simultaneously with symmetric orthogonalization.</span>
+
+<span class="sd">    **Algorithm**::</span>
+
+<span class="sd">        Initialize: W = random (n_components, n_whitened)</span>
+<span class="sd">        W = symmetric_orthogonalize(W)</span>
+
+<span class="sd">        Repeat until converged:</span>
+<span class="sd">            S = W @ X</span>
+<span class="sd">            S_denoised = f(S)</span>
+<span class="sd">            W_new = E[S_denoised @ X.T] + beta * W</span>
+<span class="sd">            W = symmetric_orthogonalize(W_new)</span>
+<span class="sd">            Check convergence</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X_whitened : ndarray, shape (n_whitened, n_times)</span>
+<span class="sd">        Whitened data with identity covariance.</span>
+<span class="sd">    denoiser : callable</span>
+<span class="sd">        Nonlinear denoising function.</span>
+<span class="sd">    n_components : int</span>
+<span class="sd">        Number of components to extract.</span>
+<span class="sd">    max_iter, tol : int, float</span>
+<span class="sd">        Convergence parameters.</span>
+<span class="sd">    w_init : ndarray, optional</span>
+<span class="sd">        Initial weight matrix.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Print progress.</span>
+<span class="sd">    alpha, beta, gamma : optional</span>
+<span class="sd">        Iteration parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    W : ndarray, shape (n_components, n_whitened)</span>
+<span class="sd">        Weight matrix (spatial filters in whitened space).</span>
+<span class="sd">    sources : ndarray, shape (n_components, n_times)</span>
+<span class="sd">        Extracted source time series.</span>
+<span class="sd">    convergence_info : ndarray, shape (n_components, 2)</span>
+<span class="sd">        [n_iter, converged] (same for all components in symmetric).</span>
+<span class="sd">    """</span>
+    <span class="n">n_whitened</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">X_whitened</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Initialize weight matrix</span>
+    <span class="k">if</span> <span class="n">w_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">w_init</span><span class="p">[:</span><span class="n">n_components</span><span class="p">,</span> <span class="p">:</span><span class="n">n_whitened</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_whitened</span><span class="p">))</span>
+
+    <span class="c1"># Symmetric orthogonalization (decorrelation)</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">_symmetric_orthogonalize</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+
+    <span class="c1"># Resolve parameters to callables</span>
+    <span class="n">alpha_func</span> <span class="o">=</span> <span class="n">_resolve_callable</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">beta_func</span> <span class="o">=</span> <span class="n">_resolve_callable</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># Gamma not typically used in vectorized symmetric step, but could be added</span>
+
+    <span class="n">convergence_info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_components</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="n">W_old</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># 1. Project to sources</span>
+        <span class="c1"># W: (n_comp, n_white), X: (n_white, n_times) -&gt; S: (n_comp, n_times)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">W</span> <span class="o">@</span> <span class="n">X_whitened</span>
+
+        <span class="c1"># 2. Apply denoiser (vectorized)</span>
+        <span class="n">S_denoised</span> <span class="o">=</span> <span class="n">denoiser</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="c1"># Apply alpha</span>
+        <span class="k">if</span> <span class="n">alpha_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Broadcast alpha across columns if it returns (n_comp,) or scalar</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">alpha_func</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="n">S_denoised</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">S_denoised</span>
+
+        <span class="c1"># 3. Update weights</span>
+        <span class="c1"># Gradient part: E[S_denoised @ X.T] -&gt; (n_comp, n_white)</span>
+        <span class="n">gradient</span> <span class="o">=</span> <span class="n">S_denoised</span> <span class="o">@</span> <span class="n">X_whitened</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">n_times</span>
+
+        <span class="c1"># Beta part</span>
+        <span class="n">step_beta</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">beta_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">beta_func</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="n">step_beta</span> <span class="o">=</span> <span class="n">b</span>
+
+        <span class="n">W</span> <span class="o">=</span> <span class="n">gradient</span> <span class="o">+</span> <span class="n">step_beta</span> <span class="o">*</span> <span class="n">W</span>
+
+        <span class="c1"># 4. Symmetric orthogonalization</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">_symmetric_orthogonalize</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+
+        <span class="c1"># 5. Check convergence (max change across components)</span>
+        <span class="c1"># Dot product of rows: diag(W @ W_old.T)</span>
+        <span class="n">correlations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">W</span> <span class="o">*</span> <span class="n">W_old</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">max_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">correlations</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_change</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Symmetric: converged at iteration </span><span class="si">{</span><span class="n">iteration</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">convergence_info</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">convergence_info</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Symmetric: max iterations (</span><span class="si">{</span><span class="n">max_iter</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="n">convergence_info</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="n">convergence_info</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Extract final sources</span>
+    <span class="n">sources</span> <span class="o">=</span> <span class="n">W</span> <span class="o">@</span> <span class="n">X_whitened</span>
+
+    <span class="k">return</span> <span class="n">W</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">convergence_info</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_symmetric_orthogonalize</span><span class="p">(</span><span class="n">W</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Symmetric orthogonalization using (W * W.T)^{-1/2} * W."""</span>
+    <span class="c1"># EVD of W @ W.T</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">W</span> <span class="o">@</span> <span class="n">W</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">D</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gram</span><span class="p">)</span>
+
+    <span class="c1"># Handle numerical issues</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">)</span>
+
+    <span class="c1"># W_orth = E @ diag(1/sqrt(D)) @ E.T @ W</span>
+    <span class="n">D_inv_sqrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+    <span class="n">W_orth</span> <span class="o">=</span> <span class="n">E</span> <span class="o">@</span> <span class="n">D_inv_sqrt</span> <span class="o">@</span> <span class="n">E</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">W</span>
+
+    <span class="k">return</span> <span class="n">W_orth</span>
+
+
+<div class="viewcode-block" id="IterativeDSS">
+<a class="viewcode-back" href="../../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IterativeDSS</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Iterative (Nonlinear) Denoising Source Separation Transformer.</span>
+
+<span class="sd">    Implements Iterative DSS as a scikit-learn compatible transformer that</span>
+<span class="sd">    fits natively on MNE-Python objects (Raw, Epochs) or numpy arrays.</span>
+
+<span class="sd">    Unlike linear DSS which uses closed-form eigendecomposition, Iterative DSS</span>
+<span class="sd">    uses fixed-point iteration with a nonlinear denoising function, making it</span>
+<span class="sd">    equivalent to FastICA when using ICA contrast functions (tanh, gauss, cube).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    denoiser : callable or NonlinearDenoiser</span>
+<span class="sd">        Nonlinear denoising function f(s) → s_denoised. Must be an instance of</span>
+<span class="sd">        `mne_denoise.dss.NonlinearDenoiser` (e.g. `TanhMaskDenoiser`,</span>
+<span class="sd">        `WienerMaskDenoiser`) or a callable.</span>
+<span class="sd">    n_components : int</span>
+<span class="sd">        Number of components to extract.</span>
+<span class="sd">    method : {'deflation', 'symmetric'}</span>
+<span class="sd">        Component extraction method:</span>
+
+<span class="sd">        - ``'deflation'``: Extract one-by-one, orthogonalizing after each.</span>
+<span class="sd">        - ``'symmetric'``: Update all simultaneously, then orthogonalize.</span>
+
+<span class="sd">        Default ``'deflation'``.</span>
+<span class="sd">    rank : int, optional</span>
+<span class="sd">        Rank for whitening. If None, auto-determined from eigenvalue threshold.</span>
+<span class="sd">    reg : float</span>
+<span class="sd">        Regularization for whitening. Default 1e-9.</span>
+<span class="sd">    max_iter : int</span>
+<span class="sd">        Maximum iterations per component. Default 100.</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Convergence tolerance. Default 1e-6.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Print convergence info. Default False.</span>
+<span class="sd">    alpha : float or callable, optional</span>
+<span class="sd">        Signal normalization factor applied after denoising.</span>
+<span class="sd">    beta : float or callable, optional</span>
+<span class="sd">        Spectral shift (Newton step) for faster convergence.</span>
+<span class="sd">        Use ``beta_tanh`` for TanhMaskDenoiser, ``beta_pow3`` for cubic.</span>
+<span class="sd">    gamma : float or callable, optional</span>
+<span class="sd">        Learning rate / relaxation parameter.</span>
+<span class="sd">    random_state : int, RandomState, Generator, optional</span>
+<span class="sd">        Seed for random initialization.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filters_ : ndarray, shape (n_components, n_channels)</span>
+<span class="sd">        The spatial filters (un-mixing matrix). Apply as: ``sources = filters_ @ data``.</span>
+<span class="sd">    patterns_ : ndarray, shape (n_channels, n_components)</span>
+<span class="sd">        The spatial patterns (mixing matrix). Reconstruct as: ``data = patterns_ @ sources``.</span>
+<span class="sd">    sources_ : ndarray, shape (n_components, n_times)</span>
+<span class="sd">        Extracted sources from fit data.</span>
+<span class="sd">    convergence_info_ : ndarray, shape (n_components, 2)</span>
+<span class="sd">        [n_iterations, converged] for each component.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss import IterativeDSS</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss.denoisers import TanhMaskDenoiser, beta_tanh</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # With numpy array</span>
+<span class="sd">    &gt;&gt;&gt; dss = IterativeDSS(denoiser=denoiser, n_components=3)</span>
+<span class="sd">    &gt;&gt;&gt; dss.fit(data)</span>
+<span class="sd">    &gt;&gt;&gt; sources = dss.transform(data)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # With MNE Raw object</span>
+<span class="sd">    &gt;&gt;&gt; dss.fit(raw)</span>
+<span class="sd">    &gt;&gt;&gt; sources = dss.transform(raw)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    DSS : Linear DSS transformer.</span>
+<span class="sd">    iterative_dss : Functional API.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="IterativeDSS.__init__">
+<a class="viewcode-back" href="../../../generated/mne_denoise.dss.IterativeDSS.html#mne_denoise.dss.IterativeDSS.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">denoiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"deflation"</span><span class="p">,</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+        <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denoiser</span> <span class="o">=</span> <span class="n">denoiser</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">reg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+
+        <span class="c1"># Fitted attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources_</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convergence_info_</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mne_info</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IterativeDSS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Compute Iterative DSS spatial filters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw | Epochs | ndarray</span>
+<span class="sd">            The data to fit. Accepts:</span>
+
+<span class="sd">            - ``mne.io.Raw``: Continuous data</span>
+<span class="sd">            - ``mne.Epochs``: Epoched data</span>
+<span class="sd">            - ``ndarray``: Shape (n_channels, n_times) or (n_channels, n_times, n_epochs)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : IterativeDSS</span>
+<span class="sd">            The fitted transformer.</span>
+<span class="sd">        """</span>
+        <span class="c1"># Validate and extract data using shared helper</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">mne_info</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># Store MNE info for later use if available</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">mne_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"raw"</span><span class="p">,</span> <span class="s2">"epochs"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">mne_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mne_info</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mne_info</span> <span class="o">=</span> <span class="n">mne_info</span><span class="o">.</span><span class="n">info</span>
+
+        <span class="n">filters</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">conv_info</span> <span class="o">=</span> <span class="n">iterative_dss</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">denoiser</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">=</span> <span class="n">filters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="n">patterns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources_</span> <span class="o">=</span> <span class="n">sources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convergence_info_</span> <span class="o">=</span> <span class="n">conv_info</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply fitted filters to extract sources.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw | Epochs | ndarray</span>
+<span class="sd">            Data to transform. Same formats as ``fit()``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sources : ndarray, shape (n_components, n_times) or (n_components, n_times, n_epochs)</span>
+<span class="sd">            Extracted source time series.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"IterativeDSS not fitted. Call fit() first."</span><span class="p">)</span>
+
+        <span class="c1"># Validate and extract data</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">original_shape</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n_epochs</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="n">n_times</span> <span class="o">=</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Center</span>
+        <span class="n">data_centered</span> <span class="o">=</span> <span class="n">data_2d</span> <span class="o">-</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Apply filters</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">data_centered</span>
+
+        <span class="c1"># Reshape to original 3D if needed</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">original_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># original: (n_epochs, n_channels, n_times)</span>
+            <span class="c1"># sources now: (n_components, n_epochs * n_times)</span>
+            <span class="c1"># reshape to: (n_components, n_epochs, n_times)</span>
+            <span class="n">n_epochs</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">original_shape</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="n">sources</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_epochs</span><span class="p">,</span> <span class="n">n_times</span><span class="p">)</span>
+            <span class="c1"># transpose to standard MNE: (n_epochs, n_components, n_times)</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="n">sources</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sources</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Reconstruct data from sources.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sources : ndarray, shape (n_sources, n_times)</span>
+<span class="sd">            Source time series. Can use fewer sources than fitted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        reconstructed : ndarray, shape (n_channels, n_times)</span>
+<span class="sd">            Reconstructed data: ``patterns_[:, :n_sources] @ sources``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"IterativeDSS not fitted. Call fit() first."</span><span class="p">)</span>
+
+        <span class="n">n_sources</span> <span class="o">=</span> <span class="n">sources</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">patterns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_sources</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">patterns</span> <span class="o">@</span> <span class="n">sources</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit and transform in one step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw | Epochs | ndarray</span>
+<span class="sd">            Data to fit and transform.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sources : ndarray</span>
+<span class="sd">            Extracted sources.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

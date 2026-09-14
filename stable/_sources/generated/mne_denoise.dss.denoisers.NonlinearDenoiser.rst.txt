@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.denoisers.NonlinearDenoiser
+============================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: NonlinearDenoiser
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NonlinearDenoiser.__init__
+      ~NonlinearDenoiser.denoise
+   
+   
+
+   
+   
+   

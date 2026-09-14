@@ -1,0 +1,1183 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mne_denoise.dss.linear &#8212; mne-denoise 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/dss/linear';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.1" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">mne-denoise 0.0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    DSS Module Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../dss.html">
+    DSS Module Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../auto_examples/index.html">
+    Examples Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development.html">
+    Development workflow
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mne_denoise.dss.linear</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mne_denoise.dss.linear</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Core linear DSS algorithm and Estimator.</span>
+
+<span class="sd">This module contains:</span>
+<span class="sd">1. `compute_dss`: The core mathematical implementation of Linear DSS.</span>
+<span class="sd">2. `DSS`: The Scikit-learn estimator compatible with MNE-Python objects or NumPy arrays.</span>
+
+<span class="sd">Authors: Sina Esmaeili (sina.esmaeili@umontreal.ca)</span>
+<span class="sd">         Hamza Abdelhedi (hamza.abdelhedi@umontreal.ca)</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">.. [1] Särelä &amp; Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res., 6, 233-272.</span>
+<span class="sd">.. [2] de Cheveigné &amp; Simon (2008). Denoising based on spatial filtering. J. Neurosci. Methods.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+
+<span class="c1"># Optional MNE support</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">mne</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mne.epochs</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEpochs</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mne.evoked</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evoked</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mne.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRaw</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">mne</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_data_from_mne</span><span class="p">,</span> <span class="n">reconstruct_mne_object</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.denoisers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearDenoiser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_covariance</span>
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># 1. Core Algorithm</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="compute_dss">
+<a class="viewcode-back" href="../../../generated/mne_denoise.dss.compute_dss.html#mne_denoise.dss.compute_dss">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_dss</span><span class="p">(</span>
+    <span class="n">covariance_baseline</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">covariance_biased</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Compute DSS spatial filters from baseline and biased covariances.</span>
+
+<span class="sd">    This implements the core Linear DSS algorithm as described in Särelä &amp; Valpola (2005) [1]_.</span>
+
+<span class="sd">    The algorithm finds a linear transform (spatial filters) that maximizes the</span>
+<span class="sd">    biased variance (signal) relative to total/baseline variance (noise).</span>
+
+<span class="sd">    The process corresponds to Equation 7 in de Cheveigné &amp; Simon (2008) [2]_:</span>
+
+<span class="sd">    .. math:: \\tilde{S}(t) = P Q R_2 N_2 R_1 N_1 S(t)</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">    *   **N1** (Initial Normalization): Handled externally (e.g. ``DSS(normalize_input=True)``).</span>
+<span class="sd">        Ensures equal weight for each sensor.</span>
+<span class="sd">    *   **R1** (First PCA): Rotation derived from baseline covariance (Sphering/Whitening PCA).</span>
+<span class="sd">        Discards components with negligible power.</span>
+<span class="sd">    *   **N2** (Whitening): Normalization to obtain orthonormal "spatially whitened" vectors.</span>
+<span class="sd">    *   **R2** (Second PCA): Rotation derived from biased covariance in the whitened space.</span>
+<span class="sd">    *   **Q** (Selector): Selection of the top ``n_components`` with highest bias score.</span>
+<span class="sd">    *   **P** (Projection): Projection back to sensor space (Spatial Patterns).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    covariance_baseline : ndarray</span>
+<span class="sd">        Baseline covariance.</span>
+<span class="sd">    covariance_biased : ndarray</span>
+<span class="sd">        Biased covariance.</span>
+<span class="sd">    n_components : int, optional</span>
+<span class="sd">        Number of DSS components to return (The **Q** selector step). If None, return all.</span>
+<span class="sd">    rank : int, optional</span>
+<span class="sd">        Rank for whitening stage. If None, auto-determined from data.</span>
+<span class="sd">    reg : float</span>
+<span class="sd">        Regularization threshold. Default 1e-9.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dss_filters : ndarray, shape (n_components, n_channels)</span>
+<span class="sd">        DSS spatial filters (unmixing matrix transposed).</span>
+<span class="sd">        Corresponds to the combined transform :math:`Q R_2 N_2 R_1`.</span>
+<span class="sd">        Apply as: ``sources = dss_filters @ data``.</span>
+<span class="sd">    dss_patterns : ndarray, shape (n_channels, n_components)</span>
+<span class="sd">        DSS spatial patterns (mixing matrix).</span>
+<span class="sd">        Corresponds to the projection matrix **P**.</span>
+<span class="sd">    eigenvalues : ndarray, shape (n_components,)</span>
+<span class="sd">        DSS eigenvalues (ratio of biased power to baseline power).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss import compute_dss, compute_covariance</span>
+<span class="sd">    &gt;&gt;&gt; # Generate synthetic data (n_channels, n_times)</span>
+<span class="sd">    &gt;&gt;&gt; data = np.random.randn(10, 1000)</span>
+<span class="sd">    &gt;&gt;&gt; # Compute covariances</span>
+<span class="sd">    &gt;&gt;&gt; cov_baseline = compute_covariance(data)</span>
+<span class="sd">    &gt;&gt;&gt; # Biased covariance: trial-averaged standard example or filtering</span>
+<span class="sd">    &gt;&gt;&gt; cov_biased = compute_covariance(data)  # Just a placeholder</span>
+<span class="sd">    &gt;&gt;&gt; # Compute DSS</span>
+<span class="sd">    &gt;&gt;&gt; filters, patterns, evs = compute_dss(cov_baseline, cov_biased, n_components=5)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    DSS : Estimator class for linear DSS.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Särelä, J., &amp; Valpola, H. (2005). Denoising source separation.</span>
+<span class="sd">           Journal of Machine Learning Research, 6, 233-272.</span>
+<span class="sd">    .. [2] de Cheveigné, A., &amp; Simon, J. Z. (2008). Denoising based on spatial filtering.</span>
+<span class="sd">           Journal of Neuroscience Methods, 171(2), 331-339.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check shapes</span>
+    <span class="k">if</span> <span class="n">covariance_baseline</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">covariance_biased</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Covariance shapes mismatch: </span><span class="si">{</span><span class="n">covariance_baseline</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">covariance_biased</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">n_channels</span> <span class="o">=</span> <span class="n">covariance_baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">covariance_baseline</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Covariance must be square, got </span><span class="si">{</span><span class="n">covariance_baseline</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># STEP 1: PCA from covariance_baseline -&gt; defines R1</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="n">covariance_baseline_sym</span> <span class="o">=</span> <span class="p">(</span><span class="n">covariance_baseline</span> <span class="o">+</span> <span class="n">covariance_baseline</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">eigenvalues_white</span><span class="p">,</span> <span class="n">eigenvectors_white</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">covariance_baseline_sym</span><span class="p">)</span>
+
+    <span class="c1"># Sort descending</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigenvalues_white</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">eigenvalues_white</span> <span class="o">=</span> <span class="n">eigenvalues_white</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">eigenvectors_white</span> <span class="o">=</span> <span class="n">eigenvectors_white</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+
+    <span class="n">eigenvalues_white</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues_white</span><span class="p">)</span>
+
+    <span class="c1"># Apply threshold</span>
+    <span class="n">max_ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">eigenvalues_white</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_ev</span> <span class="o">&lt;</span> <span class="mf">1e-15</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Covariance matrix has no significant variance"</span><span class="p">)</span>
+
+    <span class="n">keep_mask</span> <span class="o">=</span> <span class="n">eigenvalues_white</span> <span class="o">/</span> <span class="n">max_ev</span> <span class="o">&gt;</span> <span class="n">reg</span>
+
+    <span class="k">if</span> <span class="n">rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">keep_mask</span><span class="p">[</span><span class="n">rank</span><span class="p">:]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">n_keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">keep_mask</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_keep</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No components above regularization threshold"</span><span class="p">)</span>
+
+    <span class="n">eigenvalues_white</span> <span class="o">=</span> <span class="n">eigenvalues_white</span><span class="p">[</span><span class="n">keep_mask</span><span class="p">]</span>
+    <span class="n">eigenvectors_white</span> <span class="o">=</span> <span class="n">eigenvectors_white</span><span class="p">[:,</span> <span class="n">keep_mask</span><span class="p">]</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># STEP 2: Whitening -&gt; defines N2</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="n">W_white</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">eigenvalues_white</span><span class="p">))</span>
+    <span class="n">covariance_whitened</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">W_white</span><span class="o">.</span><span class="n">T</span>
+<div class="viewcode-block" id="DSS">
+<a class="viewcode-back" href="../../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS">[docs]</a>
+        <span class="o">@</span> <span class="n">eigenvectors_white</span><span class="o">.</span><span class="n">T</span>
+        <span class="o">@</span> <span class="n">covariance_biased</span>
+        <span class="o">@</span> <span class="n">eigenvectors_white</span>
+        <span class="o">@</span> <span class="n">W_white</span>
+    <span class="p">)</span>
+    <span class="n">covariance_whitened</span> <span class="o">=</span> <span class="p">(</span><span class="n">covariance_whitened</span> <span class="o">+</span> <span class="n">covariance_whitened</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># STEP 3: PCA on whitened covariance_biased -&gt; defines R2</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="n">eigenvalues_biased</span><span class="p">,</span> <span class="n">eigenvectors_biased</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">covariance_whitened</span><span class="p">)</span>
+
+    <span class="c1"># Sort descending</span>
+    <span class="n">idx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigenvalues_biased</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">eigenvalues_biased</span> <span class="o">=</span> <span class="n">eigenvalues_biased</span><span class="p">[</span><span class="n">idx2</span><span class="p">]</span>
+    <span class="n">eigenvectors_biased</span> <span class="o">=</span> <span class="n">eigenvectors_biased</span><span class="p">[:,</span> <span class="n">idx2</span><span class="p">]</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># STEP 4: Build DSS matrix (filters = R2 * N2 * R1)</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="n">unmixing_matrix</span> <span class="o">=</span> <span class="n">eigenvectors_white</span> <span class="o">@</span> <span class="n">W_white</span> <span class="o">@</span> <span class="n">eigenvectors_biased</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># STEP 5: Normalize so components have unit variance</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="n">norm_factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">unmixing_matrix</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">covariance_baseline</span> <span class="o">@</span> <span class="n">unmixing_matrix</span><span class="p">)</span>
+    <span class="n">norm_factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">norm_factor</span> <span class="o">&gt;</span> <span class="mf">1e-15</span><span class="p">,</span> <span class="n">norm_factor</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">unmixing_matrix</span> <span class="o">=</span> <span class="n">unmixing_matrix</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm_factor</span><span class="p">))</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># STEP 6: Truncate to n_components</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="k">if</span> <span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_components</span> <span class="o">=</span> <span class="n">unmixing_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_components</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_components</span><span class="p">,</span> <span class="n">unmixing_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">unmixing_matrix</span> <span class="o">=</span> <span class="n">unmixing_matrix</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_components</span><span class="p">]</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">eigenvalues_biased</span><span class="p">[:</span><span class="n">n_components</span><span class="p">]</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># Convert to our convention: filters are (n_components, n_channels)</span>
+    <span class="c1"># Corresponds to Q selector on the rows of the combined matrix.</span>
+    <span class="c1"># =========================================================================</span>
+    <span class="n">dss_filters</span> <span class="o">=</span> <span class="n">unmixing_matrix</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1"># DSS patterns: for interpretation</span>
+    <span class="n">dss_patterns</span> <span class="o">=</span> <span class="n">covariance_baseline</span> <span class="o">@</span> <span class="n">unmixing_matrix</span>
+    <span class="n">pattern_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dss_patterns</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">pattern_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pattern_norms</span> <span class="o">&gt;</span> <span class="mf">1e-15</span><span class="p">,</span> <span class="n">pattern_norms</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">dss_patterns</span> <span class="o">=</span> <span class="n">dss_patterns</span> <span class="o">/</span> <span class="n">pattern_norms</span>
+
+    <span class="k">return</span> <span class="n">dss_filters</span><span class="p">,</span> <span class="n">dss_patterns</span><span class="p">,</span> <span class="n">eigenvalues</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># 2. Scikit-Learn Estimator</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DSS</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Denoising Source Separation (DSS) Transformer.</span>
+
+<span class="sd">    Implements DSS as a scikit-learn compatible transformer that fits natively</span>
+<span class="sd">    on MNE-Python objects (Raw, Epochs, Evoked) or numpy arrays.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_components : int, optional</span>
+<span class="sd">        Number of DSS components to keep. If None, keep all.</span>
+<span class="sd">    bias : LinearDenoiser</span>
+<span class="sd">        Bias function to define the signal of interest. Must be an instance of</span>
+<span class="sd">        `mne_denoise.dss.LinearDenoiser` (e.g. `BandpassBias`, `TrialAverageBias`)</span>
+<span class="sd">        or a callable that takes data and returns biased data.</span>
+<span class="sd">    rank : int or dict, optional</span>
+<span class="sd">        Rank of the data for whitening. If None, rank is estimated automatically.</span>
+<span class="sd">    reg : float</span>
+<span class="sd">        Regularization for covariance estimation. Default 1e-9.</span>
+<span class="sd">    normalize_input : bool</span>
+<span class="sd">        If True, normalize input data channel-wise (L2 norm) before fitting/transforming.</span>
+<span class="sd">        Useful when mixing sensors with different scales (e.g. MAG and GRAD). Default True.</span>
+<span class="sd">    cov_method : str</span>
+<span class="sd">        Method for covariance estimation.</span>
+<span class="sd">        For MNE objects, passed as `method` to `mne.compute_covariance`.</span>
+<span class="sd">        For NumPy arrays, passed as `method` to `mne_denoise.utils.compute_covariance`.</span>
+<span class="sd">        Default 'empirical'.</span>
+<span class="sd">    cov_kws : dict, optional</span>
+<span class="sd">        Additional keywords options for covariance estimation.</span>
+<span class="sd">        For MNE objects, passed to `mne.compute_covariance` (e.g. `{'tstep': 0.1, 'rank': 'info'}`).</span>
+<span class="sd">        For NumPy arrays, passed to `mne_denoise.utils.compute_covariance` (e.g. `{'shrinkage': 0.1}`).</span>
+<span class="sd">    return_type : {'sources', 'epochs', 'raw'}</span>
+<span class="sd">        Type of object to return from `transform`. 'sources' returns a numpy array</span>
+<span class="sd">        of DSS components. 'epochs'/'raw' returns the denoised input object.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filters_ : array, shape (n_components, n_channels)</span>
+<span class="sd">        The spatial filters (un-mixing matrix).</span>
+<span class="sd">    patterns_ : array, shape (n_channels, n_components)</span>
+<span class="sd">        The spatial patterns (mixing matrix).</span>
+<span class="sd">    eigenvalues_ : array, shape (n_components,)</span>
+<span class="sd">        The power of each component in the biased data (bias score).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss import DSS, BandpassBias</span>
+<span class="sd">    &gt;&gt;&gt; from mne_denoise.dss.denoisers import TrialAverageBias</span>
+<span class="sd">    &gt;&gt;&gt; # Create a bias (e.g. emphasize 10Hz oscillations)</span>
+<span class="sd">    &gt;&gt;&gt; bias = BandpassBias(sfreq=250, freq=10, bandwidth=2)</span>
+<span class="sd">    &gt;&gt;&gt; # Initialize DSS</span>
+<span class="sd">    &gt;&gt;&gt; dss = DSS(bias=bias, n_components=3)</span>
+<span class="sd">    &gt;&gt;&gt; # Fit on data (MNE Raw/Epochs or NumPy)</span>
+<span class="sd">    &gt;&gt;&gt; dss.fit(raw_data)</span>
+<span class="sd">    &gt;&gt;&gt; # Extract sources</span>
+<span class="sd">    &gt;&gt;&gt; sources = dss.transform(raw_data)</span>
+<span class="sd">    &gt;&gt;&gt; # Or return denoised data</span>
+<span class="sd">    &gt;&gt;&gt; dss.return_type = "raw"</span>
+<span class="sd">    &gt;&gt;&gt; denoised_raw = dss.transform(raw_data)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    compute_dss : Functional interface for computing DSS solutions.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="DSS.__init__">
+<a class="viewcode-back" href="../../../generated/mne_denoise.dss.DSS.html#mne_denoise.dss.DSS.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bias</span><span class="p">:</span> <span class="n">LinearDenoiser</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+        <span class="n">normalize_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">cov_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"empirical"</span><span class="p">,</span>
+        <span class="n">cov_kws</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sources"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">reg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_input</span> <span class="o">=</span> <span class="n">normalize_input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_method</span> <span class="o">=</span> <span class="n">cov_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_kws</span> <span class="o">=</span> <span class="n">cov_kws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_type</span> <span class="o">=</span> <span class="n">return_type</span>
+
+        <span class="c1"># Fit attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explained_variance_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DSS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Compute DSS spatial filters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw | Epochs | Evoked | array</span>
+<span class="sd">            The data to fit.</span>
+<span class="sd">            - If array, shape must be:</span>
+<span class="sd">              - `(n_channels, n_times)` for continuous data.</span>
+<span class="sd">              - `(n_channels, n_times, n_epochs)` for epoch data (evoked DSS).</span>
+<span class="sd">              - `(n_datasets, n_channels, n_times)` for group data (Joint DSS).</span>
+<span class="sd">            Note: For group DSS, you must reshape your list of datasets into a 3D array before fitting.</span>
+<span class="sd">        y : None</span>
+<span class="sd">            Ignored.</span>
+<span class="sd">        weights : array, shape (n_times,), optional</span>
+<span class="sd">             Sample weights for covariance computation. Only used if input is numpy array</span>
+<span class="sd">             or if internal logic supports weighted covariance for MNE objects.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : DSS</span>
+<span class="sd">            The fitted transformer.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_input</span><span class="p">:</span>
+            <span class="n">X_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">fit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X_norm</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="k">if</span> <span class="n">mne</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_norm</span><span class="p">,</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_mne</span><span class="p">(</span><span class="n">X_norm</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_norm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_numpy</span><span class="p">(</span><span class="n">X_norm</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported input type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">X_norm</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+        <span class="c1"># Compute mixing matrix (pseudoinverse of filters)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">fit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Normalize data channel-wise.</span>
+
+<span class="sd">        This mimics MNE's Scaling capabilities, ensuring channels with different</span>
+<span class="sd">        units (e.g. MAG vs GRAD) contribute equally.</span>
+<span class="sd">        """</span>
+        <span class="c1"># Helper to get numpy data</span>
+        <span class="n">is_mne</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">mne_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">mne</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+            <span class="n">is_mne</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">BaseEpochs</span><span class="p">):</span>
+                <span class="n">mne_type</span> <span class="o">=</span> <span class="s2">"epochs"</span>
+                <span class="c1"># MNE Epochs: (n_epochs, n_channels, n_times) -&gt; (n_channels, n_times, n_epochs)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Evoked</span><span class="p">):</span>
+                <span class="n">mne_type</span> <span class="o">=</span> <span class="s2">"evoked"</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mne_type</span> <span class="o">=</span> <span class="s2">"raw"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="c1"># Now data is always (n_channels, ...) for both 2D and 3D</span>
+        <span class="n">orig_shape</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_times</span><span class="p">,</span> <span class="n">n_epochs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_ch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="k">if</span> <span class="n">fit</span><span class="p">:</span>
+            <span class="c1"># unique norms per channel</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">data_2d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Avoid division by zero</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">,</span> <span class="mf">1.0</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Apply normalization</span>
+        <span class="n">data_norm</span> <span class="o">=</span> <span class="n">data_2d</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="c1"># Reshape back</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">data_norm</span> <span class="o">=</span> <span class="n">data_norm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_mne</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"raw"</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span><span class="p">(</span><span class="n">data_norm</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="c1"># Preserve annotations</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"annotations"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">X</span><span class="o">.</span><span class="n">annotations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">set_annotations</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">annotations</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">out</span>
+            <span class="k">elif</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"epochs"</span><span class="p">:</span>
+                <span class="c1"># Transpose back to MNE format: (n_ch, n_times, n_epochs) -&gt; (n_epochs, n_ch, n_times)</span>
+                <span class="n">data_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_norm</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EpochsArray</span><span class="p">(</span>
+                    <span class="n">data_norm</span><span class="p">,</span>
+                    <span class="n">X</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                    <span class="n">events</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">tmin</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"tmin"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"event_id"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="c1"># Preserve metadata</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">X</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">out</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Evoked</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EvokedArray</span><span class="p">(</span>
+                    <span class="n">data_norm</span><span class="p">,</span>
+                    <span class="n">X</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                    <span class="n">tmin</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"tmin"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">comment</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"comment"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+                    <span class="n">nave</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"nave"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">out</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data_norm</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_bias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply bias function to data."""</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="s2">"apply"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_mne</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inst</span><span class="p">:</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit using MNE objects."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info_</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">info</span>
+
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If weights provided, extract data and use numpy path</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_numpy</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_method</span>
+        <span class="n">kws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_kws</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_kws</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="c1"># Set defaults if not in kws</span>
+        <span class="n">kws</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"rank"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="n">kws</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"verbose"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"epochs"</span><span class="p">:</span>
+            <span class="c1"># DSS transpose preference</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="n">biased_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_bias</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">BaseEpochs</span><span class="p">):</span>
+            <span class="n">biased_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">biased_data</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">BaseRaw</span><span class="p">):</span>
+            <span class="n">kws</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"tstep"</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">baseline_cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">compute_raw_covariance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+            <span class="n">biased_inst</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">RawArray</span><span class="p">(</span><span class="n">biased_data</span><span class="p">,</span> <span class="n">inst</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">biased_cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">compute_raw_covariance</span><span class="p">(</span><span class="n">biased_inst</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">BaseEpochs</span><span class="p">):</span>
+            <span class="n">baseline_cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">compute_covariance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+            <span class="n">biased_inst</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EpochsArray</span><span class="p">(</span><span class="n">biased_data</span><span class="p">,</span> <span class="n">inst</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">biased_cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">compute_covariance</span><span class="p">(</span><span class="n">biased_inst</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Evoked - use numpy path since MNE doesn't support Evoked covariance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_numpy</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Extract data from MNE covariances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span> <span class="o">=</span> <span class="n">compute_dss</span><span class="p">(</span>
+            <span class="n">covariance_baseline</span><span class="o">=</span><span class="n">baseline_cov</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">covariance_biased</span><span class="o">=</span><span class="n">biased_cov</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate explained variance from filters and baseline covariance</span>
+        <span class="c1"># Diag(filters @ baseline_cov.data @ filters.T)</span>
+        <span class="n">sources_cov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">baseline_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explained_variance_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sources_cov</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fit using numpy arrays."""</span>
+        <span class="n">biased_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_bias</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_method</span>
+        <span class="n">kws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_kws</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_kws</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="n">baseline_cov</span> <span class="o">=</span> <span class="n">compute_covariance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+        <span class="n">biased_cov</span> <span class="o">=</span> <span class="n">compute_covariance</span><span class="p">(</span><span class="n">biased_X</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+
+        <span class="c1"># Use rank if provided (compute from covariance if not)</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span>
+            <span class="c1"># If rank is a dict (MNE style), ignore for numpy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues_</span> <span class="o">=</span> <span class="n">compute_dss</span><span class="p">(</span>
+            <span class="n">covariance_baseline</span><span class="o">=</span><span class="n">baseline_cov</span><span class="p">,</span>
+            <span class="n">covariance_biased</span><span class="o">=</span><span class="n">biased_cov</span><span class="p">,</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate explained variance</span>
+        <span class="n">sources_cov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">baseline_cov</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explained_variance_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sources_cov</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">BaseRaw</span> <span class="o">|</span> <span class="n">BaseEpochs</span> <span class="o">|</span> <span class="n">Evoked</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply DSS spatial filters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : Raw | Epochs | Evoked | array</span>
+<span class="sd">            Data to transform.</span>
+<span class="sd">            - If array, must match the shape convention used in fit (see fit docstring).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : array | Raw | Epochs | Evoked</span>
+<span class="sd">            If return_type='sources', returns the source time series.</span>
+<span class="sd">            If return_type='raw'/'epochs'/'evoked', returns the reconstructed data (denoised)</span>
+<span class="sd">            projected back to sensor space (keeping n_components).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"DSS not fitted. Call fit() first."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_input</span><span class="p">:</span>
+            <span class="c1"># Apply normalization using fitted norms</span>
+            <span class="n">X_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X_in</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="c1"># Helper to extract data</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span><span class="n">X_in</span><span class="p">)</span>
+
+        <span class="c1"># DSS internal convention for Epochs: (n_channels, n_times, n_epochs)</span>
+        <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"epochs"</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="n">orig_shape</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_times</span><span class="p">,</span> <span class="n">n_epochs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_ch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_ch</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_2d</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="c1"># Center using mean on data_2d</span>
+        <span class="c1"># DSS implies zero-mean assumption for correct projection</span>
+        <span class="n">mean_</span> <span class="o">=</span> <span class="n">data_2d</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">data_centered</span> <span class="o">=</span> <span class="n">data_2d</span> <span class="o">-</span> <span class="n">mean_</span>
+
+        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">data_centered</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_type</span> <span class="o">==</span> <span class="s2">"sources"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">sources</span> <span class="o">=</span> <span class="n">sources</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="ow">or</span> <span class="n">sources</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_times</span><span class="p">,</span> <span class="n">n_epochs</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"epochs"</span><span class="p">:</span>
+                    <span class="c1"># Return as (n_epochs, n_components, n_times)</span>
+                    <span class="k">return</span> <span class="n">sources</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">sources</span>
+
+        <span class="c1"># Use only kept components</span>
+        <span class="n">n_keep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># mixing shape: (n_channels, n_components)</span>
+        <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_keep</span><span class="p">]</span> <span class="o">@</span> <span class="n">sources</span><span class="p">[:</span><span class="n">n_keep</span><span class="p">]</span>
+        <span class="n">rec</span> <span class="o">+=</span> <span class="n">mean_</span>
+
+        <span class="c1"># Reshape to original</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">)</span>  <span class="c1"># (n_ch, n_times, n_epochs)</span>
+
+        <span class="c1"># De-normalization</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_input</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># (n_ch, n_times, n_epochs)</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">rec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># (n_ch, n_times)</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">rec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="c1"># Prepare for reconstruction (transpose back if needed)</span>
+        <span class="k">if</span> <span class="n">mne_type</span> <span class="o">==</span> <span class="s2">"epochs"</span><span class="p">:</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">reconstruct_mne_object</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">component_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Transform sources back to sensor space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sources : array, shape (n_components, n_times)</span>
+<span class="sd">            The latent sources.</span>
+<span class="sd">        component_indices : array-like of bool or int, optional</span>
+<span class="sd">            Indices of components to keep. If None, keep all.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        reconstructed : array, shape (n_channels, n_times)</span>
+<span class="sd">            The reconstructed sensor space data.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"DSS not fitted. Call fit() first."</span><span class="p">)</span>
+        <span class="n">is_epochs_mne</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">sources</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># Determine orientation: sources from transform() are</span>
+            <span class="c1"># (n_comps, n_times, n_epochs) for numpy or (n_epochs, n_comps, n_times) for MNE epochs</span>
+            <span class="c1"># Use shape[0] vs mixing_.shape[1] to detect MNE epoch format</span>
+            <span class="n">n_comp_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sources</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_comp_fit</span> <span class="ow">and</span> <span class="n">sources</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_comp_fit</span><span class="p">:</span>
+                <span class="c1"># MNE epochs format: (n_epochs, n_comps, n_times) -&gt; (n_comps, n_times, n_epochs)</span>
+                <span class="n">sources_internal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                <span class="n">is_epochs_mne</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sources_internal</span> <span class="o">=</span> <span class="n">sources</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sources_internal</span> <span class="o">=</span> <span class="n">sources</span>
+
+        <span class="n">n_comp_sources</span> <span class="o">=</span> <span class="n">sources_internal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">patterns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixing_</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_comp_sources</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">component_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Make a copy to avoid modifying input</span>
+            <span class="n">sources_used</span> <span class="o">=</span> <span class="n">sources_internal</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">component_indices</span><span class="p">)</span>
+
+            <span class="c1"># Handle boolean mask</span>
+            <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_comp_sources</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Mask length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="si">}</span><span class="s2"> != n_sources </span><span class="si">{</span><span class="n">n_comp_sources</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">)</span>
+                <span class="n">sources_used</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Handle integer indices</span>
+                <span class="c1"># Create a boolean mask from indices</span>
+                <span class="n">full_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_comp_sources</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+                <span class="n">full_mask</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">sources_used</span><span class="p">[</span><span class="o">~</span><span class="n">full_mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">rec_internal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">patterns</span><span class="p">,</span> <span class="n">sources_used</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rec_internal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">patterns</span><span class="p">,</span> <span class="n">sources_internal</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">is_epochs_mne</span><span class="p">:</span>
+            <span class="c1"># rec_internal: (n_ch, n_times, n_epochs) -&gt; (n_epochs, n_ch, n_times)</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">rec_internal</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">rec_internal</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_input</span><span class="p">:</span>
+            <span class="c1"># rec is (n_epochs, n_ch, n_times) OR (n_ch, n_times, n_epochs) OR (n_ch, n_times)</span>
+            <span class="k">if</span> <span class="n">is_epochs_mne</span><span class="p">:</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">rec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">rec</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># (n_ch, n_times, n_epochs)</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">rec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># (n_ch, n_times)</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">rec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_norms_</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">rec</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

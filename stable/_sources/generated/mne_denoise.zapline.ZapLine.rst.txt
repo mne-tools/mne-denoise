@@ -1,0 +1,32 @@
+﻿mne\_denoise.zapline.ZapLine
+============================
+
+.. currentmodule:: mne_denoise.zapline
+
+.. autoclass:: ZapLine
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ZapLine.__init__
+      ~ZapLine.fit
+      ~ZapLine.fit_transform
+      ~ZapLine.get_metadata_routing
+      ~ZapLine.get_params
+      ~ZapLine.inverse_transform
+      ~ZapLine.set_fit_request
+      ~ZapLine.set_inverse_transform_request
+      ~ZapLine.set_output
+      ~ZapLine.set_params
+      ~ZapLine.transform
+   
+   
+
+   
+   
+   

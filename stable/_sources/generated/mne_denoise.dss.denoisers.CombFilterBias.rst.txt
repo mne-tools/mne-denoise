@@ -1,0 +1,29 @@
+﻿mne\_denoise.dss.denoisers.CombFilterBias
+=========================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: CombFilterBias
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CombFilterBias.__init__
+      ~CombFilterBias.apply
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CombFilterBias.harmonic_frequencies
+   
+   

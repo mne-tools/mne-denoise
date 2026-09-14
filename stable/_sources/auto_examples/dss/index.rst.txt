@@ -1,0 +1,275 @@
+
+
+.. _sphx_glr_auto_examples_dss:
+
+DSS Examples
+============
+
+Examples demonstrating Denoising Source Separation (DSS) for various use cases.
+
+Basic DSS
+---------
+- ``plot_01_dss_fundamentals.py``: Core DSS concepts (Trial Average and Bandpass biases)
+- ``plot_02_artifact_correction.py``: Removing artifacts using DSS
+- ``plot_03_evoked_responses.py``: Enhancing event-related potentials
+
+Spectral & Oscillatory DSS
+--------------------------
+- ``plot_04_spectral_dss.py``: Frequency-specific component extraction
+- ``plot_05_periodic_dss.py``: SSVEP and periodic signal enhancement
+- ``plot_06_temporal_dss.py``: Time-shift DSS for temporal structure
+- ``plot_07_spectrogram_dss.py``: Time-frequency decomposition with DSS
+
+Advanced DSS
+------------
+- ``plot_08_blind_source_separation.py``: Comparison with ICA
+- ``plot_09_custom_bias.py``: Creating custom bias functions
+- ``plot_10_benchmarking.py``: Performance evaluation
+- ``plot_11_wiener_masking.py``: Nonlinear DSS with Wiener masks
+- ``plot_12_joint_dss.py``: Multi-dataset repeatability (JDSS)
+
+References
+----------
+- Särelä & Valpola (2005). Denoising Source Separation. J. Mach. Learn. Res.
+- de Cheveigné & Simon (2008). Denoising based on spatial filtering. J. Neurosci. Methods.
+- de Cheveigné & Parra (2014). Joint decorrelation. NeuroImage.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the WienerMaskDenoiser, a nonlinear function that adapts to the local variance (envelope) of the signal.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_11_wiener_masking_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_11_wiener_masking`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">11. Adaptive Wiener Masking for Bursty Signals.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates Joint Denoising Source Separation (JDSS), a method for extracting components that are reproducible across multiple datasets.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_12_joint_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_12_joint_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Joint DSS (Multi-Dataset Repeatability).</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to extend DSS by defining custom bias criteria. This is useful when you have domain-specific knowledge about the target source (e.g., &quot;it has sharp gradients&quot;, &quot;it occurs after a specific trigger&quot;, etc.).">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_09_custom_bias_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_09_custom_bias`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">09. Custom DSS: Defining Your Own Bias.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how Nonlinear DSS can perform Blind Source Separation (BSS), effectively recovering independent sources from mixed signals. It explicitly shows the equivalence between DSS with specific nonlinearities and Independent Component Analysis (ICA).">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_08_blind_source_separation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_08_blind_source_separation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">08. Blind Source Separation & ICA Equivalence.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates DSS for extracting temporally structured signals: autocorrelated components, slow drifts, and smooth waveforms.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_06_temporal_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_06_temporal_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Temporal DSS: Time-Shift Regression & Smoothness.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use DSS to enhance Evoked Responses (ERPs/ERFs). We explore two strategies: 1.  Standard Denoising: Using AverageBias to enhance the common evoked response (N100/P200). 2.  Contrast Enhancement: Building a Custom Bias to isolate the difference between two experimental conditions (Left vs Right Audio).">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_03_evoked_responses_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_03_evoked_responses`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Denoising Evoked Responses.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the superior efficiency of DSS in recovering evoked responses compared to standard methods.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_10_benchmarking_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_10_benchmarking`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">10. Efficiency Benchmark: DSS vs PCA, ICA, and Averaging.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates DSS for extracting transient oscillatory bursts using time-frequency (TF) domain constraints via spectrogram masking.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_07_spectrogram_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_07_spectrogram_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Time-Frequency DSS: Spectrogram Masking.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="DSS is a powerful tool for removing artifacts (ECG, EOG) from data. The core idea is: Artifacts are repetitive.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_02_artifact_correction_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_02_artifact_correction`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Artifact Correction with DSS.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example comprehensively demonstrates periodic signal extraction using DSS.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_05_periodic_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_05_periodic_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Example 5: Periodic Signals (SSVEP & Quasi-Periodic).</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces Denoising Source Separation (DSS), a technique for extracting brain sources based on a specific criterion of &quot;interestingness&quot; (bias).">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_01_dss_fundamentals_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_01_dss_fundamentals`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fundamentals of DSS.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use DSS to isolate oscillatory brain rhythms (e.g., Alpha, Beta) using spectral biases.">
+
+.. only:: html
+
+  .. image:: /auto_examples/dss/images/thumb/sphx_glr_plot_04_spectral_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/dss/plot_04_spectral_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Denoising Rhythms (Spectral DSS).</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/dss/plot_11_wiener_masking
+   /auto_examples/dss/plot_12_joint_dss
+   /auto_examples/dss/plot_09_custom_bias
+   /auto_examples/dss/plot_08_blind_source_separation
+   /auto_examples/dss/plot_06_temporal_dss
+   /auto_examples/dss/plot_03_evoked_responses
+   /auto_examples/dss/plot_10_benchmarking
+   /auto_examples/dss/plot_07_spectrogram_dss
+   /auto_examples/dss/plot_02_artifact_correction
+   /auto_examples/dss/plot_05_periodic_dss
+   /auto_examples/dss/plot_01_dss_fundamentals
+   /auto_examples/dss/plot_04_spectral_dss
+

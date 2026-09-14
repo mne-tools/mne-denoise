@@ -1,6 +1,0 @@
-﻿mne\_denoise.dss.denoisers.beta\_pow3
-=====================================
-
-.. currentmodule:: mne_denoise.dss.denoisers
-
-.. autofunction:: beta_pow3

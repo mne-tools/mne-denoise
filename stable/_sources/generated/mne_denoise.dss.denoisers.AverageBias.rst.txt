@@ -1,0 +1,23 @@
+﻿mne\_denoise.dss.denoisers.AverageBias
+======================================
+
+.. currentmodule:: mne_denoise.dss.denoisers
+
+.. autoclass:: AverageBias
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AverageBias.__init__
+      ~AverageBias.apply
+   
+   
+
+   
+   
+   

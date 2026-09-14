@@ -1,6 +1,0 @@
-﻿mne\_denoise.sspsir.compute\_sspsir
-===================================
-
-.. currentmodule:: mne_denoise.sspsir
-
-.. autofunction:: compute_sspsir

@@ -1,0 +1,6 @@
+﻿mne\_denoise.viz.plot\_narrowband\_scan
+=======================================
+
+.. currentmodule:: mne_denoise.viz
+
+.. autofunction:: plot_narrowband_scan

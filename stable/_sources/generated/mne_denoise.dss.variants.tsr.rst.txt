@@ -1,0 +1,13 @@
+﻿mne\_denoise.dss.variants.tsr
+=============================
+
+.. automodule:: mne_denoise.dss.variants.tsr
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      smooth_dss
+      time_shift_dss
+   

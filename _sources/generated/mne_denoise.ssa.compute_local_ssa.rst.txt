@@ -1,6 +1,0 @@
-﻿mne\_denoise.ssa.compute\_local\_ssa
-====================================
-
-.. currentmodule:: mne_denoise.ssa
-
-.. autofunction:: compute_local_ssa

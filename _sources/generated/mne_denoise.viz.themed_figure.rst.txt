@@ -1,6 +1,0 @@
-﻿mne\_denoise.viz.themed\_figure
-===============================
-
-.. currentmodule:: mne_denoise.viz
-
-.. autofunction:: themed_figure
