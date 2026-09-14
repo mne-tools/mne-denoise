@@ -1,0 +1,139 @@
+name: Recover v0.0.2 publication
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recover-publish:
+    name: Validate and publish v0.0.2
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: pypi-recovery
+      url: https://pypi.org/p/mne-denoise
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_TAG: v0.0.2
+      EXPECTED_VERSION: 0.0.2
+      EXPECTED_SHA: f3215e3bebe655a27b0b3618c3ac92d16454031c
+
+    steps:
+      - name: Checkout exact release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: v0.0.2
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --group build
+
+      - name: Verify exact release source
+        run: |
+          set -euo pipefail
+
+          head_sha="$(git rev-parse HEAD)"
+          tag_sha="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+
+          echo "release tag: $RELEASE_TAG"
+          echo "checkout HEAD: $head_sha"
+          echo "tagged commit: $tag_sha"
+          echo "expected commit: $EXPECTED_SHA"
+
+          if [[ "$head_sha" != "$EXPECTED_SHA" ]]; then
+            echo "checkout does not match expected v0.0.2 release commit" >&2
+            exit 1
+          fi
+
+          if [[ "$tag_sha" != "$EXPECTED_SHA" ]]; then
+            echo "$RELEASE_TAG does not point to expected release commit" >&2
+            exit 1
+          fi
+
+          if [[ "$head_sha" != "$tag_sha" ]]; then
+            echo "release tag and checkout HEAD disagree" >&2
+            exit 1
+          fi
+
+          echo "tags pointing at HEAD:"
+          git tag --points-at HEAD
+
+      - name: Build distribution artifacts
+        run: |
+          rm -rf dist/
+          python -m build
+
+      - name: Validate distribution artifacts
+        run: |
+          set -euo pipefail
+          python -m twine check --strict dist/*
+          python scripts/check_dist.py dist --expected-version "$EXPECTED_VERSION"
+
+      - name: Validate installed wheel
+        run: |
+          set -euo pipefail
+
+          wheel_test="$RUNNER_TEMP/mne-denoise-wheel-test"
+          python -m venv "$wheel_test"
+
+          wheel="$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)"
+          test -n "$wheel"
+
+          # Validate the true base installation first.
+          "$wheel_test/bin/python" -m pip install "$wheel"
+
+          cd "$RUNNER_TEMP"
+
+          "$wheel_test/bin/python" "$GITHUB_WORKSPACE/scripts/check_base_install.py"
+          "$wheel_test/bin/python" -m pip check
+
+          # Validate all supported optional integrations from the same wheel.
+          "$wheel_test/bin/python" -m pip install \
+            "${wheel}[mne,viz,progress]"
+
+          "$wheel_test/bin/python" -m pip check
+
+          MPLBACKEND=Agg "$wheel_test/bin/python" - <<'PY'
+          import matplotlib.pyplot as plt
+          import mne
+
+          from mne_denoise.progress import TqdmProgress
+          from mne_denoise.viz import plot_metric_violins
+
+          data = {
+              "subject": ["s1", "s1", "s2", "s2"],
+              "group": ["a", "a", "b", "b"],
+              "metric": [1.0, 2.0, 3.0, 4.0],
+          }
+
+          fig = plot_metric_violins(data, ["metric"], show=False)
+          plt.close(fig)
+
+          progress = TqdmProgress(disable=True)
+          progress.close()
+
+          print("MNE-Python:", mne.__version__)
+          print("v0.0.2 recovery wheel validation: OK")
+          PY
+
+      - name: Show release artifacts
+        run: |
+          ls -lh dist/
+          test "$(find dist -maxdepth 1 -name '*.whl' | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -name '*.tar.gz' | wc -l)" -eq 1
+
+      - name: Publish v0.0.2 to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+        with:
+          print-hash: true
