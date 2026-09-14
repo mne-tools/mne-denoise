@@ -144,5 +144,6 @@ Get started <getting-started>
 Methods <methods>
 Examples <auto_examples/index>
 API reference <api>
+Release notes <release-notes>
 Development <development>
 ```
