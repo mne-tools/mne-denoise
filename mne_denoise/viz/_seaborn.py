@@ -15,7 +15,7 @@ def _try_import_seaborn():
     except ImportError as err:
         raise ImportError(
             "seaborn is required for this plotting function. "
-            "Install it with: pip install seaborn"
+            'Install it with: pip install "mne-denoise[viz]"'
         ) from err
 
 

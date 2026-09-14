@@ -14,9 +14,9 @@ from packaging.version import Version
 
 CORE_REQUIREMENTS = {"numpy", "scipy", "scikit-learn", "joblib"}
 OPTIONAL_REQUIREMENTS = {
-    "mne": "mne",
-    "progress": "tqdm",
-    "viz": "matplotlib",
+    "mne": {"mne"},
+    "progress": {"tqdm"},
+    "viz": {"matplotlib", "seaborn"},
 }
 DEVELOPMENT_REQUIREMENTS = {
     "build",
@@ -107,14 +107,14 @@ def _check_wheel(wheel: Path) -> Version:
             f"unexpected base requirements: {base_requirements}"
         )
 
-        for extra, expected_requirement in OPTIONAL_REQUIREMENTS.items():
+        for extra, expected_requirements in OPTIONAL_REQUIREMENTS.items():
             extra_requirements = {
                 requirement.name.lower()
                 for requirement in requirements
                 if requirement.marker is not None
                 and requirement.marker.evaluate({"extra": extra})
             }
-            assert extra_requirements == {expected_requirement}, (
+            assert extra_requirements == expected_requirements, (
                 f"unexpected requirements for {extra!r}: {extra_requirements}"
             )
 

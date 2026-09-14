@@ -6,7 +6,7 @@ from importlib.util import find_spec
 
 def main() -> None:
     """Check the base installation contract."""
-    for package in ("mne", "matplotlib", "tqdm"):
+    for package in ("mne", "matplotlib", "seaborn", "tqdm"):
         assert find_spec(package) is None, f"{package} leaked into the base environment"
 
     import numpy as np

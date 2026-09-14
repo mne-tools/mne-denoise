@@ -4,6 +4,8 @@ Getting started
 Install
 -------
 
+Python 3.12 or newer is required.
+
 Install the base package and optional integrations with the package manager
 you use:
 
@@ -36,6 +38,12 @@ you use:
 
          pip install "mne-denoise[progress]"
 
+      All optional integrations:
+
+      .. code-block:: console
+
+         pip install "mne-denoise[mne,viz,progress]"
+
    .. tab-item:: uv
 
       Base package:
@@ -62,6 +70,12 @@ you use:
 
          uv pip install "mne-denoise[progress]"
 
+      All optional integrations:
+
+      .. code-block:: console
+
+         uv pip install "mne-denoise[mne,viz,progress]"
+
    .. tab-item:: conda
 
       Install the base package from conda-forge:
@@ -83,7 +97,7 @@ you use:
 
       .. code-block:: console
 
-         conda install -c conda-forge mne-denoise matplotlib
+         conda install -c conda-forge mne-denoise matplotlib seaborn
 
       Progress bars:
 

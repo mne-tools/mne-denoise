@@ -23,17 +23,15 @@ and exact contracts. Experimental APIs are identified in the documentation.
 
 ## Installation
 
-```bash
-pip install mne-denoise
-```
+Python 3.12 or newer is required.
 
-Optional integrations can be installed with extras:
+Base package — `pip install mne-denoise`
 
-```bash
-pip install "mne-denoise[mne]"
-pip install "mne-denoise[viz]"
-pip install "mne-denoise[progress]"
-```
+MNE-Python integration — `pip install "mne-denoise[mne]"`
+
+Visualization (Matplotlib + Seaborn) — `pip install "mne-denoise[viz]"`
+
+Progress bars (tqdm) — `pip install "mne-denoise[progress]"`
 
 ## Quick start
 
