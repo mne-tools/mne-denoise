@@ -1,6 +1,0 @@
-Added ``SOUND`` and ``SSPSIR``, forward-model denoisers from the TMS-EEG
-literature for sensor noise and TMS-evoked muscle artifacts. Both provide
-scikit-learn-style ``fit``/``transform`` support for NumPy and MNE
-Raw/Epochs/Evoked inputs and accept an optional ``mne.Forward`` (with an EEG
-spherical fallback where supported). Added ``quantify_overcorrection`` to
-assess source-model signal attenuation and distortion (Issue #32).

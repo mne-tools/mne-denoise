@@ -1,2 +1,0 @@
-Release distributions are now built and validated once, then published to
-PyPI from the exact validated artifacts using Trusted Publishing.

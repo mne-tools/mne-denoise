@@ -1,5 +1,0 @@
-**DSS**:
-- Fixed pattern normalization so ``DSS`` and ``IterativeDSS`` reconstructions
-  preserve physical signal scaling.
-- Added ``get_normalized_patterns()`` to ``DSS`` and ``IterativeDSS`` for
-  unit-normalized visualization patterns.

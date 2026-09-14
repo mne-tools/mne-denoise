@@ -1,6 +1,0 @@
-Added ``mne_denoise.icanclean.ICanClean`` for reference-based artifact removal
-with Canonical Correlation Analysis (CCA). The scikit-learn-style transformer
-supports NumPy and MNE Raw/Epochs inputs, four cleaning modes (``global``,
-``sliding``, ``calibrated``, and ``hybrid``), configurable cleaning bases, and
-re-referencing. Added quality-control plots for window scores and component
-counts.

@@ -1,9 +1,0 @@
-Added ``threshold='null'`` to :class:`mne_denoise.icanclean.ICanClean`. It
-estimates a data-dependent maximum squared canonical correlation attributable
-to sampling noise using circularly shifted reference surrogates, accounting for
-window length and channel counts, and rejects components above that threshold.
-Use ``null_random_state`` for reproducible surrogates; the null tests shared
-variance with the reference, not whether that variance is artifact.
-
-The fitted ``max_r2_``, ``thresholds_``, and ``samples_per_variable_``
-attributes record the evidence behind each window's threshold.

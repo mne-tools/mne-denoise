@@ -1,4 +1,0 @@
-Refocused the examples gallery around scientifically motivated denoising use
-cases, with curated examples across the supported methods and clearer
-preservation and validation controls. Improved gallery layout, thumbnails,
-figure readability, and documentation-data prefetching.

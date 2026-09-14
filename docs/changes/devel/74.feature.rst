@@ -1,7 +1,0 @@
-Added ``pseudo_ref`` and ``filter_ref`` to
-:class:`mne_denoise.icanclean.ICanClean`. With ``pseudo_ref=True``, a filtered
-copy of the primary channels supplies the CCA reference for recordings without
-physical reference electrodes; ``filter_ref`` can also filter supplied
-reference channels. Pseudo-reference mode requires ``ref_channels=None`` and a
-filter, while invalid, non-positive, or Nyquist-edge specifications now raise
-during construction (Downey & Ferris, 2023).

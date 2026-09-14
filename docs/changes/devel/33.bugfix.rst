@@ -1,2 +1,0 @@
-Fixed documentation links and CI failures by moving project URLs to
-``mne.tools``.

@@ -1,6 +1,0 @@
-Added ``mne_denoise.viz.plot_component_selector``, an interactive Matplotlib
-dashboard for selecting components from ``DSS``, ``IterativeDSS``, and standard
-``ZapLine``. The returned ``ComponentSelector`` applies selections while
-preserving NumPy layouts or MNE containers and their metadata; adaptive
-``ZapLine`` is rejected because its component basis varies by segment (Issue
-#38).

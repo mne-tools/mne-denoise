@@ -1,5 +1,0 @@
-Clarified the pre-1.0 public namespace: single-method APIs use direct
-canonical modules, obsolete raw DSS variant aliases and ``dss.utils`` paths
-are removed, and shared blending remains private. QA and visualization are
-exposed through explicit ``mne_denoise.qa`` and ``mne_denoise.viz`` namespaces;
-scientific algorithms are unchanged.

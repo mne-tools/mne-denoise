@@ -1,5 +1,0 @@
-Restored the final runtime dependency contract: NumPy ``>=1.26,<3``, SciPy
-``>=1.13``, scikit-learn ``>=1.5``, and joblib ``>=1.4``. MNE remains optional
-(``mne>=1.13.0``), while ``viz`` installs Matplotlib and Seaborn. SSP-SIR now
-uses the reference default ``M = rank(data) - artifact rank`` and errors when
-no positive reconstruction rank remains.

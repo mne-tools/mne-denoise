@@ -1,2 +1,0 @@
-Added narrative iCanClean documentation covering threshold scales, window
-conditioning, operating modes, and reference construction.
