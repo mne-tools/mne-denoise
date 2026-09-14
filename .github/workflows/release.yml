@@ -140,6 +140,13 @@ jobs:
           print("MNE-Python:", mne.__version__)
           print("built-wheel optional extras smoke: OK")
           PY
+      - name: Upload release distributions
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: release-dists
+          path: dist/
+          if-no-files-found: error
   publish:
     name: Publish to PyPI
     needs: package
