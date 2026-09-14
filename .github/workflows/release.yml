@@ -97,22 +97,49 @@ jobs:
       - name: Validate installed wheel
         run: |
           set -euo pipefail
+
           wheel_test="$RUNNER_TEMP/mne-denoise-wheel-test"
           python -m venv "$wheel_test"
+
           wheel="$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)"
           test -n "$wheel"
+
+          # First validate the true base installation boundary.
           "$wheel_test/bin/python" -m pip install "$wheel"
+
           cd "$RUNNER_TEMP"
+
           "$wheel_test/bin/python" "$GITHUB_WORKSPACE/scripts/check_base_install.py"
           "$wheel_test/bin/python" -m pip check
-      - name: Upload release distributions
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          name: release-dists
-          path: dist/
-          if-no-files-found: error
-          retention-days: 14
 
+          # Then install all supported optional integrations from the same built wheel.
+          "$wheel_test/bin/python" -m pip install \
+            "${wheel}[mne,viz,progress]"
+
+          "$wheel_test/bin/python" -m pip check
+
+          MPLBACKEND=Agg "$wheel_test/bin/python" - <<'PY'
+          import matplotlib.pyplot as plt
+          import mne
+
+          from mne_denoise.progress import TqdmProgress
+          from mne_denoise.viz import plot_metric_violins
+
+          data = {
+              "subject": ["s1", "s1", "s2", "s2"],
+              "group": ["a", "a", "b", "b"],
+              "metric": [1.0, 2.0, 3.0, 4.0],
+          }
+
+          fig = plot_metric_violins(data, ["metric"], show=False)
+          plt.close(fig)
+
+          progress = TqdmProgress(disable=True)
+          progress.close()
+
+          print("MNE-Python:", mne.__version__)
+          print("built-wheel optional extras smoke: OK")
+          PY
   publish:
     name: Publish to PyPI
     needs: package
