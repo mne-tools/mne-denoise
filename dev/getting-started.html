@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Getting started &#8212; mne-denoise 0.0.2.dev227+g9f0d6b529 documentation</title>
+    <title>Getting started &#8212; mne-denoise 0.0.2.dev228+g444a51951 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=14a2691c"></script>
+    <script src="_static/documentation_options.js?v=d3426f5e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -67,7 +67,7 @@
     <link rel="prev" title="mne-denoise" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.2.dev227+g9f0d6b529" />
+  <meta name="docsearch:version" content="0.0.2.dev228+g444a51951" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -468,6 +468,7 @@
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
 <section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Link to this heading">#</a></h2>
+<p>Python 3.12 or newer is required.</p>
 <p>Install the base package and optional integrations with the package manager
 you use:</p>
 <div class="sd-tab-set mdn-install-tabs docutils">
@@ -490,6 +491,10 @@ pip</label><div class="sd-tab-content docutils">
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install "mne-denoise[progress]"</span>
 </pre></div>
 </div>
+<p>All optional integrations:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install "mne-denoise[mne,viz,progress]"</span>
+</pre></div>
+</div>
 </div>
 <input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
@@ -510,6 +515,10 @@ uv</label><div class="sd-tab-content docutils">
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">uv pip install "mne-denoise[progress]"</span>
 </pre></div>
 </div>
+<p>All optional integrations:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">uv pip install "mne-denoise[mne,viz,progress]"</span>
+</pre></div>
+</div>
 </div>
 <input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
@@ -525,7 +534,7 @@ mne-denoise:</p>
 </pre></div>
 </div>
 <p>Visualization:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda install -c conda-forge mne-denoise matplotlib</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda install -c conda-forge mne-denoise matplotlib seaborn</span>
 </pre></div>
 </div>
 <p>Progress bars:</p>
