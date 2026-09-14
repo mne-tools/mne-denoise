@@ -24,15 +24,20 @@ _ROOT_REDIRECT = """<!doctype html>
 """
 _DEFAULT_VERSIONS: list[dict[str, Any]] = [
     {
-        "name": "0.0.2 (dev)",
+        "name": "0.0.3 (dev)",
         "version": "dev",
         "url": "https://mne.tools/mne-denoise/dev/",
     },
     {
-        "name": "0.0.1 (stable)",
-        "version": "0.0.1",
+        "name": "0.0.2 (stable)",
+        "version": "0.0.2",
         "url": "https://mne.tools/mne-denoise/stable/",
         "preferred": True,
+    },
+    {
+        "name": "0.0.1",
+        "version": "0.0.1",
+        "url": "https://mne.tools/mne-denoise/0.0.1/",
     },
 ]
 _LEGACY_ROOT_DIRECTORIES = (
