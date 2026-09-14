@@ -1,5 +1,0 @@
-**DSS Refactor**:
-- Consolidated DSS implementation from `dev-benchmarch` branch, including:
-  - 20+ denoiser classes in `mne_denoise.dss.denoisers`.
-  - Updated `mne_denoise.utils` for consistent MNE object handling.
-  - Visualization updates.

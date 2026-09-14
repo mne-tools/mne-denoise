@@ -1,22 +1,6 @@
-**iCanClean Module**:
-
-- Added a complete implementation of the **iCanClean algorithm** for reference-based
-  artifact removal using Canonical Correlation Analysis (CCA), based on Downey & Ferris (2022).
-- Added the ``mne_denoise.icanclean.ICanClean`` transformer, providing a
-  Scikit-learn compatible API that integrates seamlessly with MNE-Python objects
-  (Raw, Epochs) and NumPy arrays.
-- Implemented four specialized cleaning modes:
-    * ``'global'``: Static CCA cleaning over the entire recording.
-    * ``'sliding'``: Dynamic, windowed CCA cleaning for non-stationary artifacts.
-    * ``'calibrated'``: One global CCA decomposition, reused for window-local
-      scoring and subtraction. It calibrates on the same data it cleans; there
-      is no separate calibration recording.
-    * ``'hybrid'``: A multi-stage approach combining global subspace removal
-      with sliding-window refinement.
-- Added support for flexible cleaning bases (primary, reference, or both) and
-  robust re-referencing options (``fullrank`` and ``loserank``).
-- Integrated new visualization primitives in ``mne_denoise.viz``:
-    * ``plot_window_score_traces``: For monitoring canonical correlations
-      and rejection thresholds across time windows.
-    * ``plot_window_count_series``: For statistical summaries of
-      subspace rejections (by Sina and Hamza).
+Added ``mne_denoise.icanclean.ICanClean`` for reference-based artifact removal
+with Canonical Correlation Analysis (CCA). The scikit-learn-style transformer
+supports NumPy and MNE Raw/Epochs inputs, four cleaning modes (``global``,
+``sliding``, ``calibrated``, and ``hybrid``), configurable cleaning bases, and
+re-referencing. Added quality-control plots for window scores and component
+counts.

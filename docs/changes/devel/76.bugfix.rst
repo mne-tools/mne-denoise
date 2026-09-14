@@ -1,13 +1,7 @@
 **iCanClean**:
-- Fixed ``threshold`` and ``global_threshold`` accepting values that silently
-  broke the estimator: a value above 1 made it a pass-through (no :math:`R^2`
-  could exceed it), a value below 0 flagged every component, and a numeric
-  string such as ``"0.5"`` was compared against floats without conversion.
-  Both parameters are now range-checked to ``[0, 1]``.
-- Fixed ``_reset_qc_attrs`` not clearing ``global_n_windows_`` or
-  ``sliding_n_windows_``, so stale hybrid window counts survived a re-fit in a
-  different mode while every sibling ``global_*``/``sliding_*`` attribute was
-  correctly cleared.
-- Fixed the ``'calibrated'`` mode docstring, which described "a dedicated
-  calibration period" that does not exist -- it calibrates on the same data it
-  cleans.
+- ``threshold`` and ``global_threshold`` now validate values in ``[0, 1]`` and
+  handle numeric inputs consistently instead of silently producing pass-through
+  or all-component behavior.
+- Re-fitting clears stale global/sliding window-count QC attributes, and the
+  ``'calibrated'`` documentation now correctly states that calibration and
+  cleaning use the same data.

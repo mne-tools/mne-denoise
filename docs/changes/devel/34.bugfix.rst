@@ -1,11 +1,8 @@
-**Core**:
-- All denoising estimators (``ZapLine``, ``ICanClean``, etc.) now check for homogeneous MNE channel types. If passed an object with multiple data types (e.g., both 'mag' and 'grad'), the estimator will emit a ``UserWarning`` and automatically pick the first type to prevent cross-contamination. Users can explicitly pick a type beforehand to avoid the warning. Non-data channels (like EOG, ECG, or Stim) are still safely ignored and seamlessly restored to the output object unchanged.
-- Functions like ``plot_psd_comparison`` now automatically pick the primary channel type (e.g., 'mag', 'grad', 'eeg') instead of requiring manual selection. This uses the new centralized ``_get_homogeneous_picks`` logic, bringing the visualization API in line with the auto-picking behavior of the denoising estimators.
-- Fixed PSD visualization functions occasionally emitting ``Data has no positive values`` matplotlib warnings by safely clipping computed power spectra to a small positive floor.
+Improved MNE channel handling across denoisers and PSD plots: heterogeneous
+data-channel inputs now select a homogeneous type with a warning, while
+non-data channels and metadata are preserved. PSD plots avoid non-positive
+power warnings.
 
-**ZapLine**:
-- Fixed ``ZapLine`` with ``n_remove='auto'`` returning 0 components on high-channel-count MEG data with many co-equal line-noise components (e.g., CTF 275-channel recordings). The iterative outlier selector assumes 1-2 dominant components and fails when several DSS eigenvalues are similar; we now layer a log-space knee detector on top of it and use the larger of the two counts (Issue #34).
-- Added ``mne_denoise.dss.utils.detect_eigenvalue_knee`` and ``auto_select_components_robust`` helpers, plus optional ``knee_rel_floor`` and ``knee_min_ratio`` parameters to ``ZapLine`` for tuning.
-
-**DSS**:
-- ``compute_dss`` now treats the baseline covariance variance check as relative to the data scale instead of rejecting valid SI-unit MEG covariances. It also emits a warning when the ``reg``-based rank reduction discards more than 75% of channels; the message points users at channel normalization, lowering ``reg``, or fitting homogeneous channel types separately.
+Improved ``ZapLine`` automatic selection for high-channel-count or co-equal
+line-noise components, and made DSS covariance checks scale-aware for SI-unit
+MEG data with clearer rank-reduction diagnostics.

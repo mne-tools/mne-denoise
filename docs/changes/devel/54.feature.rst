@@ -1,14 +1,5 @@
-Added the experimental ``GuidedASR`` research prototype, which combines the
-``riemannian_windowed`` ASR backbone with DSS-style artifact/preserve bias
-operators and soft component reconstruction. The estimator follows the current
-ASR Raw, Epochs, Evoked, annotation, final-window-rejection, diagnostics, and
-scikit-learn workflows. Standard windowed ASR and GuidedASR share one streaming
-reconstruction engine, while guidance covariance preparation and component
-weighting live in a focused internal module. Guidance affects only components
-already flagged by ASR and uses an explicit bounded linear strength parameter;
-equal bias weighting and directional scoring above an isotropic reference are
-documented as experimental modeling choices. The feature includes synthetic
-tests, a benchmark, a gallery example, and prominent warnings that the method
-is unpublished and not validated for scientific use. Epoch concatenation for
-fit-time spatial models now uses the shared ``extract_data_from_mne`` utility
-across ASR, AdaptiveASR, JugglerASR, ZapLine, and iterative DSS.
+Added experimental ``GuidedASR``, a DSS-guided ASR variant with artifact and
+preserve bias covariances and soft component reconstruction. It follows ASR's
+NumPy/MNE estimator workflows and applies guidance only to ASR-flagged
+components; soft reconstruction requires ``experimental=True``. The method is
+unpublished and not validated for scientific use.

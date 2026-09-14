@@ -1,3 +1,4 @@
-The base installation no longer requires MNE-Python or Matplotlib. Install the
-``mne`` extra for MNE objects and the ``viz`` extra for plotting; tqdm remains
-available through the existing ``progress`` extra.
+Separated optional integrations from the base install. The base package
+supports NumPy/SciPy/scikit-learn workflows without MNE-Python, Matplotlib,
+Seaborn, or tqdm; install ``mne-denoise[mne]`` for MNE-Python, ``[viz]`` for
+Matplotlib and Seaborn, and ``[progress]`` for tqdm.

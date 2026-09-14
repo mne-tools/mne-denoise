@@ -3,12 +3,5 @@
   ``DSS`` rather than duplicating under a second name. Accepted values
   (``int`` or ``'auto'``) and the ``n_removed_`` attribute are unchanged.
 - Removed ``mne_denoise.zapline.adaptive.segment_data``, superseded by the
-  shared ``mne_denoise.dss.utils.CovarianceSegmenter``::
-
-      CovarianceSegmenter(
-          sfreq=sfreq,
-          min_chunk_len=min_chunk_len,
-          bandpass=(target_freq - 3, target_freq + 3),
-      ).segment(data)
-
-(Issue #27, PR #28)
+  shared public ``mne_denoise.dss.CovarianceSegmenter`` and
+  ``FixedWindowSegmenter``.

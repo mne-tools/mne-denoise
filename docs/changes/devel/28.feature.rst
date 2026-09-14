@@ -1,44 +1,10 @@
-**DSS**:
-- Added ``adaptive`` mode, which segments continuous data and fits an
-  independent DSS per segment, for artifacts whose profile drifts over a
-  recording. Runs in ``fit_transform``; ``fit`` still gives a single global fit,
-  so ``DSS`` stays usable in a ``Pipeline``. Per-segment filters, eigenvalues
-  and counts land in the new ``segment_results_``.
-- Added ``segmenter``, taking ``CovarianceSegmenter`` (splits where the spatial
-  covariance stops being stationary; new ``prominence`` parameter tunes how
-  decisively it must change) or ``FixedWindowSegmenter``. Defaults to a
-  ``CovarianceSegmenter`` band-limited around the bias frequency.
-- Added ``crossfade`` (seconds, default ``0.0``), blending adjacent segments
-  with a raised-cosine overlap-add. Segments are cleaned with different
-  filters, so plain concatenation leaves a broadband step at each boundary.
-- Added ``max_prop_remove`` and ``min_select`` to cap and floor per-segment
-  removal.
-- Added ``smooth``, which fits DSS on the residual of a smooth/residual split
-  and adds the smooth branch back. With ``window = round(sfreq / f_line)`` the
-  residual concentrates the artifact, sharpening eigenvalue contrast
-  (de Cheveigné, 2020). An ``int`` is shorthand for a ``SmoothingBias``.
-- Added automatic component selection: ``n_select``, ``selection_threshold``,
-  ``knee_rel_floor``, ``knee_min_ratio``, the ``auto_select`` method and
-  ``n_selected_``. Uses the same ``auto_select_components_robust`` selector as
-  ``ZapLine``. Defaults to ``'auto'`` when ``adaptive=True``.
-- ``narrowband_scan`` rejects ``adaptive=True``, which it would otherwise
-  ignore silently; scan first, then clean at the located frequency.
+Added adaptive ``DSS`` processing for non-stationary artifacts. With
+``adaptive=True``, ``fit_transform`` fits per-segment operators using a
+``CovarianceSegmenter`` or ``FixedWindowSegmenter`` and supports smoothing,
+automatic component selection, per-segment caps/floors, and optional
+raised-cosine cross-fading; global ``fit`` remains available for pipeline use.
 
-**ZapLine**:
-- Adaptive mode now runs on ``DSS``'s machinery instead of its own copy.
-  ``ZapLine`` supplies only frequency detection, harmonics, fine-peak
-  refinement and the spectral-QA loop, via ``DSS._process_segment``.
-- Consequently gained ``crossfade``, ``segmenter``, ``max_prop_remove`` and
-  ``min_select``; adaptive ``ZapLine`` previously concatenated chunks with no
-  way to smooth the boundaries. ``adaptive`` is now inherited from ``DSS``.
-
-**Denoisers**:
-- ``CombFilterBias`` gained ``q_mode``. ``"proportional"`` scales Q with the
-  harmonic number for roughly constant bandwidth across the comb;
-  ``"fixed"`` (default) is unchanged.
-
-**Internal**:
-- Added ``mne_denoise.blending``, sharing raised-cosine blending between ASR's
-  reconstruction and DSS's segment cross-fade.
-
-(Issue #27, PR #28)
+Adaptive ``ZapLine`` now reuses the DSS segmentation and processing path and
+gains the corresponding cross-fade and selection behavior. ``CombFilterBias``
+gained ``q_mode``, and ``narrowband_scan`` now rejects unsupported adaptive
+use.

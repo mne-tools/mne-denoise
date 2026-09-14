@@ -4,5 +4,3 @@
   retry loop was built from a hand-written argument list that omitted them, so
   every chunk was fitted with defaults regardless of configuration. It is now
   derived from ``get_params()``.
-
-(Issue #27, PR #28)
