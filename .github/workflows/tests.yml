@@ -76,8 +76,8 @@ jobs:
               print(package, version(package))
           PY
 
-  minimum:
-    name: Minimum dependencies
+  lower-bound-base:
+    name: Lower bound / base dependencies
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -96,34 +96,89 @@ jobs:
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
-            tools/pylock.ci-old.toml
+            tools/pylock.ci-min-base.toml
       - name: Install shared lockfile checker
         run: >-
           uv pip install
           "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
-      - name: Validate lower-bound lockfile
+      - name: Validate base lower-bound lockfile
         run: |
           python -m mne_tools.check_lockfile \
             "$GITHUB_WORKSPACE" \
-            tools/pylock.ci-old.toml \
-            --groups lockfile_extras
+            tools/pylock.ci-min-base.toml \
+            --groups lockfile_base
       - name: Restore lower-bound Python environment
         run: |
-          minimum_env="$RUNNER_TEMP/mne-denoise-minimum"
-          uv venv --python 3.12 "$minimum_env"
-          echo "VIRTUAL_ENV=$minimum_env" >> "$GITHUB_ENV"
-          echo "$minimum_env/bin" >> "$GITHUB_PATH"
+          base_env="$RUNNER_TEMP/mne-denoise-lower-bound-base"
+          uv venv --python 3.12 "$base_env"
+          echo "MNE_DENOISE_BASE_ENV=$base_env" >> "$GITHUB_ENV"
       - name: Install lower-bound environment
         run: |
-          minimum_python="$VIRTUAL_ENV/bin/python"
-          uv pip sync --python "$minimum_python" tools/pylock.ci-old.toml
-          uv pip install --python "$minimum_python" pip
-          uv pip install --python "$minimum_python" -e . --no-deps
+          base_python="$MNE_DENOISE_BASE_ENV/bin/python"
+          uv pip sync --python "$base_python" tools/pylock.ci-min-base.toml
+          uv pip install --python "$base_python" pip \
+            "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
+          uv pip install --python "$base_python" -e . --no-deps
       - name: Check declared lower bounds
-        uses: mne-tools/mne-tools/actions/check-environment@2e7c4b5469ef311a169e16c7f97cd0ce68508a61  # audited mne-tools main
+        run: |
+          base_python="$MNE_DENOISE_BASE_ENV/bin/python"
+          "$base_python" -m mne_tools.check_environment \
+            "$GITHUB_WORKSPACE" \
+            --groups lockfile_base
+      - name: Check base installation boundary
+        run: >-
+          "$MNE_DENOISE_BASE_ENV/bin/python" scripts/check_base_install.py
+      - name: Display environment information
+        run: |
+          base_python="$MNE_DENOISE_BASE_ENV/bin/python"
+          "$base_python" --version
+          "$base_python" - <<'PY'
+          from importlib.metadata import version
+
+          for package in (
+              "mne-denoise",
+              "numpy",
+              "scipy",
+              "scikit-learn",
+              "joblib",
+          ):
+              print(package, version(package))
+          PY
+      - name: Check installed requirements
+        run: >-
+          "$MNE_DENOISE_BASE_ENV/bin/python" -m pip check
+
+  mne-minimum:
+    name: MNE-Python 1.13.0 minimum integration
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          project-root: ${{ github.workspace }}
-          groups: lockfile_extras
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install MNE-Python minimum test environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test "mne==1.13.0"
+      - name: Verify MNE-Python minimum version
+        run: |
+          python - <<'PY'
+          from importlib.metadata import version
+
+          installed = version("mne")
+          if installed != "1.13.0":
+              raise SystemExit(f"expected MNE-Python 1.13.0, found {installed}")
+          print("MNE-Python:", installed)
+          PY
       - name: Display environment information
         run: |
           python --version
@@ -138,14 +193,117 @@ jobs:
               "joblib",
               "mne",
               "matplotlib",
+              "seaborn",
               "tqdm",
           ):
               print(package, version(package))
           PY
       - name: Check installed requirements
         run: python -m pip check
-      - name: Run tests
+      - name: Run full test suite
         run: pytest -q
+
+  lower-bound-extras:
+    name: Lower bound / standalone extras
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        with:
+          version: ">=0.9"
+          python-version: "3.12"
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+            tools/pylock.ci-min-extras.toml
+      - name: Install shared lockfile checker
+        run: >-
+          uv pip install
+          "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
+      - name: Validate standalone extras lower-bound lockfile
+        run: |
+          python -m mne_tools.check_lockfile \
+            "$GITHUB_WORKSPACE" \
+            tools/pylock.ci-min-extras.toml \
+            --groups lockfile_extras
+      - name: Restore lower-bound Python environment
+        run: |
+          extras_env="$RUNNER_TEMP/mne-denoise-lower-bound-extras"
+          uv venv --python 3.12 "$extras_env"
+          echo "MNE_DENOISE_EXTRAS_ENV=$extras_env" >> "$GITHUB_ENV"
+      - name: Install lower-bound environment
+        run: |
+          extras_python="$MNE_DENOISE_EXTRAS_ENV/bin/python"
+          uv pip sync --python "$extras_python" tools/pylock.ci-min-extras.toml
+          uv pip install --python "$extras_python" pip \
+            "mne-tools @ git+https://github.com/mne-tools/mne-tools.git@2e7c4b5469ef311a169e16c7f97cd0ce68508a61"
+          uv pip install --python "$extras_python" -e . --no-deps
+      - name: Check declared lower bounds
+        run: |
+          extras_python="$MNE_DENOISE_EXTRAS_ENV/bin/python"
+          "$extras_python" -m mne_tools.check_environment \
+            "$GITHUB_WORKSPACE" --groups lockfile_extras
+      - name: Verify MNE-Python remains optional
+        run: |
+          "$MNE_DENOISE_EXTRAS_ENV/bin/python" - <<'PY'
+          from importlib.util import find_spec
+
+          if find_spec("mne") is not None:
+              raise SystemExit(
+                  "MNE-Python leaked into the standalone extras lower-bound environment"
+              )
+          PY
+      - name: Display environment information
+        run: |
+          extras_python="$MNE_DENOISE_EXTRAS_ENV/bin/python"
+          "$extras_python" --version
+          "$extras_python" - <<'PY'
+          from importlib.metadata import version
+
+          for package in (
+              "mne-denoise",
+              "numpy",
+              "scipy",
+              "scikit-learn",
+              "joblib",
+              "matplotlib",
+              "seaborn",
+              "tqdm",
+          ):
+              print(package, version(package))
+          PY
+      - name: Check installed requirements
+        run: >-
+          "$MNE_DENOISE_EXTRAS_ENV/bin/python" -m pip check
+      - name: Run standalone public API smoke
+        run: |
+          extras_python="$MNE_DENOISE_EXTRAS_ENV/bin/python"
+          MPLBACKEND=Agg "$extras_python" - <<'PY'
+          import matplotlib.pyplot as plt
+
+          from mne_denoise.progress import TqdmProgress
+          from mne_denoise.viz import plot_metric_violins
+
+          data = {
+              "subject": ["s1", "s1", "s2", "s2"],
+              "group": ["a", "a", "b", "b"],
+              "metric": [1.0, 2.0, 3.0, 4.0],
+          }
+
+          fig = plot_metric_violins(data, ["metric"], show=False)
+          plt.close(fig)
+
+          progress = TqdmProgress(disable=True)
+          progress.close()
+          PY
 
   stable:
     name: ${{ matrix.name }}
@@ -213,6 +371,7 @@ jobs:
               "joblib",
               "mne",
               "matplotlib",
+              "seaborn",
               "tqdm",
           ):
               print(package, version(package))
@@ -297,6 +456,7 @@ jobs:
               "joblib",
               "mne",
               "matplotlib",
+              "seaborn",
               "tqdm",
           ):
               print(package, version(package))
@@ -330,7 +490,7 @@ jobs:
       - name: Upgrade scientific dependencies to prereleases
         run: |
           python -m pip install --upgrade --pre \
-            numpy scipy scikit-learn joblib matplotlib tqdm
+            numpy scipy scikit-learn joblib matplotlib seaborn tqdm
       - name: Display environment information
         run: |
           python --version
@@ -345,6 +505,7 @@ jobs:
               "joblib",
               "mne",
               "matplotlib",
+              "seaborn",
               "tqdm",
           ):
               print(package, version(package))

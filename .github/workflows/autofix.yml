@@ -55,24 +55,39 @@ jobs:
             --header 'Accept: application/vnd.github+json' \
             "repos/${GH_REPO}/pulls/${GH_PR_NUMBER}/files?per_page=100" \
             --jq '.[].filename')"
-          if grep -Eq '^(pyproject\.toml|tools/pylock\.ci-old\.toml|\.github/workflows/autofix\.yml)$' <<<"$changed_files"; then
+          if grep -Eq '^(pyproject\.toml|tools/pylock\.ci-min-(base|extras)\.toml|\.github/workflows/autofix\.yml)$' <<<"$changed_files"; then
             echo "dependencies=true" >> "$GITHUB_OUTPUT"
           else
             echo "dependencies=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Regenerate lower-bound lockfile
+      - name: Regenerate lower-bound lockfiles
         if: steps.changed.outputs.dependencies == 'true'
-        run: >-
-          uv pip compile pyproject.toml --python "3.12"
-          --python-platform "x86_64-unknown-linux-gnu" --group test
-          --group lockfile_extras --resolution lowest-direct --format pylock.toml
-          --output-file tools/pylock.ci-old.toml --no-cache
-      - name: Validate lower-bound lockfile
+        run: |
+          uv pip compile pyproject.toml \
+            --python "3.12" \
+            --python-platform "x86_64-unknown-linux-gnu" \
+            --resolution lowest-direct \
+            --format pylock.toml \
+            --output-file tools/pylock.ci-min-base.toml \
+            --no-cache
+          uv pip compile pyproject.toml \
+            --python "3.12" \
+            --python-platform "x86_64-unknown-linux-gnu" \
+            --group lockfile_extras \
+            --resolution lowest-direct \
+            --format pylock.toml \
+            --output-file tools/pylock.ci-min-extras.toml \
+            --no-cache
+      - name: Validate lower-bound lockfiles
         if: steps.changed.outputs.dependencies == 'true'
         run: |
           python -m mne_tools.check_lockfile \
             "$GITHUB_WORKSPACE" \
-            tools/pylock.ci-old.toml \
+            tools/pylock.ci-min-base.toml \
+            --groups lockfile_base
+          python -m mne_tools.check_lockfile \
+            "$GITHUB_WORKSPACE" \
+            tools/pylock.ci-min-extras.toml \
             --groups lockfile_extras
       - name: Run repository hooks
         run: prek run --all-files

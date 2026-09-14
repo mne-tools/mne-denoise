@@ -324,9 +324,7 @@ def test_sspsir_forward_integrations(tms_epochs, forward):
 
     evoked_data = epochs.get_data().mean(axis=0)
     evoked_data -= evoked_data.mean(axis=0, keepdims=True)
-    expected_default_M = max(
-        1, np.linalg.matrix_rank(evoked_data) - mne_model.n_components_
-    )
+    expected_default_M = np.linalg.matrix_rank(evoked_data) - mne_model.n_components_
     assert mne_model.M_ == expected_default_M
 
     explicit_model = SSPSIR(n_components=2, M=3, forward=forward, blend="constant").fit(
@@ -352,8 +350,8 @@ def test_sspsir_forward_integrations(tms_epochs, forward):
         tmin=epochs.tmin,
         verbose=False,
     )
-    low_rank_model = SSPSIR(n_components=2, forward=forward).fit(low_rank_epochs)
-    assert low_rank_model.M_ == 1
+    with pytest.raises(ValueError, match="M must be a positive integer"):
+        SSPSIR(n_components=2, forward=forward).fit(low_rank_epochs)
 
     evoked = epochs.average()
     evoked_out = SSPSIR(n_components=2).fit_transform(evoked)
