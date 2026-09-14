@@ -138,8 +138,7 @@ class SSPSIR(BaseEstimator, TransformerMixin):
     high_pass : float, default=100.0
         High-pass cutoff in Hz for artifact-subspace estimation.
     M : int or None, default=None
-        Source-informed reconstruction rank; None uses the maximum of one and
-        data rank minus artifact rank.
+        Source-informed reconstruction rank; None uses data rank minus artifact rank.
     smooth_length : float, default=0.010
         Crossfade transition width in seconds.
     sfreq : float or None, default=None
@@ -443,9 +442,7 @@ class SSPSIR(BaseEstimator, TransformerMixin):
 
         data_rank = int(np.linalg.matrix_rank(evoked))
         requested_M = (
-            int(self.M)
-            if self.M is not None
-            else max(1, data_rank - self.n_components_)
+            int(self.M) if self.M is not None else data_rank - self.n_components_
         )
         if requested_M < 1:
             raise ValueError(f"M must be a positive integer, got {requested_M!r}.")
