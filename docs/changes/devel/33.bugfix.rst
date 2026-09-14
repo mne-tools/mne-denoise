@@ -1,1 +1,2 @@
-Fix 404 documentation errors and CI failures by updating project URLs to ``mne.tools`` and bumping the MNE requirement to >=1.9.0 (fixing compatibility with SciPy 1.15.0). Also bumped ``softprops/action-gh-release`` to v3.
+Fixed documentation links and CI failures by moving project URLs to
+``mne.tools``.

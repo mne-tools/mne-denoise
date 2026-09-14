@@ -1,3 +1,5 @@
 **DSS**:
-- Fix DSS pattern normalization to preserve physical signal scaling in `compute_dss` and `iterative_dss`, and added `get_normalized_patterns()` to `DSS` and `IterativeDSS` for standard visualization (by [@Antigravity](https://github.com/google-deepmind)).
-››
+- Fixed pattern normalization so ``DSS`` and ``IterativeDSS`` reconstructions
+  preserve physical signal scaling.
+- Added ``get_normalized_patterns()`` to ``DSS`` and ``IterativeDSS`` for
+  unit-normalized visualization patterns.

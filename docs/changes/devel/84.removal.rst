@@ -1,13 +1,5 @@
-Intentional pre-1.0 namespace cleanup:
-
-- Single-implementation methods now use direct modules while preserving
-  canonical imports such as ``mne_denoise.sound.SOUND``.
-- DSS ``utils`` is replaced by semantic public/private modules, and accidental
-  raw DSS variant aliases are removed.
-- The shared ``blending`` implementation is private as
-  ``mne_denoise._blending``.
-- QA and visualization are explicit public namespaces:
-  ``mne_denoise.qa`` and ``mne_denoise.viz``.
-
-These changes clarify the public API contract without changing scientific
-algorithms.
+Clarified the pre-1.0 public namespace: single-method APIs use direct
+canonical modules, obsolete raw DSS variant aliases and ``dss.utils`` paths
+are removed, and shared blending remains private. QA and visualization are
+exposed through explicit ``mne_denoise.qa`` and ``mne_denoise.viz`` namespaces;
+scientific algorithms are unchanged.

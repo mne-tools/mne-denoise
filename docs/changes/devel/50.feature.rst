@@ -1,4 +1,4 @@
-Add additive Basic SSA decomposition, frequency-guided per-channel cleaning,
+Added additive Basic SSA decomposition, frequency-guided per-channel cleaning,
 W-correlation diagnostics, and the clustering/PCA/MDL local SSA algorithm of
 Teixeira et al. through :mod:`mne_denoise.ssa`. The scikit-learn transformers
 support NumPy and MNE containers with explicit transductive semantics. The

@@ -1,12 +1,6 @@
 Added ``mne_denoise.viz.plot_component_selector``, an interactive Matplotlib
-dashboard for selecting Linear DSS, IterativeDSS, and standard ZapLine
-components. Each row shows a component's spatial pattern, time course, and power
-spectrum; clicking a row excludes it from the clean output. Decompositions
-larger than ``rows_per_page`` are paged with a row of page buttons, since
-Matplotlib canvases cannot scroll. The live preview compares the current
-selection against the no-exclusion reconstruction rather than the raw input, so
-a rank-reduced DSS fit no longer shows a large apparent drop before anything is
-excluded. The returned ``ComponentSelector`` tracks the selection and applies it
-while preserving NumPy layouts or MNE object types, metadata, and channels
-outside the fitted decomposition. Adaptive ZapLine is rejected explicitly
-because its components vary between segments (Issue #38, PR #45).
+dashboard for selecting components from ``DSS``, ``IterativeDSS``, and standard
+``ZapLine``. The returned ``ComponentSelector`` applies selections while
+preserving NumPy layouts or MNE containers and their metadata; adaptive
+``ZapLine`` is rejected because its component basis varies by segment (Issue
+#38).
