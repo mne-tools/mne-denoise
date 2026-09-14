@@ -83,7 +83,8 @@ jobs:
         run: |
           python -m mne_tools.check_lockfile \
             "$GITHUB_WORKSPACE" \
-            tools/pylock.ci-min-base.toml
+            tools/pylock.ci-min-base.toml \
+            --groups lockfile_base
           python -m mne_tools.check_lockfile \
             "$GITHUB_WORKSPACE" \
             tools/pylock.ci-min-extras.toml \

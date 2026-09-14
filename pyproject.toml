@@ -70,6 +70,8 @@ viz = [
 ]
 
 [dependency-groups]
+lockfile_base = []
+
 lockfile_extras = [
   "matplotlib>=3.8",
   "seaborn>=0.13",
