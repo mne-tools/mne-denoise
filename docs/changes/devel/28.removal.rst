@@ -1,7 +1,0 @@
-**ZapLine**:
-- Renamed ``n_remove`` to ``n_select``, which ``ZapLine`` now inherits from
-  ``DSS`` rather than duplicating under a second name. Accepted values
-  (``int`` or ``'auto'``) and the ``n_removed_`` attribute are unchanged.
-- Removed ``mne_denoise.zapline.adaptive.segment_data``, superseded by the
-  shared public ``mne_denoise.dss.CovarianceSegmenter`` and
-  ``FixedWindowSegmenter``.

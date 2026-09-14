@@ -1,7 +1,0 @@
-Added ``mne_denoise.spectrum_interpolation.SpectrumInterpolation``, an FFT-based
-power-line noise remover following Leske & Dalal (2019) and FieldTrip's
-``ft_preproc_dftfilter`` ``neighbour_fft`` mode. It replaces spectral amplitudes
-around the line frequency and its harmonics with the mean amplitude of
-neighbouring bins while preserving phase. It supports MNE ``Raw``, ``Epochs``,
-and ``Evoked`` objects and NumPy arrays. The lower-level
-``interpolate_spectrum`` function is also exposed.

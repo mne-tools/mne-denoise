@@ -1,2 +1,0 @@
-Added an optional ``TqdmProgress`` adapter. ``tqdm`` remains optional, and the
-adapter consumes the existing structured progress callbacks.

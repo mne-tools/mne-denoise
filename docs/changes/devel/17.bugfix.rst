@@ -1,2 +1,0 @@
-**ZapLine**:
-- Fixed a bug in `ZapLine` adaptive mode where sampling rate mismatch caused incorrect frequency detection and potential crashes (Issue #16).

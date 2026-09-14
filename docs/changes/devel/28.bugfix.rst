@@ -1,6 +1,0 @@
-**ZapLine**:
-- Fixed adaptive ``ZapLine`` ignoring ``rank``, ``reg``, ``nfft``, ``nkeep``,
-  ``whiten`` and ``noise_cov``. The per-chunk estimator in the quality-assurance
-  retry loop was built from a hand-written argument list that omitted them, so
-  every chunk was fitted with defaults regardless of configuration. It is now
-  derived from ``get_params()``.

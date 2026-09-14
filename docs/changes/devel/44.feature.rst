@@ -1,7 +1,0 @@
-**DSS and ZapLine**:
-- ``DSS`` and ``ZapLine`` gained an optional ``whiten`` mode for jointly
-  decomposing multiple data channel types (for example, magnetometers,
-  gradiometers, and EEG) in one run. A supplied ``noise_cov`` uses MNE's
-  covariance whitener; otherwise MNE inputs use channel-type scaling and NumPy
-  arrays use per-channel scaling. The default homogeneous-channel behavior is
-  unchanged.

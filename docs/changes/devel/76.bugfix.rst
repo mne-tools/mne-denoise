@@ -1,7 +1,0 @@
-**iCanClean**:
-- ``threshold`` and ``global_threshold`` now validate values in ``[0, 1]`` and
-  handle numeric inputs consistently instead of silently producing pass-through
-  or all-component behavior.
-- Re-fitting clears stale global/sliding window-count QC attributes, and the
-  ``'calibrated'`` documentation now correctly states that calibration and
-  cleaning use the same data.

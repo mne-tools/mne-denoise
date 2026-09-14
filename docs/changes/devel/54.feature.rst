@@ -1,5 +1,0 @@
-Added experimental ``GuidedASR``, a DSS-guided ASR variant with artifact and
-preserve bias covariances and soft component reconstruction. It follows ASR's
-NumPy/MNE estimator workflows and applies guidance only to ASR-flagged
-components; soft reconstruction requires ``experimental=True``. The method is
-unpublished and not validated for scientific use.

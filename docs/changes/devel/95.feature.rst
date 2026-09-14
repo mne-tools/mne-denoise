@@ -1,4 +1,0 @@
-Separated optional integrations from the base install. The base package
-supports NumPy/SciPy/scikit-learn workflows without MNE-Python, Matplotlib,
-Seaborn, or tqdm; install ``mne-denoise[mne]`` for MNE-Python, ``[viz]`` for
-Matplotlib and Seaborn, and ``[progress]`` for tqdm.

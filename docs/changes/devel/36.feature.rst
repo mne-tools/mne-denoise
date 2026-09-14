@@ -1,5 +1,0 @@
-Added ``mne_denoise.asr`` with standard and Riemannian ASR,
-``AdaptiveASR``, and ``JugglerASR`` estimators. The module follows the
-package's NumPy/MNE fit-transform conventions and includes calibration helpers,
-diagnostics and annotations, memory-bounded covariance processing, and
-reference-backed validation examples.

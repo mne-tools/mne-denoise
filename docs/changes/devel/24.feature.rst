@@ -1,7 +1,0 @@
-Refactored ``mne_denoise.viz`` into content-oriented modules for themes,
-components, signals, spectra, statistics, and summaries. The former
-method-scoped plotting surface was replaced by explicit, study-agnostic public
-inputs.
-
-Added the canonical ``mne_denoise.qa`` namespace with array-based and Raw-based
-quality-assurance metrics for artifact suppression and signal preservation.

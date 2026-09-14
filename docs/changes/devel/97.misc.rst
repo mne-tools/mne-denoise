@@ -1,3 +1,0 @@
-Continuous integration now validates the supported Python range, minimum
-dependencies, MNE-Python development compatibility, and strict documentation
-builds against both stable and development MNE-Python.

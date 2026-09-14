@@ -1,8 +1,0 @@
-Improved MNE channel handling across denoisers and PSD plots: heterogeneous
-data-channel inputs now select a homogeneous type with a warning, while
-non-data channels and metadata are preserved. PSD plots avoid non-positive
-power warnings.
-
-Improved ``ZapLine`` automatic selection for high-channel-count or co-equal
-line-noise components, and made DSS covariance checks scale-aware for SI-unit
-MEG data with clearer rank-reduction diagnostics.
