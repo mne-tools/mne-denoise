@@ -1,6 +1,0 @@
-﻿mne\_denoise.dss.variants.time\_shift\_dss
-==========================================
-
-.. currentmodule:: mne_denoise.dss.variants
-
-.. autofunction:: time_shift_dss

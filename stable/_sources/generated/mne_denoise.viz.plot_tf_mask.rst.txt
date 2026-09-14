@@ -1,6 +1,0 @@
-﻿mne\_denoise.viz.plot\_tf\_mask
-===============================
-
-.. currentmodule:: mne_denoise.viz
-
-.. autofunction:: plot_tf_mask

@@ -1,6 +1,0 @@
-﻿mne\_denoise.viz.plot\_overlay\_comparison
-==========================================
-
-.. currentmodule:: mne_denoise.viz
-
-.. autofunction:: plot_overlay_comparison

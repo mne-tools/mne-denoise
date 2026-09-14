@@ -1,0 +1,951 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Release notes &#8212; mne-denoise 0.0.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css?v=fc7d3997" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="_static/documentation_options.js?v=f7f30125"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'release-notes';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mne.tools/mne-denoise/dev/_static/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.0.2';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Development" href="development.html" />
+    <link rel="prev" title="mne_denoise.progress.TqdmProgress" href="generated/mne_denoise.progress.TqdmProgress.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.2" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/mne.svg" class="logo__image only-light" alt=""/>
+    <img src="_static/mne.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">mne-denoise</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Release notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="methods.html">
+    Methods
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Release notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="development.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mne.discourse.group/" title="MNE Forum" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i><span class="visually-hidden">MNE Forum</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mne-tools/mne-denoise" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="release-notes">
+<h1>Release notes<a class="headerlink" href="#release-notes" title="Link to this heading">#</a></h1>
+<p>All notable changes to this project will be documented in this file.</p>
+<p>The format is based on <a class="reference external" href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
+and this project adheres to <a class="reference external" href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<section id="id1">
+<h2>[0.0.2] - 2026-09-14<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<section id="added">
+<h3>Added<a class="headerlink" href="#added" title="Link to this heading">#</a></h3>
+<ul>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">mne_denoise.viz</span></code> into content-oriented modules for themes,
+components, signals, spectra, statistics, and summaries. The former
+method-scoped plotting surface was replaced by explicit, study-agnostic public
+inputs.</p>
+<p>Added the canonical <code class="docutils literal notranslate"><span class="pre">mne_denoise.qa</span></code> namespace with array-based and Raw-based
+quality-assurance metrics for artifact suppression and signal preservation. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/24">#24</a>)</p>
+</li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">mne_denoise.icanclean.ICanClean</span></code> for reference-based artifact removal
+with Canonical Correlation Analysis (CCA). The scikit-learn-style transformer
+supports NumPy and MNE Raw/Epochs inputs, four cleaning modes (<code class="docutils literal notranslate"><span class="pre">global</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sliding</span></code>, <code class="docutils literal notranslate"><span class="pre">calibrated</span></code>, and <code class="docutils literal notranslate"><span class="pre">hybrid</span></code>), configurable cleaning bases, and
+re-referencing. Added quality-control plots for window scores and component
+counts. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/26">#26</a>)</p></li>
+<li><p>Added adaptive <code class="docutils literal notranslate"><span class="pre">DSS</span></code> processing for non-stationary artifacts. With
+<code class="docutils literal notranslate"><span class="pre">adaptive=True</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_transform</span></code> fits per-segment operators using a
+<code class="docutils literal notranslate"><span class="pre">CovarianceSegmenter</span></code> or <code class="docutils literal notranslate"><span class="pre">FixedWindowSegmenter</span></code> and supports smoothing,
+automatic component selection, per-segment caps/floors, and optional
+raised-cosine cross-fading; global <code class="docutils literal notranslate"><span class="pre">fit</span></code> remains available for pipeline use.</p>
+<p>Adaptive <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> now reuses the DSS segmentation and processing path and
+gains the corresponding cross-fade and selection behavior. <code class="docutils literal notranslate"><span class="pre">CombFilterBias</span></code>
+gained <code class="docutils literal notranslate"><span class="pre">q_mode</span></code>, and <code class="docutils literal notranslate"><span class="pre">narrowband_scan</span></code> now rejects unsupported adaptive
+use. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/28">#28</a>)</p>
+</li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">mne_denoise.asr</span></code> with standard and Riemannian ASR,
+<code class="docutils literal notranslate"><span class="pre">AdaptiveASR</span></code>, and <code class="docutils literal notranslate"><span class="pre">JugglerASR</span></code> estimators. The module follows the
+package’s NumPy/MNE fit-transform conventions and includes calibration helpers,
+diagnostics and annotations, memory-bounded covariance processing, and
+reference-backed validation examples. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/36">#36</a>)</p></li>
+<li><p><strong>DSS</strong>:</p>
+<ul class="simple">
+<li><p>Centered, unweighted <code class="docutils literal notranslate"><span class="pre">DSS</span></code> fits on :class:<code class="docutils literal notranslate"><span class="pre">mne.Evoked</span></code> now use the public
+:func:<code class="docutils literal notranslate"><span class="pre">mne.compute_covariance</span></code> API available in MNE-Python 1.13, while
+weighted and explicitly uncentered fits retain the NumPy covariance path
+(Issue #39). (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/42">#42</a>)</p></li>
+</ul>
+</li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">mne_denoise.spectrum_interpolation.SpectrumInterpolation</span></code>, an FFT-based
+power-line noise remover following Leske &amp; Dalal (2019) and FieldTrip’s
+<code class="docutils literal notranslate"><span class="pre">ft_preproc_dftfilter</span></code> <code class="docutils literal notranslate"><span class="pre">neighbour_fft</span></code> mode. It replaces spectral amplitudes
+around the line frequency and its harmonics with the mean amplitude of
+neighbouring bins while preserving phase. It supports MNE <code class="docutils literal notranslate"><span class="pre">Raw</span></code>, <code class="docutils literal notranslate"><span class="pre">Epochs</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">Evoked</span></code> objects and NumPy arrays. The lower-level
+<code class="docutils literal notranslate"><span class="pre">interpolate_spectrum</span></code> function is also exposed. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/43">#43</a>)</p></li>
+<li><p><strong>DSS and ZapLine</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DSS</span></code> and <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> gained an optional <code class="docutils literal notranslate"><span class="pre">whiten</span></code> mode for jointly
+decomposing multiple data channel types (for example, magnetometers,
+gradiometers, and EEG) in one run. A supplied <code class="docutils literal notranslate"><span class="pre">noise_cov</span></code> uses MNE’s
+covariance whitener; otherwise MNE inputs use channel-type scaling and NumPy
+arrays use per-channel scaling. The default homogeneous-channel behavior is
+unchanged. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/44">#44</a>)</p></li>
+</ul>
+</li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">mne_denoise.viz.plot_component_selector</span></code>, an interactive Matplotlib
+dashboard for selecting components from <code class="docutils literal notranslate"><span class="pre">DSS</span></code>, <code class="docutils literal notranslate"><span class="pre">IterativeDSS</span></code>, and standard
+<code class="docutils literal notranslate"><span class="pre">ZapLine</span></code>. The returned <code class="docutils literal notranslate"><span class="pre">ComponentSelector</span></code> applies selections while
+preserving NumPy layouts or MNE containers and their metadata; adaptive
+<code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> is rejected because its component basis varies by segment (Issue
+#38). (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/45">#45</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">SOUND</span></code> and <code class="docutils literal notranslate"><span class="pre">SSPSIR</span></code>, forward-model denoisers from the TMS-EEG
+literature for sensor noise and TMS-evoked muscle artifacts. Both provide
+scikit-learn-style <code class="docutils literal notranslate"><span class="pre">fit</span></code>/<code class="docutils literal notranslate"><span class="pre">transform</span></code> support for NumPy and MNE
+Raw/Epochs/Evoked inputs and accept an optional <code class="docutils literal notranslate"><span class="pre">mne.Forward</span></code> (with an EEG
+spherical fallback where supported). Added <code class="docutils literal notranslate"><span class="pre">quantify_overcorrection</span></code> to
+assess source-model signal attenuation and distortion (Issue #32). (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/46">#46</a>)</p></li>
+<li><p>Added :class:<code class="docutils literal notranslate"><span class="pre">mne_denoise.bss_cca.BSSCCA</span></code> and
+:func:<code class="docutils literal notranslate"><span class="pre">mne_denoise.bss_cca.compute_bss_cca</span></code> implementing reference-free BSS-CCA
+for broadband muscle-artifact attenuation, with an explicit lag in samples or
+physical time, paper-aligned <code class="docutils literal notranslate"><span class="pre">n_remove</span></code> component selection, optional
+contiguous block-wise operation, signed autocorrelation diagnostics, and
+leakage-safe <code class="docutils literal notranslate"><span class="pre">fit</span></code>/<code class="docutils literal notranslate"><span class="pre">transform</span></code> semantics. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/49">#49</a>)</p></li>
+<li><p>Added additive Basic SSA decomposition, frequency-guided per-channel cleaning,
+W-correlation diagnostics, and the clustering/PCA/MDL local SSA algorithm of
+Teixeira et al. through :mod:<code class="docutils literal notranslate"><span class="pre">mne_denoise.ssa</span></code>. The scikit-learn transformers
+support NumPy and MNE containers with explicit transductive semantics. The
+functional multichannel entry points are <code class="docutils literal notranslate"><span class="pre">compute_basic_ssa</span></code> and
+<code class="docutils literal notranslate"><span class="pre">compute_local_ssa</span></code>. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/50">#50</a>)</p></li>
+<li><p>Added :class:<code class="docutils literal notranslate"><span class="pre">mne_denoise.sns.SNS</span></code> with fitted batch-invariant centering,
+weighted and robust fitting, iterative projections, chunked execution, shared
+MNE container integration, rank diagnostics, and a documentation gallery. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/52">#52</a>)</p></li>
+<li><p>Added experimental <code class="docutils literal notranslate"><span class="pre">GuidedASR</span></code>, a DSS-guided ASR variant with artifact and
+preserve bias covariances and soft component reconstruction. It follows ASR’s
+NumPy/MNE estimator workflows and applies guidance only to ASR-flagged
+components; soft reconstruction requires <code class="docutils literal notranslate"><span class="pre">experimental=True</span></code>. The method is
+unpublished and not validated for scientific use. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/54">#54</a>)</p></li>
+<li><p>Replaced the ambiguous DSS <code class="docutils literal notranslate"><span class="pre">return_type</span></code> behavior with explicit
+<code class="docutils literal notranslate"><span class="pre">component_action</span></code> operations for extracting, retaining, or subtracting
+selected components while preserving segmented adaptive subtraction. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/69">#69</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">TimeShiftDSS</span></code> for explicit lag-augmented repeated-trial DSS, with
+weighted fitting, held-out scoring, sensor reconstruction, optional CCA
+distortion control, and a scientific validation script. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/70">#70</a>)</p></li>
+<li><p>Added an explicit cardiac-cleaning composition from MNE ECG detection,
+<code class="docutils literal notranslate"><span class="pre">CycleAverageBias</span></code>, and subtractive <code class="docutils literal notranslate"><span class="pre">DSS</span></code>, with a held-out gallery example. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/71">#71</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">pseudo_ref</span></code> and <code class="docutils literal notranslate"><span class="pre">filter_ref</span></code> to
+:class:<code class="docutils literal notranslate"><span class="pre">mne_denoise.icanclean.ICanClean</span></code>. With <code class="docutils literal notranslate"><span class="pre">pseudo_ref=True</span></code>, a filtered
+copy of the primary channels supplies the CCA reference for recordings without
+physical reference electrodes; <code class="docutils literal notranslate"><span class="pre">filter_ref</span></code> can also filter supplied
+reference channels. Pseudo-reference mode requires <code class="docutils literal notranslate"><span class="pre">ref_channels=None</span></code> and a
+filter, while invalid, non-positive, or Nyquist-edge specifications now raise
+during construction (Downey &amp; Ferris, 2023). (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/74">#74</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">reject={'low',</span> <span class="pre">'high'}</span></code> and <code class="docutils literal notranslate"><span class="pre">threshold_on={'rho',</span> <span class="pre">'rsq'}</span></code> to
+:func:<code class="docutils literal notranslate"><span class="pre">mne_denoise.bss_cca.compute_bss_cca</span></code> and
+:class:<code class="docutils literal notranslate"><span class="pre">mne_denoise.bss_cca.BSSCCA</span></code>. <code class="docutils literal notranslate"><span class="pre">reject='high'</span></code> drops the most
+autocorrelated components – slow drift and movement artifact – instead of
+the least autocorrelated ones – muscle; <code class="docutils literal notranslate"><span class="pre">threshold_on='rsq'</span></code> thresholds the
+squared canonical correlation instead of the correlation itself. Both
+parameters default to the package’s existing behaviour. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/75">#75</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">threshold='null'</span></code> to :class:<code class="docutils literal notranslate"><span class="pre">mne_denoise.icanclean.ICanClean</span></code>. It
+estimates a data-dependent maximum squared canonical correlation attributable
+to sampling noise using circularly shifted reference surrogates, accounting for
+window length and channel counts, and rejects components above that threshold.
+Use <code class="docutils literal notranslate"><span class="pre">null_random_state</span></code> for reproducible surrogates; the null tests shared
+variance with the reference, not whether that variance is artifact.</p>
+<p>The fitted <code class="docutils literal notranslate"><span class="pre">max_r2_</span></code>, <code class="docutils literal notranslate"><span class="pre">thresholds_</span></code>, and <code class="docutils literal notranslate"><span class="pre">samples_per_variable_</span></code>
+attributes record the evidence behind each window’s threshold. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/76">#76</a>)</p>
+</li>
+<li><p>Reconciled structured callbacks around the immutable <code class="docutils literal notranslate"><span class="pre">ProgressEvent</span></code>
+contract across the supported iterative, segmented, and channel-wise methods.
+Callbacks are runtime observers and remain independent from package logging. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/89">#89</a>)</p></li>
+<li><p>Added an optional <code class="docutils literal notranslate"><span class="pre">TqdmProgress</span></code> adapter. <code class="docutils literal notranslate"><span class="pre">tqdm</span></code> remains optional, and the
+adapter consumes the existing structured progress callbacks. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/90">#90</a>)</p></li>
+<li><p>Separated optional integrations from the base install. The base package
+supports NumPy/SciPy/scikit-learn workflows without MNE-Python, Matplotlib,
+Seaborn, or tqdm; install <code class="docutils literal notranslate"><span class="pre">mne-denoise[mne]</span></code> for MNE-Python, <code class="docutils literal notranslate"><span class="pre">[viz]</span></code> for
+Matplotlib and Seaborn, and <code class="docutils literal notranslate"><span class="pre">[progress]</span></code> for tqdm. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/95">#95</a>)</p></li>
+</ul>
+</section>
+<section id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading">#</a></h3>
+<ul>
+<li><p><strong>ZapLine</strong>:</p>
+<ul class="simple">
+<li><p>Fixed a bug in <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> adaptive mode where sampling rate mismatch caused incorrect frequency detection and potential crashes (Issue #16). (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/17">#17</a>)</p></li>
+</ul>
+</li>
+<li><p><strong>DSS</strong>:</p>
+<ul class="simple">
+<li><p>Fixed pattern normalization so <code class="docutils literal notranslate"><span class="pre">DSS</span></code> and <code class="docutils literal notranslate"><span class="pre">IterativeDSS</span></code> reconstructions
+preserve physical signal scaling.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">get_normalized_patterns()</span></code> to <code class="docutils literal notranslate"><span class="pre">DSS</span></code> and <code class="docutils literal notranslate"><span class="pre">IterativeDSS</span></code> for
+unit-normalized visualization patterns. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/19">#19</a>)</p></li>
+</ul>
+</li>
+<li><p><strong>ZapLine</strong>:</p>
+<ul class="simple">
+<li><p>Fixed adaptive <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> ignoring <code class="docutils literal notranslate"><span class="pre">rank</span></code>, <code class="docutils literal notranslate"><span class="pre">reg</span></code>, <code class="docutils literal notranslate"><span class="pre">nfft</span></code>, <code class="docutils literal notranslate"><span class="pre">nkeep</span></code>,
+<code class="docutils literal notranslate"><span class="pre">whiten</span></code> and <code class="docutils literal notranslate"><span class="pre">noise_cov</span></code>. The per-chunk estimator in the quality-assurance
+retry loop was built from a hand-written argument list that omitted them, so
+every chunk was fitted with defaults regardless of configuration. It is now
+derived from <code class="docutils literal notranslate"><span class="pre">get_params()</span></code>. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/28">#28</a>)</p></li>
+</ul>
+</li>
+<li><p>Fixed documentation links and CI failures by moving project URLs to
+<code class="docutils literal notranslate"><span class="pre">mne.tools</span></code>. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/33">#33</a>)</p></li>
+<li><p>Improved MNE channel handling across denoisers and PSD plots: heterogeneous
+data-channel inputs now select a homogeneous type with a warning, while
+non-data channels and metadata are preserved. PSD plots avoid non-positive
+power warnings.</p>
+<p>Improved <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> automatic selection for high-channel-count or co-equal
+line-noise components, and made DSS covariance checks scale-aware for SI-unit
+MEG data with clearer rank-reduction diagnostics. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/34">#34</a>)</p>
+</li>
+<li><p>:class:<code class="docutils literal notranslate"><span class="pre">mne_denoise.spectrum_interpolation.SpectrumInterpolation</span></code> no longer
+silently ignores an explicit <code class="docutils literal notranslate"><span class="pre">sfreq</span></code> when fitted on an MNE object. A declared
+sampling frequency that disagrees with <code class="docutils literal notranslate"><span class="pre">info['sfreq']</span></code> now raises instead of
+being discarded. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/49">#49</a>)</p></li>
+<li><p>Fixed standard <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> with <code class="docutils literal notranslate"><span class="pre">n_select=&quot;auto&quot;</span></code> returning zero components
+when line noise is distributed across several DSS components with a smoothly
+decaying eigenvalue spectrum. ZapLine now uses spectral artifact detection and
+cleaning QA as a fallback when eigenvalue-based selection returns zero. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/63">#63</a>)</p></li>
+<li><p>Fixed ASR spectral shaping, filter-state continuity, physical-unit invariance,
+and <code class="docutils literal notranslate"><span class="pre">min_clean_fraction</span></code> calibration semantics. <code class="docutils literal notranslate"><span class="pre">AdaptiveASR</span></code> updates are
+now transactional, while Juggler uses continuous filtering, unit-stable GEV
+fitting, and memory-bounded Chebyshev DBSCAN. <code class="docutils literal notranslate"><span class="pre">ASR</span></code> and <code class="docutils literal notranslate"><span class="pre">GuidedASR</span></code> now
+default to <code class="docutils literal notranslate"><span class="pre">filter_kind=&quot;asr&quot;</span></code>; parity coverage and cutoff guidance were also
+updated. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/64">#64</a>)</p></li>
+<li><p>Fixed DSS fitting and reconstruction for MNE objects with bad channels, and
+preserved Raw annotations, acquisition sample coordinates, projections, and
+sample rejection consistently between baseline and biased covariance estimates. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/69">#69</a>)</p></li>
+<li><p>Fixed 3-D covariance and <code class="docutils literal notranslate"><span class="pre">AverageBias</span></code> weights to follow time-by-epoch
+observation order, and made <code class="docutils literal notranslate"><span class="pre">DSS</span></code> transforms reuse their fitted global mean. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/70">#70</a>)</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">CycleAverageBias</span></code> so epochs cannot share windows, overlaps are
+event-order invariant, integer averages cannot truncate, and event coordinates,
+boundaries, origins, duplicates, and minimum counts have explicit contracts. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/71">#71</a>)</p></li>
+<li><p>Made documentation builds resilient without dropping real-data gallery output:
+CI now prefetches and caches the complete MNE dataset inventory, ZapLine uses a
+maintained MNE recording instead of the unavailable NoiseTools host, and an
+incomplete build cannot replace the published site. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/72">#72</a>)</p></li>
+<li><p><strong>iCanClean</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">global_threshold</span></code> now validate values in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> and
+handle numeric inputs consistently instead of silently producing pass-through
+or all-component behavior.</p></li>
+<li><p>Re-fitting clears stale global/sliding window-count QC attributes, and the
+<code class="docutils literal notranslate"><span class="pre">'calibrated'</span></code> documentation now correctly states that calibration and
+cleaning use the same data. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/76">#76</a>)</p></li>
+</ul>
+</li>
+<li><p>Restored the final runtime dependency contract: NumPy <code class="docutils literal notranslate"><span class="pre">&gt;=1.26,&lt;3</span></code>, SciPy
+<code class="docutils literal notranslate"><span class="pre">&gt;=1.13</span></code>, scikit-learn <code class="docutils literal notranslate"><span class="pre">&gt;=1.5</span></code>, and joblib <code class="docutils literal notranslate"><span class="pre">&gt;=1.4</span></code>. MNE remains optional
+(<code class="docutils literal notranslate"><span class="pre">mne&gt;=1.13.0</span></code>), while <code class="docutils literal notranslate"><span class="pre">viz</span></code> installs Matplotlib and Seaborn. SSP-SIR now
+uses the reference default <code class="docutils literal notranslate"><span class="pre">M</span> <span class="pre">=</span> <span class="pre">rank(data)</span> <span class="pre">-</span> <span class="pre">artifact</span> <span class="pre">rank</span></code> and errors when
+no positive reconstruction rank remains. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/123">#123</a>)</p></li>
+</ul>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added narrative iCanClean documentation covering threshold scales, window
+conditioning, operating modes, and reference construction. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/76">#76</a>)</p></li>
+<li><p>Streamlined repository guidance, contributor documentation, and GitHub contribution templates. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/115">#115</a>)</p></li>
+<li><p>Audited scientific documentation and public docstrings, corrected remaining API and citation mismatches, and improved core API guidance with concise examples and cross-references. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/116">#116</a>)</p></li>
+<li><p>Refocused the examples gallery around scientifically motivated denoising use
+cases, with curated examples across the supported methods and clearer
+preservation and validation controls. Improved gallery layout, thumbnails,
+figure readability, and documentation-data prefetching. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/121">#121</a>)</p></li>
+</ul>
+</section>
+<section id="removed">
+<h3>Removed<a class="headerlink" href="#removed" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>ZapLine</strong>:</p>
+<ul>
+<li><p>Renamed <code class="docutils literal notranslate"><span class="pre">n_remove</span></code> to <code class="docutils literal notranslate"><span class="pre">n_select</span></code>, which <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> now inherits from
+<code class="docutils literal notranslate"><span class="pre">DSS</span></code> rather than duplicating under a second name. Accepted values
+(<code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>) and the <code class="docutils literal notranslate"><span class="pre">n_removed_</span></code> attribute are unchanged.</p></li>
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">mne_denoise.zapline.adaptive.segment_data</span></code>, superseded by the
+shared public <code class="docutils literal notranslate"><span class="pre">mne_denoise.dss.CovarianceSegmenter</span></code> and
+<code class="docutils literal notranslate"><span class="pre">FixedWindowSegmenter</span></code>. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/28">#28</a>)</p></li>
+</ul>
+</li>
+<li><p>Removed the ambiguous DSS <code class="docutils literal notranslate"><span class="pre">return_type</span></code> parameter in favor of the single
+<code class="docutils literal notranslate"><span class="pre">component_action</span></code> operation contract. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/69">#69</a>)</p></li>
+<li><p>Renamed <code class="docutils literal notranslate"><span class="pre">TimeShiftBias</span></code> to <code class="docutils literal notranslate"><span class="pre">LagAverageBias</span></code> and removed the ambiguous
+<code class="docutils literal notranslate"><span class="pre">time_shift_dss()</span></code> convenience constructor. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/70">#70</a>)</p></li>
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">min_select</span></code> and <code class="docutils literal notranslate"><span class="pre">max_prop_remove</span></code> from the public <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code>
+constructor because these bounds apply only to adaptive per-segment processing.
+Adaptive <code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> continues to use a minimum removal of 1 and a maximum
+removal proportion of 0.2 by default; custom adaptive values can be configured
+through <code class="docutils literal notranslate"><span class="pre">adaptive_params[&quot;n_remove_params&quot;]</span></code>. The corresponding parameters
+remain available on the generic <code class="docutils literal notranslate"><span class="pre">DSS</span></code> estimator (Issue #63). (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/78">#78</a>)</p></li>
+<li><p>Clarified the pre-1.0 public namespace: single-method APIs use direct
+canonical modules, obsolete raw DSS variant aliases and <code class="docutils literal notranslate"><span class="pre">dss.utils</span></code> paths
+are removed, and shared blending remains private. QA and visualization are
+exposed through explicit <code class="docutils literal notranslate"><span class="pre">mne_denoise.qa</span></code> and <code class="docutils literal notranslate"><span class="pre">mne_denoise.viz</span></code> namespaces;
+scientific algorithms are unchanged. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/84">#84</a>)</p></li>
+<li><p>Development-only <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">docs</span></code>, <code class="docutils literal notranslate"><span class="pre">dev</span></code>, and <code class="docutils literal notranslate"><span class="pre">all</span></code> extras were replaced
+by standardized dependency groups. The user-facing <code class="docutils literal notranslate"><span class="pre">mne</span></code>, <code class="docutils literal notranslate"><span class="pre">viz</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">progress</span></code> extras remain available. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/96">#96</a>)</p></li>
+<li><p>Python 3.11 support has been removed. Python 3.12 is now the minimum
+supported Python version. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/99">#99</a>)</p></li>
+</ul>
+</section>
+<section id="internal">
+<h3>Internal<a class="headerlink" href="#internal" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Consolidated duplicated internals under package-level ownership. New
+<code class="docutils literal notranslate"><span class="pre">mne_denoise._validation</span></code> helpers and new <code class="docutils literal notranslate"><span class="pre">mne_denoise._spatial</span></code>
+epoch-reshaping helpers replace validation and reshape logic that had been
+copied across ASR, DSS, SNS, ZapLine, spectrum interpolation, the covariance
+utilities, and the visualization module. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/49">#49</a>)</p></li>
+<li><p>Shared weighted CCA, sensor-mixing, and positive-integer validation helpers
+across DSS, BSS-CCA, and SSA. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/70">#70</a>)</p></li>
+<li><p>Added deterministic cardiac DSS scientific validation with isolated-source
+metrics, negative controls, sensitivity sweeps, resampling, and optional ECG SSP
+comparison on a local recording. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/71">#71</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">mne_denoise._filtering.design_butter_sos</span></code>, replacing independently
+hand-rolled Butterworth SOS design in ICanClean, the DSS covariance segmenter,
+ZapLine’s cleanline notch fallback, and DSS’s <code class="docutils literal notranslate"><span class="pre">BandpassBias</span></code>. Also removed
+the manual per-epoch <code class="docutils literal notranslate"><span class="pre">sosfiltfilt</span></code> loops in <code class="docutils literal notranslate"><span class="pre">BandpassBias</span></code>,
+<code class="docutils literal notranslate"><span class="pre">PeakFilterBias</span></code>, and <code class="docutils literal notranslate"><span class="pre">CombFilterBias</span></code>: <code class="docutils literal notranslate"><span class="pre">sosfiltfilt</span></code> already filters
+along a given axis independently of the others, so a 3-D
+<code class="docutils literal notranslate"><span class="pre">(n_channels,</span> <span class="pre">n_times,</span> <span class="pre">n_epochs)</span></code> array needs no loop. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/74">#74</a>)</p></li>
+<li><p><strong>SSP-SIR</strong> now delegates Forward-based source-informed projection reconstruction
+to MNE-Python instead of maintaining a local reconstruction implementation. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/91">#91</a>)</p></li>
+<li><p>Package builds now use Hatchling with Git-derived versioning and modern
+distribution metadata. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/96">#96</a>)</p></li>
+<li><p>Continuous integration now validates the supported Python range, minimum
+dependencies, MNE-Python development compatibility, and strict documentation
+builds against both stable and development MNE-Python. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/97">#97</a>)</p></li>
+<li><p>Release distributions are now built and validated once, then published to
+PyPI from the exact validated artifacts using Trusted Publishing. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/98">#98</a>)</p></li>
+<li><p>Developer tooling and CI maintenance now use Spin, prek, immutable GitHub
+Actions, automated lower-bound dependency validation, dependency review, and
+security-focused repository checks. (<a class="reference external" href="https://github.com/mne-tools/mne-denoise/issues/99">#99</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h2>[0.0.1] - 2026-01-23<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<section id="id3">
+<h3>Added<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>DSS Module</strong>: Complete implementation of Denoising Source Separation</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">DSS</span></code> estimator with scikit-learn compatible API</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IterativeDSS</span></code> for nonlinear/iterative DSS</p></li>
+<li><p>20+ pluggable denoiser functions:</p>
+<ul>
+<li><p>Spectral: <code class="docutils literal notranslate"><span class="pre">BandpassBias</span></code>, <code class="docutils literal notranslate"><span class="pre">LineNoiseBias</span></code></p></li>
+<li><p>Temporal: <code class="docutils literal notranslate"><span class="pre">TimeShiftBias</span></code>, <code class="docutils literal notranslate"><span class="pre">SmoothingBias</span></code>, <code class="docutils literal notranslate"><span class="pre">DCTDenoiser</span></code></p></li>
+<li><p>Periodic: <code class="docutils literal notranslate"><span class="pre">CombFilterBias</span></code>, <code class="docutils literal notranslate"><span class="pre">PeakFilterBias</span></code>, <code class="docutils literal notranslate"><span class="pre">CycleAverageBias</span></code></p></li>
+<li><p>ICA-style: <code class="docutils literal notranslate"><span class="pre">KurtosisDenoiser</span></code>, <code class="docutils literal notranslate"><span class="pre">SkewDenoiser</span></code>, <code class="docutils literal notranslate"><span class="pre">TanhMaskDenoiser</span></code></p></li>
+</ul>
+</li>
+<li><p>Variants: <code class="docutils literal notranslate"><span class="pre">tsr</span></code>, <code class="docutils literal notranslate"><span class="pre">ssvep</span></code>, <code class="docutils literal notranslate"><span class="pre">narrowband</span></code></p></li>
+<li><p>Full MNE-Python integration (Raw, Epochs, Evoked)</p></li>
+</ul>
+</li>
+<li><p><strong>ZapLine Module</strong>: Line noise removal algorithms</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> estimator for standard mode</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ZapLine</span></code> adaptive mode (ZapLine-plus) with automatic frequency detection</p></li>
+<li><p>Per-chunk processing for non-stationary data</p></li>
+<li><p>Quality assurance with spectral checks</p></li>
+</ul>
+</li>
+<li><p><strong>Visualization</strong>: Component and comparison plotting</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot_dss_components</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot_dss_sources</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot_before_after</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>Documentation</strong>: Sphinx-based documentation with examples</p>
+<ul>
+<li><p>12 DSS examples</p></li>
+<li><p>5 ZapLine examples</p></li>
+<li><p>API reference</p></li>
+</ul>
+</li>
+<li><p><strong>Testing</strong>: Comprehensive test suite with 91% coverage</p>
+<ul>
+<li><p>Cross-platform: Ubuntu, macOS, Windows</p></li>
+<li><p>Python 3.10, 3.11, 3.12, 3.13</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Minimum Python version is now 3.10</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="generated/mne_denoise.progress.TqdmProgress.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">mne_denoise.progress.TqdmProgress</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="development.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Development</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">[0.0.2] - 2026-09-14</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#added">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixed">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#removed">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#internal">Internal</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">[0.0.1] - 2026-01-23</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changed">Changed</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, mne-denoise developers.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

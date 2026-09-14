@@ -1,6 +1,0 @@
-﻿mne\_denoise.dss.variants.ssvep\_dss
-====================================
-
-.. currentmodule:: mne_denoise.dss.variants
-
-.. autofunction:: ssvep_dss
