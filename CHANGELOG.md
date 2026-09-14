@@ -1,6 +1,13 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [0.0.2] - 2026-09-14
 
-#### Added
+### Added
 
 - Refactored ``mne_denoise.viz`` into content-oriented modules for themes,
   components, signals, spectra, statistics, and summaries. The former
@@ -122,7 +129,7 @@
   Seaborn, or tqdm; install ``mne-denoise[mne]`` for MNE-Python, ``[viz]`` for
   Matplotlib and Seaborn, and ``[progress]`` for tqdm. ([#95](https://github.com/mne-tools/mne-denoise/issues/95))
 
-#### Fixed
+### Fixed
 
 - **ZapLine**:
   - Fixed a bug in `ZapLine` adaptive mode where sampling rate mismatch caused incorrect frequency detection and potential crashes (Issue #16). ([#17](https://github.com/mne-tools/mne-denoise/issues/17))
@@ -186,7 +193,7 @@
   uses the reference default ``M = rank(data) - artifact rank`` and errors when
   no positive reconstruction rank remains. ([#123](https://github.com/mne-tools/mne-denoise/issues/123))
 
-#### Documentation
+### Documentation
 
 - Added narrative iCanClean documentation covering threshold scales, window
   conditioning, operating modes, and reference construction. ([#76](https://github.com/mne-tools/mne-denoise/issues/76))
@@ -197,7 +204,7 @@
   preservation and validation controls. Improved gallery layout, thumbnails,
   figure readability, and documentation-data prefetching. ([#121](https://github.com/mne-tools/mne-denoise/issues/121))
 
-#### Removed
+### Removed
 
 - **ZapLine**:
   - Renamed ``n_remove`` to ``n_select``, which ``ZapLine`` now inherits from
@@ -227,7 +234,7 @@
 - Python 3.11 support has been removed. Python 3.12 is now the minimum
   supported Python version. ([#99](https://github.com/mne-tools/mne-denoise/issues/99))
 
-#### Internal
+### Internal
 
 - Consolidated duplicated internals under package-level ownership. New
   ``mne_denoise._validation`` helpers and new ``mne_denoise._spatial``
@@ -258,33 +265,6 @@
 - Developer tooling and CI maintenance now use Spin, prek, immutable GitHub
   Actions, automated lower-bound dependency validation, dependency review, and
   security-focused repository checks. ([#99](https://github.com/mne-tools/mne-denoise/issues/99))
-
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-
-- **ICanClean pseudo-reference mode** (restores functionality removed in
-  `e38e8f5` without a changelog entry; see issue #68)
-  - `pseudo_ref=True` derives the CCA reference block from the primary
-    channels themselves rather than from physical noise electrodes, for
-    recordings with no dual-layer cap. Implements the pseudo-reference
-    method of Downey & Ferris 2023, *Sensors* 23(19):8214.
-  - `filter_ref=(btype, freqs)` shapes the reference block before CCA,
-    using scipy's own filter-kind names: `'bandstop'`, `'bandpass'`,
-    `'highpass'`, `'lowpass'`; zero-phase 4th-order Butterworth. Usable
-    on its own to filter physical reference channels.
-  - `ref_channels` must be left as `None` when `pseudo_ref=True`; the two
-    are mutually exclusive.
-  - `pseudo_ref=True` without `filter_ref` raises: an unfiltered copy of
-    the primary block is perfectly correlated with itself and would remove
-    the entire signal.
 
 ## [0.0.1] - 2026-01-23
 
