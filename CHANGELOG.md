@@ -1,3 +1,10 @@
+## [0.0.3] - 2026-09-24
+
+#### Added
+
+- Python 3.11 support has been restored, making Python 3.11 the minimum
+  supported Python version again. ([#132](https://github.com/mne-tools/mne-denoise/issues/132))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

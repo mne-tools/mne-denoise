@@ -1,14 +1,19 @@
 [
   {
-    "name": "0.0.3 (dev)",
+    "name": "0.0.4 (dev)",
     "version": "dev",
     "url": "https://mne.tools/mne-denoise/dev/"
   },
   {
-    "name": "0.0.2 (stable)",
-    "version": "0.0.2",
+    "name": "0.0.3 (stable)",
+    "version": "0.0.3",
     "url": "https://mne.tools/mne-denoise/stable/",
     "preferred": true
+  },
+  {
+    "name": "0.0.2",
+    "version": "0.0.2",
+    "url": "https://mne.tools/mne-denoise/0.0.2/"
   },
   {
     "name": "0.0.1",
