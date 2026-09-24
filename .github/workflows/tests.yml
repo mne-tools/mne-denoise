@@ -42,7 +42,7 @@ jobs:
         run: spin lint
 
   base-install:
-    name: Base install / Python 3.12
+    name: Base install / Python 3.11
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - name: Validate base installation
         run: |
           base_python="$RUNNER_TEMP/mne-denoise-base/bin/python"
@@ -92,7 +92,7 @@ jobs:
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
         with:
           version: ">=0.9"
-          python-version: "3.12"
+          python-version: "3.11"
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -110,7 +110,7 @@ jobs:
       - name: Restore lower-bound Python environment
         run: |
           base_env="$RUNNER_TEMP/mne-denoise-lower-bound-base"
-          uv venv --python 3.12 "$base_env"
+          uv venv --python 3.11 "$base_env"
           echo "MNE_DENOISE_BASE_ENV=$base_env" >> "$GITHUB_ENV"
       - name: Install lower-bound environment
         run: |
@@ -163,7 +163,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
-          python-version: "3.12"
+          python-version: "3.11"
           cache: pip
       - name: Install MNE-Python minimum test environment
         run: |
@@ -219,7 +219,7 @@ jobs:
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
         with:
           version: ">=0.9"
-          python-version: "3.12"
+          python-version: "3.11"
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -237,7 +237,7 @@ jobs:
       - name: Restore lower-bound Python environment
         run: |
           extras_env="$RUNNER_TEMP/mne-denoise-lower-bound-extras"
-          uv venv --python 3.12 "$extras_env"
+          uv venv --python 3.11 "$extras_env"
           echo "MNE_DENOISE_EXTRAS_ENV=$extras_env" >> "$GITHUB_ENV"
       - name: Install lower-bound environment
         run: |
@@ -314,6 +314,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+            name: Python 3.12
+            coverage: "false"
           - os: ubuntu-latest
             python-version: "3.13"
             name: Python 3.13
