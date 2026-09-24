@@ -23,7 +23,7 @@ and exact contracts. Experimental APIs are identified in the documentation.
 
 ## Installation
 
-Python 3.12 or newer is required.
+Python 3.11 or newer is required.
 
 Base package — `pip install mne-denoise`
 

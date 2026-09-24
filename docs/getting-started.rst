@@ -4,7 +4,7 @@ Getting started
 Install
 -------
 
-Python 3.12 or newer is required.
+Python 3.11 or newer is required.
 
 Install the base package and optional integrations with the package manager
 you use:

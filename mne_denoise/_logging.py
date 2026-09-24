@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
 from numbers import Integral
-from typing import Any
+from typing import Any, TypeVar
 
 logger = logging.getLogger("mne_denoise")
 
@@ -18,6 +18,8 @@ _active_verbose_scope = ContextVar(
     "mne_denoise_active_verbose_scope",
     default=_UNSET,
 )
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 def _level_from_verbose(verbose: bool | str | int | None) -> int | None:
@@ -64,7 +66,7 @@ def use_log_level(verbose: bool | str | int | None) -> Iterator[None]:
         _active_verbose_scope.reset(token)
 
 
-def verbose[**P, T](function: Callable[P, T]) -> Callable[P, T]:
+def verbose(function: _F) -> _F:
     """Decorate a public operation with a temporary ``verbose`` override.
 
     The decorator accepts the same forms as MNE-Python's ``@verbose``. An
@@ -89,4 +91,4 @@ def verbose[**P, T](function: Callable[P, T]) -> Callable[P, T]:
 
         return function(*args, **kwargs)
 
-    return wrapper
+    return wrapper  # type: ignore[return-value]

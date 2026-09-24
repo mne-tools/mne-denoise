@@ -7,7 +7,7 @@ name = "mne-denoise"
 dynamic = ["version"]
 description = "Artifact removal and signal denoising for EEG and MEG."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [
@@ -37,6 +37,7 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -130,7 +131,7 @@ raw-options = { version_scheme = "guess-next-dev" }
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
