@@ -27,8 +27,12 @@ clean = model.fit_transform(data)  # data: (n_channels, n_times)
   canonical-correlation spectrum is treated as artifactual.
 - lag_samples or lag_seconds and preprocessing affect the
   canonical-correlation ordering.
-- Segmented operation fits one operator per block; overlap controls block
-  overlap and diagnostics report the fitted block operators.
+- With MNE input, channels in `info["bads"]` are left out of the fit and pass
+  through unchanged.
+- Segmented operation fits one operator per block. Vergult et al. cleaned
+  contiguous 10 s epochs independently
+  {footcite:p}`vergult2007_bss_cca`; overlapping blocks and the cross-fade
+  between them, in the middle of their overlap, are additions of this package.
 
 The ordering is a signal-model assumption, not a universal artifact label.
 Check the result against controls and the signal of interest.

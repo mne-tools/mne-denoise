@@ -272,14 +272,19 @@ def _segment_bounds(
     if starts[-1] + n_block < n_times:
         starts.append(n_times - n_block)
 
-    bounds = []
-    own_start = 0
-    for index, start in enumerate(starts):
-        own_end = n_times if index == len(starts) - 1 else min(start + hop, n_times)
-        own_end = max(own_end, own_start)
-        bounds.append((start, start + n_block, own_start, own_end))
-        own_start = own_end
-    return bounds
+    # Neighbouring blocks hand over in the middle of their overlap, so each
+    # block's extensions are symmetric and the raised-cosine blend fades one
+    # block out while the next fades in, with no jump in the weights.
+    handovers = [
+        (start + previous + n_block) // 2
+        for previous, start in zip(starts[:-1], starts[1:])
+    ]
+    own_starts = [0, *handovers]
+    own_ends = [*handovers, n_times]
+    return [
+        (start, start + n_block, own_start, own_end)
+        for start, own_start, own_end in zip(starts, own_starts, own_ends)
+    ]
 
 
 @verbose
@@ -345,6 +350,9 @@ def compute_bss_cca(
     components with the lowest lagged correlation are removed; reject="high" removes
     the highest. Segmented mode is continuous-only and cannot span epoch boundaries
     :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca,hotelling1936_cca`.
+    Vergult et al. cleaned contiguous 10 s epochs independently; the overlap and
+    the raised-cosine cross-fade between neighbouring blocks, which hand over in
+    the middle of their overlap, are additions of this package.
 
     See Also
     --------
@@ -615,6 +623,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
     With segment_len set, transform requires the same number of samples used during
     fit. MNE Raw, Epochs, and Evoked inputs preserve their container type and
     channel metadata :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca`.
+    Channels listed in ``info["bads"]`` at fit time are left out of the
+    decomposition and pass through transform unchanged.
 
     References
     ----------
@@ -687,7 +697,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         del y
         callback = _validate_callback(callback)
         data, data_sfreq, _mne_type, _orig, _picks, names = extract_data_from_mne(
-            X, auto_pick=True
+            X, auto_pick=True, exclude_bads=True
         )
         sfreq = resolve_sfreq(self.sfreq, data_sfreq, required=False)
         _cleaned, info = compute_bss_cca(
