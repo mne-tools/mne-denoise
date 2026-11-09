@@ -216,17 +216,28 @@ def test_lagged_pairs_never_cross_epoch_boundaries():
 def test_selection_rule_must_be_explicit(rng):
     """Neither a silent default nor two competing rules are accepted."""
     data = rng.standard_normal((5, 1000))
-    for kwargs in ({}, {"n_remove": 1, "rho_threshold": 0.9}):
+    for kwargs in (
+        {},
+        {"n_remove": 1, "rho_threshold": 0.9},
+        {"n_remove": 1, "slope_threshold": 0.0, "sfreq": SFREQ},
+    ):
         with pytest.raises(ValueError, match="exactly one of"):
             compute_bss_cca(data, **kwargs)
 
 
-def test_unreachable_threshold_removes_everything(rng):
+def test_unreachable_threshold_removes_everything(rng, caplog):
     """An unreachable threshold has an explicit all-components outcome."""
     data = rng.standard_normal((6, 3000))
-    cleaned, info = compute_bss_cca(data, rho_threshold=0.9, preserve_mean=False)
-    assert info["n_kept"] == 0
-    np.testing.assert_allclose(cleaned, 0.0, atol=1e-9)
+    for kwargs, message in (
+        ({"rho_threshold": 0.9}, "rho_threshold"),
+        ({"slope_threshold": -5.0, "sfreq": SFREQ}, "spectral slope above"),
+    ):
+        caplog.clear()
+        with caplog.at_level("WARNING", logger="mne_denoise"):
+            cleaned, info = compute_bss_cca(data, preserve_mean=False, **kwargs)
+        assert info["n_kept"] == 0
+        np.testing.assert_allclose(cleaned, 0.0, atol=1e-9)
+        assert message in caplog.text
 
 
 def test_realistic_correlation_spectrum_is_not_silently_destroyed(realistic_eeg):
@@ -288,6 +299,28 @@ def test_invalid_selection_parameters(rng):
         ({"n_remove": 1.5}, TypeError, "n_remove"),
         ({"rho_threshold": 1.5}, ValueError, "between 0 and 1"),
         ({"rho_threshold": np.nan}, TypeError, "rho_threshold"),
+        ({"slope_threshold": 0.0}, ValueError, "sfreq is required"),
+        ({"slope_threshold": 0.0, "sfreq": 100.0}, ValueError, "Nyquist"),
+        (
+            {"slope_threshold": 0.0, "sfreq": SFREQ, "slope_band": 5.0},
+            TypeError,
+            "pair",
+        ),
+        (
+            {"slope_threshold": 0.0, "sfreq": SFREQ, "slope_band": (50.0, 5.0)},
+            ValueError,
+            "fmin < fmax",
+        ),
+        (
+            {"slope_threshold": 0.0, "sfreq": SFREQ, "slope_band": (10.0, 10.2)},
+            ValueError,
+            "bin",
+        ),
+        (
+            {"slope_threshold": 0.0, "sfreq": SFREQ, "reject": "high"},
+            ValueError,
+            "reject='high' cannot",
+        ),
     ]
     for kwargs, error, message in cases:
         with pytest.raises(error, match=message):
@@ -549,6 +582,80 @@ def test_broadband_attenuation_preserves_neural_bands(muscle_data):
     observed_c = observed - observed.mean(axis=1, keepdims=True)
     assert _corr(cleaned, clean_c) > 0.95
     assert _corr(cleaned, clean_c) > _corr(observed_c, clean_c)
+
+
+# ---------------------------------------------------------------------------
+# Spectral-slope selection (Janani et al., 2018)
+# ---------------------------------------------------------------------------
+
+
+def test_slope_rule_removes_the_flat_spectrum_sources(realistic_eeg):
+    """Components with flat (muscle-like) spectra are removed, brain kept."""
+    observed, clean, sfreq = realistic_eeg
+    cleaned, info = compute_bss_cca(
+        observed, sfreq=sfreq, slope_threshold=0.0, preserve_mean=False
+    )
+    assert info["slope_band"] == (7.0, 75.0)
+    assert info["n_removed"] == 3
+    np.testing.assert_array_equal(info["kept_mask"], info["slopes"] <= 0.0)
+    assert _band_power(cleaned, sfreq, 50.0, 120.0) < 0.05 * _band_power(
+        observed, sfreq, 50.0, 120.0
+    )
+    assert _corr(cleaned, clean - clean.mean(axis=1, keepdims=True)) > 0.95
+
+    model = BSSCCA(sfreq=sfreq, slope_threshold=0.0).fit(observed)
+    np.testing.assert_array_equal(model.kept_mask_, info["kept_mask"])
+    np.testing.assert_allclose(model.slopes_, info["slopes"])
+
+    # Epoched input: spectra are computed within epochs and averaged.
+    epochs = observed.reshape(21, 5, -1).transpose(1, 0, 2)
+    _cleaned, epoched = compute_bss_cca(epochs, sfreq=sfreq, slope_threshold=0.0)
+    assert epoched["n_removed"] == 3
+
+
+def test_slope_rule_is_independent_of_the_correlation_ranking(rng):
+    """A strongly autocorrelated source with a rising spectrum is removed.
+
+    A 70 Hz oscillation ranks above white noise by correlation, so a rank cut
+    could not remove it without brain-like sources ranked below it.
+    """
+    n_times = int(SFREQ * 20)
+    t = np.arange(n_times) / SFREQ
+    pink = np.cumsum(rng.standard_normal((3, n_times)), axis=1)
+    pink -= pink.mean(axis=1, keepdims=True)
+    hf = np.sin(2 * np.pi * 70 * t) * (1 + 0.5 * rng.standard_normal(n_times))
+    sources = np.vstack([pink / pink.std(axis=1, keepdims=True), hf])
+    data = rng.standard_normal((10, 4)) @ sources
+    _cleaned, info = compute_bss_cca(data, sfreq=SFREQ, slope_threshold=0.0)
+    assert info["n_removed"] == 1
+    assert np.all(info["slopes"][info["kept_mask"]] < -1.0)
+
+
+def test_slope_matches_the_reference_welch_fit(rng):
+    """Slopes use 1 s Hann Welch spectra and a log-log line, as in the reference."""
+    from scipy.signal import welch
+
+    data = np.cumsum(rng.standard_normal((4, int(SFREQ * 20))), axis=1)
+    data += 0.5 * rng.standard_normal(data.shape)
+    _cleaned, info = compute_bss_cca(data, sfreq=SFREQ, slope_threshold=0.0)
+    sources = info["filters"] @ (data - info["training_mean"])
+    freqs, psd = welch(sources, fs=SFREQ, nperseg=int(SFREQ))
+    band = (freqs >= 7.0) & (freqs <= 75.0)
+    expected = np.polyfit(np.log(freqs[band]), np.log(psd[:, band]).T, 1)[0]
+    np.testing.assert_allclose(info["slopes"], expected, rtol=1e-10)
+
+
+def test_combined_rule_removes_the_union_of_both_stages(realistic_eeg):
+    """rho_threshold with slope_threshold is Janani et al.'s two-stage rule."""
+    observed, _clean, sfreq = realistic_eeg
+    _c, by_rho = compute_bss_cca(observed, sfreq=sfreq, rho_threshold=0.9)
+    _c, by_slope = compute_bss_cca(observed, sfreq=sfreq, slope_threshold=0.0)
+    _c, both = compute_bss_cca(
+        observed, sfreq=sfreq, rho_threshold=0.9, slope_threshold=0.0
+    )
+    np.testing.assert_array_equal(
+        both["kept_mask"], by_rho["kept_mask"] & by_slope["kept_mask"]
+    )
 
 
 # ---------------------------------------------------------------------------

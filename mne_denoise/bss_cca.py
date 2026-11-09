@@ -6,6 +6,7 @@ from numbers import Integral, Real
 from typing import Any
 
 import numpy as np
+from scipy.signal import welch
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -32,6 +33,15 @@ from ._validation import (
 from .progress import _emit_progress, _validate_callback
 
 __all__ = ["BSSCCA", "compute_bss_cca"]
+
+#: Band over which the spectral slope is fitted, in Hz: muscle power rises and
+#: brain power falls with frequency here (Fitzgibbon et al., 2016; Janani et al.,
+#: 2018).
+_DEFAULT_SLOPE_BAND = (7.0, 75.0)
+
+#: Welch segment length for the spectral slope, in seconds: 1 s Hann segments
+#: with 50% overlap, as in the reference implementation of Janani et al. (2018).
+_SLOPE_SEGMENT_SECONDS = 1.0
 
 #: Warn when the number of lagged pairs falls below this multiple of the
 #: channel count; canonical correlations saturate toward 1 as the ratio drops.
@@ -81,12 +91,17 @@ def _resolve_lag_samples(
 
 
 def _check_selection(
-    n_remove: int | None, rho_threshold: float | None
-) -> tuple[int | None, float | None]:
-    """Validate that exactly one selection rule is requested."""
-    if (n_remove is None) == (rho_threshold is None):
+    n_remove: int | None,
+    rho_threshold: float | None,
+    slope_threshold: float | None = None,
+    slope_band: tuple[float, float] = _DEFAULT_SLOPE_BAND,
+) -> tuple[int | None, float | None, float | None, tuple[float, float] | None]:
+    """Validate the selection rule; only rho_threshold and slope_threshold combine."""
+    thresholds = rho_threshold is not None or slope_threshold is not None
+    if (n_remove is None) != thresholds:
         raise ValueError(
-            "set exactly one of n_remove or rho_threshold; there is no "
+            "set exactly one of n_remove, rho_threshold or slope_threshold "
+            "(rho_threshold and slope_threshold may be combined); there is no "
             "universally valid default (De Clercq et al. describe "
             "autocorrelation thresholding as unvalidated future work, and "
             "select a component count instead)"
@@ -96,7 +111,28 @@ def _check_selection(
             raise TypeError("n_remove must be a non-negative integer")
         if n_remove < 0:
             raise ValueError("n_remove must be a non-negative integer")
-        return int(n_remove), None
+        return int(n_remove), None, None, None
+    if slope_threshold is None:
+        slope_band = None
+    else:
+        if (
+            isinstance(slope_threshold, bool)
+            or not isinstance(slope_threshold, Real)
+            or not np.isfinite(slope_threshold)
+        ):
+            raise TypeError("slope_threshold must be a finite number")
+        slope_threshold = float(slope_threshold)
+        try:
+            fmin, fmax = (float(freq) for freq in slope_band)
+        except (TypeError, ValueError):
+            raise TypeError("slope_band must be a pair (fmin, fmax) in Hz") from None
+        if not 0.0 < fmin < fmax:
+            raise ValueError(
+                f"slope_band must satisfy 0 < fmin < fmax, got {slope_band}"
+            )
+        slope_band = (fmin, fmax)
+        if rho_threshold is None:
+            return None, None, slope_threshold, slope_band
     if isinstance(rho_threshold, bool) or not isinstance(rho_threshold, Real):
         raise TypeError("rho_threshold must be a finite number")
     rho_threshold = float(rho_threshold)
@@ -104,7 +140,7 @@ def _check_selection(
         raise TypeError("rho_threshold must be a finite number")
     if not 0.0 <= rho_threshold <= 1.0:
         raise ValueError("rho_threshold must be between 0 and 1")
-    return None, rho_threshold
+    return None, rho_threshold, slope_threshold, slope_band
 
 
 def _lagged_pairs(X: np.ndarray, lag_samples: int) -> tuple[np.ndarray, np.ndarray]:
@@ -162,6 +198,37 @@ def _select_components(
     return keep
 
 
+def _component_slopes(
+    sources: np.ndarray,
+    data_shape: tuple[int, ...],
+    *,
+    sfreq: float,
+    slope_band: tuple[float, float],
+) -> np.ndarray:
+    """Return the log-log spectral slope of each component inside slope_band.
+
+    As in the reference implementation of Janani et al. (2018): Welch spectra
+    with 1 s Hann segments and 50% overlap, then a least-squares line on log
+    power against log frequency. Epoched sources average their spectra across
+    epochs, so no segment spans an epoch boundary.
+    """
+    if len(data_shape) == 3:
+        n_epochs, _n_channels, n_times = data_shape
+        sources = continuous_to_epochs(sources, (n_epochs, sources.shape[0], n_times))
+    nperseg = min(sources.shape[-1], int(round(sfreq * _SLOPE_SEGMENT_SECONDS)))
+    freqs, psd = welch(sources, fs=sfreq, nperseg=nperseg, axis=-1)
+    band = (freqs >= slope_band[0]) & (freqs <= slope_band[1])
+    if band.sum() < 2:
+        raise ValueError(
+            f"slope_band={slope_band} contains {band.sum()} Welch frequency "
+            f"bin(s) at sfreq={sfreq} for {sources.shape[-1]}-sample series; "
+            f"widen the band or supply longer blocks or epochs"
+        )
+    if psd.ndim == 3:
+        psd = psd.mean(axis=0)
+    return np.polyfit(np.log(freqs[band]), np.log(psd[:, band]).T, 1)[0]
+
+
 def _learn_operator(
     X: np.ndarray,
     *,
@@ -171,6 +238,9 @@ def _learn_operator(
     reject: str,
     threshold_on: str,
     bound: tuple[int, int, int, int],
+    slope_threshold: float | None = None,
+    slope_band: tuple[float, float] | None = None,
+    sfreq: float | None = None,
 ) -> dict[str, Any]:
     """Learn one channel-space BSS-CCA operator and diagnostics."""
     ext_start, ext_end, own_start, own_end = bound
@@ -208,13 +278,28 @@ def _learn_operator(
     sources = unmixing @ centered
     mixing = fit_mixing_matrix(centered, sources)
 
-    keep = _select_components(
-        correlations,
-        n_remove=n_remove,
-        rho_threshold=rho_threshold,
-        reject=reject,
-        threshold_on=threshold_on,
-    )
+    keep = np.ones(correlations.size, dtype=bool)
+    if n_remove is not None or rho_threshold is not None:
+        keep = _select_components(
+            correlations,
+            n_remove=n_remove,
+            rho_threshold=rho_threshold,
+            reject=reject,
+            threshold_on=threshold_on,
+        )
+    slopes = None
+    if slope_threshold is not None:
+        slopes = _component_slopes(
+            sources, data.shape, sfreq=sfreq, slope_band=slope_band
+        )
+        if keep.any() and not (keep & (slopes <= slope_threshold)).any():
+            logger.warning(
+                "BSS-CCA: every remaining component has a spectral slope above "
+                "slope_threshold=%.4g; every component will be removed. Adjust "
+                "the threshold or the band.",
+                slope_threshold,
+            )
+        keep &= slopes <= slope_threshold
     cleaning = mixing @ (keep[:, np.newaxis] * unmixing)
 
     return {
@@ -225,6 +310,7 @@ def _learn_operator(
         "autocorrelations": _signed_autocorrelations(current, past, filters_x),
         "filter_asymmetry": _filter_asymmetry(filters_x, filters_y),
         "kept_mask": keep,
+        "slopes": slopes,
         "training_mean": training_mean,
         "input_rank": n_components,
         "n_pairs": n_pairs,
@@ -298,6 +384,8 @@ def compute_bss_cca(
     rho_threshold: float | None = None,
     reject: str = "low",
     threshold_on: str = "rho",
+    slope_threshold: float | None = None,
+    slope_band: tuple[float, float] = _DEFAULT_SLOPE_BAND,
     segment_len: float | None = None,
     overlap: float = 0.0,
     preserve_mean: bool = True,
@@ -320,12 +408,22 @@ def compute_bss_cca(
     n_remove : int or None, default=None
         Number of components removed from the end selected by reject.
     rho_threshold : float or None, default=None
-        Correlation threshold used instead of n_remove. Exactly one selection rule
-        must be supplied.
+        Correlation threshold used instead of n_remove. It can be combined with
+        slope_threshold; n_remove cannot be combined with either threshold.
     reject : {"low", "high"}, default="low"
-        End of the correlation spectrum treated as artifactual.
+        End of the correlation spectrum treated as artifactual. slope_threshold
+        requires "low".
     threshold_on : {"rho", "rsq"}, default="rho"
         Scale for rho_threshold.
+    slope_threshold : float or None, default=None
+        Remove components whose log-log power spectrum within slope_band has a
+        slope above this value. Requires sfreq. Together with rho_threshold, a
+        component is removed when either rule flags it. There is no default; the
+        user guide lists the published values and their conditions.
+    slope_band : tuple of float, default=(7.0, 75.0)
+        Frequency band ``(fmin, fmax)`` in Hz over which the slope is fitted; used
+        only with slope_threshold. The default is the band of the published
+        method (see Notes).
     segment_len : float or None, default=None
         Continuous-data block length in seconds. None uses one operator.
     overlap : float, default=0.0
@@ -354,6 +452,19 @@ def compute_bss_cca(
     the raised-cosine cross-fade between neighbouring blocks, which hand over in
     the middle of their overlap, are additions of this package.
 
+    slope_threshold removes components whose spectrum between 7 and 75 Hz is
+    flatter than brain activity, the muscle signature shown on recordings under
+    neuromuscular blockade
+    :footcite:p:`fitzgibbon2016_emg_paralysis,janani2018_bss_cca_slope`.
+    The slope is estimated as in the reference implementation of Janani et al.
+    (1 s Welch segments, least squares on log power against log frequency); it is
+    the exponent ``a`` of ``P(f) ∝ f**a``. Janani et al. combine a correlation
+    stage and a slope stage, which rho_threshold and slope_threshold reproduce
+    together. Their published values depend on the decomposition, montage,
+    sampling rate and lag, so neither threshold has a default; the user guide
+    lists them with the conditions they were measured in. Remove line noise
+    first: it flattens spectra inside slope_band.
+
     See Also
     --------
     BSSCCA
@@ -367,11 +478,28 @@ def compute_bss_cca(
     X = check_channel_first_data(X, name="BSS-CCA")
     if not isinstance(preserve_mean, bool):
         raise TypeError("preserve_mean must be a bool")
-    n_remove, rho_threshold = _check_selection(n_remove, rho_threshold)
+    n_remove, rho_threshold, slope_threshold, slope_band = _check_selection(
+        n_remove, rho_threshold, slope_threshold, slope_band
+    )
     if reject not in ("low", "high"):
         raise ValueError(f"reject must be 'low' or 'high', got {reject!r}")
     if threshold_on not in ("rho", "rsq"):
         raise ValueError(f"threshold_on must be 'rho' or 'rsq', got {threshold_on!r}")
+    if slope_threshold is not None:
+        if reject != "low":
+            raise ValueError(
+                "reject='high' cannot be used with slope_threshold: the slope "
+                "rule removes muscle-like components, which sit at the low end "
+                "of the correlation spectrum"
+            )
+        if sfreq is None:
+            raise ValueError("sfreq is required when slope_threshold is used")
+        sfreq = check_positive_real(sfreq, name="sfreq")
+        if slope_band[1] > sfreq / 2.0:
+            raise ValueError(
+                f"slope_band upper edge {slope_band[1]} Hz exceeds the Nyquist "
+                f"frequency {sfreq / 2.0} Hz"
+            )
     lag = _resolve_lag_samples(
         lag_samples=lag_samples,
         lag_seconds=lag_seconds,
@@ -407,6 +535,9 @@ def compute_bss_cca(
             reject=reject,
             threshold_on=threshold_on,
             bound=bound,
+            slope_threshold=slope_threshold,
+            slope_band=slope_band,
+            sfreq=sfreq,
         )
         operators.append(operator)
         if segment_len is not None:
@@ -437,6 +568,9 @@ def compute_bss_cca(
         "autocorrelations": per_block([op["autocorrelations"] for op in operators]),
         "filter_asymmetry": per_block([op["filter_asymmetry"] for op in operators]),
         "kept_mask": per_block(kept),
+        "slopes": None
+        if slope_threshold is None
+        else per_block([op["slopes"] for op in operators]),
         "training_mean": per_block([op["training_mean"] for op in operators]),
         "input_rank": per_block([int(mask.size) for mask in kept]),
         "n_kept": per_block([int(mask.sum()) for mask in kept]),
@@ -454,6 +588,8 @@ def compute_bss_cca(
         "threshold_on": threshold_on,
         "n_remove": n_remove,
         "rho_threshold": rho_threshold,
+        "slope_threshold": slope_threshold,
+        "slope_band": slope_band,
         # Minimal records needed to re-apply the fitted operators; consumed by
         # BSSCCA.fit so the estimator never re-derives them.
         "operators": tuple(
@@ -466,11 +602,19 @@ def compute_bss_cca(
     }
     if n_remove is not None:
         selection = f"reject={reject}, n_remove={n_remove}"
+    elif rho_threshold is None:
+        selection = ""
     else:
         selection = (
             f"reject={reject}, threshold_on={threshold_on}, "
             f"rho_threshold={rho_threshold:.4g}"
         )
+    if slope_threshold is not None:
+        slope = (
+            f"slope_threshold={slope_threshold:.4g} over "
+            f"{slope_band[0]:g}-{slope_band[1]:g} Hz"
+        )
+        selection = f"{selection} or {slope}" if selection else slope
     logger.info(
         "BSS-CCA: lag=%d sample(s), %d block(s), %s, removed %s of %s components.",
         lag,
@@ -573,12 +717,20 @@ class BSSCCA(BaseEstimator, TransformerMixin):
     n_remove : int or None, default=None
         Number of components to remove.
     rho_threshold : float or None, default=None
-        Correlation threshold used instead of n_remove. Exactly one selection rule
-        is required.
+        Correlation threshold used instead of n_remove; it can be combined with
+        slope_threshold.
     reject : {"low", "high"}, default="low"
-        End of the correlation spectrum treated as artifactual.
+        End of the correlation spectrum treated as artifactual. slope_threshold
+        requires "low".
     threshold_on : {"rho", "rsq"}, default="rho"
         Scale for rho_threshold.
+    slope_threshold : float or None, default=None
+        Remove components whose log-log spectral slope within slope_band is above
+        this value. Requires a sampling frequency. No default; see
+        :func:`compute_bss_cca` for the published values.
+    slope_band : tuple of float, default=(7.0, 75.0)
+        Frequency band ``(fmin, fmax)`` in Hz over which the slope is fitted; used
+        only with slope_threshold.
     segment_len : float or None, default=None
         Continuous-data block length in seconds.
     overlap : float, default=0.0
@@ -604,6 +756,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         Canonical-filter asymmetry diagnostic.
     kept_mask_ : ndarray of bool
         Retained component mask.
+    slopes_ : ndarray, tuple of ndarray, or None
+        Spectral slope of each component when slope_threshold is used, else None.
     training_mean_ : ndarray
         Fitted channel mean.
     spans_ : tuple
@@ -650,6 +804,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         rho_threshold: float | None = None,
         reject: str = "low",
         threshold_on: str = "rho",
+        slope_threshold: float | None = None,
+        slope_band: tuple[float, float] = _DEFAULT_SLOPE_BAND,
         segment_len: float | None = None,
         overlap: float = 0.0,
         preserve_mean: bool = True,
@@ -662,6 +818,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         self.rho_threshold = rho_threshold
         self.reject = reject
         self.threshold_on = threshold_on
+        self.slope_threshold = slope_threshold
+        self.slope_band = slope_band
         self.segment_len = segment_len
         self.overlap = overlap
         self.preserve_mean = preserve_mean
@@ -709,6 +867,8 @@ class BSSCCA(BaseEstimator, TransformerMixin):
             rho_threshold=self.rho_threshold,
             reject=self.reject,
             threshold_on=self.threshold_on,
+            slope_threshold=self.slope_threshold,
+            slope_band=self.slope_band,
             segment_len=self.segment_len,
             overlap=self.overlap,
             preserve_mean=self.preserve_mean,
@@ -721,6 +881,7 @@ class BSSCCA(BaseEstimator, TransformerMixin):
         self.autocorrelations_ = info["autocorrelations"]
         self.filter_asymmetry_ = info["filter_asymmetry"]
         self.kept_mask_ = info["kept_mask"]
+        self.slopes_ = info["slopes"]
         self.training_mean_ = info["training_mean"]
         self.input_rank_ = info["input_rank"]
         self.n_kept_ = info["n_kept"]
