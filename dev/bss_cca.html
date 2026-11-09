@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reference-free BSS-CCA &#8212; mne-denoise 0.0.4.dev10+g8798c71e1 documentation</title>
+    <title>Reference-free BSS-CCA &#8212; mne-denoise 0.0.4.dev11+g9202a810d documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=5b066f6e"></script>
+    <script src="_static/documentation_options.js?v=7765b8ac"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.4.dev10+g8798c71e1" />
+  <meta name="docsearch:version" content="0.0.4.dev11+g9202a810d" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -521,15 +521,19 @@ reject chooses whether the low- or high-correlation end of the
 canonical-correlation spectrum is treated as artifactual.</p></li>
 <li><p>lag_samples or lag_seconds and preprocessing affect the
 canonical-correlation ordering.</p></li>
-<li><p>Segmented operation fits one operator per block; overlap controls block
-overlap and diagnostics report the fitted block operators.</p></li>
+<li><p>With MNE input, channels in <code class="docutils literal notranslate"><span class="pre">info[&quot;bads&quot;]</span></code> are left out of the fit and pass
+through unchanged.</p></li>
+<li><p>Segmented operation fits one operator per block. Vergult et al. cleaned
+contiguous 10 s epochs independently
+<a class="footnote-reference brackets" href="#footcite-vergult2007-bss-cca" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>; overlapping blocks and the cross-fade
+between them, in the middle of their overlap, are additions of this package.</p></li>
 </ul>
 <p>The ordering is a signal-model assumption, not a universal artifact label.
 Check the result against controls and the signal of interest.</p>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
-<div class="docutils container" id="id4">
+<div class="docutils container" id="id5">
 </div>
 </section>
 </section>
@@ -540,7 +544,8 @@ Check the result against controls and the signal of interest.</p>
 <p>Wim De Clercq, Anneleen Vergult, Bart Vanrumste, Wim Van Paesschen, and Sabine Van Huffel. Canonical correlation analysis applied to remove muscle artifacts from the electroencephalogram. <em>IEEE Transactions on Biomedical Engineering</em>, 53(12):2583–2587, 2006. <a class="reference external" href="https://doi.org/10.1109/TBME.2006.879459">doi:10.1109/TBME.2006.879459</a>.</p>
 </aside>
 <aside class="footnote brackets" id="footcite-vergult2007-bss-cca" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id4">2</a>)</span>
 <p>Anneleen Vergult, Wim De Clercq, André Palmini, Bart Vanrumste, Patrick Dupont, Sabine Van Huffel, and Wim Van Paesschen. Improving the interpretation of ictal scalp eeg: bss–cca algorithm for muscle artifact removal. <em>Epilepsia</em>, 48(5):950–958, 2007. <a class="reference external" href="https://doi.org/10.1111/j.1528-1167.2007.01031.x">doi:10.1111/j.1528-1167.2007.01031.x</a>.</p>
 </aside>
 <aside class="footnote brackets" id="footcite-hotelling1936-cca" role="doc-footnote">

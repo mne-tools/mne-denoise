@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mne_denoise.bss_cca &#8212; mne-denoise 0.0.4.dev10+g8798c71e1 documentation</title>
+    <title>mne_denoise.bss_cca &#8212; mne-denoise 0.0.4.dev11+g9202a810d documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=5b066f6e"></script>
+    <script src="../../_static/documentation_options.js?v=7765b8ac"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.4.dev10+g8798c71e1" />
+  <meta name="docsearch:version" content="0.0.4.dev11+g9202a810d" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -731,14 +731,19 @@
     <span class="k">if</span> <span class="n">starts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">n_block</span> <span class="o">&lt;</span> <span class="n">n_times</span><span class="p">:</span>
         <span class="n">starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_times</span> <span class="o">-</span> <span class="n">n_block</span><span class="p">)</span>
 
-    <span class="n">bounds</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">own_start</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">starts</span><span class="p">):</span>
-        <span class="n">own_end</span> <span class="o">=</span> <span class="n">n_times</span> <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">hop</span><span class="p">,</span> <span class="n">n_times</span><span class="p">)</span>
-        <span class="n">own_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">own_end</span><span class="p">,</span> <span class="n">own_start</span><span class="p">)</span>
-        <span class="n">bounds</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">n_block</span><span class="p">,</span> <span class="n">own_start</span><span class="p">,</span> <span class="n">own_end</span><span class="p">))</span>
-        <span class="n">own_start</span> <span class="o">=</span> <span class="n">own_end</span>
-    <span class="k">return</span> <span class="n">bounds</span>
+    <span class="c1"># Neighbouring blocks hand over in the middle of their overlap, so each</span>
+    <span class="c1"># block's extensions are symmetric and the raised-cosine blend fades one</span>
+    <span class="c1"># block out while the next fades in, with no jump in the weights.</span>
+    <span class="n">handovers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">previous</span> <span class="o">+</span> <span class="n">n_block</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">previous</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">starts</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="p">]</span>
+    <span class="n">own_starts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">handovers</span><span class="p">]</span>
+    <span class="n">own_ends</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">handovers</span><span class="p">,</span> <span class="n">n_times</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">n_block</span><span class="p">,</span> <span class="n">own_start</span><span class="p">,</span> <span class="n">own_end</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">own_start</span><span class="p">,</span> <span class="n">own_end</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">own_starts</span><span class="p">,</span> <span class="n">own_ends</span><span class="p">)</span>
+    <span class="p">]</span>
 
 
 <div class="viewcode-block" id="compute_bss_cca">
@@ -806,6 +811,9 @@
 <span class="sd">    components with the lowest lagged correlation are removed; reject="high" removes</span>
 <span class="sd">    the highest. Segmented mode is continuous-only and cannot span epoch boundaries</span>
 <span class="sd">    :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca,hotelling1936_cca`.</span>
+<span class="sd">    Vergult et al. cleaned contiguous 10 s epochs independently; the overlap and</span>
+<span class="sd">    the raised-cosine cross-fade between neighbouring blocks, which hand over in</span>
+<span class="sd">    the middle of their overlap, are additions of this package.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -1079,6 +1087,8 @@
 <span class="sd">    With segment_len set, transform requires the same number of samples used during</span>
 <span class="sd">    fit. MNE Raw, Epochs, and Evoked inputs preserve their container type and</span>
 <span class="sd">    channel metadata :footcite:p:`declercq2006_bss_cca,vergult2007_bss_cca`.</span>
+<span class="sd">    Channels listed in ``info["bads"]`` at fit time are left out of the</span>
+<span class="sd">    decomposition and pass through transform unchanged.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -1153,7 +1163,7 @@
         <span class="k">del</span> <span class="n">y</span>
         <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
         <span class="n">data</span><span class="p">,</span> <span class="n">data_sfreq</span><span class="p">,</span> <span class="n">_mne_type</span><span class="p">,</span> <span class="n">_orig</span><span class="p">,</span> <span class="n">_picks</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
-            <span class="n">X</span><span class="p">,</span> <span class="n">auto_pick</span><span class="o">=</span><span class="kc">True</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">auto_pick</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_bads</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="n">sfreq</span> <span class="o">=</span> <span class="n">resolve_sfreq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span> <span class="n">data_sfreq</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">_cleaned</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">compute_bss_cca</span><span class="p">(</span>

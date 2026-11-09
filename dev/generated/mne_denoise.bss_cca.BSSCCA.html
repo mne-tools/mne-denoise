@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mne_denoise.bss_cca.BSSCCA &#8212; mne-denoise 0.0.4.dev10+g8798c71e1 documentation</title>
+    <title>mne_denoise.bss_cca.BSSCCA &#8212; mne-denoise 0.0.4.dev11+g9202a810d documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=5b066f6e"></script>
+    <script src="../_static/documentation_options.js?v=7765b8ac"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.4.dev10+g8798c71e1" />
+  <meta name="docsearch:version" content="0.0.4.dev11+g9202a810d" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -746,7 +746,9 @@ is required.</p>
 <p class="rubric">Notes</p>
 <p>With segment_len set, transform requires the same number of samples used during
 fit. MNE Raw, Epochs, and Evoked inputs preserve their container type and
-channel metadata <a class="footnote-reference brackets" href="#footcite-declercq2006-bss-cca" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a><a class="footnote-reference brackets" href="#footcite-vergult2007-bss-cca" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
+channel metadata <a class="footnote-reference brackets" href="#footcite-declercq2006-bss-cca" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a><a class="footnote-reference brackets" href="#footcite-vergult2007-bss-cca" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.
+Channels listed in <code class="docutils literal notranslate"><span class="pre">info[&quot;bads&quot;]</span></code> at fit time are left out of the
+decomposition and pass through transform unchanged.</p>
 <p class="rubric">References</p>
 <div class="docutils container" id="id3">
 <aside class="footnote-list brackets">
