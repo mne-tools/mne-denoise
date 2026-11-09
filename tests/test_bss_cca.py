@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from mne_denoise._blending import overlap_add_combine
 from mne_denoise.bss_cca import BSSCCA, _lagged_pairs, _segment_bounds, compute_bss_cca
 
 SFREQ = 250.0
@@ -352,7 +353,47 @@ def test_segment_bounds_tile_and_cover_a_ragged_tail():
     own = [(own_start, own_end) for _e0, _e1, own_start, own_end in bounds]
     assert own == [(0, 250), (250, 500), (500, 750), (750, 1000)]
     ragged = _segment_bounds(900, n_block=250, hop=250)
-    assert ragged[-1] == (650, 900, 750, 900)
+    # The tail block overlaps its neighbour on 650-750 and takes over at 700.
+    assert ragged[-2:] == [(500, 750, 500, 700), (650, 900, 700, 900)]
+
+
+@pytest.mark.parametrize(
+    ("n_times", "n_block", "hop"),
+    [(9000, 3000, 1500), (9700, 3000, 1500), (5000, 1000, 250), (5000, 1000, 1000)],
+)
+def test_overlapping_blocks_blend_without_jumps(n_times, n_block, hop):
+    """Owned spans tile the recording and the blend weights change smoothly.
+
+    Each block outputs a constant equal to its index, so the blended signal is
+    the local mixing weight. A block that took full weight at its first sample
+    while its predecessor still had full weight would jump by 0.5 there.
+    """
+    bounds = _segment_bounds(n_times, n_block=n_block, hop=hop)
+    owned = [(own_start, own_end) for _e0, _e1, own_start, own_end in bounds]
+    assert owned[0][0] == 0
+    assert owned[-1][1] == n_times
+    assert all(a[1] == b[0] for a, b in zip(owned[:-1], owned[1:]))
+    for ext_start, ext_end, own_start, own_end in bounds:
+        assert ext_start <= own_start <= own_end <= ext_end
+
+    chunks = [
+        {
+            "data": np.full((1, ext_end - ext_start), float(index)),
+            "ext_start": ext_start,
+            "ext_end": ext_end,
+            "start": own_start,
+            "end": own_end,
+        }
+        for index, (ext_start, ext_end, own_start, own_end) in enumerate(bounds)
+    ]
+    blended = overlap_add_combine((1, n_times), chunks)[0]
+    overlap = n_block - hop
+    # Each raised-cosine ramp spans half the overlap, so one weight changes by
+    # at most pi / overlap per sample; a factor 2 covers more than two blocks
+    # sharing a sample at high overlap. Without overlap the blocks are simply
+    # concatenated.
+    max_step = 2 * np.pi / overlap if overlap else 1.0
+    assert np.abs(np.diff(blended)).max() <= max_step + 1e-12
 
 
 def test_one_block_covering_everything_equals_the_global_fit(rng):
@@ -641,3 +682,32 @@ def test_estimator_forwards_reject_and_threshold_on():
     estimator = BSSCCA(**kwargs).fit(observed)
     _cleaned, info = compute_bss_cca(observed, **kwargs)
     np.testing.assert_array_equal(estimator.kept_mask_, info["kept_mask"])
+
+
+# ---------------------------------------------------------------------------
+# Bad channels
+# ---------------------------------------------------------------------------
+
+
+def test_bad_channels_are_left_out_of_the_decomposition(muscle_data):
+    """Bad channels neither shape the operator nor get modified."""
+    mne = pytest.importorskip("mne")
+    observed, _clean, sfreq = muscle_data
+    info = mne.create_info([f"EEG{i:02d}" for i in range(21)], sfreq, "eeg")
+    raw = mne.io.RawArray(observed * 1e-6, info, verbose=False)
+    raw._data[3] *= 1e3  # a broken electrode
+    raw.info["bads"] = ["EEG03"]
+
+    model = BSSCCA(n_remove=3).fit(raw)
+    cleaned = model.transform(raw)
+    assert "EEG03" not in model.feature_names_in_
+    np.testing.assert_array_equal(
+        cleaned.get_data(picks="EEG03"), raw.get_data(picks="EEG03")
+    )
+    assert cleaned.info["bads"] == ["EEG03"]
+
+    good = raw.copy().drop_channels(["EEG03"])
+    reference = BSSCCA(n_remove=3).fit_transform(good)
+    np.testing.assert_allclose(
+        cleaned.get_data(picks=good.ch_names), reference.get_data(), rtol=1e-10, atol=0
+    )
