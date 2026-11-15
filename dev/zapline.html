@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ZapLine &#8212; mne-denoise 0.0.4.dev12+g94f47e15d documentation</title>
+    <title>ZapLine &#8212; mne-denoise 0.0.4.dev13+g2330a019e documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="_static/style.css?v=fc7d3997" />
   
   <!-- So that users can add custom icons -->
@@ -44,13 +44,13 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=4bf5d08b"></script>
+    <script src="_static/documentation_options.js?v=ded21dd4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/sg-tags.js?v=d80f6fa4"></script>
-    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'zapline';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.4.dev12+g94f47e15d" />
+  <meta name="docsearch:version" content="0.0.4.dev13+g2330a019e" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -554,6 +554,21 @@ remove what is left channel by channel with
 <a class="reference internal" href="generated/mne_denoise.spectrum_interpolation.SpectrumInterpolation.html#mne_denoise.spectrum_interpolation.SpectrumInterpolation" title="mne_denoise.spectrum_interpolation.SpectrumInterpolation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpectrumInterpolation</span></code></a> or a notch
 filter.</p>
 </section>
+<section id="subtracting-only-the-line-band">
+<h2>Subtracting only the line band<a class="headerlink" href="#subtracting-only-the-line-band" title="Link to this heading">#</a></h2>
+<p>The removed components also carry broadband activity, so subtracting them
+whole can raise power away from the line on single channels. With
+<code class="docutils literal notranslate"><span class="pre">line_bandwidth</span></code>, an mne-denoise extension, only their part within
+<code class="docutils literal notranslate"><span class="pre">line_bandwidth</span></code> Hz of each targeted harmonic is subtracted, and the spectrum
+outside these bands is unchanged:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ZapLine</span><span class="p">(</span><span class="n">sfreq</span><span class="o">=</span><span class="mf">200.0</span><span class="p">,</span> <span class="n">line_freq</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">line_bandwidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># 59-61 Hz</span>
+</pre></div>
+</div>
+<p>ZapLine selects the same components as without it. A line broader than the
+band is removed less completely. On short inputs, or epochs that are not
+contiguous, part of the line falls outside the band and is not removed; apply
+it to the continuous recording before epoching.</p>
+</section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <div class="docutils container" id="id3">
@@ -623,6 +638,7 @@ filter.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-points">Key points</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#number-of-removed-components">Number of removed components</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#line-noise-from-many-sources">Line noise from many sources</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subtracting-only-the-line-band">Subtracting only the line band</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>

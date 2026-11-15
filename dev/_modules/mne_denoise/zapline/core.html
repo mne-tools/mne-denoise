@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mne_denoise.zapline.core &#8212; mne-denoise 0.0.4.dev12+g94f47e15d documentation</title>
+    <title>mne_denoise.zapline.core &#8212; mne-denoise 0.0.4.dev13+g2330a019e documentation</title>
   
   
   
@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=fc7d3997" />
   
   <!-- So that users can add custom icons -->
@@ -43,13 +43,13 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=4bf5d08b"></script>
+    <script src="../../../_static/documentation_options.js?v=ded21dd4"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
-    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mne_denoise/zapline/core';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.4.dev12+g94f47e15d" />
+  <meta name="docsearch:version" content="0.0.4.dev13+g2330a019e" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -471,8 +471,10 @@
     <span class="n">extract_data_from_mne</span><span class="p">,</span>
     <span class="n">reconstruct_mne_object</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">line_band_mask</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.._logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">verbose</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.._spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_spatial_transform</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_positive_real</span>
 
 <span class="c1"># Inherit from DSS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..dss._whitening</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -539,6 +541,9 @@
 <span class="sd">        Pre-whiten supported MNE data channels before processing.</span>
 <span class="sd">    noise_cov : mne.Covariance or None, default=None</span>
 <span class="sd">        Noise covariance used when whiten=True.</span>
+<span class="sd">    line_bandwidth : float or None, default=None</span>
+<span class="sd">        Half-width in Hz of the band around each targeted harmonic within which</span>
+<span class="sd">        the removed components are subtracted. None subtracts them entirely.</span>
 <span class="sd">    verbose : bool, str, int, or None, default=None</span>
 <span class="sd">        Logging level.</span>
 
@@ -600,6 +605,7 @@
         <span class="n">crossfade</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">whiten</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">noise_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">line_bandwidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sfreq</span><span class="p">)</span>
@@ -610,6 +616,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">knee_rel_floor</span> <span class="o">=</span> <span class="n">knee_rel_floor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">knee_min_ratio</span> <span class="o">=</span> <span class="n">knee_min_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line_bandwidth</span> <span class="o">=</span> <span class="n">line_bandwidth</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adaptive_params</span> <span class="o">=</span> <span class="n">adaptive_params</span> <span class="k">if</span> <span class="n">adaptive_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
@@ -693,6 +700,7 @@
                 <span class="s2">"Adaptive mode requires simultaneous fit and transform (local chunks). "</span>
                 <span class="s2">"Use fit_transform() instead."</span>
             <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_line_bandwidth</span><span class="p">()</span>
 
         <span class="n">data</span><span class="p">,</span> <span class="n">extracted_sfreq</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="n">extract_data_from_mne</span><span class="p">(</span>
             <span class="n">X</span><span class="p">,</span>
@@ -824,6 +832,7 @@
         <span class="n">callback</span> <span class="o">=</span> <span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">adaptive</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_line_bandwidth</span><span class="p">()</span>
 
         <span class="n">data</span><span class="p">,</span> <span class="n">extracted_sfreq</span><span class="p">,</span> <span class="n">mne_type</span><span class="p">,</span> <span class="n">orig_inst</span><span class="p">,</span> <span class="n">picks</span><span class="p">,</span> <span class="n">ch_names</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">extract_data_from_mne</span><span class="p">(</span>
@@ -1046,8 +1055,29 @@
             <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># The smoother is linear and per channel: smooth the sources, not the data</span>
-        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_line_part</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_</span> <span class="o">@</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">_harmonic_freqs</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_artifact_mixing_</span> <span class="o">@</span> <span class="n">sources</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_line_bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return line_bandwidth as a float after validation, or None."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_bandwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">check_positive_real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">line_bandwidth</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"line_bandwidth"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_line_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">harmonics</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Zero the Fourier bins of signal outside the bands around harmonics."""</span>
+        <span class="n">half_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_line_bandwidth</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">half_width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">signal</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.fft</span><span class="w"> </span><span class="kn">import</span> <span class="n">irfft</span><span class="p">,</span> <span class="n">rfft</span><span class="p">,</span> <span class="n">rfftfreq</span>
+
+        <span class="n">n_times</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">rfftfreq</span><span class="p">(</span><span class="n">n_times</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">)</span>
+        <span class="n">spectrum</span> <span class="o">=</span> <span class="n">rfft</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">spectrum</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">~</span><span class="n">line_band_mask</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">harmonics</span><span class="p">,</span> <span class="n">half_width</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">irfft</span><span class="p">(</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n_times</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_smooth_residual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">warn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Split data into smooth and residual components."""</span>
@@ -1243,9 +1273,27 @@
         <span class="k">finally</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_target_freq_</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="c1"># Segments select and subtract whole components; restricting their sum</span>
+        <span class="c1"># to the line bands over the whole recording keeps segment boundaries</span>
+        <span class="c1"># and the segments' spectral checks out of the result.</span>
+        <span class="n">removed</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">current_data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_bandwidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">all_chunk_metadata</span><span class="p">:</span>
+            <span class="n">harmonics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">LineNoiseBias</span><span class="p">(</span>
+                        <span class="n">freq</span><span class="o">=</span><span class="n">chunk</span><span class="p">[</span><span class="s2">"fine_freq"</span><span class="p">],</span>
+                        <span class="n">sfreq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sfreq</span><span class="p">,</span>
+                        <span class="n">n_harmonics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_harmonics</span><span class="p">,</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">_harmonic_freqs</span>
+                    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">all_chunk_metadata</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">removed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_line_part</span><span class="p">(</span><span class="n">removed</span><span class="p">,</span> <span class="n">harmonics</span><span class="p">)</span>
+            <span class="n">current_data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">removed</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">"cleaned"</span><span class="p">:</span> <span class="n">current_data</span><span class="p">,</span>
-            <span class="s2">"removed"</span><span class="p">:</span> <span class="n">data</span> <span class="o">-</span> <span class="n">current_data</span><span class="p">,</span>
+            <span class="s2">"removed"</span><span class="p">:</span> <span class="n">removed</span><span class="p">,</span>
             <span class="s2">"n_removed"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_removed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_chunk_metadata</span><span class="p">),</span>
             <span class="s2">"line_freq"</span><span class="p">:</span> <span class="n">line_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">line_freqs</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
             <span class="s2">"line_freqs"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">all_freqs_to_process</span><span class="p">),</span>
@@ -1309,6 +1357,7 @@
                 <span class="s2">"threshold"</span><span class="p">:</span> <span class="n">current_sigma</span><span class="p">,</span>
                 <span class="s2">"adaptive"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="s2">"crossfade"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="s2">"line_bandwidth"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="s2">"verbose"</span><span class="p">:</span> <span class="s2">"WARNING"</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
