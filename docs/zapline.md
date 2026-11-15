@@ -61,6 +61,23 @@ remove what is left channel by channel with
 {class}`~mne_denoise.spectrum_interpolation.SpectrumInterpolation` or a notch
 filter.
 
+## Subtracting only the line band
+
+The removed components also carry broadband activity, so subtracting them
+whole can raise power away from the line on single channels. With
+`line_bandwidth`, an mne-denoise extension, only their part within
+`line_bandwidth` Hz of each targeted harmonic is subtracted, and the spectrum
+outside these bands is unchanged:
+
+```python
+model = ZapLine(sfreq=200.0, line_freq=60.0, line_bandwidth=1.0)  # 59-61 Hz
+```
+
+ZapLine selects the same components as without it. A line broader than the
+band is removed less completely. On short inputs, or epochs that are not
+contiguous, part of the line falls outside the band and is not removed; apply
+it to the continuous recording before epoching.
+
 ## References
 
 ```{footbibliography}

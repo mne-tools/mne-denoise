@@ -12,6 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _mne
 from ._data import extract_data_from_mne, reconstruct_mne_object
+from ._filtering import line_band_mask
 from ._logging import logger, verbose
 from ._validation import (
     check_matching_sfreq,
@@ -104,13 +105,7 @@ def interpolate_spectrum(
         if not (0.0 < f < nyquist):
             continue
 
-        band = (fft_freqs >= f - bandwidth) & (fft_freqs <= f + bandwidth)
-        if not np.any(band):
-            # Band narrower than the frequency resolution: snap to nearest bin.
-            nearest = int(np.argmin(np.abs(fft_freqs - f)))
-            band = np.zeros_like(band)
-            band[nearest] = True
-
+        band = line_band_mask(fft_freqs, f, bandwidth)
         left = (fft_freqs >= f - bandwidth - neighbour_width) & (
             fft_freqs < f - bandwidth
         )

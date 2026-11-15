@@ -12,8 +12,10 @@ from .._data import (
     extract_data_from_mne,
     reconstruct_mne_object,
 )
+from .._filtering import line_band_mask
 from .._logging import logger, verbose
 from .._spatial import apply_spatial_transform
+from .._validation import check_positive_real
 
 # Inherit from DSS
 from ..dss._whitening import (
@@ -78,6 +80,9 @@ class ZapLine(DSS):
         Pre-whiten supported MNE data channels before processing.
     noise_cov : mne.Covariance or None, default=None
         Noise covariance used when whiten=True.
+    line_bandwidth : float or None, default=None
+        Half-width in Hz of the band around each targeted harmonic within which
+        the removed components are subtracted. None subtracts them entirely.
     verbose : bool, str, int, or None, default=None
         Logging level.
 
@@ -139,6 +144,7 @@ class ZapLine(DSS):
         crossfade: float = 0.0,
         whiten: bool = False,
         noise_cov=None,
+        line_bandwidth: float | None = None,
         verbose: bool | str | int | None = None,
     ):
         self.sfreq = float(sfreq)
@@ -149,6 +155,7 @@ class ZapLine(DSS):
         self.threshold = threshold
         self.knee_rel_floor = knee_rel_floor
         self.knee_min_ratio = knee_min_ratio
+        self.line_bandwidth = line_bandwidth
         self.adaptive_params = adaptive_params if adaptive_params is not None else {}
         self.verbose = verbose
 
@@ -230,6 +237,7 @@ class ZapLine(DSS):
                 "Adaptive mode requires simultaneous fit and transform (local chunks). "
                 "Use fit_transform() instead."
             )
+        self._check_line_bandwidth()
 
         data, extracted_sfreq, _, orig_inst, _, ch_names = extract_data_from_mne(
             X,
@@ -355,6 +363,7 @@ class ZapLine(DSS):
         callback = _validate_callback(callback)
         if not self.adaptive:
             return super().fit_transform(X, y=y, callback=callback, **fit_params)
+        self._check_line_bandwidth()
 
         data, extracted_sfreq, mne_type, orig_inst, picks, ch_names = (
             extract_data_from_mne(
@@ -576,8 +585,29 @@ class ZapLine(DSS):
             return data.copy()
 
         # The smoother is linear and per channel: smooth the sources, not the data
-        sources = self._get_residual(self.filters_ @ data)
+        sources = self._line_part(
+            self._get_residual(self.filters_ @ data), self.bias._harmonic_freqs
+        )
         return data - self._artifact_mixing_ @ sources
+
+    def _check_line_bandwidth(self) -> float | None:
+        """Return line_bandwidth as a float after validation, or None."""
+        if self.line_bandwidth is None:
+            return None
+        return check_positive_real(self.line_bandwidth, name="line_bandwidth")
+
+    def _line_part(self, signal: np.ndarray, harmonics: np.ndarray) -> np.ndarray:
+        """Zero the Fourier bins of signal outside the bands around harmonics."""
+        half_width = self._check_line_bandwidth()
+        if half_width is None:
+            return signal
+        from scipy.fft import irfft, rfft, rfftfreq
+
+        n_times = signal.shape[-1]
+        freqs = rfftfreq(n_times, d=1.0 / self.sfreq)
+        spectrum = rfft(signal, axis=-1)
+        spectrum[..., ~line_band_mask(freqs, harmonics, half_width)] = 0
+        return irfft(spectrum, n=n_times, axis=-1)
 
     def _get_smooth_residual(self, data: np.ndarray, warn: bool = False):
         """Split data into smooth and residual components."""
@@ -773,9 +803,27 @@ class ZapLine(DSS):
         finally:
             self._target_freq_ = None
 
+        # Segments select and subtract whole components; restricting their sum
+        # to the line bands over the whole recording keeps segment boundaries
+        # and the segments' spectral checks out of the result.
+        removed = data - current_data
+        if self.line_bandwidth is not None and all_chunk_metadata:
+            harmonics = np.concatenate(
+                [
+                    LineNoiseBias(
+                        freq=chunk["fine_freq"],
+                        sfreq=self.sfreq,
+                        n_harmonics=self.n_harmonics,
+                    )._harmonic_freqs
+                    for chunk in all_chunk_metadata
+                ]
+            )
+            removed = self._line_part(removed, harmonics)
+            current_data = data - removed
+
         return {
             "cleaned": current_data,
-            "removed": data - current_data,
+            "removed": removed,
             "n_removed": sum(c.get("n_removed", 0) for c in all_chunk_metadata),
             "line_freq": line_freqs[0] if line_freqs else 0,
             "line_freqs": tuple(float(freq) for freq in all_freqs_to_process),
@@ -839,6 +887,7 @@ class ZapLine(DSS):
                 "threshold": current_sigma,
                 "adaptive": False,
                 "crossfade": 0.0,
+                "line_bandwidth": None,
                 "verbose": "WARNING",
             }
         )
