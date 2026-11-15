@@ -395,3 +395,158 @@ def test_zapline_exposes_only_n_select():
     assert "n_select" in estimator.get_params()
     assert ZapLine(sfreq=500.0, line_freq=60.0, n_select="auto").n_select == "auto"
     assert ZapLine(sfreq=500.0, line_freq=60.0, n_select=3).n_select == 3
+
+
+def _eeg_with_muscle_and_line(sfreq, line_amplitudes, *, duration=60.0, seed=0):
+    """Return 19-channel EEG-like data with muscle on 3 channels and a 60 Hz line.
+
+    ``line_amplitudes`` gives the relative amplitude of each 60 Hz harmonic.
+    """
+    rng = np.random.default_rng(seed)
+    n_channels, n_times = 19, int(sfreq * duration)
+    times = np.arange(n_times) / sfreq
+    brain = np.cumsum(rng.standard_normal((n_channels, n_times)), axis=1)
+    brain = signal.sosfiltfilt(
+        signal.butter(2, 0.5, "hp", fs=sfreq, output="sos"), brain
+    )
+    mixing = np.eye(n_channels) + 0.3 * rng.standard_normal((n_channels, n_channels))
+    data = mixing @ brain
+    muscle_band = signal.butter(
+        4, [20.0, 0.95 * sfreq / 2], "bp", fs=sfreq, output="sos"
+    )
+    data[:3] += 20.0 * signal.sosfiltfilt(
+        muscle_band, rng.standard_normal((3, n_times))
+    )
+    line = sum(
+        amplitude * np.sin(2 * np.pi * 60.0 * (harmonic + 1) * times + harmonic)
+        for harmonic, amplitude in enumerate(line_amplitudes)
+    )
+    return data + 30.0 * rng.uniform(0.5, 1.0, n_channels)[:, None] * line
+
+
+def _welch_db_change(before, after, sfreq):
+    """Return frequencies and per-channel Welch power change in dB."""
+    freqs, psd_before = signal.welch(before, fs=sfreq, nperseg=int(4 * sfreq))
+    _, psd_after = signal.welch(after, fs=sfreq, nperseg=int(4 * sfreq))
+    return freqs, 10 * np.log10(psd_after / psd_before)
+
+
+def _line_reduction_db(before, after, sfreq, freq):
+    """Return the drop in summed Welch power within 0.5 Hz of freq, in dB.
+
+    Unlike ``_power_at``, the 0.25 Hz resolution keeps the broadband power next
+    to the line, which only the whole-component subtraction removes, out of the
+    measure.
+    """
+    freqs, psd_before = signal.welch(before, fs=sfreq, nperseg=int(4 * sfreq))
+    _, psd_after = signal.welch(after, fs=sfreq, nperseg=int(4 * sfreq))
+    near = np.abs(freqs - freq) <= 0.5
+    return 10 * np.log10(psd_before[:, near].sum() / psd_after[:, near].sum())
+
+
+@pytest.mark.parametrize(
+    ("sfreq", "n_harmonics", "line_amplitudes"),
+    [
+        (200.0, None, (1.0,)),  # fractional period; only 60 Hz is below Nyquist
+        (500.0, 2, (1.0, 0.5)),
+    ],
+)
+def test_zapline_line_bandwidth_leaves_spectrum_outside_the_line_unchanged(
+    sfreq, n_harmonics, line_amplitudes
+):
+    """Line-only subtraction keeps the default's line removal without its broadband cost.
+
+    With three components, the default whole-component subtraction moves the
+    muscle activity of some channels onto others; subtracting only each
+    component's part within 1 Hz of the harmonics leaves every other Fourier bin
+    of the input unchanged.
+    """
+    data = _eeg_with_muscle_and_line(sfreq, line_amplitudes)
+    harmonics = 60.0 * np.arange(1, len(line_amplitudes) + 1)
+    params = {
+        "sfreq": sfreq,
+        "line_freq": 60.0,
+        "n_select": 3,
+        "n_harmonics": n_harmonics,
+    }
+    default = ZapLine(**params).fit_transform(data)
+    line_only = ZapLine(**params, line_bandwidth=1.0).fit_transform(data)
+
+    freqs, change = _welch_db_change(data, default, sfreq)
+    away = np.all(np.abs(freqs[:, None] - harmonics) > 1.5, axis=1) & (freqs >= 1.0)
+    assert change[:, away].max() > 3.0
+
+    fft_freqs = np.fft.rfftfreq(data.shape[-1], d=1.0 / sfreq)
+    outside = np.all(np.abs(fft_freqs[:, None] - harmonics) > 1.0, axis=1)
+    spectrum = np.fft.rfft(data, axis=-1)
+    assert_allclose(
+        np.fft.rfft(line_only, axis=-1)[:, outside],
+        spectrum[:, outside],
+        rtol=0,
+        atol=1e-9 * np.abs(spectrum).max(),
+    )
+
+    for freq in harmonics:
+        reduction = _line_reduction_db(data, line_only, sfreq, freq)
+        assert reduction > 20.0
+        assert reduction == pytest.approx(
+            _line_reduction_db(data, default, sfreq, freq), abs=0.5
+        )
+
+
+def test_zapline_line_bandwidth_in_adaptive_mode_keeps_the_segment_selection():
+    """Adaptive segments select as by default; only the line band is subtracted.
+
+    The segments' spectral checks see whole-component subtraction, so they
+    remove the same number of components, and the band is applied to the
+    removed signal of the whole recording, so no segment boundary leaks into
+    the spectrum outside the line bands.
+    """
+    sfreq = 200.0
+    data = _eeg_with_muscle_and_line(sfreq, (1.0,))
+    params = {
+        "sfreq": sfreq,
+        "line_freq": 60.0,
+        "adaptive": True,
+        "adaptive_params": {"min_chunk_len": 20.0},
+    }
+    default = ZapLine(**params)
+    cleaned_default = default.fit_transform(data)
+    line_only = ZapLine(**params, line_bandwidth=1.0)
+    cleaned = line_only.fit_transform(data)
+
+    assert len(line_only.adaptive_results_["chunk_info"]) > 1
+    assert line_only.n_removed_ == default.n_removed_
+
+    # The segments refine the line frequency to within 0.05 Hz.
+    fft_freqs = np.fft.rfftfreq(data.shape[-1], d=1.0 / sfreq)
+    outside = np.abs(fft_freqs - 60.0) > 1.1
+    spectrum = np.fft.rfft(data, axis=-1)
+    assert_allclose(
+        np.fft.rfft(cleaned, axis=-1)[:, outside],
+        spectrum[:, outside],
+        rtol=0,
+        atol=1e-9 * np.abs(spectrum).max(),
+    )
+    reduction = _line_reduction_db(data, cleaned, sfreq, 60.0)
+    assert reduction > 20.0
+    assert reduction == pytest.approx(
+        _line_reduction_db(data, cleaned_default, sfreq, 60.0), abs=0.5
+    )
+
+
+@pytest.mark.parametrize(
+    ("line_bandwidth", "error"),
+    [(0.0, ValueError), (-2.0, ValueError), (np.inf, ValueError), (True, TypeError)],
+)
+def test_zapline_rejects_invalid_line_bandwidth(minimal_data, line_bandwidth, error):
+    """line_bandwidth must be a positive, finite number of hertz, also when set later."""
+    data, sfreq = minimal_data["data"], minimal_data["sfreq"]
+    model = ZapLine(sfreq=sfreq, line_freq=50.0, line_bandwidth=line_bandwidth)
+    with pytest.raises(error, match="line_bandwidth"):
+        model.fit(data)
+
+    fitted = ZapLine(sfreq=sfreq, line_freq=50.0, n_select=1).fit(data)
+    fitted.set_params(line_bandwidth=line_bandwidth)
+    with pytest.raises(error, match="line_bandwidth"):
+        fitted.transform(data)
